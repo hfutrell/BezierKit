@@ -11,6 +11,7 @@
 		FD0F54FB1DC43FFB0084CDCD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */; };
 		FD0F54FE1DC43FFB0084CDCD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */; };
 		FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
+		FDD476611DC4422400A1FAF3 /* CubicBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD476601DC4422400A1FAF3 /* CubicBezier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTests.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FDD476601DC4422400A1FAF3 /* CubicBezier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicBezier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */,
+				FDD476601DC4422400A1FAF3 /* CubicBezier.swift */,
 				FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */,
 				FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */,
 				FD0F54FF1DC43FFB0084CDCD /* Info.plist */,
@@ -193,6 +196,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD0F54F91DC43FFB0084CDCD /* AppDelegate.swift in Sources */,
+				FDD476611DC4422400A1FAF3 /* CubicBezier.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,6 +395,7 @@
 				FD0F550F1DC43FFB0084CDCD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		FD0F55101DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitTests" */ = {
 			isa = XCConfigurationList;
@@ -399,6 +404,7 @@
 				FD0F55121DC43FFB0084CDCD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
