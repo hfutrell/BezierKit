@@ -14,8 +14,19 @@ typealias BKRect = CGRect
 
 class CubicBezier {
     
+    let p0, p1, p2, p3: BKPoint
+    
+    var points: [BKPoint] {
+        get {
+            return [p0, p1, p2, p3]
+        }
+    }
+    
     init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
-        
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
     }
  
     /*
