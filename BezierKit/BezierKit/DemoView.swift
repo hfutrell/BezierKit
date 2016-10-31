@@ -58,7 +58,7 @@ class DemoView: NSView, DraggableDelegate {
     
     var curve: CubicBezier?
     
-    var draggables: [Draggable]
+    var draggables: [Draggable] = [Draggable]()
     var selectedDraggable: Draggable?
     
     var cp0: Draggable?
@@ -74,14 +74,12 @@ class DemoView: NSView, DraggableDelegate {
     
     required init?(coder: NSCoder) {
         
-        self.draggables = [Draggable]()
-
         super.init(coder: coder)
 
-        self.cp0 = self.addDraggable(initialLocation: BKPoint(x: 100, y: 25), radius: 3)
-        self.cp1 = self.addDraggable(initialLocation: BKPoint(x: 10, y: 90), radius: 3)
-        self.cp2 = self.addDraggable(initialLocation: BKPoint(x: 110, y: 100), radius: 3)
-        self.cp3 = self.addDraggable(initialLocation: BKPoint(x: 150, y: 195), radius: 3)
+        self.cp0 = self.addDraggable(initialLocation: BKPoint(x: 100, y: 25), radius: 7)
+        self.cp1 = self.addDraggable(initialLocation: BKPoint(x: 10, y: 90), radius: 7)
+        self.cp2 = self.addDraggable(initialLocation: BKPoint(x: 110, y: 100), radius: 7)
+        self.cp3 = self.addDraggable(initialLocation: BKPoint(x: 150, y: 195), radius: 7)
 
         self.updateCurves()
 
