@@ -27,12 +27,10 @@ class Draggable {
         self.callback = callback
     }
     convenience init(initialLocation location: BKPoint, radius: Double) {
-        
         let callback: DraggableCallback = { (dragPosition: BKPoint) -> (BKPoint) in
             return dragPosition
         }
         self.init(initialLocation: location, radius: radius, callback: callback)
-        
     }
     func updateLocation(_ location: BKPoint) {
         let updatedLocation = self.callback(location)
@@ -43,10 +41,8 @@ class Draggable {
     }
     func containsLocation(_ location: BKPoint) -> Bool {
         let c = self.cursorRect as CGRect
-        print("%@ contains location %@", self.cursorRect, location)
         return c.contains(location)
     }
-    
     var cursorRect: NSRect {
         get {
             let r = self.radius
@@ -77,7 +73,6 @@ class DemoView: NSView, DraggableDelegate {
     }
     
     required init?(coder: NSCoder) {
-        NSLog("init with coder")
         
         self.draggables = [Draggable]()
 
