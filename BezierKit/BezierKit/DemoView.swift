@@ -98,8 +98,27 @@ class DemoView: NSView, DraggableDelegate {
         context.setFillColor(NSColor.white.cgColor)
         context.fill(self.bounds)
         
-        Draw.drawSkeleton(context, curve: curve!)
-        Draw.drawCurve(context, curve: curve!)
+        Draw.reset(context)
+        
+        let p1 = BKPoint(x: 110, y: 50)
+        let B = BKPoint(x: 50, y: 80)
+        let p3 = BKPoint(x:135, y:100)
+        let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
+        let curves: [CubicBezier] = tvalues.map({
+            (t: CGFloat) -> (CubicBezier) in
+                return CubicBezier(fromPointsWithS: p1, B: B, E: p3, t: t)
+            }
+        )
+        
+        let offset = BKPoint(x: 0.0, y: 0.0)
+        for curve in curves {
+            Draw.setRandomColor(context)
+            Draw.drawCurve(context, curve: curve, offset: offset)
+        }
+        Draw.setColor(context, color: Draw.black)
+        Draw.drawCircle(context, center: curves[0].points[0], radius: 3, offset: offset)
+        Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
+        Draw.drawCircle(context, center: B, radius: 3, offset: offset);
         
     }
     
