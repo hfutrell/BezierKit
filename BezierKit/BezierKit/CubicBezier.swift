@@ -8,10 +8,6 @@
 
 import AppKit
 
-typealias BKPoint = CGPoint
-typealias BKFloat = CGFloat
-typealias BKRect = CGRect
-
 class CubicBezier {
     
     let p0, p1, p2, p3: BKPoint

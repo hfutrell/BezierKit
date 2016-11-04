@@ -8,41 +8,6 @@
 
 import Foundation
 
-extension CGPoint {
-    var length: CGFloat {
-        return sqrt(self.lengthSquared)
-    }
-    var lengthSquared: CGFloat {
-        let x = self.x
-        let y = self.y
-        return x * x + y * y
-    }
-    func normalize() -> CGPoint {
-        return self / self.length
-    }
-}
-func += ( left: inout CGPoint, right: CGPoint) {
-    return left = left + right
-}
-func -= ( left: inout CGPoint, right: CGPoint) {
-    return left = left - right
-}
-func + (left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x + right.x, y: left.y + right.y)
-}
-func - (left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x - right.x, y: left.y - right.y)
-}
-func / (left: CGPoint, right: CGFloat) -> CGPoint {
-    return CGPoint(x: left.x / right, y: left.y / right)
-}
-func * (left: CGFloat, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left * right.x, y: left * right.y)
-}
-func * (left: CGPoint, right: CGFloat) -> CGPoint {
-    return CGPoint(x: left.x * right, y: left.y * right)
-}
-
 class Draw {
     
     static let lightGrey = CGColor(red: 211.0 / 255.0, green: 211.0 / 255.0, blue: 211.0 / 255.0, alpha: 1.0)
