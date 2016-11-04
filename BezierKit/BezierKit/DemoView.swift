@@ -60,11 +60,7 @@ class DemoView: NSView, DraggableDelegate {
     
     var draggables: [Draggable] = [Draggable]()
     var selectedDraggable: Draggable?
-    
-    var cp0: Draggable?
-    var cp1: Draggable?
-    var cp2: Draggable?
-    var cp3: Draggable?
+    var cp0, cp1, cp2, cp3: Draggable?
 
     override var isFlipped: Bool {
         get {
