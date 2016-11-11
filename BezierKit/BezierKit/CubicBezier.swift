@@ -11,6 +11,7 @@ import AppKit
 class CubicBezier {
     
     let p0, p1, p2, p3: BKPoint
+    let order = 3
     
     var points: [BKPoint] {
         get {

@@ -26,10 +26,10 @@ class DemoView: NSView, DraggableDelegate {
         
         super.init(coder: coder)
 
-        self.cp0 = self.addDraggable(initialLocation: BKPoint(x: 100, y: 25), radius: 7)
-        self.cp1 = self.addDraggable(initialLocation: BKPoint(x: 10, y: 90), radius: 7)
-        self.cp2 = self.addDraggable(initialLocation: BKPoint(x: 110, y: 100), radius: 7)
-        self.cp3 = self.addDraggable(initialLocation: BKPoint(x: 150, y: 195), radius: 7)
+        self.cp0 = self.addDraggable(initialLocation: CGPoint(x: 100, y: 25), radius: 7)
+        self.cp1 = self.addDraggable(initialLocation: CGPoint(x: 10, y: 90), radius: 7)
+        self.cp2 = self.addDraggable(initialLocation: CGPoint(x: 110, y: 100), radius: 7)
+        self.cp3 = self.addDraggable(initialLocation: CGPoint(x: 150, y: 195), radius: 7)
 
         self.updateCurves()
 
@@ -37,15 +37,15 @@ class DemoView: NSView, DraggableDelegate {
     
     func updateCurves() {
         
-        self.curve = CubicBezier(p0: cp0!.location,
-                                 p1: cp1!.location,
-                                 p2: cp2!.location,
-                                 p3: cp3!.location)
+        self.curve = CubicBezier(p0: cp0!.bkLocation,
+                                 p1: cp1!.bkLocation,
+                                 p2: cp2!.bkLocation,
+                                 p3: cp3!.bkLocation)
 
         
     }
     
-    func draggable(_ draggable: Draggable, didUpdateLocation location: BKPoint) {
+    func draggable(_ draggable: Draggable, didUpdateLocation location: CGPoint) {
         self.updateCurves()
         self.resetCursorRects()
         self.setNeedsDisplay(self.bounds)
@@ -61,7 +61,7 @@ class DemoView: NSView, DraggableDelegate {
         }
     }
     
-    func addDraggable(initialLocation location: BKPoint, radius: Double) -> Draggable {
+    func addDraggable(initialLocation location: CGPoint, radius: CGFloat) -> Draggable {
         let draggable = Draggable(initialLocation: location, radius: radius)
         draggable.delegate = self
         self.draggables.append(draggable)

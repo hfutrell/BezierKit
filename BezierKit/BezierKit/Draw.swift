@@ -110,16 +110,16 @@ class Draw {
     
     static func drawCurve(_ context: CGContext, curve: CubicBezier, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
-        context.move(to: curve.p0 + offset)
-        context.addCurve(to: curve.p3 + offset,
-                         control1: curve.p1 + offset,
-                         control2: curve.p2 + offset)
+        context.move(to: (curve.p0 + offset).toCGPoint())
+        context.addCurve(to: (curve.p3 + offset).toCGPoint(),
+                         control1: (curve.p1 + offset).toCGPoint(),
+                         control2: (curve.p2 + offset).toCGPoint())
         context.strokePath()
     }
     
-    static func drawCircle(_ context: CGContext, center: BKPoint, radius r : Double, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+    static func drawCircle(_ context: CGContext, center: BKPoint, radius r : BKFloat, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
-        context.addEllipse(in: CGRect(origin: center - CGPoint(x: r, y: r),
+        context.addEllipse(in: CGRect(origin: CGPoint(x: center.x - r, y: center.y - r),
                             size: CGSize(width: 2.0 * r, height: 2.0 * r))
                             )
         context.strokePath()
@@ -138,8 +138,8 @@ class Draw {
                   to p1: BKPoint,
                   offset: BKPoint=BKPoint(x: 0.0, y: 0.0)) {
         context.beginPath()
-        context.move(to: p0 + offset)
-        context.addLine(to: p1 + offset)
+        context.move(to: (p0 + offset).toCGPoint())
+        context.addLine(to: (p1 + offset).toCGPoint())
         context.strokePath()
     }
  
