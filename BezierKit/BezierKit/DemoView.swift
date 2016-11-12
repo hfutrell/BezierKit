@@ -8,45 +8,119 @@
 
 import AppKit
 
+struct Demo {
+    var controlPoints: [CGPoint]
+    var drawFunction: (_ context: CGContext, _ demo: Demo ) -> Void
+}
+
 class DemoView: NSView, DraggableDelegate {
     
     var curve: CubicBezier?
     
     var draggables: [Draggable] = [Draggable]()
     var selectedDraggable: Draggable?
-    var cp0, cp1, cp2, cp3: Draggable?
 
+    var demos: [Demo] = []
+    
+    
+    var currentDemo: Demo? = nil {
+        didSet {
+            self.clearDraggables()
+            for p in self.currentDemo!.controlPoints {
+                self.addDraggable(initialLocation: p, radius: 7)
+            }
+            self.setNeedsDisplay(self.bounds)
+        }
+    }
+    
     override var isFlipped: Bool {
         get {
             return true
         }
     }
     
+    func registerDemo(_ demo: Demo) {
+        self.demos.append(demo)
+    }
+    
+
     required init?(coder: NSCoder) {
         
         super.init(coder: coder)
+        
+        let controlPoints = [CGPoint(x: 100, y: 25),
+                             CGPoint(x: 10, y: 90),
+                             CGPoint(x: 110, y: 100),
+                             CGPoint(x: 150, y: 195)]
+        
+        // warning, these blocks introduce memory leaks!
+        
+        let demo1 = Demo(controlPoints: controlPoints, drawFunction: { (context: CGContext, demo: Demo) in
+            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
+                                     p1: self.draggables[1].bkLocation,
+                                     p2: self.draggables[2].bkLocation,
+                                     p3: self.draggables[3].bkLocation
+            );
+            Draw.drawSkeleton(context, curve: curve)
+            Draw.drawCurve(context, curve: curve)
+        })
+        let demo2 = Demo(controlPoints: [], drawFunction: { (context: CGContext, demo: Demo) in
+            let p1 = BKPoint(x: 110, y: 50)
+            let B = BKPoint(x: 50, y: 80)
+            let p3 = BKPoint(x:135, y:100)
+            let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
+            let curves: [CubicBezier] = tvalues.map({
+                (t: CGFloat) -> (CubicBezier) in
+                    return CubicBezier(fromPointsWithS: p1, B: B, E: p3, t: t)
+                }
+            )
+    
+            let offset = BKPoint(x: 0.0, y: 0.0)
+            for curve in curves {
+                Draw.setRandomColor(context)
+                Draw.drawCurve(context, curve: curve, offset: offset)
+            }
+            Draw.setColor(context, color: Draw.black)
+            Draw.drawCircle(context, center: curves[0].points[0], radius: 3, offset: offset)
+            Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
+            Draw.drawCircle(context, center: B, radius: 3, offset: offset);
+        })
+        let demo3 = Demo(controlPoints: controlPoints, drawFunction: { (context: CGContext, demo: Demo) in
+            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
+                                     p1: self.draggables[1].bkLocation,
+                                     p2: self.draggables[2].bkLocation,
+                                     p3: self.draggables[3].bkLocation
+            );
+            Draw.drawSkeleton(context, curve: curve);
+            let LUT = curve.generateLookupTable(withSteps: 16);
+            
+            for p in LUT {
+                Draw.drawCircle(context, center: p, radius: 2);
+            }
+            
 
-        self.cp0 = self.addDraggable(initialLocation: CGPoint(x: 100, y: 25), radius: 7)
-        self.cp1 = self.addDraggable(initialLocation: CGPoint(x: 10, y: 90), radius: 7)
-        self.cp2 = self.addDraggable(initialLocation: CGPoint(x: 110, y: 100), radius: 7)
-        self.cp3 = self.addDraggable(initialLocation: CGPoint(x: 150, y: 195), radius: 7)
+        })
 
-        self.updateCurves()
-
+        
+        self.registerDemo(demo1)
+        self.registerDemo(demo2)
+        self.registerDemo(demo3)
+        
+        postInit()
+        
     }
     
-    func updateCurves() {
-        
-        self.curve = CubicBezier(p0: cp0!.bkLocation,
-                                 p1: cp1!.bkLocation,
-                                 p2: cp2!.bkLocation,
-                                 p3: cp3!.bkLocation)
-
-        
+    func postInit() {
+        self.currentDemo = self.demos[1]
+    }
+    
+    func clearDraggables() {
+        self.selectedDraggable = nil
+        self.resetCursorRects()
+        self.draggables = []
     }
     
     func draggable(_ draggable: Draggable, didUpdateLocation location: CGPoint) {
-        self.updateCurves()
         self.resetCursorRects()
         self.setNeedsDisplay(self.bounds)
     }
@@ -100,40 +174,7 @@ class DemoView: NSView, DraggableDelegate {
         
         Draw.reset(context)
         
-//        let p1 = BKPoint(x: 110, y: 50)
-//        let B = BKPoint(x: 50, y: 80)
-//        let p3 = BKPoint(x:135, y:100)
-//        let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
-//        let curves: [CubicBezier] = tvalues.map({
-//            (t: CGFloat) -> (CubicBezier) in
-//                return CubicBezier(fromPointsWithS: p1, B: B, E: p3, t: t)
-//            }
-//        )
-//        
-//        let offset = BKPoint(x: 0.0, y: 0.0)
-//        for curve in curves {
-//            Draw.setRandomColor(context)
-//            Draw.drawCurve(context, curve: curve, offset: offset)
-//        }
-//        Draw.setColor(context, color: Draw.black)
-//        Draw.drawCircle(context, center: curves[0].points[0], radius: 3, offset: offset)
-//        Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
-//        Draw.drawCircle(context, center: B, radius: 3, offset: offset);
-        
-        
-        var curve = CubicBezier( p0: cp0!.bkLocation,
-                                 p1: cp1!.bkLocation,
-                                 p2: cp2!.bkLocation,
-                                 p3: cp3!.bkLocation
-        );
-        Draw.drawSkeleton(context, curve: curve);
-        let LUT = curve.generateLookupTable(withSteps: 16);
-        
-        for p in LUT {
-            Draw.drawCircle(context, center: p, radius: 2);
-        }
-        
-        
+        currentDemo!.drawFunction(context, currentDemo! )
         
     }
     
