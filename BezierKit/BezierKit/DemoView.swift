@@ -55,7 +55,8 @@ class DemoView: NSView, DraggableDelegate {
         
         // warning, these blocks introduce memory leaks!
         
-        let demo1 = Demo(controlPoints: controlPoints, drawFunction: { (context: CGContext, demo: Demo) in
+        let demo1 = Demo(controlPoints: controlPoints,
+                         drawFunction: { (context: CGContext, demo: Demo) in
             let curve = CubicBezier( p0: self.draggables[0].bkLocation,
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation,
@@ -64,7 +65,8 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawSkeleton(context, curve: curve)
             Draw.drawCurve(context, curve: curve)
         })
-        let demo2 = Demo(controlPoints: [], drawFunction: { (context: CGContext, demo: Demo) in
+        let demo2 = Demo(controlPoints: [],
+                         drawFunction: { (context: CGContext, demo: Demo) in
             let p1 = BKPoint(x: 110, y: 50)
             let B = BKPoint(x: 50, y: 80)
             let p3 = BKPoint(x:135, y:100)
@@ -85,7 +87,8 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
             Draw.drawCircle(context, center: B, radius: 3, offset: offset);
         })
-        let demo3 = Demo(controlPoints: controlPoints, drawFunction: { (context: CGContext, demo: Demo) in
+        let demo3 = Demo(controlPoints: controlPoints,
+                         drawFunction: { (context: CGContext, demo: Demo) in
             let curve = CubicBezier( p0: self.draggables[0].bkLocation,
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation,
@@ -97,8 +100,6 @@ class DemoView: NSView, DraggableDelegate {
             for p in LUT {
                 Draw.drawCircle(context, center: p, radius: 2);
             }
-            
-
         })
 
         
@@ -135,11 +136,10 @@ class DemoView: NSView, DraggableDelegate {
         }
     }
     
-    func addDraggable(initialLocation location: CGPoint, radius: CGFloat) -> Draggable {
+    func addDraggable(initialLocation location: CGPoint, radius: CGFloat) {
         let draggable = Draggable(initialLocation: location, radius: radius)
         draggable.delegate = self
         self.draggables.append(draggable)
-        return draggable
     }
     
     override func mouseDown(with event: NSEvent) {
