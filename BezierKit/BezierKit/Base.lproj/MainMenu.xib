@@ -688,15 +688,38 @@
                 <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Ql-9U-0la" customClass="DemoView" customModule="BezierKit">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                    <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="wvE-Cv-9ww">
+                        <rect key="frame" x="246" y="17" width="217" height="26"/>
+                        <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jdf-yq-Fom" id="m9M-k6-Mjf">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" id="Bk2-1J-eMx">
+                                <items>
+                                    <menuItem title="Item 1" state="on" id="jdf-yq-Fom"/>
+                                    <menuItem title="Item 2" id="mfp-je-dSu"/>
+                                    <menuItem title="Item 3" id="6Hb-cH-LMj"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="popupActionWithSender:" target="0Ql-9U-0la" id="7VX-9X-gzb"/>
+                        </connections>
+                    </popUpButton>
+                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="0Ql-9U-0la" customClass="DemoView" customModule="BezierKit">
+                        <rect key="frame" x="0.0" y="61" width="480" height="299"/>
+                        <connections>
+                            <outlet property="popup" destination="wvE-Cv-9ww" id="ipp-ZA-5aE"/>
+                        </connections>
                     </customView>
                 </subviews>
                 <constraints>
-                    <constraint firstItem="0Ql-9U-0la" firstAttribute="height" secondItem="EiT-Mj-1SZ" secondAttribute="height" id="ZUd-rx-3cd"/>
+                    <constraint firstItem="0Ql-9U-0la" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" id="7Dd-xa-Yrf"/>
+                    <constraint firstItem="wvE-Cv-9ww" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="248" id="CON-Sv-mgx"/>
+                    <constraint firstAttribute="bottom" secondItem="wvE-Cv-9ww" secondAttribute="bottom" constant="20" id="M1i-30-QR5"/>
                     <constraint firstItem="0Ql-9U-0la" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" id="kfL-Ru-2At"/>
                     <constraint firstAttribute="trailing" secondItem="0Ql-9U-0la" secondAttribute="trailing" id="neU-ws-Oep"/>
-                    <constraint firstItem="0Ql-9U-0la" firstAttribute="width" secondItem="EiT-Mj-1SZ" secondAttribute="width" id="tAC-p2-gVb"/>
+                    <constraint firstAttribute="trailing" secondItem="wvE-Cv-9ww" secondAttribute="trailing" constant="20" id="q37-t8-TiB"/>
+                    <constraint firstItem="wvE-Cv-9ww" firstAttribute="top" secondItem="0Ql-9U-0la" secondAttribute="bottom" constant="20" id="yv4-e6-Z6Y"/>
                 </constraints>
             </view>
         </window>

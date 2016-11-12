@@ -8,12 +8,22 @@
 
 import AppKit
 
+typealias DemoDrawFunction = (_ context: CGContext, _ demo: Demo ) -> Void
+
 struct Demo {
+    var title: String
     var controlPoints: [CGPoint]
-    var drawFunction: (_ context: CGContext, _ demo: Demo ) -> Void
+    var quadraticDrawFunction: DemoDrawFunction
+    var cubicDrawFunction: DemoDrawFunction
 }
 
 class DemoView: NSView, DraggableDelegate {
+    
+    @IBOutlet var popup: NSPopUpButton!
+
+    @IBAction func popupAction(sender: NSPopUpButton){
+        self.currentDemo = self.demos[sender.indexOfSelectedItem]
+    }
     
     var curve: CubicBezier?
     
@@ -29,6 +39,7 @@ class DemoView: NSView, DraggableDelegate {
             for p in self.currentDemo!.controlPoints {
                 self.addDraggable(initialLocation: p, radius: 7)
             }
+            self.resetCursorRects()
             self.setNeedsDisplay(self.bounds)
         }
     }
@@ -55,8 +66,10 @@ class DemoView: NSView, DraggableDelegate {
         
         // warning, these blocks introduce memory leaks!
         
-        let demo1 = Demo(controlPoints: controlPoints,
-                         drawFunction: { (context: CGContext, demo: Demo) in
+        let demo1 = Demo(title: "new Bezier(...)",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
             let curve = CubicBezier( p0: self.draggables[0].bkLocation,
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation,
@@ -65,8 +78,10 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawSkeleton(context, curve: curve)
             Draw.drawCurve(context, curve: curve)
         })
-        let demo2 = Demo(controlPoints: [],
-                         drawFunction: { (context: CGContext, demo: Demo) in
+        let demo2 = Demo(title: "Bezier.quadraticFromPoints",
+                         controlPoints: [],
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
             let p1 = BKPoint(x: 110, y: 50)
             let B = BKPoint(x: 50, y: 80)
             let p3 = BKPoint(x:135, y:100)
@@ -87,8 +102,10 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
             Draw.drawCircle(context, center: B, radius: 3, offset: offset);
         })
-        let demo3 = Demo(controlPoints: controlPoints,
-                         drawFunction: { (context: CGContext, demo: Demo) in
+        let demo3 = Demo(title: ".getLUT(steps)",
+                        controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
             let curve = CubicBezier( p0: self.draggables[0].bkLocation,
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation,
@@ -107,12 +124,19 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo2)
         self.registerDemo(demo3)
         
-        postInit()
-        
     }
     
-    func postInit() {
-        self.currentDemo = self.demos[1]
+    override func awakeFromNib() {
+        
+        let index: Int = 1
+        
+        self.currentDemo = self.demos[index]
+        
+        self.popup.removeAllItems()
+        for demo in self.demos {
+            self.popup.addItem(withTitle: demo.title)
+        }
+        self.popup.selectItem(at: index)
     }
     
     func clearDraggables() {
@@ -143,8 +167,7 @@ class DemoView: NSView, DraggableDelegate {
     }
     
     override func mouseDown(with event: NSEvent) {
-        var location = self.convert(event.locationInWindow, to: self)
-        location.y = self.bounds.height - location.y
+        let location = self.superview!.convert(event.locationInWindow, to: self)
         for d in self.draggables {
             if d.containsLocation(location) {
                 self.selectedDraggable = d
@@ -155,8 +178,7 @@ class DemoView: NSView, DraggableDelegate {
     
     override func mouseDragged(with event: NSEvent) {
         if let draggable : Draggable = self.selectedDraggable {
-            var location = self.convert(event.locationInWindow, to: self)
-            location.y = self.bounds.height - location.y
+            let location = self.superview!.convert(event.locationInWindow, to: self)
             draggable.updateLocation(location)
         }
     }
@@ -174,7 +196,7 @@ class DemoView: NSView, DraggableDelegate {
         
         Draw.reset(context)
         
-        currentDemo!.drawFunction(context, currentDemo! )
+        currentDemo!.cubicDrawFunction(context, currentDemo! )
         
     }
     
