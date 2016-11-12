@@ -36,6 +36,8 @@ struct BKPoint {
     }
 }
 
+let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0, z: 0.0)
+
 extension CGPoint {
     init(_ p: BKPoint) {
         self.x = p.x

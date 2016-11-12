@@ -11,7 +11,8 @@ import AppKit
 class CubicBezier {
     
     let p0, p1, p2, p3: BKPoint
-    let order = 3
+    let order: Int = 3
+    let threeD: Bool = false
     
     var points: [BKPoint] {
         get {
@@ -76,13 +77,90 @@ class CubicBezier {
         return 0.0
     }
     
-    func eval(t: BKFloat) -> BKFloat {
-    /*
-        Calculates the point on the curve for a given t value between 0 and 1 (inclusive)
-     */
-        return 0.0
+    func compute(_ t: BKFloat) -> BKPoint {
+        // shortcuts
+        if(t==0) {
+            return self.points[0]
+        }
+        if(t==1) {
+            return self.points[self.order]
+        }
+        
+        var p = self.points
+        let mt = 1-t;
+        
+        // linear?
+        if self.order == 1 {
+            var value = BKPoint(
+                x: mt*p[0].x + t*p[1].x,
+                y: mt*p[0].y + t*p[1].y
+            )
+            if self.threeD {
+                value.z = mt*p[0].z + t*p[1].z
+            }
+            return value
+        }
+        
+        // quadratic/cubic curve?
+        if self.order < 4 {
+            let mt2: BKFloat = mt*mt
+            let t2: BKFloat = t*t
+            var a: BKFloat = 0
+            var b: BKFloat = 0
+            var c: BKFloat = 0
+            var d: BKFloat = 0
+            if self.order == 2 {
+                p = [p[0], p[1], p[2], BKPointZero]
+                a = mt2
+                b = mt * t*2
+                c = t2
+            }
+            else if self.order == 3 {
+                a = mt2 * mt
+                b = mt2 * t * 3.0
+                c = mt * t2 * 3.0
+                d = t * t2
+            }
+            var ret = BKPoint(
+                x: a*p[0].x + b*p[1].x + c*p[2].x + d*p[3].x,
+                y: a*p[0].y + b*p[1].y + c*p[2].y + d*p[3].y
+            )
+            if self.threeD {
+                ret.z = a*p[0].z + b*p[1].z + c*p[2].z + d*p[3].z;
+            }
+            return ret
+        }
+        
+        // higher order curves: use de Casteljau's computation
+//        var dCpts = JSON.parse(JSON.stringify(this.points));
+//        while dCpts.length > 1 {
+//            for (var i=0; i<dCpts.length-1; i++) {
+//                dCpts[i] = {
+//                    x: dCpts[i].x + (dCpts[i+1].x - dCpts[i].x) * t,
+//                    y: dCpts[i].y + (dCpts[i+1].y - dCpts[i].y) * t
+//                };
+//                if (typeof dCpts[i].z !== "undefined") {
+//                    dCpts[i] = dCpts[i].z + (dCpts[i+1].z - dCpts[i].z) * t
+//                }
+//            }
+//            dCpts.splice(dCpts.length-1, 1);
+//        }
+//        return dCpts[0];
+        assert(false)  // todo: higher order unsupported for now
+        return BKPointZero
     }
     
+    func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
+        assert(steps >= 0)
+        var table: [BKPoint] = []
+        for i in 0 ... steps {
+            let t = BKFloat(i) / BKFloat(steps)
+            table.append(self.compute(t))
+        }
+        
+        return table
+    }
+ 
 //    func derivative(t: BKFloat) -> BKPoint {
 //    /*
 //        Calculates the curve tangent at the specified t value. Note that this yields a not-normalized vector {x: dx, y: dy}.
