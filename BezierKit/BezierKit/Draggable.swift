@@ -41,7 +41,7 @@ class Draggable {
     }
     public func containsLocation(_ location: CGPoint) -> Bool {
         let c = self.cursorRect as CGRect
-        return c.contains(CGPoint(x: location.y, y: location.y))
+        return c.contains(CGPoint(x: location.x, y: location.y))
     }
     public var cursorRect: NSRect {
         get {
