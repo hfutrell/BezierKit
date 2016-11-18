@@ -64,7 +64,7 @@ class DemoView: NSView, DraggableDelegate {
                              CGPoint(x: 110, y: 100),
                              CGPoint(x: 150, y: 195)]
         
-        // warning, these blocks introduce memory leaks!
+        // warning, these blocks introduce memory leaks! (because they reference self)
         
         let demo1 = Demo(title: "new Bezier(...)",
                          controlPoints: controlPoints,
@@ -91,7 +91,6 @@ class DemoView: NSView, DraggableDelegate {
                     return CubicBezier(fromPointsWithS: p1, B: B, E: p3, t: t)
                 }
             )
-    
             let offset = BKPoint(x: 0.0, y: 0.0)
             for curve in curves {
                 Draw.setRandomColor(context)
@@ -118,12 +117,43 @@ class DemoView: NSView, DraggableDelegate {
                 Draw.drawCircle(context, center: p, radius: 2);
             }
         })
+        let demo4 = Demo(title: ".length()",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
+                            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
+                                                     p1: self.draggables[1].bkLocation,
+                                                     p2: self.draggables[2].bkLocation,
+                                                     p3: self.draggables[3].bkLocation
+                            );
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            let arclength = curve.length()
+                            let offset = curve.offset(distance: -10)
+                            let last = offset.count-1
+                            for idx in 0 ..< offset.count {
+                                let c: CubicBezier = offset[idx]
+                                Draw.drawCurve(context, curve: c);
+                                if(idx==last) {
+                                    let p1 = curve.offset(t: 0.95, distance: -15);
+                                    let p2 = c.compute(1);
+                                    let p3 = curve.offset(t: 0.95, distance: -5);
+                                    Draw.drawLine(context, from: p1, to: p2);
+                                    Draw.drawLine(context, from: p2, to: p3);
+                                    let label = String(format: "%3.1f px", arclength)
+                                    Draw.drawText(context, text: label, offset: BKPoint(x: p2.x+7, y: p2.y-3));
+                                }
+                            }
+        })
+
 
         
         self.registerDemo(demo1)
         self.registerDemo(demo2)
         self.registerDemo(demo3)
-        
+        self.registerDemo(demo4)
+
     }
     
     override func awakeFromNib() {

@@ -12,12 +12,22 @@ class CubicBezier {
     
     let p0, p1, p2, p3: BKPoint
     let order: Int = 3
-    let threeD: Bool = false
+    private let threeD: Bool = false // todo: fix this
+    private let linear: Bool = false // todo: fix this
     
     var points: [BKPoint] {
         get {
             return [p0, p1, p2, p3]
         }
+    }
+    
+    init(points: [BKPoint]) {
+        // todo: implement
+        assert(false, "constructor not yet supported")
+        self.p0 = BKPointZero
+        self.p1 = BKPointZero
+        self.p2 = BKPointZero
+        self.p3 = BKPointZero
     }
     
     init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
@@ -131,6 +141,7 @@ class CubicBezier {
             return ret
         }
         
+// todo: implement me
         // higher order curves: use de Casteljau's computation
 //        var dCpts = JSON.parse(JSON.stringify(this.points));
 //        while dCpts.length > 1 {
@@ -160,7 +171,51 @@ class CubicBezier {
         
         return table
     }
- 
+    
+    func normal(_ t: BKFloat) -> BKPoint {
+        return BKPointZero
+    }
+    
+    /*
+        Reduces a curve to a collection of "simple" subcurves, where a simpleness is defined as having all control points on the same side of the baseline (cubics having the additional constraint that the control-to-end-point lines may not cross), and an angle between the end point normals no greater than 60 degrees.
+     
+        The main reason this function exists is to make it possible to scale curves. As mentioned in the offset function, curves cannot be offset without cheating, and the cheating is implemented in this function. The array of simple curves that this function yields can safely be scaled.
+     
+
+    */
+    func reduce() -> [CubicBezier] {
+        return []
+    }
+    
+    /*
+        Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
+     */
+    func scale(distance d: BKFloat) -> CubicBezier {
+        // todo: implement me
+        return CubicBezier(points: [])
+    }
+    
+    func offset(distance d: BKFloat) -> [CubicBezier] {
+        if self.linear {
+            let n = self.normal(0);
+            let coords: [BKPoint] = self.points.map({(p: BKPoint) -> BKPoint in
+                return p + n * d
+            })
+            return [CubicBezier(points: coords)]
+        }
+        // for non-linear curves we need to create a set of curves
+        let reduced: [CubicBezier] = self.reduce()
+        return reduced.map({(s: CubicBezier) -> CubicBezier in
+            return s.scale(distance: d)
+        })
+    }
+    
+    func offset(t: BKFloat, distance d: BKFloat) -> BKPoint {
+        let c = self.compute(t);
+        let n = self.normal(t);
+        return c + n * d
+    }
+    
 //    func derivative(t: BKFloat) -> BKPoint {
 //    /*
 //        Calculates the curve tangent at the specified t value. Note that this yields a not-normalized vector {x: dx, y: dy}.
