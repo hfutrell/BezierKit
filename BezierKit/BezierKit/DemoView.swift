@@ -74,7 +74,7 @@ class DemoView: NSView, DraggableDelegate {
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation,
                                      p3: self.draggables[3].bkLocation
-            );
+            )
             Draw.drawSkeleton(context, curve: curve)
             Draw.drawCurve(context, curve: curve)
         })
@@ -99,7 +99,7 @@ class DemoView: NSView, DraggableDelegate {
             Draw.setColor(context, color: Draw.black)
             Draw.drawCircle(context, center: curves[0].points[0], radius: 3, offset: offset)
             Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
-            Draw.drawCircle(context, center: B, radius: 3, offset: offset);
+            Draw.drawCircle(context, center: B, radius: 3, offset: offset)
         })
         let demo3 = Demo(title: ".getLUT(steps)",
                         controlPoints: controlPoints,
@@ -109,12 +109,12 @@ class DemoView: NSView, DraggableDelegate {
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation,
                                      p3: self.draggables[3].bkLocation
-            );
-            Draw.drawSkeleton(context, curve: curve);
-            let LUT = curve.generateLookupTable(withSteps: 16);
+            )
+            Draw.drawSkeleton(context, curve: curve)
+            let LUT = curve.generateLookupTable(withSteps: 16)
             
             for p in LUT {
-                Draw.drawCircle(context, center: p, radius: 2);
+                Draw.drawCircle(context, center: p, radius: 2)
             }
         })
         let demo4 = Demo(title: ".length()",
@@ -125,7 +125,7 @@ class DemoView: NSView, DraggableDelegate {
                                                      p1: self.draggables[1].bkLocation,
                                                      p2: self.draggables[2].bkLocation,
                                                      p3: self.draggables[3].bkLocation
-                            );
+                            )
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -134,25 +134,38 @@ class DemoView: NSView, DraggableDelegate {
                             let last = offset.count-1
                             for idx in 0 ..< offset.count {
                                 let c: CubicBezier = offset[idx]
-                                Draw.drawCurve(context, curve: c);
+                                Draw.drawCurve(context, curve: c)
                                 if(idx==last) {
-                                    let p1 = curve.offset(t: 0.95, distance: -15);
-                                    let p2 = c.compute(1);
-                                    let p3 = curve.offset(t: 0.95, distance: -5);
-                                    Draw.drawLine(context, from: p1, to: p2);
-                                    Draw.drawLine(context, from: p2, to: p3);
+                                    let p1 = curve.offset(t: 0.95, distance: -15)
+                                    let p2 = c.compute(1)
+                                    let p3 = curve.offset(t: 0.95, distance: -5)
+                                    Draw.drawLine(context, from: p1, to: p2)
+                                    Draw.drawLine(context, from: p2, to: p3)
                                     let label = String(format: "%3.1f px", arclength)
-                                    Draw.drawText(context, text: label, offset: BKPoint(x: p2.x+7, y: p2.y-3));
+                                    Draw.drawText(context, text: label, offset: BKPoint(x: p2.x+7, y: p2.y-3))
                                 }
                             }
         })
-
-
+        let demo5 = Demo(title: ".get(t) and .compute(t)",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
+                            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
+                                                  p1: self.draggables[1].bkLocation,
+                                                  p2: self.draggables[2].bkLocation,
+                                                  p3: self.draggables[3].bkLocation
+                            )
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            Draw.drawPoint(context, origin: curve.compute(0.5))
+        })
         
         self.registerDemo(demo1)
         self.registerDemo(demo2)
         self.registerDemo(demo3)
         self.registerDemo(demo4)
+        self.registerDemo(demo5)
 
     }
     
