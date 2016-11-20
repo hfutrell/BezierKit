@@ -160,12 +160,32 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.setColor(context, color: Draw.red)
                             Draw.drawPoint(context, origin: curve.compute(0.5))
         })
+        let demo6 = Demo(title: ".derivative(t)",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
+                            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
+                                                     p1: self.draggables[1].bkLocation,
+                                                     p2: self.draggables[2].bkLocation,
+                                                     p3: self.draggables[3].bkLocation
+                            )
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            for t in stride(from: 0, through: 1, by: 0.1) {
+                                let pt = curve.compute(BKFloat(t));
+                                let dv = curve.derivative(BKFloat(t));
+                                Draw.drawLine(context, from: pt, to: pt + dv );
+                            }
+        })
+
         
         self.registerDemo(demo1)
         self.registerDemo(demo2)
         self.registerDemo(demo3)
         self.registerDemo(demo4)
         self.registerDemo(demo5)
+        self.registerDemo(demo6)
 
     }
     
