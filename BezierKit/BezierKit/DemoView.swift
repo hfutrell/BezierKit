@@ -64,6 +64,12 @@ class DemoView: NSView, DraggableDelegate {
                              CGPoint(x: 110, y: 100),
                              CGPoint(x: 150, y: 195)]
         
+        let hullPoints = [CGPoint(x: 100, y: 25),
+                             CGPoint(x: 10, y: 90),
+                             CGPoint(x: 50, y: 185),
+                             CGPoint(x: 170, y: 175)]
+
+        
         // warning, these blocks introduce memory leaks! (because they reference self)
         
         let demo1 = Demo(title: "new Bezier(...)",
@@ -173,6 +179,19 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawLine(context, from: pt, to: pt + dv * d );
                             }
         })
+        let demo11 = Demo(title: ".hull(t)",
+                         controlPoints: hullPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            let hull = curve.hull(0.5)
+                            Draw.drawHull(context, hull: hull);
+                            Draw.drawCircle(context, center: hull[hull.count-1], radius: 5);
+        })
+
 
 
         
@@ -183,6 +202,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo5)
         self.registerDemo(demo6)
         self.registerDemo(demo7)
+        self.registerDemo(demo11)
 
     }
     

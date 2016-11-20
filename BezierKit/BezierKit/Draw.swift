@@ -170,4 +170,28 @@ class Draw {
         
     }
     
+    static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
+        context.beginPath();
+        if hull.count == 6 {
+            context.move(to: hull[0].toCGPoint());
+            context.addLine(to: hull[1].toCGPoint());
+            context.addLine(to: hull[2].toCGPoint());
+            context.move(to: hull[3].toCGPoint());
+            context.addLine(to: hull[4].toCGPoint());
+        }
+        else {
+            context.move(to: hull[0].toCGPoint())
+            context.addLine(to: hull[1].toCGPoint());
+            context.addLine(to: hull[2].toCGPoint());
+            context.addLine(to: hull[3].toCGPoint());
+            context.move(to: hull[4].toCGPoint());
+            context.addLine(to: hull[5].toCGPoint());
+            context.addLine(to: hull[6].toCGPoint());
+            context.move(to: hull[7].toCGPoint());
+            context.addLine(to: hull[8].toCGPoint());
+        }
+        context.strokePath();
+    }
+
+    
 }
