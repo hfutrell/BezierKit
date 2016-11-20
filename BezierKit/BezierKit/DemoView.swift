@@ -178,6 +178,22 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawLine(context, from: pt, to: pt + dv );
                             }
         })
+        let demo7 = Demo(title: ".normal(t)",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            let d: BKFloat = 20.0
+                            for t in stride(from: 0, through: 1, by: 0.1) {
+                                let pt = curve.compute(BKFloat(t));
+                                let dv = curve.normal(BKFloat(t));
+                                Draw.drawLine(context, from: pt, to: pt + dv * d );
+                            }
+        })
+
 
         
         self.registerDemo(demo1)
@@ -186,6 +202,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo4)
         self.registerDemo(demo5)
         self.registerDemo(demo6)
+        self.registerDemo(demo7)
 
     }
     
@@ -200,6 +217,13 @@ class DemoView: NSView, DraggableDelegate {
             self.popup.addItem(withTitle: demo.title)
         }
         self.popup.selectItem(at: index)
+    }
+    
+    func draggableCubicCurve() -> CubicBezier {
+        return CubicBezier( p0: self.draggables[0].bkLocation,
+                            p1: self.draggables[1].bkLocation,
+                            p2: self.draggables[2].bkLocation,
+                            p3: self.draggables[3].bkLocation )
     }
     
     func clearDraggables() {
