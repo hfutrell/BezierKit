@@ -69,12 +69,8 @@ class DemoView: NSView, DraggableDelegate {
         let demo1 = Demo(title: "new Bezier(...)",
                          controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
-            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
-                                     p1: self.draggables[1].bkLocation,
-                                     p2: self.draggables[2].bkLocation,
-                                     p3: self.draggables[3].bkLocation
-            )
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+            let curve = self.draggableCubicCurve()
             Draw.drawSkeleton(context, curve: curve)
             Draw.drawCurve(context, curve: curve)
         })
@@ -104,12 +100,8 @@ class DemoView: NSView, DraggableDelegate {
         let demo3 = Demo(title: ".getLUT(steps)",
                         controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
-            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
-                                     p1: self.draggables[1].bkLocation,
-                                     p2: self.draggables[2].bkLocation,
-                                     p3: self.draggables[3].bkLocation
-            )
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+            let curve = self.draggableCubicCurve()
             Draw.drawSkeleton(context, curve: curve)
             let LUT = curve.generateLookupTable(withSteps: 16)
             
@@ -120,12 +112,8 @@ class DemoView: NSView, DraggableDelegate {
         let demo4 = Demo(title: ".length()",
                          controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
-                            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
-                                                     p1: self.draggables[1].bkLocation,
-                                                     p2: self.draggables[2].bkLocation,
-                                                     p3: self.draggables[3].bkLocation
-                            )
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -149,12 +137,8 @@ class DemoView: NSView, DraggableDelegate {
         let demo5 = Demo(title: ".get(t) and .compute(t)",
                          controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
-                            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
-                                                  p1: self.draggables[1].bkLocation,
-                                                  p2: self.draggables[2].bkLocation,
-                                                  p3: self.draggables[3].bkLocation
-                            )
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -163,12 +147,8 @@ class DemoView: NSView, DraggableDelegate {
         let demo6 = Demo(title: ".derivative(t)",
                          controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
-                            let curve = CubicBezier( p0: self.draggables[0].bkLocation,
-                                                     p1: self.draggables[1].bkLocation,
-                                                     p2: self.draggables[2].bkLocation,
-                                                     p3: self.draggables[3].bkLocation
-                            )
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -181,7 +161,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo7 = Demo(title: ".normal(t)",
                          controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
