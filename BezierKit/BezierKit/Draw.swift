@@ -126,6 +126,11 @@ class Draw {
         context.strokePath()
     }
     
+    static func drawPoint(_ context: CGContext, origin o: BKPoint, offset: BKPoint=BKPointZero) {
+        self.drawCircle(context, center: o, radius: 5.0)
+        
+    }
+    
     static func drawPoints(_ context: CGContext,
                     points: [BKPoint],
                     offset: BKPoint=BKPoint(x: 0.0, y: 0.0)) {
