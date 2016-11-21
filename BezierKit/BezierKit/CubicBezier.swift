@@ -353,41 +353,47 @@ class CubicBezier {
         return n
     }
     
-    func extrema() -> (x: [BKFloat], y: [BKFloat], z: [BKFloat]?, values: [BKFloat] ) {
-//        let dims = [0,1,2] // todo: fix this
-//        var result = {}
-//        var roots: [BKFloat] = []
-//        for dim in dims {
-//            let mfn = {(v: BKPoint) -> BKFloat in
-//                switch(dim) {
-//                    case 0:
-//                        return v.x
-//                    case 1:
-//                        return v.y
-//                    case 2:
-//                        return v.z
-//                }
-//            }
-//            var p: [BKFloat] = [mfn(self.dpoints[0])]
-//            result[dim] = Utils.droots(p);
-//            if self.order == 3 {
-//                p = self.dpoints[1].map(mfn);
-//                result[dim] = result[dim].concat(Utils.droots(p));
-//            }
-//            result[dim] = result[dim].filter(
-//                {(t) in
-//                    return (t >= 0 && t <= 1)
-//                }
-//            )
-//            roots += result[dim].sort();
-//        }
-//        roots = roots.sort().filter({(v, idx) in
-//            return (roots.indexOf(v) == idx);
-//        })
-//        result.values = roots
-//        return result
-        
-        return (x: [], y: [], z: [], values: [])
+    func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) { // todo: is xyz used normally? can we stick it in an optional inout?
+        let dims = [0, 1, 2] // todo: cleanup
+        var result: (xyz: [[BKFloat]], values: [BKFloat]) = (xyz: [[],[],[]], values: [])
+        var roots: [BKFloat] = []
+        for dim in dims {
+            let mfn = {(v: BKPoint) -> BKFloat in
+                switch(dim) {
+                    case 0:
+                        return v.x
+                    case 1:
+                        return v.y
+                    case 2:
+                        return v.z
+                    default:
+                        assert(false, "nope!")
+                }
+            }
+            var p: [BKFloat] = self.dpoints[0].map(mfn)
+            result.xyz[dim] = Utils.droots(p);
+            if self.order == 3 {
+                p = self.dpoints[1].map(mfn);
+                result.xyz[dim] += Utils.droots(p);
+            }
+            result.xyz[dim] = result.xyz[dim].filter(
+                {(t) in
+                    return (t >= 0 && t <= 1)
+                }
+            )
+            roots += (result.xyz[dim].sorted())
+        }
+        // todo: cleanup, what was this ugly code even doing in the javascript?
+        var rootsPrime: [BKFloat] = []
+        let sortedRoots = roots.sorted()
+        for idx in 0..<sortedRoots.count {
+            let v: BKFloat = sortedRoots[idx]
+            if sortedRoots.index(of: v) == idx {
+                rootsPrime.append(v)
+            }
+        }
+        result.values = rootsPrime
+        return result
     }
     
     func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {

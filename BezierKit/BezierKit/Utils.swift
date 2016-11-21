@@ -63,6 +63,39 @@ class Utils {
 //        return Utils.lli4(v1,v1.c,v2,v2.c)
 //    }
 
+    static func droots(_ p: [BKFloat]) -> [BKFloat] {
+        // quadratic roots are easy
+        if p.count == 3 {
+            let a = p[0]
+            let b = p[1]
+            let c = p[2]
+            let d = a - 2*b + c;
+            if d != 0 {
+                let m1 = -sqrt(b*b-a*c)
+                let m2 = -a+b
+                let v1 = -( m1+m2)/d
+                let v2 = -(-m1+m2)/d
+                return [v1, v2]
+            }
+            else if (b != c) && (d == 0) {
+                return [(2*b-c)/(2*(b-c))]
+            }
+            return []
+        }
+        
+        // linear roots are even easier
+        if p.count == 2 {
+            let a = p[0]
+            let b = p[1]
+            if a != b {
+                return [a/(a-b)];
+            }
+            return []
+        }
+
+        assert(false, "nope!")
+        return []
+    }
     
     static func lerp(_ r: BKFloat, _ v1: BKPoint, _ v2: BKPoint) -> BKPoint {
         return v1 + (v2 - v1) * r;

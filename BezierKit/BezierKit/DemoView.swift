@@ -193,7 +193,19 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawCircle(context, center: curve.compute(0.25), radius: 3);
                             Draw.drawCircle(context, center: curve.compute(0.75), radius: 3);
         })
-
+        let demo9 = Demo(title: ".extrema()",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.setColor(context, color: Draw.lightGrey)
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            for t in curve.extrema().values {
+                                Draw.drawCircle(context, center: curve.compute(t), radius: 3);
+                            }
+        })
         let demo11 = Demo(title: ".hull(t)",
                          controlPoints: hullPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
@@ -218,6 +230,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo6)
         self.registerDemo(demo7)
         self.registerDemo(demo8)
+        self.registerDemo(demo9)
         self.registerDemo(demo11)
 
     }
