@@ -32,18 +32,17 @@ struct TimeTaggedCurve {
             }
         }
         
-        
         // make sure we bind _t1/_t2 information!
-        let left_t1  = Utils.map(0,  0,1, self._t1, self._t2);
-        let left_t2  = Utils.map(t1, 0,1, self._t1, self._t2);
-        let right_t1 = Utils.map(t1, 0,1, self._t1, self._t2);
-        let right_t2 = Utils.map(1,  0,1, self._t1, self._t2);
+        let left_t1  = Utils.map(0,  0,1, self._t1, self._t2)
+        let left_t2  = Utils.map(t1, 0,1, self._t1, self._t2)
+        let right_t1 = Utils.map(t1, 0,1, self._t1, self._t2)
+        let right_t2 = Utils.map(1,  0,1, self._t1, self._t2)
         
         // no shortcut: use "de Casteljau" iteration.
         var q = self.curve.hull(t1);
 
         let left = self.curve.order == 2 ? CubicBezier(points: [q[0],q[3],q[5]]) : CubicBezier(points: [q[0],q[4],q[7],q[9]])
-        let right = self.curve.order == 2 ? CubicBezier(points: [q[0],q[3],q[5]]) : CubicBezier(points: [q[0],q[4],q[7],q[9]])
+        let right = self.curve.order == 2 ? CubicBezier(points: [q[0],q[3],q[5]]) : CubicBezier(points: [q[9],q[8],q[6],q[3]])
 
         let taggedLeft = TimeTaggedCurve(_t1: left_t1, _t2: left_t2, curve: left)
         let taggedRight = TimeTaggedCurve(_t1: right_t1, _t2: right_t2, curve: right)
@@ -54,7 +53,7 @@ struct TimeTaggedCurve {
                                                     right: taggedRight,
                                                     span: q
             )
-            return result;
+            return result
         }
         
         // if we have a t2, split again:
@@ -394,6 +393,29 @@ class CubicBezier {
     func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {
         let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
         return taggedSelf.split(t1, t2)
+    }
+    
+    func split(at t1: BKFloat) -> (left: CubicBezier, right: CubicBezier) {
+        assert(t1 > 0)
+        assert(t1 < 1)
+        let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
+        if case let .multipleCurves(left, right, _) = taggedSelf.split(t1) {
+            return (left: left.curve, right: right.curve)
+        }
+        else {
+            assert(false, "what?")
+        }
+    }
+    
+    func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezier {
+        assert( t2 > t1 )
+        let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
+        switch taggedSelf.split(t1, t2) {
+            case .multipleCurves(_, let right, _):
+                return right.curve
+            case .singleCurve(let curve):
+                return curve.curve
+        }
     }
     
     lazy var simple: Bool =  {

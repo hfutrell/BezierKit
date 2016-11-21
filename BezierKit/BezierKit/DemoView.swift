@@ -179,6 +179,21 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawLine(context, from: pt, to: pt + dv * d );
                             }
         })
+        let demo8 = Demo(title: ".split(t) and .split(t1,t2)",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.setColor(context, color: Draw.lightGrey)
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            let c = curve.split(from: 0.25, to: 0.75);
+                            Draw.setColor(context, color: Draw.red)
+                            Draw.drawCurve(context, curve: c)
+                            Draw.drawCircle(context, center: curve.compute(0.25), radius: 3);
+                            Draw.drawCircle(context, center: curve.compute(0.75), radius: 3);
+        })
+
         let demo11 = Demo(title: ".hull(t)",
                          controlPoints: hullPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
@@ -202,6 +217,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo5)
         self.registerDemo(demo6)
         self.registerDemo(demo7)
+        self.registerDemo(demo8)
         self.registerDemo(demo11)
 
     }
