@@ -8,6 +8,7 @@
 
 import AppKit
 
+// todo: get rid of this whole stupid struct
 struct TimeTaggedCurve {
     let _t1: BKFloat
     let _t2: BKFloat

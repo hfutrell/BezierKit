@@ -227,6 +227,28 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawHull(context, hull: hull);
                             Draw.drawCircle(context, center: hull[hull.count-1], radius: 5);
         })
+        let demo14 = Demo(title: ".reduce(t)",
+                          controlPoints: controlPoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            let reduced = curve.reduce()
+                            if reduced.count > 0 {
+                                for i in 0..<reduced.count {
+                                    let c = reduced[i].curve
+                                    Draw.setColor(context, color: Draw.black)
+                                    if i > 0 {
+                                        Draw.drawCircle(context, center: c.points[0], radius: 3)
+                                    }
+                                    Draw.setRandomColor(context)
+                                    Draw.drawCurve(context, curve: c)
+                                }
+                            }
+                            else {
+                                Draw.drawCurve(context, curve: curve)
+                            }
+        })
 
 
 
@@ -242,6 +264,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo9)
         self.registerDemo(demo10)
         self.registerDemo(demo11)
+        self.registerDemo(demo14)
 
     }
     
