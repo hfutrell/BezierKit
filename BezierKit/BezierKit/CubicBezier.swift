@@ -590,37 +590,5 @@ class CubicBezier {
         let n = self.normal(t);
         return (c: c, n: n, p: c + n * d)
     }
-
-    
-//    func derivative(t: BKFloat) -> BKPoint {
-//    /*
-//        Calculates the curve tangent at the specified t value. Note that this yields a not-normalized vector {x: dx, y: dy}.
-//     */
-//        return BKPoint(x: 0.0, y: 0.0)
-//    }
-    
-//    func normal(t: BKFloat) -> BKPoint {
-//        
-//    }
-//    
-//    func split(t: BKFloat) -> (b1: CubicBezier, b2: CubicBezier) {
-//        
-//    }
-//    
-//    func horizontalExtrema() -> BKPoint {
-//        
-//    }
-//    
-//    func verticalExtrema() -> BKPoint {
-//        
-//    }
-//    
-//    func boundingRect() -> BKRect {
-//        
-//    }
-//    
-//    func project(p: BKPoint) -> (t: BKFloat, p: BKPoint) {
-//        
-//    }
     
 }
