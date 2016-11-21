@@ -198,7 +198,6 @@ class DemoView: NSView, DraggableDelegate {
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
-                            Draw.setColor(context, color: Draw.lightGrey)
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -206,6 +205,16 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCircle(context, center: curve.compute(t), radius: 3);
                             }
         })
+        let demo10 = Demo(title: ".bbox()",
+                         controlPoints: controlPoints,
+                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: CGColor(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0))
+                            Draw.drawBoundingBox(context, boundingBox: curve.boundingBox)
+            })
         let demo11 = Demo(title: ".hull(t)",
                          controlPoints: hullPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
@@ -231,6 +240,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo7)
         self.registerDemo(demo8)
         self.registerDemo(demo9)
+        self.registerDemo(demo10)
         self.registerDemo(demo11)
 
     }

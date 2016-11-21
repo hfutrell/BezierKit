@@ -80,7 +80,8 @@ class CubicBezier {
     let order: Int = 3
     private let threeD: Bool = false // todo: fix this
     private let linear: Bool = false // todo: fix this
-    
+    let dims: [Int] = [0, 1, 2] // todo: improve
+
     var p0: BKPoint {
         get {
             return self.points[0]
@@ -395,6 +396,44 @@ class CubicBezier {
         result.values = rootsPrime
         return result
     }
+        
+    lazy var boundingBox: BoundingBox = {
+        // todo: this function is fugly
+        let extrema = self.extrema()
+        var result: BoundingBox = BoundingBox(min: BKPointZero, max: BKPointZero)
+        for d in self.dims {
+            let computeDimension = { (t: BKFloat) -> BKFloat in
+                let p = self.compute(t)
+                if ( d == 0 ) {
+                    return p.x
+                }
+                else if ( d == 1 ) {
+                    return p.y
+                }
+                else if ( d == 2 ) {
+                    return p.z
+                }
+                else {
+                    assert(false, "what?")
+                    return 0
+                }
+            }
+            let (min, max) = Utils.getminmax(list: extrema.xyz[d], computeDimension: computeDimension )
+            if ( d == 0 ) {
+                result.min.x = min
+                result.max.x = max
+            }
+            if ( d == 1 ) {
+                result.min.y = min
+                result.max.y = max
+            }
+            if ( d == 2 ) {
+                result.min.z = min
+                result.max.z = max
+            }
+        }
+        return result;
+    }()
     
     func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {
         let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)

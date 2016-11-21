@@ -63,6 +63,28 @@ class Utils {
 //        return Utils.lli4(v1,v1.c,v2,v2.c)
 //    }
 
+    static func getminmax(list: [BKFloat], computeDimension: (BKFloat) -> BKFloat) -> (min: BKFloat, max: BKFloat) {
+        var min = BKFloat.infinity
+        var max = -BKFloat.infinity
+        var listPrime = list
+        if listPrime.index(of: 0) == nil {
+            listPrime.insert(0, at: 0)
+        }
+        if listPrime.index(of :1) == nil {
+            listPrime.append(1)
+        }
+        for t in listPrime {
+            let c = computeDimension(t);
+            if c < min {
+                min = c
+            }
+            if c > max {
+                max = c
+            }
+        }
+        return ( min:min, max: max );
+    }
+    
     static func droots(_ p: [BKFloat]) -> [BKFloat] {
         // quadratic roots are easy
         if p.count == 3 {

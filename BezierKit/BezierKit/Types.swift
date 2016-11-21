@@ -36,6 +36,27 @@ struct BKPoint {
     }
 }
 
+struct BoundingBox {
+    var min: BKPoint
+    var max: BKPoint
+    var mid: BKPoint {
+        get {
+            return (min + max)/2.0
+        }
+    }
+    var size: BKPoint {
+        get {
+            return max - min
+        }
+    }
+    var toCGRect: CGRect {
+        get {
+            let s = self.size
+            return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
+        }
+    }
+}
+
 let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0, z: 0.0)
 
 extension CGPoint {

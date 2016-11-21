@@ -193,5 +193,12 @@ class Draw {
         context.strokePath();
     }
 
+    static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : BKPoint = BKPointZero) {
+        context.beginPath();
+        context.addRect(boundingBox.toCGRect)
+        context.closePath();
+        context.strokePath();
+    }
+
     
 }
