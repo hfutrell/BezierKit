@@ -249,6 +249,30 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
         })
+        let demo16 = Demo(title: ".scale(d)",
+                          controlPoints: controlPoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.setColor(context, color: Draw.black)
+                            let reduced = curve.reduce()
+                            if reduced.count > 0 {
+                                for i in 0..<reduced.count {
+                                    let c = reduced[i].curve
+                                    if i > 0 {
+                                        Draw.drawCircle(context, center: c.points[0], radius: 3)
+                                    }
+                                    Draw.drawCurve(context, curve: c)
+                                }
+                                for i in stride(from: -30, through: 30, by: 10) {
+                                    Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)));
+                                }
+                            }
+                            else {
+                                Draw.drawCurve(context, curve: curve)
+                            }
+            })
 
 
 
@@ -265,6 +289,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo10)
         self.registerDemo(demo11)
         self.registerDemo(demo14)
+        self.registerDemo(demo16)
 
     }
     

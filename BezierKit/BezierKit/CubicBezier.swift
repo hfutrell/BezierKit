@@ -576,8 +576,8 @@ class CubicBezier {
         let r1 = /*distanceFn ? distanceFn(0) :*/ d
         let r2 = /*distanceFn ? distanceFn(1) :*/ d
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
-        let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[0].c)
-        if(o == nil) { // todo: replace with guard let
+        let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
+        if o == nil { // todo: replace with guard let
             assert(false, "cannot scale this curve. Try reducing it first.")
         }
         // move all points by distance 'd' wrt the origin 'o'
