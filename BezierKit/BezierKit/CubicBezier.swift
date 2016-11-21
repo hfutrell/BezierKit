@@ -235,7 +235,7 @@ class CubicBezier {
         return BKPointZero
     }
     
-    lazy var dpoints: [BKPoint] = self.update()
+    lazy var dpoints: [[BKPoint]] = self.update()
     lazy var clockwise: Bool = self.computeDirection()
     
     private func computeDirection() -> Bool {
@@ -244,9 +244,9 @@ class CubicBezier {
         return angle > 0;
     }
     
-    private func update() -> [BKPoint] {
+    private func update() -> [[BKPoint]] {
         // todo: is this function correct? :(
-        var ret: [BKPoint] = [];
+        var ret: [[BKPoint]] = [];
         var p: [BKPoint] = self.points
         for d in (2 ... p.count).reversed() {
             let c = d-1
@@ -255,7 +255,7 @@ class CubicBezier {
                 let dpt: BKPoint = (p[j+1] - p[j]) * BKFloat(c)
                 list.append(dpt)
             }
-            ret += list
+            ret.append(list)
             p = list
         }
         return ret
@@ -277,7 +277,7 @@ class CubicBezier {
         var a: BKFloat = 0.0
         var b: BKFloat = 0.0
         var c: BKFloat = 0.0
-        var p: [BKPoint] = self.dpoints // todo: more efficient way of doing this?
+        var p: [BKPoint] = self.dpoints[0] // todo: more efficient way of doing this?
         if self.order == 2 {
             p = [p[0], p[1], BKPointZero]
             a = mt
@@ -356,7 +356,7 @@ class CubicBezier {
     func extrema() -> (x: [BKFloat], y: [BKFloat], z: [BKFloat]?, values: [BKFloat] ) {
 //        let dims = [0,1,2] // todo: fix this
 //        var result = {}
-//        var roots = []
+//        var roots: [BKFloat] = []
 //        for dim in dims {
 //            let mfn = {(v: BKPoint) -> BKFloat in
 //                switch(dim) {
@@ -368,7 +368,7 @@ class CubicBezier {
 //                        return v.z
 //                }
 //            }
-//            let p: [BKFloat] = self.dpoints[0].map(mfn);
+//            var p: [BKFloat] = [mfn(self.dpoints[0])]
 //            result[dim] = Utils.droots(p);
 //            if self.order == 3 {
 //                p = self.dpoints[1].map(mfn);
