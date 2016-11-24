@@ -625,6 +625,41 @@ class CubicBezier {
         return self.internalOffset(t: t, distance: d).p
     }
     
+    func project(point: BKPoint) -> BKPoint {
+        // step 1: coarse check
+        let LUT = self.generateLookupTable()
+        let l = LUT.count-1
+        let closest = Utils.closest(LUT, point)
+        var mdist = closest.mdist
+        let mpos = closest.mpos
+        if (mpos == 0) || (mpos == l) {
+            let t = BKFloat(mpos) / BKFloat(l)
+            let pt = self.compute(t)
+//            pt.t = t
+//            pt.d = mdist
+            return pt
+        }
+        
+        // step 2: fine check
+        let t1 = BKFloat(mpos-1) / BKFloat(l)
+        let t2 = BKFloat(mpos+1) / BKFloat(l)
+        let step = 0.1 / BKFloat(l)
+        mdist += 1;
+        var ft = t1
+        for t in stride(from: t1, to: t2+step, by: step) {
+            let p = self.compute(t);
+            let d = Utils.dist(point, p);
+            if d<mdist {
+                mdist = d
+                ft = t
+            }
+        }
+        let p = self.compute(ft)
+//        p.t = ft
+//        p.d = mdist
+        return p
+    }
+    
     private func internalOffset(t: BKFloat, distance d: BKFloat) -> (c: BKPoint, n: BKPoint, p: BKPoint) {
         let c = self.compute(t);
         let n = self.normal(t);

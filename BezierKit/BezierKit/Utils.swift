@@ -143,4 +143,19 @@ class Utils {
         return atan2(cross, dot)
     }
     
+    static func closest(_ LUT: [BKPoint],_ point: BKPoint) -> (mdist: BKFloat, mpos: Int) {
+        assert(LUT.count > 0)
+        var mdist = BKFloat.infinity
+        var mpos: Int? = nil
+        for i in 0..<LUT.count {
+            let p = LUT[i]
+            let d = Utils.dist(point, p);
+            if d<mdist {
+                mdist = d;
+                mpos = i;
+            }
+        }
+        return ( mdist:mdist, mpos:mpos! );
+    }
+    
 }

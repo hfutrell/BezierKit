@@ -79,6 +79,8 @@ class Draw {
     static let lightGrey = CGColor(red: 211.0 / 255.0, green: 211.0 / 255.0, blue: 211.0 / 255.0, alpha: 1.0)
     static let black = CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
     static let red = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
+    static let pinkish = CGColor(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
+    
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
         var temp: [CGColor] = [];

@@ -27,11 +27,14 @@ class DemoView: NSView, DraggableDelegate {
     
     var curve: CubicBezier?
     
+    var mouseTrackingArea: NSTrackingArea?
+    
     var draggables: [Draggable] = [Draggable]()
     var selectedDraggable: Draggable?
 
     var demos: [Demo] = []
     
+    var lastMouseLocation: CGPoint? = nil
     
     var currentDemo: Demo? = nil {
         didSet {
@@ -40,6 +43,7 @@ class DemoView: NSView, DraggableDelegate {
                 self.addDraggable(initialLocation: p, radius: 7)
             }
             self.resetCursorRects()
+            self.resetTrackingAreas()
             self.setNeedsDisplay(self.bounds)
         }
     }
@@ -116,6 +120,7 @@ class DemoView: NSView, DraggableDelegate {
             }
         })
         let demo4 = Demo(title: ".length()",
+                         //TODO: you still haven't implemented length function or drawText
                          controlPoints: controlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
@@ -212,7 +217,7 @@ class DemoView: NSView, DraggableDelegate {
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
-                            Draw.setColor(context, color: CGColor(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0))
+                            Draw.setColor(context, color: Draw.pinkish)
                             Draw.drawBoundingBox(context, boundingBox: curve.boundingBox)
             })
         let demo11 = Demo(title: ".hull(t)",
@@ -226,6 +231,19 @@ class DemoView: NSView, DraggableDelegate {
                             let hull = curve.hull(0.5)
                             Draw.drawHull(context, hull: hull);
                             Draw.drawCircle(context, center: hull[hull.count-1], radius: 5);
+        })
+        let demo12 = Demo(title: ".project(point)",
+                          controlPoints: hullPoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.pinkish)
+                            if let mouse = self.lastMouseLocation {
+                                let p = curve.project(point: BKPoint(mouse))
+                                Draw.drawLine(context, from: BKPoint(mouse), to: p)
+                            }
         })
         let demo13 = Demo(title: ".offset(d) and .offset(t, d)",
                           controlPoints: controlPoints,
@@ -302,6 +320,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo9)
         self.registerDemo(demo10)
         self.registerDemo(demo11)
+        self.registerDemo(demo12)
         self.registerDemo(demo13)
         self.registerDemo(demo14)
         self.registerDemo(demo16)
@@ -349,6 +368,14 @@ class DemoView: NSView, DraggableDelegate {
         }
     }
     
+    func resetTrackingAreas() {
+        
+        self.mouseTrackingArea = NSTrackingArea(rect: self.bounds, options: [NSTrackingAreaOptions.activeInKeyWindow, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.mouseEnteredAndExited], owner: self, userInfo: nil)
+        
+        self.addTrackingArea(self.mouseTrackingArea!)
+        
+    }
+    
     func addDraggable(initialLocation location: CGPoint, radius: CGFloat) {
         let draggable = Draggable(initialLocation: location, radius: radius)
         draggable.delegate = self
@@ -374,6 +401,21 @@ class DemoView: NSView, DraggableDelegate {
     
     override func mouseUp(with event: NSEvent) {
         self.selectedDraggable = nil
+    }
+    
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+//        NSLog("mouse location \(event.locationInWindow)")
+        let location = self.superview!.convert(event.locationInWindow, to: self)
+        self.lastMouseLocation = location
+        self.setNeedsDisplay(self.bounds)
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        self.lastMouseLocation = nil
     }
     
     override func draw(_ dirtyRect: NSRect) {
