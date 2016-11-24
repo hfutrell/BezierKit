@@ -44,20 +44,16 @@ class Draggable {
         return c.contains(CGPoint(x: location.x, y: location.y))
     }
     public var cursorRect: NSRect {
-        get {
-            let r = self.radius
-            let r2 = 2.0 * r
-            return CGRect( origin: CGPoint(x: self.location.x - r, y: self.location.y - r),
-                           size: CGSize(width: r2, height: r2))
-        }
+        let r = self.radius
+        let r2 = 2.0 * r
+        return CGRect( origin: CGPoint(x: self.location.x - r, y: self.location.y - r),
+                       size: CGSize(width: r2, height: r2))
     }
     
 }
 
 extension Draggable {
     var bkLocation: BKPoint {
-        get {
-            return BKPoint(self.location)
-        }
+        return BKPoint(self.location)
     }
 }

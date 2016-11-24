@@ -40,20 +40,14 @@ struct BoundingBox {
     var min: BKPoint
     var max: BKPoint
     var mid: BKPoint {
-        get {
-            return (min + max)/2.0
-        }
+        return (min + max)/2.0
     }
     var size: BKPoint {
-        get {
-            return max - min
-        }
+        return max - min
     }
     var toCGRect: CGRect {
-        get {
-            let s = self.size
-            return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
-        }
+        let s = self.size
+        return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
     }
 }
 

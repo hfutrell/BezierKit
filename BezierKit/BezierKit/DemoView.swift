@@ -49,9 +49,7 @@ class DemoView: NSView, DraggableDelegate {
     }
     
     override var isFlipped: Bool {
-        get {
-            return true
-        }
+        return true
     }
     
     func registerDemo(_ demo: Demo) {

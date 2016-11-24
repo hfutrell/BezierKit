@@ -84,26 +84,17 @@ class CubicBezier {
     let dims: [Int] = [0, 1, 2] // todo: improve
 
     var p0: BKPoint {
-        get {
-            return self.points[0]
-        }
+        return self.points[0]
     }
     var p1: BKPoint {
-        get {
-            return self.points[1]
-        }
+        return self.points[1]
     }
     var p2: BKPoint {
-        get {
-            return self.points[2]
-        }
+        return self.points[2]
     }
     var p3: BKPoint {
-        get {
-            return self.points[3]
-        }
+        return self.points[3]
     }
-
     
     init(points: [BKPoint]) {
         self.points = points
