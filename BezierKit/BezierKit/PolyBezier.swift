@@ -25,11 +25,5 @@ class PolyBezier {
         return PolyBezier(curves: self.curves.reduce([],{
             $0 + $1.offset(distance: d)
         }))
-        
-//        let curves: [CubicBezier] = []
-//        for curve in self.curves {
-//            curves.append(
-//        }
-        
     }
 }
