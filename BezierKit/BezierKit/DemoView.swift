@@ -71,6 +71,11 @@ class DemoView: NSView, DraggableDelegate {
                              CGPoint(x: 50, y: 185),
                              CGPoint(x: 170, y: 175)]
 
+        let outlinePoints = [CGPoint(x: 102, y: 33),
+                          CGPoint(x: 16, y: 99),
+                          CGPoint(x: 101, y: 129),
+                          CGPoint(x: 132, y: 173)]
+
         
         // warning, these blocks introduce memory leaks! (because they reference self)
         
@@ -303,8 +308,22 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
             })
-
-
+        let demo17 = Demo(title: ".outline(d)",
+                          controlPoints: outlinePoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            let doc = {(c: CubicBezier) in Draw.drawCurve(context, curve: c) }
+                            let outline = curve.outline(distance: 25)
+                            outline.curves.forEach(doc)
+                            Draw.setColor(context, color: Draw.transparentBlue)
+                            outline.offset(distance: 10).curves.forEach(doc)
+                            outline.offset(distance: -10).curves.forEach(doc)
+                            
+    })
 
         
         self.registerDemo(demo1)
@@ -322,6 +341,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo13)
         self.registerDemo(demo14)
         self.registerDemo(demo16)
+        self.registerDemo(demo17)
 
     }
     

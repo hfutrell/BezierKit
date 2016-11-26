@@ -80,7 +80,6 @@ class CubicBezier {
     let points: [BKPoint]
     let order: Int = 3
     private let threeD: Bool = false // todo: fix this
-    private let linear: Bool = false // todo: fix this
     let dims: [Int] = [0, 1, 2] // todo: improve
 
     var p0: BKPoint {
@@ -146,6 +145,19 @@ class CubicBezier {
         self.init(p0:S, p1: nc1, p2: nc2, p3: E);
         
     }
+    
+    lazy var linear: Bool = {
+        let order = self.order
+        let points = self.points
+        var a = Utils.align(points, p1:points[0], p2:points[order])
+        for i in 0..<a.count {
+            // TODO: investigate horrible magic number usage
+            if abs(a[i].y) > 0.0001 {
+                return false
+            }
+        }
+        return true
+    }()
     
     /*
         Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
@@ -569,6 +581,7 @@ class CubicBezier {
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
         let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
         if o == nil { // todo: replace with guard let
+            // todo: WE CAN HIT THIS IN THE OUTLINES EXAMPLE! what is wrong?
             assert(false, "cannot scale this curve. Try reducing it first.")
         }
         // move all points by distance 'd' wrt the origin 'o'
@@ -655,6 +668,71 @@ class CubicBezier {
         let c = self.compute(t);
         let n = self.normal(t);
         return (c: c, n: n, p: c + n * d)
+    }
+    
+    func outline(distance d1: BKFloat/*, d2, d3, d4*/) -> PolyBezier {
+//        d2 = (typeof d2 === "undefined") ? d1 : d2;
+        let d2 = d1
+        let reduced = self.reduce()
+        let len = reduced.count
+        var fcurves: [CubicBezier] = []
+        var bcurves: [CubicBezier] = []
+//        var p
+        var alen: BKFloat = 0.0
+//        var tlen = self.length()
+        
+        let graduated = false //(typeof d3 !== "undefined" && typeof d4 !== "undefined");
+        
+//        let linearDistanceFunction = {(_ s: BKFloat,_ e: BKFloat,_ tlen: Int,_ alen: Int,_ slen: Int) in
+//            return { (_ v: BKFloat) -> BKFloat in
+//                let f1: BKFloat = BKFloat(alen) / BKFloat(tlen)
+//                let f2: BKFloat = BKFloat(alen+slen) / BKFloat(tlen)
+//                let d: BKFloat = e-s
+//                return Utils.map(v, 0,1, s+f1*d, s+f2*d)
+//            }
+//        }
+        
+        // form curve oulines
+        for segment in reduced {
+            let slen = segment.curve.length();
+            if graduated {
+//                fcurves.append(segment.scale(distanceFunction: linearDistanceFunction( d1,  d3, tlen, alen, slen)  ));
+//                bcurves.append(segment.scale(distanceFunction: linearDistanceFunction(-d2, -d4, tlen, alen, slen)  ));
+            }
+            else {
+                fcurves.append(segment.curve.scale(distance: d1))
+                bcurves.append(segment.curve.scale(distance: -d2))
+            }
+            alen += slen
+        }
+        
+        // reverse the "return" outline
+        bcurves = bcurves.map({(s: CubicBezier) in
+            let p = s.points
+            if p.count == 4 {
+                return CubicBezier(points: [p[3],p[2],p[1],p[0]])
+            }
+            else if p.count == 3 {
+                return CubicBezier(points: [p[2],p[1],p[0]])
+            }
+            else {
+                assert(false, "crud")
+                return s
+            }
+        }).reversed();
+        
+        // form the endcaps as lines
+        let fs = fcurves[0].points[0]
+        let fe = fcurves[len-1].points[fcurves[len-1].points.count-1]
+        let bs = bcurves[len-1].points[bcurves[len-1].points.count-1]
+        let be = bcurves[0].points[0]
+        let ls = Utils.makeline(bs,fs)
+        let le = Utils.makeline(fe,be)
+        let segments = [ls] + fcurves + [le] + bcurves
+//        let slen = segments.count
+        
+        return PolyBezier(curves: segments)
+
     }
     
 }

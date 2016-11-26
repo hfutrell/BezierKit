@@ -143,6 +143,19 @@ class Utils {
         return atan2(cross, dot)
     }
     
+    static func align(_ points: [BKPoint], p1: BKPoint, p2: BKPoint) -> [BKPoint] {
+        let tx = p1.x
+        let ty = p1.y
+        let a = -atan2(p2.y-ty, p2.x-tx)
+        let d =  {( v: BKPoint) in
+            return BKPoint(
+                x: (v.x-tx)*cos(a) - (v.y-ty)*sin(a),
+                y: (v.x-tx)*sin(a) + (v.y-ty)*cos(a)
+            )
+        }
+        return points.map(d)
+    }
+    
     static func closest(_ LUT: [BKPoint],_ point: BKPoint) -> (mdist: BKFloat, mpos: Int) {
         assert(LUT.count > 0)
         var mdist = BKFloat.infinity
@@ -157,5 +170,20 @@ class Utils {
         }
         return ( mdist:mdist, mpos:mpos! );
     }
+    
+    static func makeline(_ p1: BKPoint,_ p2: BKPoint) -> CubicBezier {
+        let x1 = p1.x
+        let y1 = p1.y
+        let x2 = p2.x
+        let y2 = p2.y
+        let dx = (x2-x1) / 3.0
+        let dy = (y2-y1) / 3.0
+        return CubicBezier(p0: BKPoint(x: x1, y: y1),
+                           p1: BKPoint(x: x1+dx, y: y1+dy),
+                           p2: BKPoint(x: x1+2.0*dx, y: y1+2.0*dy),
+                           p3: BKPoint(x: x2, y: y2)
+        )
+    }
+
     
 }
