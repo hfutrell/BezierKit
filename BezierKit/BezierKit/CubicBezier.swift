@@ -65,6 +65,7 @@ struct TimeTaggedCurve {
         }
         else {
             assert(false, "what?")
+            return SplitResult.singleCurve(curve: self) // TODO: fix
         }
     }
 
@@ -373,6 +374,7 @@ class CubicBezier {
                         return v.z
                     default:
                         assert(false, "nope!")
+                        return 0.0 // TODO: fix
                 }
             }
             var p: [BKFloat] = self.dpoints[0].map(mfn)
@@ -453,6 +455,7 @@ class CubicBezier {
         }
         else {
             assert(false, "what?")
+            return (left: self, right: self) // TODO: fix
         }
     }
     
