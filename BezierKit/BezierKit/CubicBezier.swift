@@ -520,6 +520,7 @@ class CubicBezier {
         }
         
         // second pass: further reduce these segments to simple segments
+        // TODO: this loop is INSANELY SLOW
         for p1 in pass1 {
             var t1: BKFloat = 0.0
             var t2: BKFloat = 0.0
