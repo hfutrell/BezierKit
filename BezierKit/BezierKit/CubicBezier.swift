@@ -8,6 +8,8 @@
 
 import AppKit
 
+typealias DistanceFunction = (_ v: BKFloat) -> BKFloat
+
 // todo: get rid of this whole stupid struct
 struct TimeTaggedCurve {
     let _t1: BKFloat
@@ -164,7 +166,7 @@ class CubicBezier {
         Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
      */
     func length() -> BKFloat {
-        return 0.0
+        return Utils.length({(_ t: BKFloat) in self.derivative(t)})
     }
     
     func compute(_ t: BKFloat) -> BKPoint {
@@ -573,15 +575,28 @@ class CubicBezier {
         Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
      */
     func scale(distance d: BKFloat) -> CubicBezier {
+        return internalScale(distance: d, distanceFunction: nil)
+    }
+    
+    func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> CubicBezier {
+        return internalScale(distance: nil, distanceFunction: distanceFn)
+    }
+    
+    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> CubicBezier {
+        
+        assert((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
+        
         let order = self.order
-//        var distanceFn = false
-//        if(typeof d === "function") { distanceFn = d; }
-//        if(distanceFn && order === 2) { return this.raise().scale(distanceFn); }
+        
+        if distanceFn != nil && self.order == 2 {
+            // for quadratics we must raise to cubics prior to scaling
+            // todo: implement raise() function an enable this
+//            return self.raise().scale(distance: nil, distanceFunction: distanceFn);
+        }
         
         // TODO: add special handling for degenerate (=linear) curves.
-//        let clockwise = self.clockwise;
-        let r1 = /*distanceFn ? distanceFn(0) :*/ d
-        let r2 = /*distanceFn ? distanceFn(1) :*/ d
+        let r1 = (distanceFn != nil) ? distanceFn!(0) : d!
+        let r2 = (distanceFn != nil) ? distanceFn!(1) : d!
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
         let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
         if o == nil { // todo: replace with guard let
@@ -598,20 +613,37 @@ class CubicBezier {
             np[t*order] = p + (v[t].n * ((t != 0) ? r2 : r1))
         }
         
-        // move control points to lie on the intersection of the offset
-        // derivative vector, and the origin-through-control vector
-        for t in [0,1] {
-            if (self.order==2) && (t != 0) {
-                break
+        if d != nil {
+            // move control points to lie on the intersection of the offset
+            // derivative vector, and the origin-through-control vector
+            for t in [0,1] {
+                if (self.order==2) && (t != 0) {
+                    break
+                }
+                let p = np[t*order]
+                let d = self.derivative(BKFloat(t))
+                let p2 = p + d
+                np[t+1] = Utils.lli4(p, p2, o!, points[t+1])!
             }
-            let p = np[t*order]
-            let d = self.derivative(BKFloat(t))
-            let p2 = BKPoint( x: p.x + d.x, y: p.y + d.y )
-            np[t+1] = Utils.lli4(p, p2, o!, points[t+1])!
+            return CubicBezier(points: np);
         }
-        return CubicBezier(points: np);
-        
-        // todo: javascript supported distance function as argument
+        else {
+            
+            let clockwise = self.clockwise;
+            for t in [0,1] {
+                if (self.order==2) && (t != 0) {
+                    break
+                }
+                let p = self.points[t+1]
+                let ov = (p - o!).normalize()
+                var rc: BKFloat = distanceFn!(BKFloat(t+1) / BKFloat(self.order))
+                if !clockwise {
+                   rc = -rc
+                }
+                np[t+1] = p + ov * rc
+            }
+            return CubicBezier(points: np);
+        }
     }
     
     func offset(distance d: BKFloat) -> [CubicBezier] {
@@ -674,34 +706,40 @@ class CubicBezier {
         return (c: c, n: n, p: c + n * d)
     }
     
-    func outline(distance d1: BKFloat/*, d2, d3, d4*/) -> PolyBezier {
-//        d2 = (typeof d2 === "undefined") ? d1 : d2;
-        let d2 = d1
+    func outline(distance d1: BKFloat) -> PolyBezier {
+        return internalOutline(d1: d1, d2: d1, d3: 0.0, d4: 0.0, graduated: false)
+    }
+    
+    func outline(d1: BKFloat, d2: BKFloat, d3: BKFloat, d4: BKFloat) -> PolyBezier {
+        return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
+    }
+
+    
+    func internalOutline(d1: BKFloat, d2: BKFloat, d3: BKFloat, d4: BKFloat, graduated: Bool) -> PolyBezier {
+
         let reduced = self.reduce()
         let len = reduced.count
         var fcurves: [CubicBezier] = []
         var bcurves: [CubicBezier] = []
 //        var p
-        var alen: BKFloat = 0.0
-//        var tlen = self.length()
+        var alen: BKFloat = 0.0 // WTF why is this always zero? what is the point?
+        let tlen = self.length()
         
-        let graduated = false //(typeof d3 !== "undefined" && typeof d4 !== "undefined");
-        
-//        let linearDistanceFunction = {(_ s: BKFloat,_ e: BKFloat,_ tlen: Int,_ alen: Int,_ slen: Int) in
-//            return { (_ v: BKFloat) -> BKFloat in
-//                let f1: BKFloat = BKFloat(alen) / BKFloat(tlen)
-//                let f2: BKFloat = BKFloat(alen+slen) / BKFloat(tlen)
-//                let d: BKFloat = e-s
-//                return Utils.map(v, 0,1, s+f1*d, s+f2*d)
-//            }
-//        }
+        let linearDistanceFunction = {(_ s: BKFloat,_ e: BKFloat,_ tlen: BKFloat,_ alen: BKFloat,_ slen: BKFloat) -> DistanceFunction in
+            return { (_ v: BKFloat) -> BKFloat in
+                let f1: BKFloat = alen / tlen
+                let f2: BKFloat = (alen+slen) / tlen
+                let d: BKFloat = e-s
+                return Utils.map(v, 0,1, s+f1*d, s+f2*d)
+            }
+        }
         
         // form curve oulines
         for segment in reduced {
             let slen = segment.curve.length();
             if graduated {
-//                fcurves.append(segment.scale(distanceFunction: linearDistanceFunction( d1,  d3, tlen, alen, slen)  ));
-//                bcurves.append(segment.scale(distanceFunction: linearDistanceFunction(-d2, -d4, tlen, alen, slen)  ));
+                fcurves.append(segment.curve.scale(distanceFunction: linearDistanceFunction( d1,  d3, tlen, alen, slen)  ));
+                bcurves.append(segment.curve.scale(distanceFunction: linearDistanceFunction(-d2, -d4, tlen, alen, slen)  ));
             }
             else {
                 fcurves.append(segment.curve.scale(distance: d1))

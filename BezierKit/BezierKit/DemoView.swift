@@ -322,8 +322,20 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.setColor(context, color: Draw.transparentBlue)
                             outline.offset(distance: 10).curves.forEach(doc)
                             outline.offset(distance: -10).curves.forEach(doc)
-                            
-    })
+        })
+        
+        let demo18 = Demo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
+                          controlPoints: outlinePoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            let doc = {(c: CubicBezier) in Draw.drawCurve(context, curve: c) }
+                            let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
+                            outline.curves.forEach(doc)
+        })
 
         
         self.registerDemo(demo1)
@@ -342,6 +354,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo14)
         self.registerDemo(demo16)
         self.registerDemo(demo17)
+        self.registerDemo(demo18)
 
     }
     
