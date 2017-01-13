@@ -65,7 +65,11 @@ class DemoView: NSView, DraggableDelegate {
                              CGPoint(x: 10, y: 90),
                              CGPoint(x: 110, y: 100),
                              CGPoint(x: 150, y: 195)]
-        
+        let lengthControlPoints = [CGPoint(x: 100, y: 25),
+                             CGPoint(x: 10, y: 90),
+                             CGPoint(x: 110, y: 100),
+                             CGPoint(x: 132, y: 192)]
+
         let hullPoints = [CGPoint(x: 100, y: 25),
                              CGPoint(x: 10, y: 90),
                              CGPoint(x: 50, y: 185),
@@ -124,7 +128,7 @@ class DemoView: NSView, DraggableDelegate {
         })
         let demo4 = Demo(title: ".length()",
                          //TODO: you still haven't implemented length function or drawText
-                         controlPoints: controlPoints,
+                         controlPoints: lengthControlPoints,
                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
@@ -143,7 +147,7 @@ class DemoView: NSView, DraggableDelegate {
                                     let p3 = curve.offset(t: 0.95, distance: -5)
                                     Draw.drawLine(context, from: p1, to: p2)
                                     Draw.drawLine(context, from: p2, to: p3)
-                                    let label = String(format: "%3.1f px", arclength)
+                                    let label = String(format: "%3.1fpx", arclength)
                                     Draw.drawText(context, text: label, offset: BKPoint(x: p2.x+7, y: p2.y-3))
                                 }
                             }
