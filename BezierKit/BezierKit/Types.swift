@@ -8,6 +8,11 @@
 
 import Foundation
 
+struct Intersection {
+    var t1: BKFloat
+    var t2: BKFloat
+}
+
 struct BKPoint {
     var x : BKFloat
     var y : BKFloat
@@ -34,6 +39,20 @@ struct BKPoint {
         }
         return true
     }
+    func dim(_ index: Int) -> BKFloat {
+        if index == 0 {
+            return self.x
+        }
+        else if index == 1 {
+            return self.y
+        }
+        else if index == 2 {
+            return self.z
+        }
+        else {
+            assert(false, "bad dimension!")
+        }
+    }
 }
 
 struct BoundingBox {
@@ -44,6 +63,17 @@ struct BoundingBox {
     }
     var size: BKPoint {
         return max - min
+    }
+    func overlaps(_ other: BoundingBox) -> Bool {
+        for i in 0..<3 {
+            if self.min.dim(i) > other.max.dim(i) {
+                return false
+            }
+            if self.max.dim(i) < other.min.dim(i) {
+                return false
+            }
+        }
+        return true
     }
     var toCGRect: CGRect {
         let s = self.size

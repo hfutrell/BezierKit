@@ -79,6 +79,10 @@ class DemoView: NSView, DraggableDelegate {
                           CGPoint(x: 16, y: 99),
                           CGPoint(x: 101, y: 129),
                           CGPoint(x: 132, y: 173)]
+        let intersectsPoints = [CGPoint(x: 10, y: 25),
+                             CGPoint(x: 10, y: 180),
+                             CGPoint(x: 170, y: 165),
+                             CGPoint(x: 65, y: 70)]
 
         
         // warning, these blocks introduce memory leaks! (because they reference self)
@@ -340,6 +344,18 @@ class DemoView: NSView, DraggableDelegate {
                             let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
                             outline.curves.forEach(doc)
         })
+        let demo20 = Demo(title: ".intersects()",
+                          controlPoints: intersectsPoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            for intersection in curve.selfIntersects(curveIntersectionThreshold: 0.1) {
+                                Draw.drawPoint(context, origin: curve.compute(intersection.t1));
+                            }
+                            
+        })
 
         
         self.registerDemo(demo1)
@@ -359,6 +375,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo16)
         self.registerDemo(demo17)
         self.registerDemo(demo18)
+        self.registerDemo(demo20)
 
     }
     

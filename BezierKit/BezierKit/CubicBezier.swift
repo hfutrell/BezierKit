@@ -443,7 +443,7 @@ class CubicBezier {
         return result;
     }()
     
-    func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {
+    private func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {
         let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
         return taggedSelf.split(t1, t2)
     }
@@ -699,6 +699,49 @@ class CubicBezier {
 //        p.d = mdist
         return p
     }
+    
+    private func overlaps(curve: CubicBezier) -> Bool {
+        let lbbox = self.boundingBox
+        let tbbox = curve.boundingBox
+        return lbbox.overlaps(tbbox);
+    }
+    
+    func selfIntersects(curveIntersectionThreshold: BKFloat) -> [Intersection] {
+        var reduced = self.reduce();
+        // "simple" curves cannot intersect with their direct
+        // neighbour, so for each segment X we check whether
+        // it intersects [0:x-2][x+2:last].
+        let len=reduced.count-2
+        var results: [Intersection] = []
+        if len > 0 {
+            for i in 0..<len {
+                let left = [reduced[i]]
+                let right = Array(reduced.suffix(from: i+2))
+                let result = self.curveIntersects(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
+                results += result
+            }
+        }
+        return results
+    }
+    
+    func curveIntersects(c1: [TimeTaggedCurve], c2: [TimeTaggedCurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
+        var pairs: [(left: TimeTaggedCurve, right: TimeTaggedCurve)] = []
+        // step 1: pair off any overlapping segments
+        for l in c1 {
+            for r in c2 {
+                if l.curve.overlaps(curve: r.curve) {
+                    pairs.append((left: l, right: r))
+                }
+            }
+        }
+        // step 2: for each pairing, run through the convergence algorithm.
+        var intersections: [Intersection] = [];
+        for pair in pairs {
+            intersections += Utils.pairiteration(pair.left, pair.right, curveIntersectionThreshold)
+        }
+        return intersections
+    }
+
     
     private func internalOffset(t: BKFloat, distance d: BKFloat) -> (c: BKPoint, n: BKPoint, p: BKPoint) {
         let c = self.compute(t);

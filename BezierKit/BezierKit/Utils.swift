@@ -256,6 +256,62 @@ class Utils {
                            p3: BKPoint(x: x2, y: y2)
         )
     }
+    
+    static func pairiteration(_ c1: TimeTaggedCurve, _ c2: TimeTaggedCurve, _ threshold: BKFloat = 0.5) -> [Intersection] {
+        let c1b = c1.curve.boundingBox
+        let c2b = c2.curve.boundingBox
+        if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
+            return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
+        }
+        
+        
+        let cc1 = c1.split(0.5)
+        let cc2 = c2.split(0.5)
+        
+        var cc1left: TimeTaggedCurve
+        var cc1right: TimeTaggedCurve
+        var cc2left: TimeTaggedCurve
+        var cc2right: TimeTaggedCurve
+
+        if case let SplitResult.multipleCurves(left, right, _) = cc1 {
+            cc1left = left
+            cc1right = right
+        }
+        else {
+            assert(false, "???")
+            return []
+        }
+        if case let SplitResult.multipleCurves(left, right, _) = cc2 {
+            cc2left = left
+            cc2right = right
+        }
+        else {
+            assert(false, "???")
+            return []
+        }
+
+        var pairs = [
+        (left: cc1left, right: cc2left ),
+        (left: cc1left, right: cc2right ),
+        (left: cc1right, right: cc2right ),
+        (left: cc1right, right: cc2left )]
+        pairs = pairs.filter( {(pair) in
+            return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
+        })
+        var results: [Intersection] = []
+        if pairs.count == 0 {
+            return results
+        }
+        for pair in pairs {
+            results += Utils.pairiteration(pair.left, pair.right, threshold)
+        }
+// TODO: remove duplicates
+        //        results = results.filter({(v,i) in
+//            return results.index(of: v) == i
+//        })
+        return uniques
+    }
+
 
     
 }
