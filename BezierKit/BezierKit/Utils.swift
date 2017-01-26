@@ -123,11 +123,11 @@ class Utils {
         var min = BKFloat.infinity
         var max = -BKFloat.infinity
         var listPrime = list
-        if listPrime.index(of: 0) == nil {
-            listPrime.insert(0, at: 0)
+        if listPrime.index(of: 0.0) == nil {
+            listPrime.insert(0.0, at: 0)
         }
-        if listPrime.index(of :1) == nil {
-            listPrime.append(1)
+        if listPrime.index(of :1.0) == nil {
+            listPrime.append(1.0)
         }
         for t in listPrime {
             let c = computeDimension(t);
@@ -261,7 +261,40 @@ class Utils {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
         if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
-            return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
+           // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
+        
+            let a1 = c1.curve.p0
+            let b1 = c1.curve.p3 - c1.curve.p0
+            let a2 = c2.curve.p0
+            let b2 = c2.curve.p3 - c2.curve.p0
+
+            let _a = b1.x
+            let _b = -b2.x
+            let _c = b1.y
+            let _d = -b2.y
+            
+            // by Cramer's rule we have
+            // t1 = ed - bf / ad - bc
+            // t2 = af - ec / ad - bc
+            let det = _a * _d - _b * _c
+            
+            let _e = -a1.x + a2.x
+            let _f = -a1.y + a2.y
+            
+            let inv_det = 1.0 / det
+            let t1 = ( _e * _d - _b * _f ) * inv_det
+            if t1 >= 1.0 || t1 <= 0.0  {
+                return [] // t1 out of interval [0, 1]
+            }
+            let t2 = ( _a * _f - _e * _c ) * inv_det
+            if t2 >= 1.0 || t2 <= 0.0 {
+                return [] // t2 out of interval [0, 1]
+            }
+            
+            // segments intersect at t1, t2
+            return [Intersection(t1: t1 * c1._t2 + (1.0 - t1) * c1._t1,
+                                 t2: t2 * c2._t2 + (1.0 - t2) * c2._t1)]
+        
         }
         
         
@@ -299,9 +332,6 @@ class Utils {
             return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
         })
         var results: [Intersection] = []
-        if pairs.count == 0 {
-            return results
-        }
         for pair in pairs {
             results += Utils.pairiteration(pair.left, pair.right, threshold)
         }
@@ -309,7 +339,7 @@ class Utils {
         //        results = results.filter({(v,i) in
 //            return results.index(of: v) == i
 //        })
-        return uniques
+        return results
     }
 
 

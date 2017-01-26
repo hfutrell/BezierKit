@@ -79,7 +79,7 @@ class DemoView: NSView, DraggableDelegate {
                           CGPoint(x: 16, y: 99),
                           CGPoint(x: 101, y: 129),
                           CGPoint(x: 132, y: 173)]
-        let intersectsPoints = [CGPoint(x: 10, y: 25),
+        let intersectsPoints = [CGPoint(x: 100, y: 25),
                              CGPoint(x: 10, y: 180),
                              CGPoint(x: 170, y: 165),
                              CGPoint(x: 65, y: 70)]
@@ -351,7 +351,7 @@ class DemoView: NSView, DraggableDelegate {
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
-                            for intersection in curve.selfIntersects(curveIntersectionThreshold: 0.1) {
+                            for intersection in curve.selfIntersects() {
                                 Draw.drawPoint(context, origin: curve.compute(intersection.t1));
                             }
                             

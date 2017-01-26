@@ -706,8 +706,8 @@ class CubicBezier {
         return lbbox.overlaps(tbbox);
     }
     
-    func selfIntersects(curveIntersectionThreshold: BKFloat) -> [Intersection] {
-        var reduced = self.reduce();
+    func selfIntersects(curveIntersectionThreshold: BKFloat = 0.5) -> [Intersection] {
+        let reduced = self.reduce();
         // "simple" curves cannot intersect with their direct
         // neighbour, so for each segment X we check whether
         // it intersects [0:x-2][x+2:last].

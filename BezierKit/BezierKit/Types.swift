@@ -64,6 +64,19 @@ struct BoundingBox {
     var size: BKPoint {
         return max - min
     }
+
+//    func overlaps(_ other: BoundingBox) -> Bool {
+//        for i in 0..<2 {
+//            let l = self.mid.dim(i)
+//            let t = other.mid.dim(i)
+//            let d = (self.size.dim(i) + other.size.dim(i)) * 0.5
+//            if abs(l-t) >= d {
+//                return false
+//            }
+//        }
+//        return true
+//    }
+    
     func overlaps(_ other: BoundingBox) -> Bool {
         for i in 0..<3 {
             if self.min.dim(i) > other.max.dim(i) {
