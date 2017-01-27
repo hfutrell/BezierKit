@@ -13,6 +13,11 @@ struct Intersection {
     var t2: BKFloat
 }
 
+struct Line {
+    var p1: BKPoint
+    var p2: BKPoint
+}
+
 struct BKPoint {
     var x : BKFloat
     var y : BKFloat

@@ -10,6 +10,11 @@ import Foundation
 
 class Utils {
     
+    // float precision significant decimal
+    static let epsilon: BKFloat = 0.000001
+    
+    static let tau: BKFloat = 2.0 * BKFloat(Double.pi)
+    
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     static let Tvalues: [BKFloat] = [
     -0.0640568928626056260850430826247450385909,
@@ -139,6 +144,88 @@ class Utils {
             }
         }
         return ( min:min, max: max );
+    }
+    
+    
+    static func approximately(_ a: BKFloat,_ b: BKFloat, precision: BKFloat = epsilon) -> Bool {
+        return abs(a-b) <= precision
+    }
+
+    static func between(_ v: BKFloat,_ m: BKFloat,_ M: BKFloat) -> Bool {
+        return (m <= v && v <= M) || Utils.approximately(v, m) || Utils.approximately(v, M)
+    }
+    
+    // cube root function yielding real roots
+    static func crt(_ v: BKFloat) -> BKFloat {
+        return (v < 0) ? -pow(-v,1/3) : pow(v,1/3)
+    }
+    
+    static func roots(points: [BKPoint], line: Line = Line(p1: BKPoint(x: 0.0, y: 0.0), p2: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
+        let order = points.count - 1
+        let p = Utils.align(points, p1: line.p1, p2: line.p2)
+        let reduce: (BKFloat) -> Bool = { 0 <= $0 && $0 <= 1 }
+        
+        if order == 2 {
+            let a = p[0].y
+            let b = p[1].y
+            let c = p[2].y
+            let d = a - 2*b + c
+            if d != 0 {
+                let m1 = -sqrt(b*b-a*c)
+                let m2 = -a+b
+                let v1: BKFloat = -( m1+m2)/d
+                let v2: BKFloat = -(-m1+m2)/d
+                return [v1, v2].filter(reduce)
+            }
+            else if b != c && d == BKFloat(0.0) {
+                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce);
+            }
+            else {
+                return []
+            }
+        }
+        else {
+            // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
+            let pa = p[0].y
+            let pb = p[1].y
+            let pc = p[2].y
+            let pd = p[3].y
+            let d = (-pa + 3*pb - 3*pc + pd)
+            let a = (3*pa - 6*pb + 3*pc) / d
+            let b = (-3*pa + 3*pb) / d
+            let c = pa / d
+            let p = (3*b - a*a)/3
+            let p3 = p/3
+            let q = (2*a*a*a - 9*a*b + 27*c)/27
+            let q2 = q/2
+            let discriminant = q2*q2 + p3*p3*p3
+            if discriminant < 0 {
+                let mp3 = -p/3
+                let mp33 = mp3*mp3*mp3
+                let r = sqrt( mp33 )
+                let t = -q/(2*r)
+                let cosphi = t < -1 ? -1 : t > 1 ? 1 : t
+                let phi = acos(cosphi)
+                let crtr = crt(r)
+                let t1 = 2*crtr;
+                let x1 = t1 * cos(phi/3) - a/3
+                let x2 = t1 * cos((phi+tau)/3) - a/3
+                let x3 = t1 * cos((phi+2*tau)/3) - a/3
+                return [x1, x2, x3].filter(reduce)
+            }
+            else if discriminant == 0 {
+                let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
+                let x1 = 2*u1-a/3
+                let x2 = -u1 - a/3
+                return [x1,x2].filter(reduce)
+            }
+            else {
+                let sd = sqrt(discriminant)
+                let u1 = crt(-q2+sd)
+                let v1 = crt(q2+sd)
+                return [u1-v1-a/3].filter(reduce)
+            }
+        }
     }
     
     static func droots(_ p: [BKFloat]) -> [BKFloat] {

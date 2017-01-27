@@ -83,6 +83,10 @@ class DemoView: NSView, DraggableDelegate {
                              CGPoint(x: 10, y: 180),
                              CGPoint(x: 170, y: 165),
                              CGPoint(x: 65, y: 70)]
+        let intersectsLine = [CGPoint(x: 53, y: 163),
+                                CGPoint(x: 27, y: 19),
+                                CGPoint(x: 182, y: 176),
+                                CGPoint(x: 155, y: 36)]
 
         
         // warning, these blocks introduce memory leaks! (because they reference self)
@@ -352,10 +356,26 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             for intersection in curve.selfIntersects() {
-                                Draw.drawPoint(context, origin: curve.compute(intersection.t1));
+                                Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                             }
                             
         })
+        let demo21 = Demo(title: ".intersects(line)",
+                          controlPoints: intersectsLine,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            let line: Line = Line( p1: BKPoint(x:0, y:175), p2: BKPoint(x:200,y:25) )
+                            Draw.setColor(context, color: Draw.red)
+                            Draw.drawLine(context, from: line.p1, to: line.p2)
+                            Draw.setColor(context, color: Draw.black)
+                            for intersection in curve.intersects(line: line) {
+                                Draw.drawPoint(context, origin: curve.compute(intersection))
+                            }
+        })
+
 
         
         self.registerDemo(demo1)
@@ -376,6 +396,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo17)
         self.registerDemo(demo18)
         self.registerDemo(demo20)
+        self.registerDemo(demo21)
 
     }
     

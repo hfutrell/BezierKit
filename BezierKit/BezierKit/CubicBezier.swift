@@ -706,6 +706,17 @@ class CubicBezier {
         return lbbox.overlaps(tbbox);
     }
     
+    func intersects(line: Line, curveIntersectionThreshold: BKFloat = 0.5) -> [BKFloat] {
+        let mx = min(line.p1.x, line.p2.x)
+        let my = min(line.p1.y, line.p2.y)
+        let MX = max(line.p1.x, line.p2.x)
+        let MY = max(line.p1.y, line.p2.y)
+        return Utils.roots(points: self.points, line: line).filter({(t: BKFloat) in
+            let p = self.compute(t);
+            return Utils.between(p.x, mx, MX) && Utils.between(p.y, my, MY);
+        })
+    }
+    
     func selfIntersects(curveIntersectionThreshold: BKFloat = 0.5) -> [Intersection] {
         let reduced = self.reduce();
         // "simple" curves cannot intersect with their direct
@@ -724,7 +735,7 @@ class CubicBezier {
         return results
     }
     
-    func curveIntersects(c1: [TimeTaggedCurve], c2: [TimeTaggedCurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
+    private func curveIntersects(c1: [TimeTaggedCurve], c2: [TimeTaggedCurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
         var pairs: [(left: TimeTaggedCurve, right: TimeTaggedCurve)] = []
         // step 1: pair off any overlapping segments
         for l in c1 {
