@@ -87,7 +87,14 @@ class DemoView: NSView, DraggableDelegate {
                                 CGPoint(x: 27, y: 19),
                                 CGPoint(x: 182, y: 176),
                                 CGPoint(x: 155, y: 36)]
-
+        let intersectsCurve1 = [CGPoint(x: 48, y: 84),
+                                CGPoint(x: 104, y: 176),
+                                CGPoint(x: 190, y: 37),
+                                CGPoint(x: 121, y: 75)]
+        let intersectsCurve2 = [BKPoint(x: 68, y: 145),
+                                BKPoint(x: 74, y: 6),
+                                BKPoint(x: 143, y: 197),
+                                BKPoint(x: 138, y: 55)]
         
         // warning, these blocks introduce memory leaks! (because they reference self)
         
@@ -355,7 +362,7 @@ class DemoView: NSView, DraggableDelegate {
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
-                            for intersection in curve.selfIntersects() {
+                            for intersection in curve.intersects() {
                                 Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                             }
                             
@@ -373,6 +380,21 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.setColor(context, color: Draw.black)
                             for intersection in curve.intersects(line: line) {
                                 Draw.drawPoint(context, origin: curve.compute(intersection))
+                            }
+        })
+        let demo22 = Demo(title: ".intersects(curve)",
+                          controlPoints: intersectsCurve1,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            let curve2 =  CubicBezier(points: intersectsCurve2)
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            Draw.drawCurve(context, curve: curve2)
+                            Draw.setColor(context, color: Draw.black);
+                            for intersection in curve.intersects(curve: curve2) {
+                                Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                             }
         })
 
@@ -397,6 +419,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo18)
         self.registerDemo(demo20)
         self.registerDemo(demo21)
+        self.registerDemo(demo22)
 
     }
     
