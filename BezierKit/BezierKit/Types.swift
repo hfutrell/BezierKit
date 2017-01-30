@@ -18,6 +18,45 @@ struct Line {
     var p2: BKPoint
 }
 
+struct Shape {
+    struct Cap {
+        var curve: CubicBezier
+        var virtual: Bool
+        init(curve: CubicBezier) {
+            self.curve = curve
+            self.virtual = false
+        }
+    }
+    var startcap: Cap
+    var endcap: Cap
+    var forward: CubicBezier
+    var back: CubicBezier
+    func boundingBox() -> BoundingBox { // TODO: convert me to a property that is computed once
+        var mx =  BKFloat.infinity
+        var my =  BKFloat.infinity
+        var MX = -BKFloat.infinity
+        var MY = -BKFloat.infinity
+        for s: CubicBezier? in [startcap.virtual ? nil : startcap.curve, forward, back, endcap.virtual ? nil : endcap.curve] {
+            if s != nil {
+                let bbox: BoundingBox = s!.boundingBox
+                if mx > bbox.min.x {
+                    mx = bbox.min.x
+                }
+                if my > bbox.min.y {
+                    my = bbox.min.y
+                }
+                if MX < bbox.max.x {
+                    MX = bbox.max.x
+                }
+                if MY < bbox.max.y {
+                    MY = bbox.max.y
+                }
+            }
+        }
+        return BoundingBox(min: BKPoint(x: mx, y: my), max: BKPoint(x: MX, y: MY))
+    }
+}
+
 struct BKPoint {
     var x : BKFloat
     var y : BKFloat
@@ -70,6 +109,8 @@ struct BoundingBox {
         return max - min
     }
 
+// TODO: write union method and use it in the shape bounding box constructor
+    
 //    func overlaps(_ other: BoundingBox) -> Bool {
 //        for i in 0..<2 {
 //            let l = self.mid.dim(i)

@@ -355,6 +355,20 @@ class DemoView: NSView, DraggableDelegate {
                             let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
                             outline.curves.forEach(doc)
         })
+        let demo19 = Demo(title: "outlineShapes",
+                          controlPoints: controlPoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            Draw.drawCurve(context, curve: curve)
+                            Draw.setColor(context, color: Draw.red)
+                            for shape in curve.outlineShapes(distance: 25) {
+                                Draw.setRandomFill(context, alpha: 0.2)
+                                Draw.drawShape(context, shape: shape);
+                            }
+        })
+
         let demo20 = Demo(title: ".intersects()",
                           controlPoints: intersectsPoints,
                           quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
@@ -417,6 +431,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo16)
         self.registerDemo(demo17)
         self.registerDemo(demo18)
+        self.registerDemo(demo19)
         self.registerDemo(demo20)
         self.registerDemo(demo21)
         self.registerDemo(demo22)

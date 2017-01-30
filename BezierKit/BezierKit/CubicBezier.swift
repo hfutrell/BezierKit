@@ -773,8 +773,29 @@ class CubicBezier {
         return internalOutline(d1: d1, d2: d1, d3: 0.0, d4: 0.0, graduated: false)
     }
     
+    func outline(distance d1: BKFloat, d2: BKFloat) -> PolyBezier {
+        return internalOutline(d1: d1, d2: d2, d3: 0.0, d4: 0.0, graduated: false)
+    }
+    
     func outline(d1: BKFloat, d2: BKFloat, d3: BKFloat, d4: BKFloat) -> PolyBezier {
         return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
+    }
+
+    func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Shape] {
+        return self.outlineShapes(distance: d1, d2: d1, curveIntersectionThreshold: curveIntersectionThreshold)
+    }
+    
+    func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Shape] {
+        var outline = self.outline(distance: d1, d2: d2).curves
+        var shapes: [Shape] = []
+        let len = outline.count
+        for i in 1..<len/2 {
+            var shape = Utils.makeshape(outline[i], outline[len-i], curveIntersectionThreshold)
+            shape.startcap.virtual = (i > 1)
+            shape.endcap.virtual = (i < len/2-1)
+            shapes.append(shape)
+        }
+        return shapes
     }
 
     

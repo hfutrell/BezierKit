@@ -87,12 +87,12 @@ class Draw {
         var temp: [CGColor] = [];
         for i in 0..<360 {
             var j = (i*47) % 360
-            var r: CGFloat = 0.0;
-            var g: CGFloat = 0.0;
-            var b: CGFloat = 0.0;
+            var r: CGFloat = 0.0
+            var g: CGFloat = 0.0
+            var b: CGFloat = 0.0
             HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5, outR: &r, outG: &g, outB: &b)
             
-            temp.append(CGColor(red: r, green: g, blue: b, alpha: 1.0));
+            temp.append(CGColor(red: r, green: g, blue: b, alpha: 1.0))
         }
         return temp
     }()
@@ -104,8 +104,15 @@ class Draw {
     
     static func setRandomColor(_ context: CGContext) {
         randomIndex = (randomIndex+1) % randomColors.count
-        let c = randomColors[randomIndex];
-        context.setStrokeColor(c);
+        let c = randomColors[randomIndex]
+        context.setStrokeColor(c)
+    }
+    
+    static func setRandomFill(_ context: CGContext, alpha a: CGFloat = 1.0) {
+        randomIndex = (randomIndex+1) % randomColors.count
+        let c = randomColors[randomIndex]
+        let c2 = c.copy(alpha: a)
+        context.setFillColor(c2!)
     }
     
     static func setColor(_ context: CGContext, color: CGColor) {
@@ -179,32 +186,66 @@ class Draw {
     static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
         context.beginPath();
         if hull.count == 6 {
-            context.move(to: hull[0].toCGPoint());
-            context.addLine(to: hull[1].toCGPoint());
-            context.addLine(to: hull[2].toCGPoint());
-            context.move(to: hull[3].toCGPoint());
-            context.addLine(to: hull[4].toCGPoint());
+            context.move(to: hull[0].toCGPoint())
+            context.addLine(to: hull[1].toCGPoint())
+            context.addLine(to: hull[2].toCGPoint())
+            context.move(to: hull[3].toCGPoint())
+            context.addLine(to: hull[4].toCGPoint())
         }
         else {
             context.move(to: hull[0].toCGPoint())
-            context.addLine(to: hull[1].toCGPoint());
-            context.addLine(to: hull[2].toCGPoint());
-            context.addLine(to: hull[3].toCGPoint());
-            context.move(to: hull[4].toCGPoint());
-            context.addLine(to: hull[5].toCGPoint());
-            context.addLine(to: hull[6].toCGPoint());
-            context.move(to: hull[7].toCGPoint());
-            context.addLine(to: hull[8].toCGPoint());
+            context.addLine(to: hull[1].toCGPoint())
+            context.addLine(to: hull[2].toCGPoint())
+            context.addLine(to: hull[3].toCGPoint())
+            context.move(to: hull[4].toCGPoint())
+            context.addLine(to: hull[5].toCGPoint())
+            context.addLine(to: hull[6].toCGPoint())
+            context.move(to: hull[7].toCGPoint())
+            context.addLine(to: hull[8].toCGPoint())
         }
         context.strokePath();
     }
 
     static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : BKPoint = BKPointZero) {
-        context.beginPath();
+        context.beginPath()
         context.addRect(boundingBox.toCGRect)
-        context.closePath();
-        context.strokePath();
+        context.closePath()
+        context.strokePath()
     }
 
+    static func drawShape(_ context: CGContext, shape: Shape, offset: BKPoint = BKPointZero) {
+        let order = shape.forward.points.count - 1
+        context.beginPath()
+        context.move(to: (offset + shape.startcap.curve.points[0]).toCGPoint())
+        context.addLine(to: (offset + shape.startcap.curve.points[3]).toCGPoint())
+        if order == 3 {
+            context.addCurve(to: (offset + shape.forward.points[3]).toCGPoint(),
+                             control1: (offset + shape.forward.points[1]).toCGPoint(),
+                             control2: (offset + shape.forward.points[2]).toCGPoint()
+                             
+            )
+        }
+        else {
+            context.addQuadCurve(to: (offset + shape.forward.points[2]).toCGPoint(),
+                                 control: (offset + shape.forward.points[1]).toCGPoint()
+            )
+        }
+        context.addLine(to: (offset + shape.endcap.curve.points[3]).toCGPoint())
+        if order == 3 {
+            context.addCurve(to: (offset + shape.back.points[3]).toCGPoint(),
+                control1: (offset + shape.back.points[1]).toCGPoint(),
+                control2: (offset + shape.back.points[2]).toCGPoint()
+            )
+        }
+        else {
+            context.addQuadCurve(to:(offset + shape.back.points[2]).toCGPoint(),
+                                 control: (offset + shape.back.points[1]).toCGPoint()
+            )
+        }
+        context.closePath()
+        context.drawPath(using: CGPathDrawingMode.fillStroke)
+    
+    }
+    
     
 }
