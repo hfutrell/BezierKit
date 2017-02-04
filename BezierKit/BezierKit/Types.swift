@@ -18,6 +18,18 @@ struct Line {
     var p2: BKPoint
 }
 
+struct Arc {
+    struct Interval {
+        var start: BKFloat
+        var end: BKFloat
+    }
+    var origin: BKPoint
+    var radius: BKFloat
+    var start: BKFloat // starting angle
+    var end: BKFloat // starting angle
+    var interval: Interval // represents t-values [0, 1] on curve
+}
+
 struct Shape {
     struct Cap {
         var curve: CubicBezier

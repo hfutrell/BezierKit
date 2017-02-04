@@ -14,6 +14,7 @@ class Utils {
     static let epsilon: BKFloat = 0.000001
     
     static let tau: BKFloat = 2.0 * BKFloat(Double.pi)
+    static let quart: BKFloat = BKFloat(Double.pi) / 2.0
     
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     static let Tvalues: [BKFloat] = [
@@ -479,6 +480,57 @@ class Utils {
 //        };
         return shape;
     }
+    
+    static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Arc.Interval) -> Arc {
+        let d1 = p2 - p1
+        let d2 = p3 - p2
+        let d1p = BKPoint(x: d1.x * cos(quart) - d1.y * sin(quart),
+                          y: d1.x * sin(quart) + d1.y * cos(quart))
+        let d2p = BKPoint(x: d2.x * cos(quart) - d2.y * sin(quart),
+                          y: d2.x * sin(quart) + d2.y * cos(quart))
+        // chord midpoints
+        let m1 = (p1 + p2) / 2.0
+        let m2 = (p2 + p3) / 2.0
+        // midpoint offsets
+        let m1n = m1 + d1p
+        let m2n = m2 + d2p
+        // intersection of these lines:
+        let oo = Utils.lli8(m1.x, m1.y, m1n.x, m1n.y, m2.x, m2.y, m2n.x, m2n.y)
+        
+        assert(oo != nil)
+        
+        let o: BKPoint = oo!
+        let r = Utils.dist(o, p1)
+        // arc start/end values, over mid point:
+        var s = atan2(p1.y - o.y, p1.x - o.x)
+        let m = atan2(p2.y - o.y, p2.x - o.x)
+        var e = atan2(p3.y - o.y, p3.x - o.x)
+        // determine arc direction (cw/ccw correction)
+        if s<e {
+            // if s<m<e, arc(s, e)
+            // if m<s<e, arc(e, s + tau)
+            // if s<e<m, arc(e, s + tau)
+            if s>m || m>e {
+                s += tau;
+            }
+            if s>e {
+                swap(&s, &e)
+            }
+        }
+        else {
+            // if e<m<s, arc(e, s)
+            // if m<e<s, arc(s, e + tau)
+            // if e<s<m, arc(s, e + tau)
+            if e<m && m<s {
+                swap(&s, &e)
+            }
+            else {
+                e += tau
+            }
+        }
+        return Arc(origin: o, radius: r, start: s, end: e, interval: interval)
+    }
+
 
     
 }

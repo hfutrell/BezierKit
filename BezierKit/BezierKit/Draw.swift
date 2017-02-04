@@ -183,6 +183,19 @@ class Draw {
         
     }
     
+    static func draw(_ context: CGContext, arc: Arc, offset: BKPoint = BKPointZero) {
+        let o = offset
+        context.beginPath()
+        context.move(to: (arc.origin + o).toCGPoint())
+        context.addArc(center: (arc.origin + o).toCGPoint(),
+                       radius: arc.radius,
+                       startAngle: arc.start,
+                       endAngle: arc.end,
+                       clockwise: false)
+        context.addLine(to: (arc.origin + o).toCGPoint())
+        context.drawPath(using: CGPathDrawingMode.fillStroke)
+    }
+    
     static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
         context.beginPath();
         if hull.count == 6 {

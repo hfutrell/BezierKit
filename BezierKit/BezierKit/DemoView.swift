@@ -303,6 +303,19 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
         })
+        let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
+                          controlPoints: controlPoints,
+                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
+                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                            let curve = self.draggableCubicCurve()
+                            Draw.drawSkeleton(context, curve: curve)
+                            let arcs = curve.arcs();
+                            Draw.setColor(context, color: Draw.black)
+                            for arc in arcs {
+                                Draw.setRandomFill(context, alpha: 0.1)
+                                Draw.draw(context, arc: arc);
+                            }
+        })
         let demo16 = Demo(title: ".scale(d)",
                           controlPoints: controlPoints,
                           quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
@@ -428,6 +441,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo12)
         self.registerDemo(demo13)
         self.registerDemo(demo14)
+        self.registerDemo(demo15)
         self.registerDemo(demo16)
         self.registerDemo(demo17)
         self.registerDemo(demo18)
