@@ -16,6 +16,17 @@ struct TimeTaggedCurve {
     let _t2: BKFloat
     let curve: CubicBezier
     
+    // todo: refactor and fix ugliness
+    func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezier {
+        var q = CubicBezier.Hull(self.curve.points, t1);
+       
+        let q2 = self.curve.order == 2 ? [q[0],q[3],q[5]] : [q[9],q[8],q[6],q[3]]
+        let t2Prime = Utils.map(t2,t1,1,0,1);
+        var p = CubicBezier.Hull(q2, t2Prime)
+        let left = self.curve.order == 2 ? CubicBezier(points: [p[0],p[3],p[5]]) : CubicBezier(points: [p[0],p[4],p[7],p[9]])
+        return left
+    }
+    
     func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {
         // shortcuts
         if (t1 == 0.0) && (t2 != nil) && (t2 != 0.0) {
@@ -307,14 +318,17 @@ class CubicBezier {
         return ret;
     }
     
-    func hull(_ t: BKFloat) -> [BKPoint] {
-        var q: [BKPoint] = [BKPoint](repeating: BKPointZero, count: self.points.count * (self.self.points.count+1) / 2)
-        q[0..<self.points.count] = self.points[0..<self.points.count]
+    static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
+       
+        let c: Int = p.count
+
+        var q: [BKPoint] = [BKPoint](repeating: BKPointZero, count: c * (c+1) / 2)
+        q[0..<c] = p[0..<c]
         
         // we lerp between all points (in-place), until we have 1 point left.
         var start: Int = 0
-        var j = self.points.count
-        for count in (1 ..< self.points.count).reversed()  {
+        var j: Int = c
+        for count in (1 ..< c).reversed()  {
             let end: Int = start + count
             for i in start ..< end {
                 let pt = Utils.lerp(t,q[i],q[i+1])
@@ -323,8 +337,13 @@ class CubicBezier {
             }
             start = end + 1
         }
-        assert(j == self.points.count * (self.points.count+1) / 2)
+        assert(j == c * (c+1) / 2)
         return q;
+
+    }
+    
+    func hull(_ t: BKFloat) -> [BKPoint] {
+        return CubicBezier.Hull(self.points, t)
     }
 
 
@@ -527,14 +546,14 @@ class CubicBezier {
             while found {
                 found = false
                 for t2 in stride(from: t1+step, through: 1.0+step, by: step) {
-                    let segment = p1.curve.split(from: t1, to: t2)
+                    let segment = p1.split(from: t1, to: t2)
                     if segment.simple == false {
                         let t2 = t2 - step
                         if abs(t1-t2) < step {
                             // we can never form a reduction
                             return
                         }
-                        let segment = p1.curve.split(from: t1, to: t2)
+                        let segment = p1.split(from: t1, to: t2)
                         let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
                                                             _t2: Utils.map(t2,0,1,p1._t1,p1._t2),
                                                             curve: segment)
@@ -546,7 +565,7 @@ class CubicBezier {
                 }
             }
             if t1 < 1.0 {
-                let segment = p1.curve.split(from: t1, to: 1.0)
+                let segment = p1.split(from: t1, to: 1.0)
                 let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
                                                     _t2: p1._t2,
                                                 curve: segment)
