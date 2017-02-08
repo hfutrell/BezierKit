@@ -107,6 +107,7 @@ struct BKPoint {
         }
         else {
             assert(false, "bad dimension!")
+            return 0.0
         }
     }
 }

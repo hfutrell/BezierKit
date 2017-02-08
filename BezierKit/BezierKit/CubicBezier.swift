@@ -285,13 +285,16 @@ class CubicBezier {
         var a: BKFloat = 0.0
         var b: BKFloat = 0.0
         var c: BKFloat = 0.0
-        var p: [BKPoint] = self.dpoints[0] // todo: more efficient way of doing this?
+        var p: [BKPoint] = []
+        let d: [BKPoint] = self.points
+        let k: BKFloat = BKFloat(self.points.count-1)
         if self.order == 2 {
-            p = [p[0], p[1], BKPointZero]
+            p = [(d[1] - d[0]) * k, (d[2] - d[1]) * k, BKPointZero]
             a = mt
             b = t
         }
         else if self.order == 3 {
+            p = [(d[1] - d[0]) * k, (d[2] - d[1]) * k, (d[3] - d[2]) * k]
             a = mt*mt
             b = mt*t*2
             c = t*t
@@ -305,25 +308,22 @@ class CubicBezier {
     }
     
     func hull(_ t: BKFloat) -> [BKPoint] {
-        var p = self.points
-        var q: [BKPoint] = [BKPoint](repeating: BKPointZero, count: self.order + 1)
-        q[0] = p[0]
-        q[1] = p[1]
-        q[2] = p[2]
-        if self.order == 3 {
-            q[3] = p[3]
-        }
-        // we lerp between all points at each iteration, until we have 1 point left.
-        while p.count > 1 {
-            var _p: [BKPoint] = []
-            let l = p.count-1
-            for i in 0..<l {
-                let pt = Utils.lerp(t,p[i],p[i+1])
-                q.append(pt)
-                _p.append(pt)
+        var q: [BKPoint] = [BKPoint](repeating: BKPointZero, count: self.points.count * (self.self.points.count+1) / 2)
+        q[0..<self.points.count] = self.points[0..<self.points.count]
+        
+        // we lerp between all points (in-place), until we have 1 point left.
+        var start: Int = 0
+        var j = self.points.count
+        for count in (1 ..< self.points.count).reversed()  {
+            let end: Int = start + count
+            for i in start ..< end {
+                let pt = Utils.lerp(t,q[i],q[i+1])
+                q[j] = pt
+                j += 1
             }
-            p = _p;
+            start = end + 1
         }
+        assert(j == self.points.count * (self.points.count+1) / 2)
         return q;
     }
 
@@ -500,75 +500,60 @@ class CubicBezier {
         var pass1: [TimeTaggedCurve] = []
         var pass2: [TimeTaggedCurve] = []
         // first pass: split on extrema
-        var extrema: [BKFloat] = self.extrema().values;
-        if extrema.index(of: 0) == nil {
-            extrema.insert(0, at: 0)
+        var extrema: [BKFloat] = self.extrema().values
+        if extrema.index(of: 0.0) == nil {
+            extrema.insert(0.0, at: 0)
         }
-        if extrema.index(of: 1) == nil {
-            extrema.append(1)
+        if extrema.index(of: 1.0) == nil {
+            extrema.append(1.0)
         }
         
         var t1 = extrema[0]
         for i in 1..<extrema.count {
             let t2 = extrema[i]
-            if case let SplitResult.singleCurve(curve) = self.split(t1,t2) {
-                let taggedSegment = TimeTaggedCurve(_t1: t1, _t2: t2, curve: curve.curve)
+            if abs(t1 - t2) >= step { // todo: I had to add this logic myself
+                let curve = self.split(from: t1, to: t2)
+                let taggedSegment = TimeTaggedCurve(_t1: t1, _t2: t2, curve: curve)
                 pass1.append(taggedSegment)
                 t1 = t2
-            }
-            else {
-                assert(false, "fuck")
             }
         }
         
         // second pass: further reduce these segments to simple segments
         // TODO: this loop is INSANELY SLOW
-        for p1 in pass1 {
+        pass1.forEach({(p1: TimeTaggedCurve) in
             var t1: BKFloat = 0.0
-            var t2: BKFloat = 0.0
-            while t2 <= 1.0 {
-                t2 = t1+step
-                while t2 <= (1.0+step) {
-                    if case let SplitResult.singleCurve(segment) = p1.curve.split(t1,t2) {
-
-                        if segment.curve.simple == false {
-                            t2 -= step
-                            if abs(t1-t2) < step {
-                                // we can never form a reduction
-                                return [];
-                            }
-                            if case let SplitResult.singleCurve(segment) = p1.curve.split(t1,t2) {
-                                let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
-                                                                    _t2: Utils.map(t2,0,1,p1._t1,p1._t2),
-                                                                    curve: segment.curve)
-                                pass2.append(taggedSegment);
-                                t1 = t2;
-                                break;
-                            }
-                            else {
-                                assert(false, "fuck")
-                            }
+            var found = true
+            while found {
+                found = false
+                for t2 in stride(from: t1+step, through: 1.0+step, by: step) {
+                    let segment = p1.curve.split(from: t1, to: t2)
+                    if segment.simple == false {
+                        let t2 = t2 - step
+                        if abs(t1-t2) < step {
+                            // we can never form a reduction
+                            return
                         }
+                        let segment = p1.curve.split(from: t1, to: t2)
+                        let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
+                                                            _t2: Utils.map(t2,0,1,p1._t1,p1._t2),
+                                                            curve: segment)
+                        pass2.append(taggedSegment)
+                        found = true
+                        t1 = t2
+                        break
                     }
-                    else {
-                        assert(false, "fuck")
-                    }
-                    t2 += step
                 }
             }
             if t1 < 1.0 {
-                if case let SplitResult.singleCurve(segment) = p1.curve.split(t1,t2) {
-                    let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
-                                                        _t2: p1._t2,
-                                                        curve: segment.curve)
-                    pass2.append(taggedSegment);
-                }
-                else {
-                    assert(false, "fuck")
-                }
+                let segment = p1.curve.split(from: t1, to: 1.0)
+                let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
+                                                    _t2: p1._t2,
+                                                curve: segment)
+                pass2.append(taggedSegment)
             }
-        }
-        return pass2;
+        })
+        return pass2
     }
     
     /*
@@ -656,8 +641,8 @@ class CubicBezier {
         }
         // for non-linear curves we need to create a set of curves
         let reduced: [TimeTaggedCurve] = self.reduce()
-        return reduced.map({(s: TimeTaggedCurve) -> CubicBezier in
-            return s.curve.scale(distance: d)
+        return reduced.map({
+            return $0.curve.scale(distance: d)
         })
     }
     
