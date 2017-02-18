@@ -293,12 +293,6 @@ class Utils {
         var dx2 = v2.x - o.x
         var dy2 = v2.y - o.y
         let cross = dx1*dy2 - dy1*dx2
-        let m1 = sqrt(dx1*dx1+dy1*dy1)
-        let m2 = sqrt(dx2*dx2+dy2*dy2)
-        dx1 /= m1
-        dy1 /= m1
-        dx2 /= m2
-        dy2 /= m2
         let dot = dx1*dx2 + dy1*dy2;
         return atan2(cross, dot)
     }

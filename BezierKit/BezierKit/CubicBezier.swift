@@ -493,17 +493,17 @@ class CubicBezier {
     
     lazy var simple: Bool =  {
         if self.order == 3 {
-            var a1 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[1]);
-            var a2 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[2]);
+            var a1 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[1])
+            var a2 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[2])
             if a1>0 && a2<0 || a1<0 && a2>0 {
-              return false;
+              return false
             }
         }
-        var n1 = self.normal(0);
-        var n2 = self.normal(1);
-        var s = n1.x*n2.x + n1.y*n2.y + n1.z*n2.z;
-        var angle = abs(acos(s));
-        return angle < (BKFloat.pi / 3.0);
+        var n1 = self.normal(0)
+        var n2 = self.normal(1)
+        var s = n1.x*n2.x + n1.y*n2.y + n1.z*n2.z
+        var angle = abs(acos(s))
+        return angle < (BKFloat.pi / 3.0)
     }()
 
     
@@ -542,34 +542,26 @@ class CubicBezier {
         // TODO: this loop is INSANELY SLOW
         pass1.forEach({(p1: TimeTaggedCurve) in
             var t1: BKFloat = 0.0
-            var found = true
-            while found {
-                found = false
-                for t2 in stride(from: t1+step, through: 1.0+step, by: step) {
-                    let segment = p1.split(from: t1, to: t2)
-                    if segment.simple == false {
-                        let t2 = t2 - step
-                        if abs(t1-t2) < step {
-                            // we can never form a reduction
-                            return
-                        }
-                        let segment = p1.split(from: t1, to: t2)
-                        let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
-                                                            _t2: Utils.map(t2,0,1,p1._t1,p1._t2),
-                                                            curve: segment)
-                        pass2.append(taggedSegment)
-                        found = true
-                        t1 = t2
+            while t1 < 1.0 {
+                var t2: BKFloat = 1.0
+                for var t in stride(from: t1+step, to: 1.0 + step, by: step) {
+                    if t > 1.0 {
+                        t = 1.0
+                    }
+                    let segment = p1.split(from: t1, to: t)
+                    if segment.simple {
+                        t2 = t
+                    }
+                    else {
                         break
                     }
                 }
-            }
-            if t1 < 1.0 {
-                let segment = p1.split(from: t1, to: 1.0)
+                let segment = p1.split(from: t1, to: t2)
                 let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
-                                                    _t2: p1._t2,
-                                                curve: segment)
+                                                    _t2: Utils.map(t2,0,1,p1._t1,p1._t2),
+                                                    curve: segment)
                 pass2.append(taggedSegment)
+                t1 = t2
             }
         })
         return pass2
