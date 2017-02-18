@@ -94,8 +94,11 @@ class CubicBezier {
     let points: [BKPoint]
     let order: Int = 3
     private let threeD: Bool = false // todo: fix this
-    let dims: [Int] = [0, 1, 2] // todo: improve
-
+    
+    var dimensions: Int {
+        return threeD ? 3 : 2
+    }
+    
     var p0: BKPoint {
         return self.points[0]
     }
@@ -380,47 +383,32 @@ class CubicBezier {
         return n
     }
     
-    func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) { // todo: is xyz used normally? can we stick it in an optional inout?
-        let dims = [0, 1, 2] // todo: cleanup
+    func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) {
         var result: (xyz: [[BKFloat]], values: [BKFloat]) = (xyz: [[],[],[]], values: [])
         var roots: [BKFloat] = []
-        for dim in dims {
-            let mfn = {(v: BKPoint) -> BKFloat in
-                switch(dim) {
-                    case 0:
-                        return v.x
-                    case 1:
-                        return v.y
-                    case 2:
-                        return v.z
-                    default:
-                        assert(false, "nope!")
-                        return 0.0 // TODO: fix
-                }
-            }
+        for d in 0..<self.dimensions {
+            let mfn = {(v: BKPoint) in v.dim(d) }
             var p: [BKFloat] = self.dpoints[0].map(mfn)
-            result.xyz[dim] = Utils.droots(p);
+            result.xyz[d] = Utils.droots(p)
             if self.order == 3 {
-                p = self.dpoints[1].map(mfn);
-                result.xyz[dim] += Utils.droots(p);
+                p = self.dpoints[1].map(mfn)
+                result.xyz[d] += Utils.droots(p)
             }
-            result.xyz[dim] = result.xyz[dim].filter(
-                {(t) in
-                    return (t >= 0 && t <= 1)
-                }
-            )
-            roots += (result.xyz[dim].sorted())
+            result.xyz[d] = result.xyz[d].filter({ $0 >= 0 && $0 <= 1 })
+            roots += (result.xyz[d].sorted())
         }
-        // todo: cleanup, what was this ugly code even doing in the javascript?
-        var rootsPrime: [BKFloat] = []
         let sortedRoots = roots.sorted()
-        for idx in 0..<sortedRoots.count {
-            let v: BKFloat = sortedRoots[idx]
-            if sortedRoots.index(of: v) == idx {
-                rootsPrime.append(v)
+        if sortedRoots.count > 0 {
+            var last: BKFloat = sortedRoots[0]
+            result.values.append(last)
+            for idx in 1..<sortedRoots.count {
+                let v = sortedRoots[idx]
+                if v > last {
+                    result.values.append(v)
+                    last = v
+                }
             }
         }
-        result.values = rootsPrime
         return result
     }
         
@@ -428,22 +416,10 @@ class CubicBezier {
         // todo: this function is fugly
         let extrema = self.extrema()
         var result: BoundingBox = BoundingBox(min: BKPointZero, max: BKPointZero)
-        for d in self.dims {
+        for d in 0..<self.dimensions {
             let computeDimension = { (t: BKFloat) -> BKFloat in
                 let p = self.compute(t)
-                if ( d == 0 ) {
-                    return p.x
-                }
-                else if ( d == 1 ) {
-                    return p.y
-                }
-                else if ( d == 2 ) {
-                    return p.z
-                }
-                else {
-                    assert(false, "what?")
-                    return 0
-                }
+                return p.dim(d)
             }
             let (min, max) = Utils.getminmax(list: extrema.xyz[d], computeDimension: computeDimension )
             if ( d == 0 ) {
