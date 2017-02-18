@@ -321,7 +321,7 @@ class CubicBezier {
         return ret;
     }
     
-    static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
+    private static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
        
         let c: Int = p.count
 
@@ -771,7 +771,7 @@ class CubicBezier {
     }
 
     
-    func internalOutline(d1: BKFloat, d2: BKFloat, d3: BKFloat, d4: BKFloat, graduated: Bool) -> PolyBezier {
+    private func internalOutline(d1: BKFloat, d2: BKFloat, d3: BKFloat, d4: BKFloat, graduated: Bool) -> PolyBezier {
 
         let reduced = self.reduce()
         let len = reduced.count
