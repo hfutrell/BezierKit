@@ -160,7 +160,7 @@ class Draw {
     }
     
     static func drawText(_ context: CGContext, text: String, offset: BKPoint = BKPointZero) {
-        // todo: write me
+        // TODO: write me
         (text as NSString).draw(at: NSPoint(x: offset.x, y: offset.y), withAttributes: [:])
         
         

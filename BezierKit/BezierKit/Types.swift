@@ -8,17 +8,17 @@
 
 import Foundation
 
-struct Intersection {
+public struct Intersection {
     var t1: BKFloat
     var t2: BKFloat
 }
 
-struct Line {
+public struct Line {
     var p1: BKPoint
     var p2: BKPoint
 }
 
-struct Arc {
+public struct Arc {
     struct Interval {
         var start: BKFloat
         var end: BKFloat
@@ -30,7 +30,7 @@ struct Arc {
     var interval: Interval // represents t-values [0, 1] on curve
 }
 
-struct Shape {
+public struct Shape {
     struct Cap {
         var curve: CubicBezier
         var virtual: Bool
@@ -69,7 +69,7 @@ struct Shape {
     }
 }
 
-struct BKPoint {
+public struct BKPoint {
     var x : BKFloat
     var y : BKFloat
     var z : BKFloat
@@ -112,7 +112,7 @@ struct BKPoint {
     }
 }
 
-struct BoundingBox {
+public struct BoundingBox {
     var min: BKPoint
     var max: BKPoint
     var mid: BKPoint {
@@ -153,19 +153,19 @@ struct BoundingBox {
     }
 }
 
-let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0, z: 0.0)
+public let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0, z: 0.0)
 
-extension CGPoint {
+public extension CGPoint {
     init(_ p: BKPoint) {
         self.x = p.x
         self.y = p.y
     }
 }
 
-typealias BKFloat = CGFloat
-typealias BKRect = CGRect
+public typealias BKFloat = CGFloat
+public typealias BKRect = CGRect
 
-extension BKPoint {
+public extension BKPoint {
     var length: BKFloat {
         return sqrt(self.lengthSquared)
     }
@@ -182,21 +182,21 @@ extension BKPoint {
         return CGPoint(self)
     }
 }
-func += ( left: inout BKPoint, right: BKPoint) {
+public func += ( left: inout BKPoint, right: BKPoint) {
     return left = left + right
 }
-func -= ( left: inout BKPoint, right: BKPoint) {
+public func -= ( left: inout BKPoint, right: BKPoint) {
     return left = left - right
 }
-func + (left: BKPoint, right: BKPoint) -> BKPoint {
+public func + (left: BKPoint, right: BKPoint) -> BKPoint {
     return BKPoint(x: left.x + right.x, y: left.y + right.y, z: left.z + right.z)
 }
-func - (left: BKPoint, right: BKPoint) -> BKPoint {
+public func - (left: BKPoint, right: BKPoint) -> BKPoint {
     return BKPoint(x: left.x - right.x, y: left.y - right.y, z: left.z - right.z)
 }
-func / (left: BKPoint, right: BKFloat) -> BKPoint {
+public func / (left: BKPoint, right: BKFloat) -> BKPoint {
     return BKPoint(x: left.x / right, y: left.y / right, z: left.z / right)
 }
-func * (left: BKPoint, right: BKFloat) -> BKPoint {
+public func * (left: BKPoint, right: BKFloat) -> BKPoint {
     return BKPoint(x: left.x * right, y: left.y * right, z: left.z * right)
 }

@@ -288,10 +288,10 @@ class Utils {
     }
     
     static func angle(o: BKPoint, v1: BKPoint, v2: BKPoint) -> BKFloat {
-        var dx1 = v1.x - o.x
-        var dy1 = v1.y - o.y
-        var dx2 = v2.x - o.x
-        var dy2 = v2.y - o.y
+        let dx1 = v1.x - o.x
+        let dy1 = v1.y - o.y
+        let dx2 = v2.x - o.x
+        let dy2 = v2.y - o.y
         let cross = dx1*dy2 - dy1*dx2
         let dot = dx1*dx2 + dy1*dy2;
         return atan2(cross, dot)
@@ -379,37 +379,14 @@ class Utils {
         
         }
         
+        let cc1 = c1.split(0.5) as! MultipleCurves
+        let cc2 = c2.split(0.5) as! MultipleCurves
         
-        let cc1 = c1.split(0.5)
-        let cc2 = c2.split(0.5)
-        
-        var cc1left: TimeTaggedCurve
-        var cc1right: TimeTaggedCurve
-        var cc2left: TimeTaggedCurve
-        var cc2right: TimeTaggedCurve
-
-        if case let SplitResult.multipleCurves(left, right, _) = cc1 {
-            cc1left = left
-            cc1right = right
-        }
-        else {
-            assert(false, "???")
-            return []
-        }
-        if case let SplitResult.multipleCurves(left, right, _) = cc2 {
-            cc2left = left
-            cc2right = right
-        }
-        else {
-            assert(false, "???")
-            return []
-        }
-
         var pairs = [
-        (left: cc1left, right: cc2left ),
-        (left: cc1left, right: cc2right ),
-        (left: cc1right, right: cc2right ),
-        (left: cc1right, right: cc2left )]
+        (left: cc1.left, right: cc2.left ),
+        (left: cc1.left, right: cc2.right ),
+        (left: cc1.right, right: cc2.right ),
+        (left: cc1.right, right: cc2.left )]
         pairs = pairs.filter( {(pair) in
             return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
         })

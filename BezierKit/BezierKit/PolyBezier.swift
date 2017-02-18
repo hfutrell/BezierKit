@@ -8,12 +8,14 @@
 
 import Foundation
 
-class PolyBezier {
-    let curves: [CubicBezier]
+public class PolyBezier {
+    public let curves: [CubicBezier]
     
-    init(curves: [CubicBezier]) {
+    public init(curves: [CubicBezier]) {
         self.curves = curves
     }
+    
+// TODO: flesh out the rest of this class
     
 //    var length: BKFloat {
 //        return 0.0
@@ -21,7 +23,7 @@ class PolyBezier {
 //    var boundingBox: BKBoundingBox {
 //        
 //    }
-    func offset(distance d: BKFloat) -> PolyBezier {
+    public func offset(distance d: BKFloat) -> PolyBezier {
         return PolyBezier(curves: self.curves.reduce([],{
             $0 + $1.offset(distance: d)
         }))
