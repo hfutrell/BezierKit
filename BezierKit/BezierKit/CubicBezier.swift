@@ -321,7 +321,7 @@ class CubicBezier {
         return ret;
     }
     
-    private static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
+    static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
        
         let c: Int = p.count
 
