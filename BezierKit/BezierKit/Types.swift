@@ -32,23 +32,23 @@ public struct Arc {
 
 public struct Shape {
     struct Cap {
-        var curve: CubicBezier
+        var curve: CubicBezierCurve
         var virtual: Bool
-        init(curve: CubicBezier) {
+        init(curve: CubicBezierCurve) {
             self.curve = curve
             self.virtual = false
         }
     }
     var startcap: Cap
     var endcap: Cap
-    var forward: CubicBezier
-    var back: CubicBezier
+    var forward: BezierCurve
+    var back: BezierCurve
     func boundingBox() -> BoundingBox { // TODO: convert me to a property that is computed once
         var mx =  BKFloat.infinity
         var my =  BKFloat.infinity
         var MX = -BKFloat.infinity
         var MY = -BKFloat.infinity
-        for s: CubicBezier? in [startcap.virtual ? nil : startcap.curve, forward, back, endcap.virtual ? nil : endcap.curve] {
+        for s: BezierCurve? in [startcap.virtual ? nil : startcap.curve, forward, back, endcap.virtual ? nil : endcap.curve] {
             if s != nil {
                 let bbox: BoundingBox = s!.boundingBox
                 if mx > bbox.min.x {

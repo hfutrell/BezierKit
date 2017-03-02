@@ -25,7 +25,7 @@ class DemoView: NSView, DraggableDelegate {
         self.currentDemo = self.demos[sender.indexOfSelectedItem]
     }
     
-    var curve: CubicBezier?
+    var curve: CubicBezierCurve?
     
     var mouseTrackingArea: NSTrackingArea?
     
@@ -114,9 +114,9 @@ class DemoView: NSView, DraggableDelegate {
             let B = BKPoint(x: 50, y: 80)
             let p3 = BKPoint(x:135, y:100)
             let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
-            let curves: [CubicBezier] = tvalues.map({
-                (t: CGFloat) -> (CubicBezier) in
-                    return CubicBezier(fromPointsWithS: p1, B: B, E: p3, t: t)
+            let curves: [CubicBezierCurve] = tvalues.map({
+                (t: CGFloat) -> (CubicBezierCurve) in
+                    return CubicBezierCurve(fromPointsWithS: p1, B: B, E: p3, t: t)
                 }
             )
             let offset = BKPoint(x: 0.0, y: 0.0)
@@ -154,7 +154,7 @@ class DemoView: NSView, DraggableDelegate {
                             let offset = curve.offset(distance: -10)
                             let last = offset.count-1
                             for idx in 0 ..< offset.count {
-                                let c: CubicBezier = offset[idx]
+                                let c: CubicBezierCurve = offset[idx] as! CubicBezierCurve
                                 Draw.drawCurve(context, curve: c)
                                 if(idx==last) {
                                     let p1 = curve.offset(t: 0.95, distance: -15)
@@ -214,7 +214,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.setColor(context, color: Draw.lightGrey)
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
-                            let c = curve.split(from: 0.25, to: 0.75);
+                            let c = curve.split(from: 0.25, to: 0.75) as! CubicBezierCurve
                             Draw.setColor(context, color: Draw.red)
                             Draw.drawCurve(context, curve: c)
                             Draw.drawCircle(context, center: curve.compute(0.25), radius: 3);
@@ -276,7 +276,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
                             for c in curve.offset(distance: 25) {
-                                Draw.drawCurve(context, curve: c)
+                                Draw.drawCurve(context, curve: c as! CubicBezierCurve)
                             }
                             Draw.drawPoint(context, origin: curve.offset(t: 0.5, distance: 25))
         
@@ -296,7 +296,7 @@ class DemoView: NSView, DraggableDelegate {
                                         Draw.drawCircle(context, center: c.points[0], radius: 3)
                                     }
                                     Draw.setRandomColor(context)
-                                    Draw.drawCurve(context, curve: c)
+                                    Draw.drawCurve(context, curve: c as! CubicBezierCurve)
                                 }
                             }
                             else {
@@ -330,7 +330,7 @@ class DemoView: NSView, DraggableDelegate {
                                     if i > 0 {
                                         Draw.drawCircle(context, center: c.points[0], radius: 3)
                                     }
-                                    Draw.drawCurve(context, curve: c)
+                                    Draw.drawCurve(context, curve: c as! CubicBezierCurve)
                                 }
                                 for i in stride(from: -30, through: 30, by: 10) {
                                     Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)));
@@ -348,7 +348,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
-                            let doc = {(c: CubicBezier) in Draw.drawCurve(context, curve: c) }
+                            let doc = {(c: BezierCurve) in Draw.drawCurve(context, curve: c) }
                             let outline = curve.outline(distance: 25)
                             outline.curves.forEach(doc)
                             Draw.setColor(context, color: Draw.transparentBlue)
@@ -364,7 +364,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
-                            let doc = {(c: CubicBezier) in Draw.drawCurve(context, curve: c) }
+                            let doc = {(c: BezierCurve) in Draw.drawCurve(context, curve: c) }
                             let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
                             outline.curves.forEach(doc)
         })
@@ -414,7 +414,7 @@ class DemoView: NSView, DraggableDelegate {
                           quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
                           cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
-                            let curve2 =  CubicBezier(points: intersectsCurve2)
+                            let curve2 =  CubicBezierCurve(points: intersectsCurve2)
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -465,11 +465,11 @@ class DemoView: NSView, DraggableDelegate {
         self.popup.selectItem(at: index)
     }
     
-    func draggableCubicCurve() -> CubicBezier {
-        return CubicBezier( p0: self.draggables[0].bkLocation,
-                            p1: self.draggables[1].bkLocation,
-                            p2: self.draggables[2].bkLocation,
-                            p3: self.draggables[3].bkLocation )
+    func draggableCubicCurve() -> CubicBezierCurve {
+        return CubicBezierCurve( p0: self.draggables[0].bkLocation,
+                                 p1: self.draggables[1].bkLocation,
+                                 p2: self.draggables[2].bkLocation,
+                                 p3: self.draggables[3].bkLocation )
     }
     
     func clearDraggables() {

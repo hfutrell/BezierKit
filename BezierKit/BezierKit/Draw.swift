@@ -119,7 +119,12 @@ class Draw {
         context.setStrokeColor(color)
     }
     
-    static func drawCurve(_ context: CGContext, curve: CubicBezier, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+    static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+        // TODO: support quadratic curves
+        drawCurve(context, curve: curve as! CubicBezierCurve, offset: offset)
+    }
+    
+    static func drawCurve(_ context: CGContext, curve: CubicBezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
         context.move(to: (curve.p0 + offset).toCGPoint())
         context.addCurve(to: (curve.p3 + offset).toCGPoint(),
@@ -167,7 +172,7 @@ class Draw {
     }
  
     static func drawSkeleton(_ context: CGContext,
-                  curve: CubicBezier,
+                  curve: CubicBezierCurve,
                   offset: BKPoint=BKPoint(x: 0.0, y: 0.0),
                   coords: Bool=true) {
     

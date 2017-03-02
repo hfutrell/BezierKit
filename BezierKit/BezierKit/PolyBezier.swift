@@ -9,9 +9,9 @@
 import Foundation
 
 public class PolyBezier {
-    public let curves: [CubicBezier]
+    public let curves: [BezierCurve]
     
-    public init(curves: [CubicBezier]) {
+    public init(curves: [BezierCurve]) {
         self.curves = curves
     }
     

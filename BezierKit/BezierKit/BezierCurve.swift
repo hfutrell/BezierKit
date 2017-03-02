@@ -1,12 +1,12 @@
 //
-//  CubicBezier.swift
+//  BezierCurve.swift
 //  BezierKit
 //
-//  Created by Holmes Futrell on 10/28/16.
-//  Copyright © 2016 Holmes Futrell. All rights reserved.
+//  Created by Holmes Futrell on 2/19/17.
+//  Copyright © 2017 Holmes Futrell. All rights reserved.
 //
 
-import AppKit
+import Foundation
 
 public typealias DistanceFunction = (_ v: BKFloat) -> BKFloat
 
@@ -14,16 +14,16 @@ public typealias DistanceFunction = (_ v: BKFloat) -> BKFloat
 public struct TimeTaggedCurve {
     let _t1: BKFloat
     let _t2: BKFloat
-    let curve: CubicBezier
+    let curve: BezierCurve
     
     // TODO: refactor and fix ugliness
-    func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezier {
-        var q = CubicBezier.Hull(self.curve.points, t1)
-       
+    func split(from t1: BKFloat, to t2: BKFloat) -> BezierCurve {
+        var q = BezierCurve.Hull(self.curve.points, t1)
+        
         let q2 = self.curve.order == 2 ? [q[0],q[3],q[5]] : [q[9],q[8],q[6],q[3]]
         let t2Prime = Utils.map(t2,t1,1,0,1)
-        var p = CubicBezier.Hull(q2, t2Prime)
-        let left = self.curve.order == 2 ? CubicBezier(points: [p[0],p[3],p[5]]) : CubicBezier(points: [p[0],p[4],p[7],p[9]])
+        var p = BezierCurve.Hull(q2, t2Prime)
+        let left = self.curve.order == 2 ? BezierCurve.init(points: [p[0],p[3],p[5]]) : CubicBezierCurve(points: [p[0],p[4],p[7],p[9]])
         return left
     }
     
@@ -46,10 +46,10 @@ public struct TimeTaggedCurve {
         
         // no shortcut: use "de Casteljau" iteration.
         var q = self.curve.hull(t1)
-
-        let left = self.curve.order == 2 ? CubicBezier(points: [q[0],q[3],q[5]]) : CubicBezier(points: [q[0],q[4],q[7],q[9]])
-        let right = self.curve.order == 2 ? CubicBezier(points: [q[0],q[3],q[5]]) : CubicBezier(points: [q[9],q[8],q[6],q[3]])
-
+        
+        let left = self.curve.order == 2 ? BezierCurve(points: [q[0],q[3],q[5]]) : CubicBezierCurve(points: [q[0],q[4],q[7],q[9]])
+        let right = self.curve.order == 2 ? BezierCurve(points: [q[0],q[3],q[5]]) : CubicBezierCurve(points: [q[9],q[8],q[6],q[3]])
+        
         let taggedLeft = TimeTaggedCurve(_t1: left_t1, _t2: left_t2, curve: left)
         let taggedRight = TimeTaggedCurve(_t1: right_t1, _t2: right_t2, curve: right)
         
@@ -67,7 +67,7 @@ public struct TimeTaggedCurve {
         let subsplit: MultipleCurves = taggedRight.split(t2Prime) as! MultipleCurves
         return SingleCurve(curve: subsplit.left)
     }
-
+    
 }
 
 protocol SplitResult {
@@ -85,29 +85,16 @@ struct MultipleCurves: SplitResult {
 
 // MARK: -
 
-public class CubicBezier {
+public class BezierCurve {
     
     public static let defaultCurveIntersectionThreshold: BKFloat = 0.5
-
+    
     public let points: [BKPoint]
-    fileprivate let order: Int = 3
-    private let threeD: Bool = false // TODO: fix this
+    internal let order: Int = 3
+    internal let threeD: Bool = false // TODO: fix this
     
     private var dimensions: Int {
         return threeD ? 3 : 2
-    }
-    
-    public var p0: BKPoint {
-        return self.points[0]
-    }
-    public var p1: BKPoint {
-        return self.points[1]
-    }
-    public var p2: BKPoint {
-        return self.points[2]
-    }
-    public var p3: BKPoint {
-        return self.points[3]
     }
     
     // MARK: - initializers
@@ -115,55 +102,7 @@ public class CubicBezier {
     public init(points: [BKPoint]) {
         self.points = points
     }
-    
-    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
-        points = [p0, p1, p2, p3]
-    }
- 
-    // TODO: the header has all these autoclosures, what's up with that?
-    public convenience init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
-        
-        func getABC(n: Int, S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5) -> (A: BKPoint, B: BKPoint, C: BKPoint) {
-            let u = Utils.projectionRatio(n: n, t: t)
-            let um = 1-u
-            let C = BKPoint(
-                x: u*S.x + um*E.x,
-                y: u*S.y + um*E.y
-            )
-            let s = Utils.abcRatio(n: n, t: t)
-            let A = BKPoint(
-                x: B.x + (B.x-C.x)/s,
-                y: B.y + (B.y-C.y)/s
-            )
-            return ( A:A, B:B, C:C )
-        }
-
-        let abc = getABC(n: 3, S: S, B: B, E: E, t: t)
-
-        let d1 = (tempD1 != nil) ? tempD1! : Utils.dist(B,abc.C)
-        let d2 = d1 * (1-t) / t
-        
-        let selen = Utils.dist(S,E)
-        let lx = (E.x-S.x) / selen
-        let ly = (E.y-S.y) / selen
-        let bx1 = d1 * lx
-        let by1 = d1 * ly
-        let bx2 = d2 * lx
-        let by2 = d2 * ly
-        
-        // derivation of new hull coordinates
-        let e1  = BKPoint( x: B.x - bx1, y: B.y - by1 )
-        let e2  = BKPoint( x: B.x + bx2, y: B.y + by2 )
-        let A   = abc.A
-        let v1  = BKPoint( x: A.x + (e1.x-A.x)/(1-t), y: A.y + (e1.y-A.y)/(1-t) )
-        let v2  = BKPoint( x: A.x + (e2.x-A.x)/(t), y: A.y + (e2.y-A.y)/(t) )
-        let nc1 = BKPoint( x: S.x + (v1.x-S.x)/(t), y: S.y + (v1.y-S.y)/(t) )
-        let nc2 = BKPoint( x: E.x + (v2.x-E.x)/(1-t), y: E.y + (v2.y-E.y)/(1-t) )
-        // ...done
-        self.init(p0:S, p1: nc1, p2: nc2, p3: E)
-        
-    }
-    
+            
     // MARK: -
     
     private lazy var dpoints: [[BKPoint]] = {
@@ -190,27 +129,7 @@ public class CubicBezier {
         return angle > 0
     }()
     
-    private lazy var linear: Bool = {
-        let order = self.order
-        let points = self.points
-        var a = Utils.align(points, p1:points[0], p2:points[order])
-        for i in 0..<a.count {
-            // TODO: investigate horrible magic number usage
-            if abs(a[i].y) > 0.0001 {
-                return false
-            }
-        }
-        return true
-    }()
-    
-    /*
-        Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
-     */
-    public func length() -> BKFloat {
-        return Utils.length({(_ t: BKFloat) in self.derivative(t)})
-    }
-    
-    private lazy var simple: Bool =  {
+    internal lazy var simple: Bool =  {
         if self.order == 3 {
             var a1 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[1])
             var a2 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[2])
@@ -225,6 +144,26 @@ public class CubicBezier {
         return angle < (BKFloat.pi / 3.0)
     }()
     
+    private lazy var linear: Bool = {
+        let order = self.order
+        let points = self.points
+        var a = Utils.align(points, p1:points[0], p2:points[order])
+        for i in 0..<a.count {
+            // TODO: investigate horrible magic number usage
+            if abs(a[i].y) > 0.0001 {
+                return false
+            }
+        }
+        return true
+    }()
+    
+    /*
+     Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
+     */
+    public func length() -> BKFloat {
+        return Utils.length({(_ t: BKFloat) in self.derivative(t)})
+    }
+        
     // MARK:
     
     public func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) {
@@ -282,7 +221,7 @@ public class CubicBezier {
         }
         return result
     }()
-
+    
     // MARK: -
     
     fileprivate static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
@@ -304,13 +243,12 @@ public class CubicBezier {
             }
             start = end + 1
         }
-        assert(j == c * (c+1) / 2)
         return q
         
     }
     
     public func hull(_ t: BKFloat) -> [BKPoint] {
-        return CubicBezier.Hull(self.points, t)
+        return BezierCurve.Hull(self.points, t)
     }
     
     public func compute(_ t: BKFloat) -> BKPoint {
@@ -367,24 +305,23 @@ public class CubicBezier {
             return ret
         }
         
-// TODO: implement me
+        // TODO: implement me
         // higher order curves: use de Casteljau's computation
-//        var dCpts = JSON.parse(JSON.stringify(this.points))
-//        while dCpts.length > 1 {
-//            for (var i=0; i<dCpts.length-1; i++) {
-//                dCpts[i] = {
-//                    x: dCpts[i].x + (dCpts[i+1].x - dCpts[i].x) * t,
-//                    y: dCpts[i].y + (dCpts[i+1].y - dCpts[i].y) * t
-//                }
-//                if (typeof dCpts[i].z !== "undefined") {
-//                    dCpts[i] = dCpts[i].z + (dCpts[i+1].z - dCpts[i].z) * t
-//                }
-//            }
-//            dCpts.splice(dCpts.length-1, 1)
-//        }
-//        return dCpts[0]
-        assert(false)  // TODO: higher order unsupported for now
-        return BKPointZero
+        //        var dCpts = JSON.parse(JSON.stringify(this.points))
+        //        while dCpts.length > 1 {
+        //            for (var i=0; i<dCpts.length-1; i++) {
+        //                dCpts[i] = {
+        //                    x: dCpts[i].x + (dCpts[i+1].x - dCpts[i].x) * t,
+        //                    y: dCpts[i].y + (dCpts[i+1].y - dCpts[i].y) * t
+        //                }
+        //                if (typeof dCpts[i].z !== "undefined") {
+        //                    dCpts[i] = dCpts[i].z + (dCpts[i+1].z - dCpts[i].z) * t
+        //                }
+        //            }
+        //            dCpts.splice(dCpts.length-1, 1)
+        //        }
+        //        return dCpts[0]
+        fatalError("unimplemented")  // TODO: higher order unsupported for now
     }
     
     public func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
@@ -397,7 +334,6 @@ public class CubicBezier {
         
         return table
     }
-    
     // MARK: -
     
     public func derivative(_ t: BKFloat) -> BKPoint {
@@ -456,10 +392,10 @@ public class CubicBezier {
         }
         return self.threeD ? normal3(t) : normal2(t)
     }
-    
+
     // MARK: -
     
-    public func split(at t1: BKFloat) -> (left: CubicBezier, right: CubicBezier) {
+    public func split(at t1: BKFloat) -> (left: BezierCurve, right: BezierCurve) {
         assert(t1 > 0)
         assert(t1 < 1)
         let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
@@ -467,7 +403,7 @@ public class CubicBezier {
         return (left: splitResult.left.curve, right: splitResult.right.curve)
     }
     
-    public func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezier {
+    public func split(from t1: BKFloat, to t2: BKFloat) -> BezierCurve {
         assert( t2 > t1 )
         let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
         let splitResult = taggedSelf.split(t1, t2)
@@ -483,12 +419,12 @@ public class CubicBezier {
     // MARK: -
     
     /*
-        Reduces a curve to a collection of "simple" subcurves, where a simpleness is defined as having all control points on the same side of the baseline (cubics having the additional constraint that the control-to-end-point lines may not cross), and an angle between the end point normals no greater than 60 degrees.
+     Reduces a curve to a collection of "simple" subcurves, where a simpleness is defined as having all control points on the same side of the baseline (cubics having the additional constraint that the control-to-end-point lines may not cross), and an angle between the end point normals no greater than 60 degrees.
      
-        The main reason this function exists is to make it possible to scale curves. As mentioned in the offset function, curves cannot be offset without cheating, and the cheating is implemented in this function. The array of simple curves that this function yields can safely be scaled.
+     The main reason this function exists is to make it possible to scale curves. As mentioned in the offset function, curves cannot be offset without cheating, and the cheating is implemented in this function. The array of simple curves that this function yields can safely be scaled.
      
-
-    */
+     
+     */
     public func reduce() -> [TimeTaggedCurve] {
         let step: BKFloat = 0.01
         var pass1: [TimeTaggedCurve] = []
@@ -545,18 +481,24 @@ public class CubicBezier {
     // MARK: -
     
     /*
-        Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
+     Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
      */
-    public func scale(distance d: BKFloat) -> CubicBezier {
+    public func scale(distance d: BKFloat) -> CubicBezierCurve {
         return internalScale(distance: d, distanceFunction: nil)
     }
     
-    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> CubicBezier {
+    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> CubicBezierCurve {
         return internalScale(distance: nil, distanceFunction: distanceFn)
     }
     
-    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> CubicBezier {
+    private enum ScaleEnum {
+        case d(BKFloat)
+        case distanceFunction(DistanceFunction)
+    }
+    
+    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> CubicBezierCurve {
         
+        // TODO: this is a good candidate for enum, d is EITHER constant or a function
         assert((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
         
         let order = self.order
@@ -564,7 +506,7 @@ public class CubicBezier {
         if distanceFn != nil && self.order == 2 {
             // for quadratics we must raise to cubics prior to scaling
             // TODO: implement raise() function an enable this
-//            return self.raise().scale(distance: nil, distanceFunction: distanceFn);
+            //            return self.raise().scale(distance: nil, distanceFunction: distanceFn);
         }
         
         // TODO: add special handling for degenerate (=linear) curves.
@@ -573,7 +515,6 @@ public class CubicBezier {
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
         let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
         if o == nil { // TODO: replace with guard let
-            // TODO: WE CAN HIT THIS IN THE OUTLINES EXAMPLE! what is wrong?
             assert(false, "cannot scale this curve. Try reducing it first.")
         }
         // move all points by distance 'd' wrt the origin 'o'
@@ -598,7 +539,7 @@ public class CubicBezier {
                 let p2 = p + d
                 np[t+1] = Utils.lli4(p, p2, o!, points[t+1])!
             }
-            return CubicBezier(points: np)
+            return CubicBezierCurve(points: np)
         }
         else {
             
@@ -611,23 +552,33 @@ public class CubicBezier {
                 let ov = (p - o!).normalize()
                 var rc: BKFloat = distanceFn!(BKFloat(t+1) / BKFloat(self.order))
                 if !clockwise {
-                   rc = -rc
+                    rc = -rc
                 }
                 np[t+1] = p + ov * rc
             }
-            return CubicBezier(points: np)
+            return CubicBezierCurve(points: np)
         }
     }
     
     // MARK: -
     
-    public func offset(distance d: BKFloat) -> [CubicBezier] {
+    public func offset(distance d: BKFloat) -> [BezierCurve] {
         if self.linear {
             let n = self.normal(0)
             let coords: [BKPoint] = self.points.map({(p: BKPoint) -> BKPoint in
                 return p + n * d
             })
-            return [CubicBezier(points: coords)]
+            // TODO: generalize to factory method
+            if points.count == 4 {
+                return [CubicBezierCurve(points: points)]
+            }
+            else if points.count == 3 {
+                // TODO: fix line
+                return [CubicBezierCurve(points: points)]
+            }
+            else {
+                return [BezierCurve(points: coords)]
+            }
         }
         // for non-linear curves we need to create a set of curves
         let reduced: [TimeTaggedCurve] = self.reduce()
@@ -658,8 +609,8 @@ public class CubicBezier {
         if (mpos == 0) || (mpos == l) {
             let t = BKFloat(mpos) / BKFloat(l)
             let pt = self.compute(t)
-//            pt.t = t
-//            pt.d = mdist
+            //            pt.t = t
+            //            pt.d = mdist
             return pt
         }
         
@@ -678,8 +629,8 @@ public class CubicBezier {
             }
         }
         let p = self.compute(ft)
-//        p.t = ft
-//        p.d = mdist
+        //        p.t = ft
+        //        p.d = mdist
         return p
     }
     
@@ -705,18 +656,18 @@ public class CubicBezier {
             for i in 0..<len {
                 let left = [reduced[i]]
                 let right = Array(reduced.suffix(from: i+2))
-                let result = CubicBezier.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
+                let result = CubicBezierCurve.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
                 results += result
             }
         }
         return results
     }
     
-    public func intersects(curve: CubicBezier, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
         
-        return CubicBezier.internalCurvesIntersect(c1: self.reduce(),
-                                    c2: [TimeTaggedCurve(_t1: 0.0, _t2: 1.0, curve: curve)],
-                                    curveIntersectionThreshold: curveIntersectionThreshold)
+        return CubicBezierCurve.internalCurvesIntersect(c1: self.reduce(),
+                                                   c2: [TimeTaggedCurve(_t1: 0.0, _t2: 1.0, curve: curve)],
+                                                   curveIntersectionThreshold: curveIntersectionThreshold)
     }
     
     private static func internalCurvesIntersect(c1: [TimeTaggedCurve], c2: [TimeTaggedCurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
@@ -736,7 +687,7 @@ public class CubicBezier {
         }
         return intersections
     }
-
+    
     // MARK: - outlines
     
     public func outline(distance d1: BKFloat) -> PolyBezier {
@@ -755,10 +706,9 @@ public class CubicBezier {
         
         let reduced = self.reduce()
         let len = reduced.count
-        var fcurves: [CubicBezier] = []
-        var bcurves: [CubicBezier] = []
+        var fcurves: [BezierCurve] = []
+        var bcurves: [BezierCurve] = []
         //        var p
-        var alen: BKFloat = 0.0 // TODO: WTF why is this always zero? what is the point?
         let tlen = self.length()
         
         let linearDistanceFunction = {(_ s: BKFloat,_ e: BKFloat,_ tlen: BKFloat,_ alen: BKFloat,_ slen: BKFloat) -> DistanceFunction in
@@ -771,6 +721,8 @@ public class CubicBezier {
         }
         
         // form curve oulines
+        var alen: BKFloat = 0.0
+        
         for segment in reduced {
             let slen = segment.curve.length()
             if graduated {
@@ -785,17 +737,16 @@ public class CubicBezier {
         }
         
         // reverse the "return" outline
-        bcurves = bcurves.map({(s: CubicBezier) in
+        bcurves = bcurves.map({(s: BezierCurve) in
             let p = s.points
             if p.count == 4 {
-                return CubicBezier(points: [p[3],p[2],p[1],p[0]])
+                return CubicBezierCurve(points: p.reversed())
             }
             else if p.count == 3 {
-                return CubicBezier(points: [p[2],p[1],p[0]])
+                return BezierCurve(points: p.reversed())
             }
             else {
-                assert(false, "crud")
-                return s
+                fatalError("crud")
             }
         }).reversed()
         
@@ -806,7 +757,7 @@ public class CubicBezier {
         let be = bcurves[0].points[0]
         let ls = Utils.makeline(bs,fs)
         let le = Utils.makeline(fe,be)
-        let segments = [ls] + fcurves + [le] + bcurves
+        let segments = ([ls] as [BezierCurve]) + fcurves + ([le] as [BezierCurve]) + bcurves
         //        let slen = segments.count
         
         return PolyBezier(curves: segments)
@@ -814,7 +765,7 @@ public class CubicBezier {
     }
     
     // MARK: shapes
-
+    
     public func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Shape] {
         return self.outlineShapes(distance: d1, d2: d1, curveIntersectionThreshold: curveIntersectionThreshold)
     }
@@ -831,12 +782,12 @@ public class CubicBezier {
         }
         return shapes
     }
-
-// MARK: - arcs
+    
+    // MARK: - arcs
     
     public func arcs(errorThreshold: BKFloat = 0.5) -> [Arc] {
         func iterate(errorThreshold: BKFloat, circles: [Arc]) -> [Arc] {
-        
+            
             var result: [Arc] = circles
             var s: BKFloat = 0.0
             var e: BKFloat = 1.0
@@ -927,5 +878,5 @@ public class CubicBezier {
         let circles: [Arc] = []
         return iterate(errorThreshold: errorThreshold, circles: circles)
     }
-
+    
 }

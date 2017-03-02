@@ -325,17 +325,17 @@ class Utils {
         return ( mdist:mdist, mpos:mpos! );
     }
     
-    static func makeline(_ p1: BKPoint,_ p2: BKPoint) -> CubicBezier {
+    static func makeline(_ p1: BKPoint,_ p2: BKPoint) -> CubicBezierCurve {
         let x1 = p1.x
         let y1 = p1.y
         let x2 = p2.x
         let y2 = p2.y
         let dx = (x2-x1) / 3.0
         let dy = (y2-y1) / 3.0
-        return CubicBezier(p0: BKPoint(x: x1, y: y1),
-                           p1: BKPoint(x: x1+dx, y: y1+dy),
-                           p2: BKPoint(x: x1+2.0*dx, y: y1+2.0*dy),
-                           p3: BKPoint(x: x2, y: y2)
+        return CubicBezierCurve(p0: BKPoint(x: x1, y: y1),
+                                p1: BKPoint(x: x1+dx, y: y1+dy),
+                                p2: BKPoint(x: x1+2.0*dx, y: y1+2.0*dy),
+                                p3: BKPoint(x: x2, y: y2)
         )
     }
     
@@ -345,10 +345,10 @@ class Utils {
         if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
            // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
         
-            let a1 = c1.curve.p0
-            let b1 = c1.curve.p3 - c1.curve.p0
-            let a2 = c2.curve.p0
-            let b2 = c2.curve.p3 - c2.curve.p0
+            let a1 = c1.curve.points[0]
+            let b1 = c1.curve.points.last! - c1.curve.points[0]
+            let a2 = c2.curve.points[0]
+            let b2 = c2.curve.points.last! - c2.curve.points[0]
 
             let _a = b1.x
             let _b = -b2.x
@@ -402,8 +402,8 @@ class Utils {
     }
 
     struct ShapeIntersection {
-        var c1: CubicBezier
-        var c2: CubicBezier
+        var c1: BezierCurve
+        var c2: BezierCurve
 //        var s1: Shape
 //        var s2: Shape
         var intersection: [Intersection]
@@ -414,8 +414,8 @@ class Utils {
             return []
         }
         var intersections: [ShapeIntersection] = []
-        let a1: [CubicBezier?] = [s1.startcap.virtual ? nil : s1.startcap.curve, s1.forward, s1.back, s1.endcap.virtual ? nil : s1.endcap.curve]
-        let a2: [CubicBezier?] = [s2.startcap.virtual ? nil : s1.startcap.curve, s2.forward, s2.back, s2.endcap.virtual ? nil : s1.endcap.curve]
+        let a1: [BezierCurve?] = [s1.startcap.virtual ? nil : s1.startcap.curve, s1.forward, s1.back, s1.endcap.virtual ? nil : s1.endcap.curve]
+        let a2: [BezierCurve?] = [s2.startcap.virtual ? nil : s1.startcap.curve, s2.forward, s2.back, s2.endcap.virtual ? nil : s1.endcap.curve]
         for l1 in a1 {
             if l1 == nil {
                 continue
@@ -433,7 +433,7 @@ class Utils {
         return intersections
     }
     
-    static func makeshape(_ forward: CubicBezier,_ back: CubicBezier,_ curveIntersectionThreshold: BKFloat) -> Shape {
+    static func makeshape(_ forward: BezierCurve,_ back: BezierCurve,_ curveIntersectionThreshold: BKFloat) -> Shape {
         let bpl = back.points.count
         let fpl = forward.points.count
         let start  = Utils.makeline(back.points[bpl-1], forward.points[0])
