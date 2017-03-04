@@ -689,16 +689,16 @@
                 <rect key="frame" x="0.0" y="0.0" width="480" height="365"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <customView misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Ql-9U-0la" customClass="DemoView" customModule="BezierKit">
-                        <rect key="frame" x="0.0" y="66" width="480" height="299"/>
+                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="0Ql-9U-0la" customClass="DemoView" customModule="BezierKit">
+                        <rect key="frame" x="0.0" y="68" width="480" height="297"/>
                         <connections>
                             <outlet property="cubicRadioButton" destination="SnG-O9-J4H" id="cQm-3A-3kj"/>
                             <outlet property="popup" destination="wvE-Cv-9ww" id="ipp-ZA-5aE"/>
                             <outlet property="quadraticRadioButton" destination="vMH-Zp-hat" id="x91-tw-jgn"/>
                         </connections>
                     </customView>
-                    <button misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vMH-Zp-hat">
-                        <rect key="frame" x="19" y="41" width="102" height="18"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="vMH-Zp-hat">
+                        <rect key="frame" x="19" y="36" width="82" height="18"/>
                         <buttonCell key="cell" type="radio" title="Quadratic" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="WT3-xm-y8t">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -707,8 +707,8 @@
                             <action selector="radioButtonActionWithSender:" target="0Ql-9U-0la" id="7c2-Nb-xUG"/>
                         </connections>
                     </button>
-                    <button misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SnG-O9-J4H">
-                        <rect key="frame" x="19" y="19" width="102" height="18"/>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="SnG-O9-J4H">
+                        <rect key="frame" x="19" y="14" width="57" height="18"/>
                         <buttonCell key="cell" type="radio" title="Cubic" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="J0P-DG-QPO">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -717,8 +717,8 @@
                             <action selector="radioButtonActionWithSender:" target="0Ql-9U-0la" id="Fgl-rb-ROg"/>
                         </connections>
                     </button>
-                    <popUpButton verticalHuggingPriority="750" horizontalCompressionResistancePriority="100" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wvE-Cv-9ww">
-                        <rect key="frame" x="246" y="34" width="217" height="26"/>
+                    <popUpButton verticalHuggingPriority="750" horizontalCompressionResistancePriority="100" translatesAutoresizingMaskIntoConstraints="NO" id="wvE-Cv-9ww">
+                        <rect key="frame" x="358" y="29" width="105" height="26"/>
                         <constraints>
                             <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="100" id="Nkh-gA-jnj"/>
                         </constraints>
