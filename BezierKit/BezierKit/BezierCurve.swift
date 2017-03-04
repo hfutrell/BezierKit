@@ -224,6 +224,7 @@ public class BezierCurve {
     
     // MARK: -
     
+    // TODO: move to utils
     fileprivate static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
         
         let c: Int = p.count

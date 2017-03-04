@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -682,14 +683,45 @@
         <window title="BezierKit" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="480" height="360"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
+            <rect key="contentRect" x="335" y="390" width="480" height="365"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1130"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                <rect key="frame" x="0.0" y="0.0" width="480" height="365"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="wvE-Cv-9ww">
-                        <rect key="frame" x="246" y="17" width="217" height="26"/>
+                    <customView misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Ql-9U-0la" customClass="DemoView" customModule="BezierKit">
+                        <rect key="frame" x="0.0" y="66" width="480" height="299"/>
+                        <connections>
+                            <outlet property="cubicRadioButton" destination="SnG-O9-J4H" id="cQm-3A-3kj"/>
+                            <outlet property="popup" destination="wvE-Cv-9ww" id="ipp-ZA-5aE"/>
+                            <outlet property="quadraticRadioButton" destination="vMH-Zp-hat" id="x91-tw-jgn"/>
+                        </connections>
+                    </customView>
+                    <button misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vMH-Zp-hat">
+                        <rect key="frame" x="19" y="41" width="102" height="18"/>
+                        <buttonCell key="cell" type="radio" title="Quadratic" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="WT3-xm-y8t">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="radioButtonActionWithSender:" target="0Ql-9U-0la" id="7c2-Nb-xUG"/>
+                        </connections>
+                    </button>
+                    <button misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SnG-O9-J4H">
+                        <rect key="frame" x="19" y="19" width="102" height="18"/>
+                        <buttonCell key="cell" type="radio" title="Cubic" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="J0P-DG-QPO">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="radioButtonActionWithSender:" target="0Ql-9U-0la" id="Fgl-rb-ROg"/>
+                        </connections>
+                    </button>
+                    <popUpButton verticalHuggingPriority="750" horizontalCompressionResistancePriority="100" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wvE-Cv-9ww">
+                        <rect key="frame" x="246" y="34" width="217" height="26"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="100" id="Nkh-gA-jnj"/>
+                        </constraints>
                         <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="jdf-yq-Fom" id="m9M-k6-Mjf">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
@@ -705,23 +737,22 @@
                             <action selector="popupActionWithSender:" target="0Ql-9U-0la" id="7VX-9X-gzb"/>
                         </connections>
                     </popUpButton>
-                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="0Ql-9U-0la" customClass="DemoView" customModule="BezierKit">
-                        <rect key="frame" x="0.0" y="61" width="480" height="299"/>
-                        <connections>
-                            <outlet property="popup" destination="wvE-Cv-9ww" id="ipp-ZA-5aE"/>
-                        </connections>
-                    </customView>
                 </subviews>
                 <constraints>
                     <constraint firstItem="0Ql-9U-0la" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" id="7Dd-xa-Yrf"/>
-                    <constraint firstItem="wvE-Cv-9ww" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="248" id="CON-Sv-mgx"/>
-                    <constraint firstAttribute="bottom" secondItem="wvE-Cv-9ww" secondAttribute="bottom" constant="20" id="M1i-30-QR5"/>
+                    <constraint firstItem="SnG-O9-J4H" firstAttribute="top" secondItem="vMH-Zp-hat" secondAttribute="bottom" constant="6" id="9MZ-dP-hPc"/>
+                    <constraint firstItem="vMH-Zp-hat" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" id="PAZ-zz-kCS"/>
+                    <constraint firstAttribute="bottom" secondItem="SnG-O9-J4H" secondAttribute="bottom" constant="15" id="PEL-vT-Jl0"/>
+                    <constraint firstItem="vMH-Zp-hat" firstAttribute="top" secondItem="0Ql-9U-0la" secondAttribute="bottom" constant="15" id="Zzu-Cz-yRZ"/>
                     <constraint firstItem="0Ql-9U-0la" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" id="kfL-Ru-2At"/>
                     <constraint firstAttribute="trailing" secondItem="0Ql-9U-0la" secondAttribute="trailing" id="neU-ws-Oep"/>
+                    <constraint firstItem="wvE-Cv-9ww" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="vMH-Zp-hat" secondAttribute="trailing" constant="8" id="oKa-tx-cJE"/>
                     <constraint firstAttribute="trailing" secondItem="wvE-Cv-9ww" secondAttribute="trailing" constant="20" id="q37-t8-TiB"/>
-                    <constraint firstItem="wvE-Cv-9ww" firstAttribute="top" secondItem="0Ql-9U-0la" secondAttribute="bottom" constant="20" id="yv4-e6-Z6Y"/>
+                    <constraint firstItem="SnG-O9-J4H" firstAttribute="leading" secondItem="vMH-Zp-hat" secondAttribute="leading" id="yeg-hZ-Gcr"/>
+                    <constraint firstItem="wvE-Cv-9ww" firstAttribute="top" secondItem="0Ql-9U-0la" secondAttribute="bottom" constant="15" id="yv4-e6-Z6Y"/>
                 </constraints>
             </view>
+            <point key="canvasLocation" x="137" y="55"/>
         </window>
     </objects>
 </document>

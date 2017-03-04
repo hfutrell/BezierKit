@@ -70,9 +70,9 @@ class Draw {
             }
         }
         // Assign temporary values to R, G, B
-        outR = temp[0];
-        outG = temp[1];
-        outB = temp[2];
+        outR = temp[0]
+        outG = temp[1]
+        outB = temp[2]
     }
 
     
@@ -99,7 +99,7 @@ class Draw {
     
     static func reset(_ context: CGContext) {
         context.setStrokeColor(black)
-        randomIndex = 0;
+        randomIndex = 0
     }
     
     static func setRandomColor(_ context: CGContext) {

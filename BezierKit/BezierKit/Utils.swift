@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Utils {
+internal class Utils {
     
     // float precision significant decimal
     static let epsilon: BKFloat = 0.000001

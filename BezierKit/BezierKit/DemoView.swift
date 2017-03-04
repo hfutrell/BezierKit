@@ -12,18 +12,30 @@ typealias DemoDrawFunction = (_ context: CGContext, _ demo: Demo ) -> Void
 
 struct Demo {
     var title: String
-    var controlPoints: [CGPoint]
+    var quadraticControlPoints: [CGPoint]
     var quadraticDrawFunction: DemoDrawFunction
+    var cubicControlPoints: [CGPoint]
     var cubicDrawFunction: DemoDrawFunction
 }
 
 class DemoView: NSView, DraggableDelegate {
+    
+    // MARK: - UI
     
     @IBOutlet var popup: NSPopUpButton!
 
     @IBAction func popupAction(sender: NSPopUpButton){
         self.currentDemo = self.demos[sender.indexOfSelectedItem]
     }
+    
+    @IBOutlet var quadraticRadioButton: NSButton!
+    @IBOutlet var cubicRadioButton: NSButton!
+    
+    @IBAction func radioButtonAction(sender: NSButton) {
+        self.useQuadratic = (sender == quadraticRadioButton)
+    }
+    
+    // MARK: -
     
     var curve: CubicBezierCurve?
     
@@ -36,15 +48,29 @@ class DemoView: NSView, DraggableDelegate {
     
     var lastMouseLocation: CGPoint? = nil
     
+    func resetDemoState() {
+        self.clearDraggables()
+        let demo = self.currentDemo!
+        let controlPoints = self.useQuadratic ? demo.quadraticControlPoints : demo.cubicControlPoints
+        for p in controlPoints {
+            self.addDraggable(initialLocation: p, radius: 7)
+        }
+        self.resetCursorRects()
+        self.resetTrackingAreas()
+        self.setNeedsDisplay(self.bounds)
+    }
+    
+    var useQuadratic: Bool = false {
+        didSet {
+           self.resetDemoState()
+            quadraticRadioButton.state = self.useQuadratic ? NSOnState : NSOffState
+            cubicRadioButton.state = self.useQuadratic ? NSOffState : NSOnState
+        }
+    }
+    
     var currentDemo: Demo? = nil {
         didSet {
-            self.clearDraggables()
-            for p in self.currentDemo!.controlPoints {
-                self.addDraggable(initialLocation: p, radius: 7)
-            }
-            self.resetCursorRects()
-            self.resetTrackingAreas()
-            self.setNeedsDisplay(self.bounds)
+            self.resetDemoState()
         }
     }
     
@@ -65,6 +91,10 @@ class DemoView: NSView, DraggableDelegate {
                              CGPoint(x: 10, y: 90),
                              CGPoint(x: 110, y: 100),
                              CGPoint(x: 150, y: 195)]
+        let quadraticControlPoints = [CGPoint(x: 150, y: 40),
+                                      CGPoint(x: 80, y: 30),
+                                      CGPoint(x: 105, y: 150)]
+
         let lengthControlPoints = [CGPoint(x: 100, y: 25),
                              CGPoint(x: 10, y: 90),
                              CGPoint(x: 110, y: 100),
@@ -99,17 +129,24 @@ class DemoView: NSView, DraggableDelegate {
         // warning, these blocks introduce memory leaks! (because they reference self)
         
         let demo1 = Demo(title: "new Bezier(...)",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
-            let curve = self.draggableCubicCurve()
-            Draw.drawSkeleton(context, curve: curve)
-            Draw.drawCurve(context, curve: curve)
+                         quadraticControlPoints: quadraticControlPoints,
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
+                        let curve = self.draggableQuadraticCurve()
+                        Draw.drawSkeleton(context, curve: curve)
+                        Draw.drawCurve(context, curve: curve)
+
+        },
+                        cubicControlPoints: controlPoints,
+                        cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
+                        let curve = self.draggableCubicCurve()
+                        Draw.drawSkeleton(context, curve: curve)
+                        Draw.drawCurve(context, curve: curve)
         })
         let demo2 = Demo(title: "Bezier.quadraticFromPoints",
-                         controlPoints: [],
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: { (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: [],
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
             let p1 = BKPoint(x: 110, y: 50)
             let B = BKPoint(x: 50, y: 80)
             let p3 = BKPoint(x:135, y:100)
@@ -130,9 +167,10 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawCircle(context, center: B, radius: 3, offset: offset)
         })
         let demo3 = Demo(title: ".getLUT(steps)",
-                        controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: controlPoints,
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
             let curve = self.draggableCubicCurve()
             Draw.drawSkeleton(context, curve: curve)
             let LUT = curve.generateLookupTable(withSteps: 16)
@@ -143,9 +181,10 @@ class DemoView: NSView, DraggableDelegate {
         })
         let demo4 = Demo(title: ".length()",
                          //TODO: you still haven't implemented length function or drawText
-                         controlPoints: lengthControlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+            quadraticControlPoints: [],
+            quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+            cubicControlPoints: lengthControlPoints,
+            cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -168,9 +207,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo5 = Demo(title: ".get(t) and .compute(t)",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: controlPoints,
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -178,9 +218,10 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawPoint(context, origin: curve.compute(0.5))
         })
         let demo6 = Demo(title: ".derivative(t)",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: controlPoints,
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -192,9 +233,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo7 = Demo(title: ".normal(t)",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: controlPoints,
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -207,9 +249,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo8 = Demo(title: ".split(t) and .split(t1,t2)",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: controlPoints,
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.setColor(context, color: Draw.lightGrey)
                             Draw.drawSkeleton(context, curve: curve)
@@ -221,9 +264,10 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawCircle(context, center: curve.compute(0.75), radius: 3);
         })
         let demo9 = Demo(title: ".extrema()",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                         quadraticControlPoints: [],
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         cubicControlPoints: controlPoints,
+                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -233,9 +277,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo10 = Demo(title: ".bbox()",
-                         controlPoints: controlPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: controlPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -243,9 +288,10 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawBoundingBox(context, boundingBox: curve.boundingBox)
             })
         let demo11 = Demo(title: ".hull(t)",
-                         controlPoints: hullPoints,
-                         quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                         cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: hullPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -255,9 +301,10 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawCircle(context, center: hull[hull.count-1], radius: 5);
         })
         let demo12 = Demo(title: ".project(point)",
-                          controlPoints: hullPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: hullPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -268,9 +315,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo13 = Demo(title: ".offset(d) and .offset(t, d)",
-                          controlPoints: controlPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: controlPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -282,9 +330,10 @@ class DemoView: NSView, DraggableDelegate {
         
             })
         let demo14 = Demo(title: ".reduce(t)",
-                          controlPoints: controlPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: controlPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             let reduced = curve.reduce()
@@ -304,9 +353,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
-                          controlPoints: controlPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: controlPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             let arcs = curve.arcs();
@@ -317,9 +367,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo16 = Demo(title: ".scale(d)",
-                          controlPoints: controlPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: controlPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.setColor(context, color: Draw.black)
@@ -341,9 +392,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
             })
         let demo17 = Demo(title: ".outline(d)",
-                          controlPoints: outlinePoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: outlinePoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -357,9 +409,10 @@ class DemoView: NSView, DraggableDelegate {
         })
         
         let demo18 = Demo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
-                          controlPoints: outlinePoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: outlinePoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -369,9 +422,10 @@ class DemoView: NSView, DraggableDelegate {
                             outline.curves.forEach(doc)
         })
         let demo19 = Demo(title: "outlineShapes",
-                          controlPoints: controlPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: controlPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -383,9 +437,10 @@ class DemoView: NSView, DraggableDelegate {
         })
 
         let demo20 = Demo(title: ".intersects()",
-                          controlPoints: intersectsPoints,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: intersectsPoints,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -395,9 +450,10 @@ class DemoView: NSView, DraggableDelegate {
                             
         })
         let demo21 = Demo(title: ".intersects(line)",
-                          controlPoints: intersectsLine,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: intersectsLine,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -410,9 +466,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo22 = Demo(title: ".intersects(curve)",
-                          controlPoints: intersectsCurve1,
-                          quadraticDrawFunction: { (context: CGContext, demo: Demo) in },
-                          cubicDrawFunction: {[unowned self] (context: CGContext, demo: Demo) in
+                          quadraticControlPoints: [],
+                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                          cubicControlPoints: intersectsCurve1,
+                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                             let curve = self.draggableCubicCurve()
                             let curve2 =  CubicBezierCurve(points: intersectsCurve2)
                             Draw.drawSkeleton(context, curve: curve)
@@ -449,7 +506,7 @@ class DemoView: NSView, DraggableDelegate {
         self.registerDemo(demo20)
         self.registerDemo(demo21)
         self.registerDemo(demo22)
-
+        
     }
     
     override func awakeFromNib() {
@@ -457,6 +514,7 @@ class DemoView: NSView, DraggableDelegate {
         let index: Int = 1
         
         self.currentDemo = self.demos[index]
+        self.useQuadratic = false
         
         self.popup.removeAllItems()
         for demo in self.demos {
@@ -465,7 +523,15 @@ class DemoView: NSView, DraggableDelegate {
         self.popup.selectItem(at: index)
     }
     
+    func draggableQuadraticCurve() -> QuadraticBezierCurve {
+        assert(self.useQuadratic)
+        return QuadraticBezierCurve( p0: self.draggables[0].bkLocation,
+                                     p1: self.draggables[1].bkLocation,
+                                     p2: self.draggables[2].bkLocation)
+    }
+    
     func draggableCubicCurve() -> CubicBezierCurve {
+        assert(self.useQuadratic == false)
         return CubicBezierCurve( p0: self.draggables[0].bkLocation,
                                  p1: self.draggables[1].bkLocation,
                                  p2: self.draggables[2].bkLocation,
@@ -506,6 +572,8 @@ class DemoView: NSView, DraggableDelegate {
         draggable.delegate = self
         self.draggables.append(draggable)
     }
+
+    // MARK: - mouse functions
     
     override func mouseDown(with event: NSEvent) {
         let location = self.superview!.convert(event.locationInWindow, to: self)
@@ -543,6 +611,8 @@ class DemoView: NSView, DraggableDelegate {
         self.lastMouseLocation = nil
     }
     
+    // MARK:
+    
     override func draw(_ dirtyRect: NSRect) {
         
         let context: CGContext = NSGraphicsContext.current()!.cgContext
@@ -551,8 +621,13 @@ class DemoView: NSView, DraggableDelegate {
         context.fill(self.bounds)
         
         Draw.reset(context)
-        
-        currentDemo!.cubicDrawFunction(context, currentDemo! )
+        let demo = currentDemo!
+        if self.useQuadratic {
+            demo.quadraticDrawFunction(context, demo )
+        }
+        else {
+            demo.cubicDrawFunction(context, demo )
+        }
         
     }
     
