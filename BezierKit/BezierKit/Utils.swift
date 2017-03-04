@@ -72,6 +72,21 @@ internal class Utils {
     0.0123412297999871995468056670700372915759
     ]
     
+    static func getABC(n: Int, S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5) -> (A: BKPoint, B: BKPoint, C: BKPoint) {
+        let u = Utils.projectionRatio(n: n, t: t)
+        let um = 1-u
+        let C = BKPoint(
+            x: u*S.x + um*E.x,
+            y: u*S.y + um*E.y
+        )
+        let s = Utils.abcRatio(n: n, t: t)
+        let A = BKPoint(
+            x: B.x + (B.x-C.x)/s,
+            y: B.y + (B.y-C.y)/s
+        )
+        return ( A:A, B:B, C:C )
+    }
+    
     static func abcRatio(n: Int, t: CGFloat = 0.5) -> BKFloat {
         // see ratio(t) note on http://pomax.github.io/bezierinfo/#abc
         assert(n == 2 || n == 3)

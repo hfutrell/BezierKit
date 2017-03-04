@@ -144,7 +144,32 @@ class DemoView: NSView, DraggableDelegate {
         })
         let demo2 = Demo(title: "Bezier.quadraticFromPoints",
                          quadraticControlPoints: [],
-                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         quadraticDrawFunction: {(context: CGContext, demo: Demo) in
+                let B = BKPoint(x: 100, y: 50)
+                let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
+                let curves: [QuadraticBezierCurve] = tvalues.map({(t: BKFloat) -> QuadraticBezierCurve in
+                    return QuadraticBezierCurve(p0: BKPoint(x:150, y: 40),
+                                                p1: B,
+                                                p2: BKPoint(x:35, y:160),
+                                                t: t)
+                })
+                let offset = BKPoint(x:45,y:30)
+                for (i, b) in curves.enumerated() {
+                    Draw.drawSkeleton(context, curve: b, offset: offset, coords: true)
+                    Draw.setColor(context, color: Draw.transparentBlack)
+                    Draw.drawCircle(context, center: b.points[1], radius: 3, offset: offset)
+                    Draw.drawText(context, text: "t=\(tvalues[i])", offset: BKPoint(
+                        x: b.points[1].x + offset.x - 15,
+                        y: b.points[1].y + offset.y - 20
+                    ))
+                    Draw.setRandomColor(context)
+                    Draw.drawCurve(context, curve: b, offset: offset)
+                }
+                Draw.setColor(context, color: Draw.black)
+                Draw.drawCircle(context, center: curves[0].points[0], radius:3, offset: offset)
+                Draw.drawCircle(context, center: curves[0].points[2], radius:3, offset: offset)
+                Draw.drawCircle(context, center: B, radius: 3, offset: offset)
+            },
                          cubicControlPoints: [],
                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
             let p1 = BKPoint(x: 110, y: 50)

@@ -29,5 +29,28 @@ public class QuadraticBezierCurve: BezierCurve {
         let points = [p0, p1, p2]
         self.init(points: points)
     }
+    
+    public convenience init(p0: BKPoint, p1: BKPoint, p2: BKPoint, t: BKFloat = 0.5) {
+        
+        // shortcuts, although they're really dumb
+        if t == 0 {
+            self.init(p0: p1, p1: p1, p2: p2)
+        }
+        else if t == 1 {
+            self.init(p0: p0, p1: p1, p2: p1)
+        }
+        else {
+            // real fitting.
+            let abc = Utils.getABC(n:2, S: p0, B: p1, E: p2, t: t)
+            self.init(p0: p0, p1: abc.A, p2: p2)
+        }
+    }
+
+    
+    // MARK: quadratic specific methods
+    
+//    public raise() -> CubicBezierCurve {
+//    
+//    }
 
 }

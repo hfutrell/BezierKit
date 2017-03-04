@@ -35,23 +35,8 @@ public class CubicBezierCurve: BezierCurve {
 
     // TODO: the header has all these autoclosures, what's up with that?
     public convenience init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
-        
-        func getABC(n: Int, S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5) -> (A: BKPoint, B: BKPoint, C: BKPoint) {
-            let u = Utils.projectionRatio(n: n, t: t)
-            let um = 1-u
-            let C = BKPoint(
-                x: u*S.x + um*E.x,
-                y: u*S.y + um*E.y
-            )
-            let s = Utils.abcRatio(n: n, t: t)
-            let A = BKPoint(
-                x: B.x + (B.x-C.x)/s,
-                y: B.y + (B.y-C.y)/s
-            )
-            return ( A:A, B:B, C:C )
-        }
-        
-        let abc = getABC(n: 3, S: S, B: B, E: E, t: t)
+                
+        let abc = Utils.getABC(n: 3, S: S, B: B, E: E, t: t)
         
         let d1 = (tempD1 != nil) ? tempD1! : Utils.dist(B,abc.C)
         let d2 = d1 * (1-t) / t

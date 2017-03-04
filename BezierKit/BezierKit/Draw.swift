@@ -81,7 +81,8 @@ class Draw {
     static let red = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
     static let pinkish = CGColor(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
     static let transparentBlue = CGColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.3)
-
+    static let transparentBlack = CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.2)
+    
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
         var temp: [CGColor] = [];
@@ -137,7 +138,7 @@ class Draw {
     
     static func drawCircle(_ context: CGContext, center: BKPoint, radius r : BKFloat, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
-        context.addEllipse(in: CGRect(origin: CGPoint(x: center.x - r, y: center.y - r),
+        context.addEllipse(in: CGRect(origin: CGPoint(x: center.x - r + offset.x, y: center.y - r + offset.y),
                             size: CGSize(width: 2.0 * r, height: 2.0 * r))
                             )
         context.strokePath()
@@ -188,7 +189,7 @@ class Draw {
         
         if (coords == true) {
             context.setStrokeColor(black)
-            self.drawPoints(context, points: curve.points)
+            self.drawPoints(context, points: curve.points, offset: offset)
         }
         
     }
