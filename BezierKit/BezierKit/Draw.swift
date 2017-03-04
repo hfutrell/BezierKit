@@ -120,16 +120,18 @@ class Draw {
     }
     
     static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
-        // TODO: support quadratic curves
-        drawCurve(context, curve: curve as! CubicBezierCurve, offset: offset)
-    }
-    
-    static func drawCurve(_ context: CGContext, curve: CubicBezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
-        context.move(to: (curve.p0 + offset).toCGPoint())
-        context.addCurve(to: (curve.p3 + offset).toCGPoint(),
-                         control1: (curve.p1 + offset).toCGPoint(),
-                         control2: (curve.p2 + offset).toCGPoint())
+        if let quadraticCurve = curve as? QuadraticBezierCurve {
+            context.move(to: (quadraticCurve.p0 + offset).toCGPoint())
+            context.addQuadCurve(to: (quadraticCurve.p2 + offset).toCGPoint(),
+                                 control: (quadraticCurve.p1 + offset).toCGPoint())
+        }
+        else if let cubicCurve = curve as? CubicBezierCurve {
+            context.move(to: (cubicCurve.p0 + offset).toCGPoint())
+            context.addCurve(to: (cubicCurve.p3 + offset).toCGPoint(),
+                             control1: (cubicCurve.p1 + offset).toCGPoint(),
+                             control2: (cubicCurve.p2 + offset).toCGPoint())
+        }
         context.strokePath()
     }
     
@@ -165,12 +167,32 @@ class Draw {
     }
     
     static func drawText(_ context: CGContext, text: String, offset: BKPoint = BKPointZero) {
-        // TODO: write me
         (text as NSString).draw(at: NSPoint(x: offset.x, y: offset.y), withAttributes: [:])
-        
-        
     }
  
+    static func drawSkeleton(_ context: CGContext,
+                             curve: BezierCurve,
+                             offset: BKPoint=BKPoint(x: 0.0, y: 0.0),
+                             coords: Bool=true) {
+        
+        context.setStrokeColor(lightGrey)
+        
+        if let cubicCurve = curve as? CubicBezierCurve {
+            self.drawLine(context, from: cubicCurve.p0, to: cubicCurve.p1, offset: offset)
+            self.drawLine(context, from: cubicCurve.p2, to: cubicCurve.p3, offset: offset)
+        }
+        else if let quadraticCurve = curve as? QuadraticBezierCurve {
+            self.drawLine(context, from: quadraticCurve.p0, to: quadraticCurve.p1, offset: offset)
+            self.drawLine(context, from: quadraticCurve.p1, to: quadraticCurve.p2, offset: offset)
+        }
+        
+        if (coords == true) {
+            context.setStrokeColor(black)
+            self.drawPoints(context, points: curve.points)
+        }
+        
+    }
+    
     static func drawSkeleton(_ context: CGContext,
                   curve: CubicBezierCurve,
                   offset: BKPoint=BKPoint(x: 0.0, y: 0.0),

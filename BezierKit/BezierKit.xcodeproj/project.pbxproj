@@ -19,6 +19,7 @@
 		FDD7ABF31DCC59FC0059D787 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF21DCC59FC0059D787 /* Types.swift */; };
 		FDD7ABF51DCC68D10059D787 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF41DCC68D10059D787 /* Utils.swift */; };
 		FDE5E2F11E5A69EA001F51DE /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */; };
+		FDE5E2F31E6A51F3001F51DE /* QuadraticBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		FDD7ABF21DCC59FC0059D787 /* Types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Types.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		FDD7ABF41DCC68D10059D787 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Utils.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
+		FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuadraticBezierCurve.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,8 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */,
-				FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */,
-				FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */,
+				FDE5E2F41E6A51FF001F51DE /* Curve */,
 				FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */,
 				FDD476621DC44EDB00A1FAF3 /* DemoView.swift */,
 				FDD7ABF01DCC58A50059D787 /* Draggable.swift */,
@@ -112,6 +113,16 @@
 				FD0F550A1DC43FFB0084CDCD /* Info.plist */,
 			);
 			path = BezierKitTests;
+			sourceTree = "<group>";
+		};
+		FDE5E2F41E6A51FF001F51DE /* Curve */ = {
+			isa = PBXGroup;
+			children = (
+				FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */,
+				FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */,
+				FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */,
+			);
+			name = Curve;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -223,6 +234,7 @@
 				FDE5E2F11E5A69EA001F51DE /* BezierCurve.swift in Sources */,
 				FDD7ABF51DCC68D10059D787 /* Utils.swift in Sources */,
 				FDD7ABF31DCC59FC0059D787 /* Types.swift in Sources */,
+				FDE5E2F31E6A51F3001F51DE /* QuadraticBezierCurve.swift in Sources */,
 				FDD476611DC4422400A1FAF3 /* CubicBezierCurve.swift in Sources */,
 				FD5EC36B1DC5A5D70079982F /* Draw.swift in Sources */,
 			);
