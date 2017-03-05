@@ -9,8 +9,22 @@
 import AppKit
 
 typealias DemoDrawFunction = (_ context: CGContext, _ demo: Demo ) -> Void
+typealias DemoDrawFunction2 = (_ context: CGContext, _ demo: Demo, _ curve: BezierCurve ) -> Void
 
-struct Demo {
+protocol Demo {
+    var title: String {get}
+    var quadraticControlPoints: [CGPoint] {get}
+    var cubicControlPoints: [CGPoint] {get}
+}
+
+struct SingleDrawFuncDemo: Demo {
+    var title: String
+    var quadraticControlPoints: [CGPoint]
+    var cubicControlPoints: [CGPoint]
+    var drawFunction: DemoDrawFunction2
+}
+
+struct DualDrawFuncDemo:Demo {
     var title: String
     var quadraticControlPoints: [CGPoint]
     var quadraticDrawFunction: DemoDrawFunction
@@ -128,7 +142,7 @@ class DemoView: NSView, DraggableDelegate {
         
         // warning, these blocks introduce memory leaks! (because they reference self)
         
-        let demo1 = Demo(title: "new Bezier(...)",
+        let demo1 = DualDrawFuncDemo(title: "new Bezier(...)",
                          quadraticControlPoints: quadraticControlPoints,
                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
                         let curve = self.draggableQuadraticCurve()
@@ -142,7 +156,7 @@ class DemoView: NSView, DraggableDelegate {
                         Draw.drawSkeleton(context, curve: curve)
                         Draw.drawCurve(context, curve: curve)
         })
-        let demo2 = Demo(title: "Bezier.quadraticFromPoints",
+        let demo2 = DualDrawFuncDemo(title: "Bezier.quadraticFromPoints",
                          quadraticControlPoints: [],
                          quadraticDrawFunction: {(context: CGContext, demo: Demo) in
                 let B = BKPoint(x: 100, y: 50)
@@ -191,26 +205,17 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawCircle(context, center: curves[0].points[3], radius: 3, offset: offset)
             Draw.drawCircle(context, center: B, radius: 3, offset: offset)
         })
-        let demo3 = Demo(title: ".getLUT(steps)",
+        let demo3 = SingleDrawFuncDemo(title: ".getLUT(steps)",
                          quadraticControlPoints: quadraticControlPoints,
-                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-            let curve = self.draggableQuadraticCurve()
-            Draw.drawSkeleton(context, curve: curve)
-            let LUT = curve.generateLookupTable(withSteps: 16)
-            for p in LUT {
-                Draw.drawCircle(context, center: p, radius: 2)
-            }
-        },
                          cubicControlPoints: controlPoints,
-                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-            let curve = self.draggableCubicCurve()
+                         drawFunction: {[unowned self](context: CGContext, demo: Demo, curve: BezierCurve) in
             Draw.drawSkeleton(context, curve: curve)
             let LUT = curve.generateLookupTable(withSteps: 16)
             for p in LUT {
                 Draw.drawCircle(context, center: p, radius: 2)
             }
         })
-        let demo4 = Demo(title: ".length()",
+        let demo4 = DualDrawFuncDemo(title: ".length()",
                          //TODO: you still haven't implemented length function or drawText
             quadraticControlPoints: [],
             quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
@@ -237,7 +242,7 @@ class DemoView: NSView, DraggableDelegate {
                                 }
                             }
         })
-        let demo5 = Demo(title: ".get(t) and .compute(t)",
+        let demo5 = DualDrawFuncDemo(title: ".get(t) and .compute(t)",
                          quadraticControlPoints: [],
                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                          cubicControlPoints: controlPoints,
@@ -248,7 +253,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.setColor(context, color: Draw.red)
                             Draw.drawPoint(context, origin: curve.compute(0.5))
         })
-        let demo6 = Demo(title: ".derivative(t)",
+        let demo6 = DualDrawFuncDemo(title: ".derivative(t)",
                          quadraticControlPoints: [],
                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                          cubicControlPoints: controlPoints,
@@ -263,7 +268,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawLine(context, from: pt, to: pt + dv );
                             }
         })
-        let demo7 = Demo(title: ".normal(t)",
+        let demo7 = DualDrawFuncDemo(title: ".normal(t)",
                          quadraticControlPoints: [],
                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                          cubicControlPoints: controlPoints,
@@ -279,7 +284,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawLine(context, from: pt, to: pt + dv * d );
                             }
         })
-        let demo8 = Demo(title: ".split(t) and .split(t1,t2)",
+        let demo8 = DualDrawFuncDemo(title: ".split(t) and .split(t1,t2)",
                          quadraticControlPoints: [],
                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                          cubicControlPoints: controlPoints,
@@ -294,7 +299,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawCircle(context, center: curve.compute(0.25), radius: 3);
                             Draw.drawCircle(context, center: curve.compute(0.75), radius: 3);
         })
-        let demo9 = Demo(title: ".extrema()",
+        let demo9 = DualDrawFuncDemo(title: ".extrema()",
                          quadraticControlPoints: [],
                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                          cubicControlPoints: controlPoints,
@@ -307,7 +312,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCircle(context, center: curve.compute(t), radius: 3);
                             }
         })
-        let demo10 = Demo(title: ".bbox()",
+        let demo10 = DualDrawFuncDemo(title: ".bbox()",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: controlPoints,
@@ -318,7 +323,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.setColor(context, color: Draw.pinkish)
                             Draw.drawBoundingBox(context, boundingBox: curve.boundingBox)
             })
-        let demo11 = Demo(title: ".hull(t)",
+        let demo11 = DualDrawFuncDemo(title: ".hull(t)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: hullPoints,
@@ -331,7 +336,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawHull(context, hull: hull);
                             Draw.drawCircle(context, center: hull[hull.count-1], radius: 5);
         })
-        let demo12 = Demo(title: ".project(point)",
+        let demo12 = DualDrawFuncDemo(title: ".project(point)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: hullPoints,
@@ -345,7 +350,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawLine(context, from: BKPoint(mouse), to: p)
                             }
         })
-        let demo13 = Demo(title: ".offset(d) and .offset(t, d)",
+        let demo13 = DualDrawFuncDemo(title: ".offset(d) and .offset(t, d)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: controlPoints,
@@ -360,7 +365,7 @@ class DemoView: NSView, DraggableDelegate {
                             Draw.drawPoint(context, origin: curve.offset(t: 0.5, distance: 25))
         
             })
-        let demo14 = Demo(title: ".reduce(t)",
+        let demo14 = DualDrawFuncDemo(title: ".reduce(t)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: controlPoints,
@@ -383,7 +388,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
         })
-        let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
+        let demo15 = DualDrawFuncDemo(title: ".arcs() and .arcs(threshold)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: controlPoints,
@@ -397,7 +402,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.draw(context, arc: arc);
                             }
         })
-        let demo16 = Demo(title: ".scale(d)",
+        let demo16 = DualDrawFuncDemo(title: ".scale(d)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: controlPoints,
@@ -422,7 +427,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
             })
-        let demo17 = Demo(title: ".outline(d)",
+        let demo17 = DualDrawFuncDemo(title: ".outline(d)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: outlinePoints,
@@ -439,7 +444,7 @@ class DemoView: NSView, DraggableDelegate {
                             outline.offset(distance: -10).curves.forEach(doc)
         })
         
-        let demo18 = Demo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
+        let demo18 = DualDrawFuncDemo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: outlinePoints,
@@ -452,7 +457,7 @@ class DemoView: NSView, DraggableDelegate {
                             let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
                             outline.curves.forEach(doc)
         })
-        let demo19 = Demo(title: "outlineShapes",
+        let demo19 = DualDrawFuncDemo(title: "outlineShapes",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: controlPoints,
@@ -467,7 +472,7 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
 
-        let demo20 = Demo(title: ".intersects()",
+        let demo20 = DualDrawFuncDemo(title: ".intersects()",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: intersectsPoints,
@@ -480,7 +485,7 @@ class DemoView: NSView, DraggableDelegate {
                             }
                             
         })
-        let demo21 = Demo(title: ".intersects(line)",
+        let demo21 = DualDrawFuncDemo(title: ".intersects(line)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: intersectsLine,
@@ -496,7 +501,7 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawPoint(context, origin: curve.compute(intersection))
                             }
         })
-        let demo22 = Demo(title: ".intersects(curve)",
+        let demo22 = DualDrawFuncDemo(title: ".intersects(curve)",
                           quadraticControlPoints: [],
                           quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
                           cubicControlPoints: intersectsCurve1,
@@ -654,12 +659,17 @@ class DemoView: NSView, DraggableDelegate {
         context.fill(self.bounds)
         
         Draw.reset(context)
-        let demo = currentDemo!
-        if self.useQuadratic {
-            demo.quadraticDrawFunction(context, demo )
+        if let demo = currentDemo! as? DualDrawFuncDemo {
+            if self.useQuadratic {
+                demo.quadraticDrawFunction(context, demo )
+            }
+            else {
+                demo.cubicDrawFunction(context, demo )
+            }
         }
-        else {
-            demo.cubicDrawFunction(context, demo )
+        else if let demo = currentDemo! as? SingleDrawFuncDemo {
+            let curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
+            demo.drawFunction(context, demo, curve)
         }
         
     }
