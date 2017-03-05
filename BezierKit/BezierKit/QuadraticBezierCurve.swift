@@ -31,7 +31,6 @@ public class QuadraticBezierCurve: BezierCurve {
     }
     
     public convenience init(p0: BKPoint, p1: BKPoint, p2: BKPoint, t: BKFloat = 0.5) {
-        
         // shortcuts, although they're really dumb
         if t == 0 {
             self.init(p0: p1, p1: p1, p2: p2)

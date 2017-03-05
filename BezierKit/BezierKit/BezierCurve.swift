@@ -90,7 +90,7 @@ public class BezierCurve {
     public static let defaultCurveIntersectionThreshold: BKFloat = 0.5
     
     public let points: [BKPoint]
-    internal let order: Int = 3
+    internal let order: Int
     internal let threeD: Bool = false // TODO: fix this
     
     private var dimensions: Int {
@@ -101,6 +101,7 @@ public class BezierCurve {
     
     public init(points: [BKPoint]) {
         self.points = points
+        self.order = points.count - 1
     }
             
     // MARK: -

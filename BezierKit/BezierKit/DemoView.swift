@@ -171,7 +171,7 @@ class DemoView: NSView, DraggableDelegate {
                 Draw.drawCircle(context, center: B, radius: 3, offset: offset)
             },
                          cubicControlPoints: [],
-                         cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
+                         cubicDrawFunction: {(context: CGContext, demo: Demo) in
             let p1 = BKPoint(x: 110, y: 50)
             let B = BKPoint(x: 50, y: 80)
             let p3 = BKPoint(x:135, y:100)
@@ -192,14 +192,20 @@ class DemoView: NSView, DraggableDelegate {
             Draw.drawCircle(context, center: B, radius: 3, offset: offset)
         })
         let demo3 = Demo(title: ".getLUT(steps)",
-                         quadraticControlPoints: [],
-                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+                         quadraticControlPoints: quadraticControlPoints,
+                         quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
+            let curve = self.draggableQuadraticCurve()
+            Draw.drawSkeleton(context, curve: curve)
+            let LUT = curve.generateLookupTable(withSteps: 16)
+            for p in LUT {
+                Draw.drawCircle(context, center: p, radius: 2)
+            }
+        },
                          cubicControlPoints: controlPoints,
                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
             let curve = self.draggableCubicCurve()
             Draw.drawSkeleton(context, curve: curve)
             let LUT = curve.generateLookupTable(withSteps: 16)
-            
             for p in LUT {
                 Draw.drawCircle(context, center: p, radius: 2)
             }
@@ -550,6 +556,7 @@ class DemoView: NSView, DraggableDelegate {
     
     func draggableQuadraticCurve() -> QuadraticBezierCurve {
         assert(self.useQuadratic)
+        assert(self.draggables.count >= 3, "uh oh, did you set the control points in demo?")
         return QuadraticBezierCurve( p0: self.draggables[0].bkLocation,
                                      p1: self.draggables[1].bkLocation,
                                      p2: self.draggables[2].bkLocation)
@@ -557,6 +564,7 @@ class DemoView: NSView, DraggableDelegate {
     
     func draggableCubicCurve() -> CubicBezierCurve {
         assert(self.useQuadratic == false)
+        assert(self.draggables.count >= 4, "uh oh, did you set the control points in demo?")
         return CubicBezierCurve( p0: self.draggables[0].bkLocation,
                                  p1: self.draggables[1].bkLocation,
                                  p2: self.draggables[2].bkLocation,
