@@ -663,7 +663,7 @@ public class BezierCurve {
             for i in 0..<len {
                 let left = [reduced[i]]
                 let right = Array(reduced.suffix(from: i+2))
-                let result = CubicBezierCurve.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
+                let result = BezierCurve.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
                 results += result
             }
         }
@@ -672,7 +672,7 @@ public class BezierCurve {
     
     public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
         
-        return CubicBezierCurve.internalCurvesIntersect(c1: self.reduce(),
+        return BezierCurve.internalCurvesIntersect(c1: self.reduce(),
                                                    c2: [TimeTaggedCurve(_t1: 0.0, _t2: 1.0, curve: curve)],
                                                    curveIntersectionThreshold: curveIntersectionThreshold)
     }
@@ -746,15 +746,7 @@ public class BezierCurve {
         // reverse the "return" outline
         bcurves = bcurves.map({(s: BezierCurve) in
             let p = s.points
-            if p.count == 4 {
-                return CubicBezierCurve(points: p.reversed())
-            }
-            else if p.count == 3 {
-                return BezierCurve(points: p.reversed())
-            }
-            else {
-                fatalError("crud")
-            }
+            return BezierCurve.curveWithPoints(points: p.reversed())
         }).reversed()
         
         // form the endcaps as lines

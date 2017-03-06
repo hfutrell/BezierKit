@@ -9,7 +9,7 @@
 import AppKit
 
 typealias DemoDrawFunction = (_ context: CGContext, _ demo: Demo ) -> Void
-typealias DemoDrawFunction2 = (_ context: CGContext, _ demo: Demo, _ curve: BezierCurve ) -> Void
+typealias DemoDrawFunction2 = (_ context: CGContext, _ quadratic: Bool, _ curve: BezierCurve ) -> Void
 
 protocol Demo {
     var title: String {get}
@@ -208,7 +208,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo3 = SingleDrawFuncDemo(title: ".getLUT(steps)",
                          quadraticControlPoints: quadraticControlPoints,
                          cubicControlPoints: controlPoints,
-                         drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                         drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
             Draw.drawSkeleton(context, curve: curve)
             let LUT = curve.generateLookupTable(withSteps: 16)
             for p in LUT {
@@ -218,7 +218,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo4 = SingleDrawFuncDemo(title: ".length()",
             quadraticControlPoints: quadraticControlPoints,
             cubicControlPoints: lengthControlPoints,
-            drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+            drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -242,7 +242,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo5 = SingleDrawFuncDemo(title: ".get(t) and .compute(t)",
                          quadraticControlPoints: quadraticControlPoints,
                          cubicControlPoints: controlPoints,
-                         drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                         drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -251,7 +251,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo6 = SingleDrawFuncDemo(title: ".derivative(t)",
                          quadraticControlPoints: quadraticControlPoints,
                          cubicControlPoints: controlPoints,
-                         drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                         drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -264,7 +264,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo7 = SingleDrawFuncDemo(title: ".normal(t)",
                          quadraticControlPoints: quadraticControlPoints,
                          cubicControlPoints: controlPoints,
-                         drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                         drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -278,7 +278,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo8 = SingleDrawFuncDemo(title: ".split(t) and .split(t1,t2)",
                          quadraticControlPoints: quadraticControlPoints,
                          cubicControlPoints: controlPoints,
-                         drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                         drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.setColor(context, color: Draw.lightGrey)
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -291,7 +291,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo9 = SingleDrawFuncDemo(title: ".extrema()",
                          quadraticControlPoints: quadraticControlPoints,
                          cubicControlPoints: controlPoints,
-                         drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                         drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -302,7 +302,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo10 = SingleDrawFuncDemo(title: ".bbox()",
                           quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: controlPoints,
-                          drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.pinkish)
@@ -311,7 +311,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo11 = SingleDrawFuncDemo(title: ".hull(t)",
                           quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: hullPoints,
-                          drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -322,7 +322,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo12 = SingleDrawFuncDemo(title: ".project(point)",
                           quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: hullPoints,
-                          drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.pinkish)
@@ -334,7 +334,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo13 = SingleDrawFuncDemo(title: ".offset(d) and .offset(t, d)",
                           quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: controlPoints,
-                          drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -347,7 +347,7 @@ class DemoView: NSView, DraggableDelegate {
         let demo14 = SingleDrawFuncDemo(title: ".reduce(t)",
                           quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: controlPoints,
-                          drawFunction: {(context: CGContext, demo: Demo, curve: BezierCurve) in
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             let reduced = curve.reduce()
                             if reduced.count > 0 {
@@ -365,12 +365,10 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
         })
-        let demo15 = DualDrawFuncDemo(title: ".arcs() and .arcs(threshold)",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo15 = SingleDrawFuncDemo(title: ".arcs() and .arcs(threshold)",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: controlPoints,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             let arcs = curve.arcs();
                             Draw.setColor(context, color: Draw.black)
@@ -379,12 +377,10 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.draw(context, arc: arc);
                             }
         })
-        let demo16 = DualDrawFuncDemo(title: ".scale(d)",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo16 = SingleDrawFuncDemo(title: ".scale(d)",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: controlPoints,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.setColor(context, color: Draw.black)
                             let reduced = curve.reduce()
@@ -394,7 +390,7 @@ class DemoView: NSView, DraggableDelegate {
                                     if i > 0 {
                                         Draw.drawCircle(context, center: c.points[0], radius: 3)
                                     }
-                                    Draw.drawCurve(context, curve: c as! CubicBezierCurve)
+                                    Draw.drawCurve(context, curve: c)
                                 }
                                 for i in stride(from: -30, through: 30, by: 10) {
                                     Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)));
@@ -404,12 +400,10 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawCurve(context, curve: curve)
                             }
             })
-        let demo17 = DualDrawFuncDemo(title: ".outline(d)",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo17 = SingleDrawFuncDemo(title: ".outline(d)",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: outlinePoints,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -421,12 +415,10 @@ class DemoView: NSView, DraggableDelegate {
                             outline.offset(distance: -10).curves.forEach(doc)
         })
         
-        let demo18 = DualDrawFuncDemo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo18 = SingleDrawFuncDemo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: outlinePoints,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -434,12 +426,10 @@ class DemoView: NSView, DraggableDelegate {
                             let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
                             outline.curves.forEach(doc)
         })
-        let demo19 = DualDrawFuncDemo(title: "outlineShapes",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo19 = SingleDrawFuncDemo(title: "outlineShapes",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: controlPoints,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
@@ -449,12 +439,11 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
 
-        let demo20 = DualDrawFuncDemo(title: ".intersects()",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        // TODO: somehow make this demo cubic only
+        let demo20 = SingleDrawFuncDemo(title: ".intersects()",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: intersectsPoints,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             for intersection in curve.intersects() {
@@ -462,12 +451,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
                             
         })
-        let demo21 = DualDrawFuncDemo(title: ".intersects(line)",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo21  = SingleDrawFuncDemo(title: ".intersects(line)",
+                          quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: intersectsLine,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             let line: Line = Line( p1: BKPoint(x:0, y:175), p2: BKPoint(x:200,y:25) )
@@ -478,12 +465,10 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawPoint(context, origin: curve.compute(intersection))
                             }
         })
-        let demo22 = DualDrawFuncDemo(title: ".intersects(curve)",
-                          quadraticControlPoints: [],
-                          quadraticDrawFunction: {[unowned self](context: CGContext, demo: Demo) in },
+        let demo22 = SingleDrawFuncDemo(title: ".intersects(curve)",
+                                      quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: intersectsCurve1,
-                          cubicDrawFunction: {[unowned self](context: CGContext, demo: Demo) in
-                            let curve = self.draggableCubicCurve()
+                          drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             let curve2 =  CubicBezierCurve(points: intersectsCurve2)
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
@@ -646,7 +631,7 @@ class DemoView: NSView, DraggableDelegate {
         }
         else if let demo = currentDemo! as? SingleDrawFuncDemo {
             let curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
-            demo.drawFunction(context, demo, curve)
+            demo.drawFunction(context, self.useQuadratic, curve)
         }
         
     }
