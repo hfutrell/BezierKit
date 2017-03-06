@@ -20,10 +20,10 @@ public struct TimeTaggedCurve {
     func split(from t1: BKFloat, to t2: BKFloat) -> BezierCurve {
         var q = BezierCurve.Hull(self.curve.points, t1)
         
-        let q2 = self.curve.order == 2 ? [q[0],q[3],q[5]] : [q[9],q[8],q[6],q[3]]
+        let q2 = self.curve.order == 2 ? [q[5],q[4],q[2]] : [q[9],q[8],q[6],q[3]]
         let t2Prime = Utils.map(t2,t1,1,0,1)
         var p = BezierCurve.Hull(q2, t2Prime)
-        let left = self.curve.order == 2 ? BezierCurve.init(points: [p[0],p[3],p[5]]) : CubicBezierCurve(points: [p[0],p[4],p[7],p[9]])
+        let left = self.curve.order == 2 ? BezierCurve.curveWithPoints(points: [p[0],p[3],p[5]]) : BezierCurve.curveWithPoints(points: [p[0],p[4],p[7],p[9]])
         return left
     }
     
@@ -47,8 +47,8 @@ public struct TimeTaggedCurve {
         // no shortcut: use "de Casteljau" iteration.
         var q = self.curve.hull(t1)
         
-        let left = self.curve.order == 2 ? BezierCurve(points: [q[0],q[3],q[5]]) : CubicBezierCurve(points: [q[0],q[4],q[7],q[9]])
-        let right = self.curve.order == 2 ? BezierCurve(points: [q[0],q[3],q[5]]) : CubicBezierCurve(points: [q[9],q[8],q[6],q[3]])
+        let left = self.curve.order == 2 ? BezierCurve.curveWithPoints(points: [q[0],q[3],q[5]]) : BezierCurve.curveWithPoints(points: [q[0],q[4],q[7],q[9]])
+        let right = self.curve.order == 2 ? BezierCurve.curveWithPoints(points: [q[5],q[4],q[2]]) : BezierCurve.curveWithPoints(points: [q[9],q[8],q[6],q[3]])
         
         let taggedLeft = TimeTaggedCurve(_t1: left_t1, _t2: left_t2, curve: left)
         let taggedRight = TimeTaggedCurve(_t1: right_t1, _t2: right_t2, curve: right)
@@ -97,9 +97,24 @@ public class BezierCurve {
         return threeD ? 3 : 2
     }
     
+    // MARK: - factory method
+    public static func curveWithPoints(points: [BKPoint]) -> BezierCurve {
+        if points.count == 3 {
+            return QuadraticBezierCurve(points: points)
+        }
+        else if points.count == 4 {
+            return CubicBezierCurve(points: points)
+        }
+        else {
+            return BezierCurve(points: points)
+        }
+    }
+    
     // MARK: - initializers
     
-    public init(points: [BKPoint]) {
+    internal init(points: [BKPoint]) {
+        // internal because external users should use factory method
+        // to get back proper subclass
         self.points = points
         self.order = points.count - 1
     }
@@ -485,11 +500,11 @@ public class BezierCurve {
     /*
      Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
      */
-    public func scale(distance d: BKFloat) -> CubicBezierCurve {
+    public func scale(distance d: BKFloat) -> BezierCurve {
         return internalScale(distance: d, distanceFunction: nil)
     }
     
-    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> CubicBezierCurve {
+    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> BezierCurve {
         return internalScale(distance: nil, distanceFunction: distanceFn)
     }
     
@@ -498,7 +513,7 @@ public class BezierCurve {
         case distanceFunction(DistanceFunction)
     }
     
-    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> CubicBezierCurve {
+    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> BezierCurve {
         
         // TODO: this is a good candidate for enum, d is EITHER constant or a function
         assert((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
@@ -536,12 +551,12 @@ public class BezierCurve {
                 if (self.order==2) && (t != 0) {
                     break
                 }
-                let p = np[t*order]
+                let p = np[t*order] // either the first or last of np
                 let d = self.derivative(BKFloat(t))
                 let p2 = p + d
                 np[t+1] = Utils.lli4(p, p2, o!, points[t+1])!
             }
-            return CubicBezierCurve(points: np)
+            return BezierCurve.curveWithPoints(points: np)
         }
         else {
             
@@ -558,7 +573,7 @@ public class BezierCurve {
                 }
                 np[t+1] = p + ov * rc
             }
-            return CubicBezierCurve(points: np)
+            return BezierCurve.curveWithPoints(points: np)
         }
     }
     
@@ -570,17 +585,7 @@ public class BezierCurve {
             let coords: [BKPoint] = self.points.map({(p: BKPoint) -> BKPoint in
                 return p + n * d
             })
-            // TODO: generalize to factory method
-            if points.count == 4 {
-                return [CubicBezierCurve(points: points)]
-            }
-            else if points.count == 3 {
-                // TODO: fix line
-                return [CubicBezierCurve(points: points)]
-            }
-            else {
-                return [BezierCurve(points: coords)]
-            }
+            return [BezierCurve.curveWithPoints(points: coords)]
         }
         // for non-linear curves we need to create a set of curves
         let reduced: [TimeTaggedCurve] = self.reduce()
