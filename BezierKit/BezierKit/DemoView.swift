@@ -135,10 +135,6 @@ class DemoView: NSView, DraggableDelegate {
                                 CGPoint(x: 104, y: 176),
                                 CGPoint(x: 190, y: 37),
                                 CGPoint(x: 121, y: 75)]
-        let intersectsCurve2 = [BKPoint(x: 68, y: 145),
-                                BKPoint(x: 74, y: 6),
-                                BKPoint(x: 143, y: 197),
-                                BKPoint(x: 138, y: 55)]
         
         // warning, these blocks introduce memory leaks! (because they reference self)
         
@@ -452,7 +448,7 @@ class DemoView: NSView, DraggableDelegate {
                             
         })
         let demo21  = SingleDrawFuncDemo(title: ".intersects(line)",
-                          quadraticControlPoints: quadraticControlPoints,
+                                         quadraticControlPoints: [CGPoint(x: 58, y: 173),CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
                           cubicControlPoints: intersectsLine,
                           drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
                             Draw.drawSkeleton(context, curve: curve)
@@ -466,10 +462,10 @@ class DemoView: NSView, DraggableDelegate {
                             }
         })
         let demo22 = SingleDrawFuncDemo(title: ".intersects(curve)",
-                                      quadraticControlPoints: quadraticControlPoints,
+                                      quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
                           cubicControlPoints: intersectsCurve1,
                           drawFunction: {(context: CGContext, quadratic: Bool, curve: BezierCurve) in
-                            let curve2 =  CubicBezierCurve(points: intersectsCurve2)
+                            let curve2 = quadratic ? QuadraticBezierCurve(points: [BKPoint(x: 68, y: 150), BKPoint(x: 74, y: 6), BKPoint(x: 143, y: 150)]) : CubicBezierCurve(points: [BKPoint(x: 68, y: 145), BKPoint(x: 74, y: 6), BKPoint(x: 143, y: 197), BKPoint(x: 138, y: 55)])
                             Draw.drawSkeleton(context, curve: curve)
                             Draw.drawCurve(context, curve: curve)
                             Draw.setColor(context, color: Draw.red)
