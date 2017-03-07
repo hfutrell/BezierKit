@@ -9,67 +9,66 @@
 import Foundation
 
 internal class Utils {
-    
+
     // float precision significant decimal
     static let epsilon: BKFloat = 0.000001
-    
     static let tau: BKFloat = 2.0 * BKFloat(Double.pi)
     static let quart: BKFloat = BKFloat(Double.pi) / 2.0
     
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     static let Tvalues: [BKFloat] = [
-    -0.0640568928626056260850430826247450385909,
-    0.0640568928626056260850430826247450385909,
-    -0.1911188674736163091586398207570696318404,
-    0.1911188674736163091586398207570696318404,
-    -0.3150426796961633743867932913198102407864,
-    0.3150426796961633743867932913198102407864,
-    -0.4337935076260451384870842319133497124524,
-    0.4337935076260451384870842319133497124524,
-    -0.5454214713888395356583756172183723700107,
-    0.5454214713888395356583756172183723700107,
-    -0.6480936519369755692524957869107476266696,
-    0.6480936519369755692524957869107476266696,
-    -0.7401241915785543642438281030999784255232,
-    0.7401241915785543642438281030999784255232,
-    -0.8200019859739029219539498726697452080761,
-    0.8200019859739029219539498726697452080761,
-    -0.8864155270044010342131543419821967550873,
-    0.8864155270044010342131543419821967550873,
-    -0.9382745520027327585236490017087214496548,
-    0.9382745520027327585236490017087214496548,
-    -0.9747285559713094981983919930081690617411,
-    0.9747285559713094981983919930081690617411,
-    -0.9951872199970213601799974097007368118745,
-    0.9951872199970213601799974097007368118745
+        -0.0640568928626056260850430826247450385909,
+        0.0640568928626056260850430826247450385909,
+        -0.1911188674736163091586398207570696318404,
+        0.1911188674736163091586398207570696318404,
+        -0.3150426796961633743867932913198102407864,
+        0.3150426796961633743867932913198102407864,
+        -0.4337935076260451384870842319133497124524,
+        0.4337935076260451384870842319133497124524,
+        -0.5454214713888395356583756172183723700107,
+        0.5454214713888395356583756172183723700107,
+        -0.6480936519369755692524957869107476266696,
+        0.6480936519369755692524957869107476266696,
+        -0.7401241915785543642438281030999784255232,
+        0.7401241915785543642438281030999784255232,
+        -0.8200019859739029219539498726697452080761,
+        0.8200019859739029219539498726697452080761,
+        -0.8864155270044010342131543419821967550873,
+        0.8864155270044010342131543419821967550873,
+        -0.9382745520027327585236490017087214496548,
+        0.9382745520027327585236490017087214496548,
+        -0.9747285559713094981983919930081690617411,
+        0.9747285559713094981983919930081690617411,
+        -0.9951872199970213601799974097007368118745,
+        0.9951872199970213601799974097007368118745
     ]
     
     // Legendre-Gauss weights with n=24 (w_i values, defined by a function linked to in the Bezier primer article)
     static let Cvalues: [BKFloat] = [
-    0.1279381953467521569740561652246953718517,
-    0.1279381953467521569740561652246953718517,
-    0.1258374563468282961213753825111836887264,
-    0.1258374563468282961213753825111836887264,
-    0.1216704729278033912044631534762624256070,
-    0.1216704729278033912044631534762624256070,
-    0.1155056680537256013533444839067835598622,
-    0.1155056680537256013533444839067835598622,
-    0.1074442701159656347825773424466062227946,
-    0.1074442701159656347825773424466062227946,
-    0.0976186521041138882698806644642471544279,
-    0.0976186521041138882698806644642471544279,
-    0.0861901615319532759171852029837426671850,
-    0.0861901615319532759171852029837426671850,
-    0.0733464814110803057340336152531165181193,
-    0.0733464814110803057340336152531165181193,
-    0.0592985849154367807463677585001085845412,
-    0.0592985849154367807463677585001085845412,
-    0.0442774388174198061686027482113382288593,
-    0.0442774388174198061686027482113382288593,
-    0.0285313886289336631813078159518782864491,
-    0.0285313886289336631813078159518782864491,
-    0.0123412297999871995468056670700372915759,
-    0.0123412297999871995468056670700372915759
+        0.1279381953467521569740561652246953718517,
+        0.1279381953467521569740561652246953718517,
+        0.1258374563468282961213753825111836887264,
+        0.1258374563468282961213753825111836887264,
+        0.1216704729278033912044631534762624256070,
+        0.1216704729278033912044631534762624256070,
+        0.1155056680537256013533444839067835598622,
+        0.1155056680537256013533444839067835598622,
+        0.1074442701159656347825773424466062227946,
+        0.1074442701159656347825773424466062227946,
+        0.0976186521041138882698806644642471544279,
+        0.0976186521041138882698806644642471544279,
+        0.0861901615319532759171852029837426671850,
+        0.0861901615319532759171852029837426671850,
+        0.0733464814110803057340336152531165181193,
+        0.0733464814110803057340336152531165181193,
+        0.0592985849154367807463677585001085845412,
+        0.0592985849154367807463677585001085845412,
+        0.0442774388174198061686027482113382288593,
+        0.0442774388174198061686027482113382288593,
+        0.0285313886289336631813078159518782864491,
+        0.0285313886289336631813078159518782864491,
+        0.0123412297999871995468056670700372915759,
+        0.0123412297999871995468056670700372915759
     ]
     
     static func getABC(n: Int, S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5) -> (A: BKPoint, B: BKPoint, C: BKPoint) {
@@ -107,7 +106,6 @@ internal class Utils {
         let top = pow(1.0 - t, CGFloat(n))
         let bottom = pow(t, CGFloat(n)) + top
         return top/bottom
-
     }
     
     static func map(_ v: BKFloat,_ ds: BKFloat,_ de: BKFloat,_ ts: BKFloat,_ te: BKFloat) -> BKFloat {
@@ -136,10 +134,10 @@ internal class Utils {
         return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
     }
     
-//    static func lli(_ v1: BKFloat,_ v2: BKFloat) -> BKPoint? {
-//        return Utils.lli4(v1,v1.c,v2,v2.c)
-//    }
-
+    //    static func lli(_ v1: BKFloat,_ v2: BKFloat) -> BKPoint? {
+    //        return Utils.lli4(v1,v1.c,v2,v2.c)
+    //    }
+    
     static func getminmax(list: [BKFloat], computeDimension: (BKFloat) -> BKFloat) -> (min: BKFloat, max: BKFloat) {
         var min = BKFloat.infinity
         var max = -BKFloat.infinity
@@ -162,11 +160,10 @@ internal class Utils {
         return ( min:min, max: max )
     }
     
-    
     static func approximately(_ a: BKFloat,_ b: BKFloat, precision: BKFloat = epsilon) -> Bool {
         return abs(a-b) <= precision
     }
-
+    
     static func between(_ v: BKFloat,_ m: BKFloat,_ M: BKFloat) -> Bool {
         return (m <= v && v <= M) || Utils.approximately(v, m) || Utils.approximately(v, M)
     }
@@ -263,7 +260,6 @@ internal class Utils {
             }
             return []
         }
-        
         // linear roots are even easier
         if p.count == 2 {
             let a = p[0]
@@ -273,7 +269,6 @@ internal class Utils {
             }
             return []
         }
-
         assert(false, "nope!")
         return []
     }
@@ -358,13 +353,13 @@ internal class Utils {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
         if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
-           // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
-        
+            // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
+            
             let a1 = c1.curve.points[0]
             let b1 = c1.curve.points.last! - c1.curve.points[0]
             let a2 = c2.curve.points[0]
             let b2 = c2.curve.points.last! - c2.curve.points[0]
-
+            
             let _a = b1.x
             let _b = -b2.x
             let _c = b1.y
@@ -387,21 +382,20 @@ internal class Utils {
             if t2 >= 1.0 || t2 <= 0.0 {
                 return [] // t2 out of interval [0, 1]
             }
-            
             // segments intersect at t1, t2
             return [Intersection(t1: t1 * c1._t2 + (1.0 - t1) * c1._t1,
                                  t2: t2 * c2._t2 + (1.0 - t2) * c2._t1)]
-        
+            
         }
         
         let cc1 = c1.split(0.5) as! MultipleCurves
         let cc2 = c2.split(0.5) as! MultipleCurves
         
         var pairs = [
-        (left: cc1.left, right: cc2.left ),
-        (left: cc1.left, right: cc2.right ),
-        (left: cc1.right, right: cc2.right ),
-        (left: cc1.right, right: cc2.left )]
+            (left: cc1.left, right: cc2.left ),
+            (left: cc1.left, right: cc2.right ),
+            (left: cc1.right, right: cc2.right ),
+            (left: cc1.right, right: cc2.left )]
         pairs = pairs.filter( {(pair) in
             return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
         })
@@ -409,18 +403,18 @@ internal class Utils {
         for pair in pairs {
             results += Utils.pairiteration(pair.left, pair.right, threshold)
         }
-// TODO: remove duplicates
+        // TODO: remove duplicates
         //        results = results.filter({(v,i) in
-//            return results.index(of: v) == i
-//        })
+        //            return results.index(of: v) == i
+        //        })
         return results
     }
-
+    
     struct ShapeIntersection {
         var c1: BezierCurve
         var c2: BezierCurve
-//        var s1: Shape
-//        var s2: Shape
+        //        var s1: Shape
+        //        var s2: Shape
         var intersection: [Intersection]
     }
     
@@ -459,11 +453,11 @@ internal class Utils {
             forward: forward,
             back: back
         )
-// TODO: intersections method
-//        var self = utils
-//        shape.intersections = function(s2) {
-//        return self.shapeintersections(shape,shape.bbox,s2,s2.bbox, curveIntersectionThreshold)
-//        }
+        // TODO: intersections method
+        //        var self = utils
+        //        shape.intersections = function(s2) {
+        //        return self.shapeintersections(shape,shape.bbox,s2,s2.bbox, curveIntersectionThreshold)
+        //        }
         return shape
     }
     
