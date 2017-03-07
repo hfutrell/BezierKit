@@ -93,15 +93,12 @@
 		FD0F54F71DC43FFB0084CDCD /* BezierKit */ = {
 			isa = PBXGroup;
 			children = (
+				FD3104731E6E3D6A001CB39F /* Lib */,
 				FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */,
-				FDE5E2F41E6A51FF001F51DE /* Curve */,
-				FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */,
 				FDD476621DC44EDB00A1FAF3 /* DemoView.swift */,
 				FD3104711E6E356C001CB39F /* Demos.swift */,
 				FDD7ABF01DCC58A50059D787 /* Draggable.swift */,
 				FD5EC36A1DC5A5D70079982F /* Draw.swift */,
-				FDD7ABF21DCC59FC0059D787 /* Types.swift */,
-				FDD7ABF41DCC68D10059D787 /* Utils.swift */,
 				FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */,
 				FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */,
 				FD0F54FF1DC43FFB0084CDCD /* Info.plist */,
@@ -116,6 +113,17 @@
 				FD0F550A1DC43FFB0084CDCD /* Info.plist */,
 			);
 			path = BezierKitTests;
+			sourceTree = "<group>";
+		};
+		FD3104731E6E3D6A001CB39F /* Lib */ = {
+			isa = PBXGroup;
+			children = (
+				FDD7ABF41DCC68D10059D787 /* Utils.swift */,
+				FDE5E2F41E6A51FF001F51DE /* Curve */,
+				FDD7ABF21DCC59FC0059D787 /* Types.swift */,
+				FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */,
+			);
+			name = Lib;
 			sourceTree = "<group>";
 		};
 		FDE5E2F41E6A51FF001F51DE /* Curve */ = {

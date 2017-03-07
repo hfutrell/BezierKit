@@ -878,4 +878,6 @@ public class BezierCurve {
         return iterate(errorThreshold: errorThreshold, circles: circles)
     }
     
+    // TODO: description method?
+    
 }

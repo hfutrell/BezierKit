@@ -27,6 +27,16 @@ class DemoView: NSView, DraggableDelegate {
     
     // MARK: -
     
+    override var intrinsicContentSize: NSSize {
+        return NSSize(width: 200, height: 210)
+    }
+    
+    var affineTransform: CGAffineTransform {
+        let tx = (self.frame.size.width - self.intrinsicContentSize.width) / 2.0
+        let ty = (self.frame.size.height - self.intrinsicContentSize.height) / 2.0
+        return CGAffineTransform(translationX: tx, y: ty)
+    }
+    
     var curve: CubicBezierCurve?
     
     var mouseTrackingArea: NSTrackingArea?
@@ -150,7 +160,7 @@ class DemoView: NSView, DraggableDelegate {
         
         self.discardCursorRects()
         for d: Draggable in self.draggables {
-            self.addCursorRect(d.cursorRect, cursor: cursor)
+            self.addCursorRect(d.cursorRect.applying(self.affineTransform), cursor: cursor)
         }
     }
     
@@ -173,7 +183,7 @@ class DemoView: NSView, DraggableDelegate {
     override func mouseDown(with event: NSEvent) {
         let location = self.superview!.convert(event.locationInWindow, to: self)
         for d in self.draggables {
-            if d.containsLocation(location) {
+            if d.containsLocation(location.applying(self.affineTransform.inverted())) {
                 self.selectedDraggable = d
                 return
             }
@@ -183,7 +193,7 @@ class DemoView: NSView, DraggableDelegate {
     override func mouseDragged(with event: NSEvent) {
         if let draggable : Draggable = self.selectedDraggable {
             let location = self.superview!.convert(event.locationInWindow, to: self)
-            draggable.updateLocation(location)
+            draggable.updateLocation(location.applying(self.affineTransform.inverted()))
         }
     }
     
@@ -212,8 +222,11 @@ class DemoView: NSView, DraggableDelegate {
         
         let context: CGContext = NSGraphicsContext.current()!.cgContext
         
+        context.saveGState()
         context.setFillColor(NSColor.white.cgColor)
         context.fill(self.bounds)
+        
+        context.concatenate(self.affineTransform)
         
         Draw.reset(context)
         if let demo = currentDemo {
@@ -221,9 +234,11 @@ class DemoView: NSView, DraggableDelegate {
             if self.draggables.count > 0 {
                 curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
             }
-            let demoState: DemoState = DemoState(quadratic: self.useQuadratic, lastInputLocation: self.lastMouseLocation, curve: curve)
+            let demoState: DemoState = DemoState(quadratic: self.useQuadratic, lastInputLocation: self.lastMouseLocation?.applying(self.affineTransform.inverted()), curve: curve)
             demo.drawFunction(context, demoState)
         }
+        
+        context.restoreGState()
         
     }
     

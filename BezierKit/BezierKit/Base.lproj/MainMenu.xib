@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12106.1" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12106.1"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -684,7 +684,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="480" height="365"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1130"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="365"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -699,6 +699,9 @@
                     </customView>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="vMH-Zp-hat">
                         <rect key="frame" x="19" y="36" width="82" height="18"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="16" id="FS3-6V-yB4"/>
+                        </constraints>
                         <buttonCell key="cell" type="radio" title="Quadratic" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="WT3-xm-y8t">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -709,6 +712,9 @@
                     </button>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="SnG-O9-J4H">
                         <rect key="frame" x="19" y="14" width="57" height="18"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="16" id="Gez-fb-YRe"/>
+                        </constraints>
                         <buttonCell key="cell" type="radio" title="Cubic" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="J0P-DG-QPO">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -752,7 +758,7 @@
                     <constraint firstItem="wvE-Cv-9ww" firstAttribute="top" secondItem="0Ql-9U-0la" secondAttribute="bottom" constant="15" id="yv4-e6-Z6Y"/>
                 </constraints>
             </view>
-            <point key="canvasLocation" x="137" y="55"/>
+            <point key="canvasLocation" x="137" y="54.5"/>
         </window>
     </objects>
 </document>

@@ -11,6 +11,8 @@ import Foundation
 // should Draw just be an extension of CGContext, or have a CGContext instead of passing it in to all these functions?
 class Draw {
     
+    // MARK: - helpers
+    
     /**
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
@@ -75,7 +77,7 @@ class Draw {
         outB = temp[2]
     }
 
-    
+    // MARK: - some useful hard-coded colors
     static let lightGrey = CGColor(red: 211.0 / 255.0, green: 211.0 / 255.0, blue: 211.0 / 255.0, alpha: 1.0)
     static let black = CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
     static let red = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
@@ -98,10 +100,14 @@ class Draw {
         return temp
     }()
     
+    // MARK: -
+    
     static func reset(_ context: CGContext) {
         context.setStrokeColor(black)
         randomIndex = 0
     }
+    
+    // MARK: - setting colors
     
     static func setRandomColor(_ context: CGContext) {
         randomIndex = (randomIndex+1) % randomColors.count
@@ -119,6 +125,8 @@ class Draw {
     static func setColor(_ context: CGContext, color: CGColor) {
         context.setStrokeColor(color)
     }
+    
+    // MARK: - drawing various geometry
     
     static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
@@ -190,23 +198,6 @@ class Draw {
         if (coords == true) {
             context.setStrokeColor(black)
             self.drawPoints(context, points: curve.points, offset: offset)
-        }
-        
-    }
-    
-    static func drawSkeleton(_ context: CGContext,
-                  curve: CubicBezierCurve,
-                  offset: BKPoint=BKPoint(x: 0.0, y: 0.0),
-                  coords: Bool=true) {
-    
-        context.setStrokeColor(lightGrey)
-        
-        self.drawLine(context, from: curve.p0, to: curve.p1, offset: offset)
-        self.drawLine(context, from: curve.p2, to: curve.p3, offset: offset)
-        
-        context.setStrokeColor(black)
-        if (coords == true) {
-            self.drawPoints(context, points: curve.points)
         }
         
     }
