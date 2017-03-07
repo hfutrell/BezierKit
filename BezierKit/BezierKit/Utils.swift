@@ -173,7 +173,7 @@ internal class Utils {
     
     // cube root function yielding real roots
     static func crt(_ v: BKFloat) -> BKFloat {
-        return (v < 0) ? -pow(-v,1/3) : pow(v,1/3)
+        return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
     }
     
     static func roots(points: [BKPoint], line: Line = Line(p1: BKPoint(x: 0.0, y: 0.0), p2: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
@@ -516,7 +516,4 @@ internal class Utils {
         }
         return Arc(origin: o, radius: r, start: s, end: e, interval: interval)
     }
-
-
-    
 }
