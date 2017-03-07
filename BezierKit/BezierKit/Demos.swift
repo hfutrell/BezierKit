@@ -31,33 +31,6 @@ let quadraticControlPoints = [CGPoint(x: 150, y: 40),
                               CGPoint(x: 80, y: 30),
                               CGPoint(x: 105, y: 150)]
 
-let lengthControlPoints = [CGPoint(x: 100, y: 25),
-                           CGPoint(x: 10, y: 90),
-                           CGPoint(x: 110, y: 100),
-                           CGPoint(x: 132, y: 192)]
-
-let hullPoints = [CGPoint(x: 100, y: 25),
-                  CGPoint(x: 10, y: 90),
-                  CGPoint(x: 50, y: 185),
-                  CGPoint(x: 170, y: 175)]
-
-let outlinePoints = [CGPoint(x: 102, y: 33),
-                     CGPoint(x: 16, y: 99),
-                     CGPoint(x: 101, y: 129),
-                     CGPoint(x: 132, y: 173)]
-let intersectsPoints = [CGPoint(x: 100, y: 25),
-                        CGPoint(x: 10, y: 180),
-                        CGPoint(x: 170, y: 165),
-                        CGPoint(x: 65, y: 70)]
-let intersectsLine = [CGPoint(x: 53, y: 163),
-                      CGPoint(x: 27, y: 19),
-                      CGPoint(x: 182, y: 176),
-                      CGPoint(x: 155, y: 36)]
-let intersectsCurve1 = [CGPoint(x: 48, y: 84),
-                        CGPoint(x: 104, y: 176),
-                        CGPoint(x: 190, y: 37),
-                        CGPoint(x: 121, y: 75)]
-
 let demo1 = Demo(title: "new Bezier(...)",
                  quadraticControlPoints: quadraticControlPoints,
                  cubicControlPoints: cubicControlPoints,
@@ -131,7 +104,7 @@ let demo3 = Demo(title: ".getLUT(steps)",
 })
 let demo4 = Demo(title: ".length()",
                  quadraticControlPoints: quadraticControlPoints,
-                 cubicControlPoints: lengthControlPoints,
+                 cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 90), CGPoint(x: 110, y: 100), CGPoint(x: 132, y: 192)],
                  drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -231,7 +204,7 @@ let demo10 = Demo(title: ".bbox()",
 })
 let demo11 = Demo(title: ".hull(t)",
                   quadraticControlPoints: quadraticControlPoints,
-                  cubicControlPoints: hullPoints,
+                  cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 90), CGPoint(x: 50, y: 185), CGPoint(x: 170, y: 175)],
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -243,7 +216,7 @@ let demo11 = Demo(title: ".hull(t)",
 })
 let demo12 = Demo(title: ".project(point)",
                   quadraticControlPoints: quadraticControlPoints,
-                  cubicControlPoints: hullPoints,
+                  cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 90), CGPoint(x: 50, y: 185), CGPoint(x: 170, y: 175)],
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -329,7 +302,10 @@ let demo16 = Demo(title: ".scale(d)",
 })
 let demo17 = Demo(title: ".outline(d)",
                   quadraticControlPoints: quadraticControlPoints,
-                  cubicControlPoints: outlinePoints,
+                  cubicControlPoints: [CGPoint(x: 102, y: 33),
+                                       CGPoint(x: 16, y: 99),
+                                       CGPoint(x: 101, y: 129),
+                                       CGPoint(x: 132, y: 173)],
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -345,7 +321,7 @@ let demo17 = Demo(title: ".outline(d)",
 
 let demo18 = Demo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
                   quadraticControlPoints: quadraticControlPoints,
-                  cubicControlPoints: outlinePoints,
+                  cubicControlPoints: [CGPoint(x: 102, y: 33), CGPoint(x: 16, y: 99), CGPoint(x: 101, y: 129), CGPoint(x: 132, y: 173)],
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -370,7 +346,7 @@ let demo19 = Demo(title: "outlineShapes",
 })
 let demo20 = Demo(title: ".intersects()",
                   quadraticControlPoints: quadraticControlPoints,
-                  cubicControlPoints: intersectsPoints,
+                  cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 180), CGPoint(x: 170, y: 165), CGPoint(x: 65, y: 70)],
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -386,7 +362,7 @@ let demo20 = Demo(title: ".intersects()",
 })
 let demo21  = Demo(title: ".intersects(line)",
                    quadraticControlPoints: [CGPoint(x: 58, y: 173),CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
-                   cubicControlPoints: intersectsLine,
+                   cubicControlPoints: [CGPoint(x: 53, y: 163), CGPoint(x: 27, y: 19), CGPoint(x: 182, y: 176), CGPoint(x: 155, y: 36)],
                    drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
@@ -401,7 +377,7 @@ let demo21  = Demo(title: ".intersects(line)",
 })
 let demo22 = Demo(title: ".intersects(curve)",
                   quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
-                  cubicControlPoints: intersectsCurve1,
+                  cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     let curve2 = demoState.quadratic ? QuadraticBezierCurve(points: [BKPoint(x: 68, y: 150), BKPoint(x: 74, y: 6), BKPoint(x: 143, y: 150)]) : CubicBezierCurve(points: [BKPoint(x: 68, y: 145), BKPoint(x: 74, y: 6), BKPoint(x: 143, y: 197), BKPoint(x: 138, y: 55)])
