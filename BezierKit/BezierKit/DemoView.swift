@@ -433,8 +433,6 @@ class DemoView: NSView, DraggableDelegate {
                                 Draw.drawShape(context, shape: shape);
                             }
         })
-
-        // TODO: somehow make this demo cubic only
         let demo20 = Demo(title: ".intersects()",
                           quadraticControlPoints: quadraticControlPoints,
                           cubicControlPoints: intersectsPoints,
@@ -445,7 +443,11 @@ class DemoView: NSView, DraggableDelegate {
                             for intersection in curve.intersects() {
                                 Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                             }
-                            
+                            if quadratic {
+                                Draw.drawText(context,
+                                              text: "note: self-intersection not possible\nwith quadratic bezier curves",
+                                              offset: BKPoint(x: 15, y: 160))
+                            }
         })
         let demo21  = Demo(title: ".intersects(line)",
                                          quadraticControlPoints: [CGPoint(x: 58, y: 173),CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
@@ -620,13 +622,11 @@ class DemoView: NSView, DraggableDelegate {
         
         Draw.reset(context)
         if let demo = currentDemo {
+            var curve: BezierCurve? = nil
             if self.draggables.count > 0 {
-                let curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
-                demo.drawFunction(context, self.useQuadratic, curve)
+                curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
             }
-            else {
-                demo.drawFunction(context, self.useQuadratic, nil)
-            }
+            demo.drawFunction(context, self.useQuadratic, curve)
         }
         
     }

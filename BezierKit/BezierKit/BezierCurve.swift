@@ -671,7 +671,7 @@ public class BezierCurve {
     }
     
     public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
-        
+        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
         return BezierCurve.internalCurvesIntersect(c1: self.reduce(),
                                                    c2: [TimeTaggedCurve(_t1: 0.0, _t2: 1.0, curve: curve)],
                                                    curveIntersectionThreshold: curveIntersectionThreshold)
