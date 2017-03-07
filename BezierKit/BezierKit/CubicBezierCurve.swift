@@ -33,7 +33,6 @@ public class CubicBezierCurve: BezierCurve {
         self.init(points: points)
     }
 
-    // TODO: the header has all these autoclosures, what's up with that?
     public convenience init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
                 
         let abc = Utils.getABC(n: 3, S: S, B: B, E: E, t: t)
