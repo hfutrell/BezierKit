@@ -173,9 +173,9 @@ let demo6 = Demo(title: ".derivative(t)",
                     Draw.drawCurve(context, curve: curve)
                     Draw.setColor(context, color: Draw.red)
                     for t in stride(from: 0, through: 1, by: 0.1) {
-                        let pt = curve.compute(BKFloat(t));
-                        let dv = curve.derivative(BKFloat(t));
-                        Draw.drawLine(context, from: pt, to: pt + dv );
+                        let pt = curve.compute(BKFloat(t))
+                        let dv = curve.derivative(BKFloat(t))
+                        Draw.drawLine(context, from: pt, to: pt + dv )
                     }
 })
 let demo7 = Demo(title: ".normal(t)",
@@ -188,9 +188,9 @@ let demo7 = Demo(title: ".normal(t)",
                     Draw.setColor(context, color: Draw.red)
                     let d: BKFloat = 20.0
                     for t in stride(from: 0, through: 1, by: 0.1) {
-                        let pt = curve.compute(BKFloat(t));
-                        let dv = curve.normal(BKFloat(t));
-                        Draw.drawLine(context, from: pt, to: pt + dv * d );
+                        let pt = curve.compute(BKFloat(t))
+                        let dv = curve.normal(BKFloat(t))
+                        Draw.drawLine(context, from: pt, to: pt + dv * d )
                     }
 })
 let demo8 = Demo(title: ".split(t) and .split(t1,t2)",
@@ -204,8 +204,8 @@ let demo8 = Demo(title: ".split(t) and .split(t1,t2)",
                     let c = curve.split(from: 0.25, to: 0.75)
                     Draw.setColor(context, color: Draw.red)
                     Draw.drawCurve(context, curve: c)
-                    Draw.drawCircle(context, center: curve.compute(0.25), radius: 3);
-                    Draw.drawCircle(context, center: curve.compute(0.75), radius: 3);
+                    Draw.drawCircle(context, center: curve.compute(0.25), radius: 3)
+                    Draw.drawCircle(context, center: curve.compute(0.75), radius: 3)
 })
 let demo9 = Demo(title: ".extrema()",
                  quadraticControlPoints: quadraticControlPoints,
@@ -216,7 +216,7 @@ let demo9 = Demo(title: ".extrema()",
                     Draw.drawCurve(context, curve: curve)
                     Draw.setColor(context, color: Draw.red)
                     for t in curve.extrema().values {
-                        Draw.drawCircle(context, center: curve.compute(t), radius: 3);
+                        Draw.drawCircle(context, center: curve.compute(t), radius: 3)
                     }
 })
 let demo10 = Demo(title: ".bbox()",
@@ -238,8 +238,8 @@ let demo11 = Demo(title: ".hull(t)",
                     Draw.drawCurve(context, curve: curve)
                     Draw.setColor(context, color: Draw.red)
                     let hull = curve.hull(0.5)
-                    Draw.drawHull(context, hull: hull);
-                    Draw.drawCircle(context, center: hull[hull.count-1], radius: 5);
+                    Draw.drawHull(context, hull: hull)
+                    Draw.drawCircle(context, center: hull[hull.count-1], radius: 5)
 })
 let demo12 = Demo(title: ".project(point)",
                   quadraticControlPoints: quadraticControlPoints,
@@ -296,11 +296,11 @@ let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
                   drawFunction: {(context: CGContext, demoState: DemoState) in
                     let curve = demoState.curve!
                     Draw.drawSkeleton(context, curve: curve)
-                    let arcs = curve.arcs();
+                    let arcs = curve.arcs()
                     Draw.setColor(context, color: Draw.black)
                     for arc in arcs {
                         Draw.setRandomFill(context, alpha: 0.1)
-                        Draw.draw(context, arc: arc);
+                        Draw.draw(context, arc: arc)
                     }
 })
 let demo16 = Demo(title: ".scale(d)",
@@ -320,7 +320,7 @@ let demo16 = Demo(title: ".scale(d)",
                             Draw.drawCurve(context, curve: c)
                         }
                         for i in stride(from: -30, through: 30, by: 10) {
-                            Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)));
+                            Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)))
                         }
                     }
                     else {
@@ -365,7 +365,7 @@ let demo19 = Demo(title: "outlineShapes",
                     Draw.setColor(context, color: Draw.red)
                     for shape in curve.outlineShapes(distance: 25) {
                         Draw.setRandomFill(context, alpha: 0.2)
-                        Draw.drawShape(context, shape: shape);
+                        Draw.drawShape(context, shape: shape)
                     }
 })
 let demo20 = Demo(title: ".intersects()",
@@ -409,7 +409,7 @@ let demo22 = Demo(title: ".intersects(curve)",
                     Draw.drawCurve(context, curve: curve)
                     Draw.setColor(context, color: Draw.red)
                     Draw.drawCurve(context, curve: curve2)
-                    Draw.setColor(context, color: Draw.black);
+                    Draw.setColor(context, color: Draw.black)
                     for intersection in curve.intersects(curve: curve2) {
                         Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                     }
