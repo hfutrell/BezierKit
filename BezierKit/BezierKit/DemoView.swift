@@ -87,29 +87,8 @@ class DemoView: NSView, DraggableDelegate {
         
         super.init(coder: coder)
         
-        self.registerDemo(demo1)
-        self.registerDemo(demo2)
-        self.registerDemo(demo3)
-        self.registerDemo(demo4)
-        self.registerDemo(demo5)
-        self.registerDemo(demo6)
-        self.registerDemo(demo7)
-        self.registerDemo(demo8)
-        self.registerDemo(demo9)
-        self.registerDemo(demo10)
-        self.registerDemo(demo11)
-        self.registerDemo(demo12)
-        self.registerDemo(demo13)
-        self.registerDemo(demo14)
-        self.registerDemo(demo15)
-        self.registerDemo(demo16)
-        self.registerDemo(demo17)
-        self.registerDemo(demo18)
-        self.registerDemo(demo19)
-        self.registerDemo(demo20)
-        self.registerDemo(demo21)
-        self.registerDemo(demo22)
-        
+        self.demos += Demos.all
+                
     }
     
     override func awakeFromNib() {
