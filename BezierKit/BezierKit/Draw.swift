@@ -145,7 +145,7 @@ class Draw {
     }
     
     static func drawPoint(_ context: CGContext, origin o: BKPoint, offset: BKPoint=BKPointZero) {
-        self.drawCircle(context, center: o, radius: 5.0)
+        self.drawCircle(context, center: o, radius: 5.0, offset: offset)
         
     }
     
