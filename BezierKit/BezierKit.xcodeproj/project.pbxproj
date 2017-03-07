@@ -11,6 +11,7 @@
 		FD0F54FB1DC43FFB0084CDCD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */; };
 		FD0F54FE1DC43FFB0084CDCD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */; };
 		FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
+		FD3104721E6E356C001CB39F /* Demos.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3104711E6E356C001CB39F /* Demos.swift */; };
 		FD5EC36B1DC5A5D70079982F /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5EC36A1DC5A5D70079982F /* Draw.swift */; };
 		FDADC2F91DE6823C00B2D384 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */; };
 		FDD476611DC4422400A1FAF3 /* CubicBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */; };
@@ -41,6 +42,7 @@
 		FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTests.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FD3104711E6E356C001CB39F /* Demos.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Demos.swift; sourceTree = "<group>"; };
 		FD5EC36A1DC5A5D70079982F /* Draw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Draw.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PolyBezier.swift; sourceTree = "<group>"; };
 		FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = CubicBezierCurve.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -95,6 +97,7 @@
 				FDE5E2F41E6A51FF001F51DE /* Curve */,
 				FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */,
 				FDD476621DC44EDB00A1FAF3 /* DemoView.swift */,
+				FD3104711E6E356C001CB39F /* Demos.swift */,
 				FDD7ABF01DCC58A50059D787 /* Draggable.swift */,
 				FD5EC36A1DC5A5D70079982F /* Draw.swift */,
 				FDD7ABF21DCC59FC0059D787 /* Types.swift */,
@@ -231,6 +234,7 @@
 				FD0F54F91DC43FFB0084CDCD /* AppDelegate.swift in Sources */,
 				FDD476631DC44EDB00A1FAF3 /* DemoView.swift in Sources */,
 				FDD7ABF11DCC58A50059D787 /* Draggable.swift in Sources */,
+				FD3104721E6E356C001CB39F /* Demos.swift in Sources */,
 				FDE5E2F11E5A69EA001F51DE /* BezierCurve.swift in Sources */,
 				FDD7ABF51DCC68D10059D787 /* Utils.swift in Sources */,
 				FDD7ABF31DCC59FC0059D787 /* Types.swift in Sources */,
