@@ -22,7 +22,7 @@ class Draw {
             outR = l
             outG = l
             outB = l
-            return;
+            return
         }
 
         var temp1, temp2: CGFloat
@@ -53,11 +53,11 @@ class Draw {
             }
             
             if (6.0 * temp[i]) < 1.0 {
-                temp[i] = temp1 + (temp2 - temp1) * 6.0 * temp[i];
+                temp[i] = temp1 + (temp2 - temp1) * 6.0 * temp[i]
             }
             else {
                 if (2.0 * temp[i]) < 1.0 {
-                    temp[i] = temp2;
+                    temp[i] = temp2
                 }
                 else {
                     if (3.0 * temp[i]) < 2.0 {
@@ -85,7 +85,7 @@ class Draw {
     
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
-        var temp: [CGColor] = [];
+        var temp: [CGColor] = []
         for i in 0..<360 {
             var j = (i*47) % 360
             var r: CGFloat = 0.0
@@ -225,7 +225,7 @@ class Draw {
     }
     
     static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
-        context.beginPath();
+        context.beginPath()
         if hull.count == 6 {
             context.move(to: hull[0].toCGPoint())
             context.addLine(to: hull[1].toCGPoint())
@@ -244,7 +244,7 @@ class Draw {
             context.move(to: hull[7].toCGPoint())
             context.addLine(to: hull[8].toCGPoint())
         }
-        context.strokePath();
+        context.strokePath()
     }
 
     static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : BKPoint = BKPointZero) {

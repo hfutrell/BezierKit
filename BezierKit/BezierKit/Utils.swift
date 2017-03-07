@@ -95,7 +95,7 @@ internal class Utils {
         }
         let bottom = pow(t, CGFloat(n)) + pow(1 - t, CGFloat(n))
         let top = bottom - 1
-        return abs(top/bottom);
+        return abs(top/bottom)
     }
     
     static func projectionRatio(n: Int, t: CGFloat = 0.5) -> BKFloat {
@@ -106,7 +106,7 @@ internal class Utils {
         }
         let top = pow(1.0 - t, CGFloat(n))
         let bottom = pow(t, CGFloat(n)) + top
-        return top/bottom;
+        return top/bottom
 
     }
     
@@ -125,7 +125,7 @@ internal class Utils {
         if d == 0 {
             return nil
         }
-        return BKPoint( x: nx/d, y: ny/d );
+        return BKPoint( x: nx/d, y: ny/d )
     }
     
     static func lli4(_ p1: BKPoint,_ p2: BKPoint,_ p3: BKPoint,_ p4: BKPoint) -> BKPoint? {
@@ -151,7 +151,7 @@ internal class Utils {
             listPrime.append(1.0)
         }
         for t in listPrime {
-            let c = computeDimension(t);
+            let c = computeDimension(t)
             if c < min {
                 min = c
             }
@@ -159,7 +159,7 @@ internal class Utils {
                 max = c
             }
         }
-        return ( min:min, max: max );
+        return ( min:min, max: max )
     }
     
     
@@ -194,7 +194,7 @@ internal class Utils {
                 return [v1, v2].filter(reduce)
             }
             else if b != c && d == BKFloat(0.0) {
-                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce);
+                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce)
             }
             else {
                 return []
@@ -223,7 +223,7 @@ internal class Utils {
                 let cosphi = t < -1 ? -1 : t > 1 ? 1 : t
                 let phi = acos(cosphi)
                 let crtr = crt(r)
-                let t1 = 2*crtr;
+                let t1 = 2*crtr
                 let x1 = t1 * cos(phi/3) - a/3
                 let x2 = t1 * cos((phi+tau)/3) - a/3
                 let x3 = t1 * cos((phi+2*tau)/3) - a/3
@@ -250,7 +250,7 @@ internal class Utils {
             let a = p[0]
             let b = p[1]
             let c = p[2]
-            let d = a - 2*b + c;
+            let d = a - 2*b + c
             if d != 0 {
                 let m1 = -sqrt(b*b-a*c)
                 let m2 = -a+b
@@ -269,7 +269,7 @@ internal class Utils {
             let a = p[0]
             let b = p[1]
             if a != b {
-                return [a/(a-b)];
+                return [a/(a-b)]
             }
             return []
         }
@@ -279,7 +279,7 @@ internal class Utils {
     }
     
     static func lerp(_ r: BKFloat, _ v1: BKPoint, _ v2: BKPoint) -> BKPoint {
-        return v1 + (v2 - v1) * r;
+        return v1 + (v2 - v1) * r
     }
     
     static func dist(_ p1: BKPoint,_ p2: BKPoint) -> BKFloat {
@@ -287,7 +287,7 @@ internal class Utils {
     }
     
     static func arcfn(_ t: BKFloat, _ derivativeFn: (_ t: BKFloat) -> BKPoint) -> BKFloat {
-        let d = derivativeFn(t);
+        let d = derivativeFn(t)
         return d.length
     }
     
@@ -296,7 +296,7 @@ internal class Utils {
         let len = Utils.Tvalues.count
         var sum: BKFloat = 0.0
         for i in 0..<len {
-            let t = z * Utils.Tvalues[i] + z;
+            let t = z * Utils.Tvalues[i] + z
             sum += Utils.Cvalues[i] * Utils.arcfn(t, derivativeFn)
         }
         return z * sum
@@ -308,7 +308,7 @@ internal class Utils {
         let dx2 = v2.x - o.x
         let dy2 = v2.y - o.y
         let cross = dx1*dy2 - dy1*dx2
-        let dot = dx1*dx2 + dy1*dy2;
+        let dot = dx1*dx2 + dy1*dy2
         return atan2(cross, dot)
     }
     
@@ -331,13 +331,13 @@ internal class Utils {
         var mpos: Int? = nil
         for i in 0..<LUT.count {
             let p = LUT[i]
-            let d = Utils.dist(point, p);
+            let d = Utils.dist(point, p)
             if d<mdist {
-                mdist = d;
-                mpos = i;
+                mdist = d
+                mpos = i
             }
         }
-        return ( mdist:mdist, mpos:mpos! );
+        return ( mdist:mdist, mpos:mpos! )
     }
     
     static func makeline(_ p1: BKPoint,_ p2: BKPoint) -> CubicBezierCurve {
@@ -441,7 +441,7 @@ internal class Utils {
                 }
                 let iss = l1!.intersects(curve: l2!, curveIntersectionThreshold: curveIntersectionThreshold)
                 if iss.count > 0 {
-                    intersections.append(ShapeIntersection(c1: l1!, c2: l2!, /*, s1: s1, s2: s2,*/ intersection: iss));
+                    intersections.append(ShapeIntersection(c1: l1!, c2: l2!, /*, s1: s1, s2: s2,*/ intersection: iss))
                 }
             }
         }
@@ -460,11 +460,11 @@ internal class Utils {
             back: back
         )
 // TODO: intersections method
-//        var self = utils;
+//        var self = utils
 //        shape.intersections = function(s2) {
-//        return self.shapeintersections(shape,shape.bbox,s2,s2.bbox, curveIntersectionThreshold);
-//        };
-        return shape;
+//        return self.shapeintersections(shape,shape.bbox,s2,s2.bbox, curveIntersectionThreshold)
+//        }
+        return shape
     }
     
     static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Arc.Interval) -> Arc {
@@ -497,7 +497,7 @@ internal class Utils {
             // if m<s<e, arc(e, s + tau)
             // if s<e<m, arc(e, s + tau)
             if s>m || m>e {
-                s += tau;
+                s += tau
             }
             if s>e {
                 swap(&s, &e)
