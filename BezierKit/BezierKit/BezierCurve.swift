@@ -124,9 +124,11 @@ public class BezierCurve {
     private lazy var dpoints: [[BKPoint]] = {
         var ret: [[BKPoint]] = []
         var p: [BKPoint] = self.points
+        ret.reserveCapacity(p.count-1)
         for d in (2 ... p.count).reversed() {
             let c = d-1
             var list: [BKPoint] = []
+            list.reserveCapacity(c)
             for j:Int in 0..<c {
                 let dpt: BKPoint = (p[j+1] - p[j]) * BKFloat(c)
                 list.append(dpt)
@@ -252,7 +254,6 @@ public class BezierCurve {
             }
             start = end + 1
         }
-        assert(q.capacity == q.count, "optimization strategy failed!")
         return q
     }
     
