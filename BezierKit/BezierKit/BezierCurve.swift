@@ -122,8 +122,6 @@ public class BezierCurve {
     // MARK: -
     
     private lazy var dpoints: [[BKPoint]] = {
-        // TODO: is this function correct? :(
-        // TODO: this function has a HORRIBLE name
         var ret: [[BKPoint]] = []
         var p: [BKPoint] = self.points
         for d in (2 ... p.count).reversed() {
@@ -211,7 +209,6 @@ public class BezierCurve {
         return result
     }
     
-    // TODO: the header file says this is { get set }, why is that?
     public lazy var boundingBox: BoundingBox = {
         // TODO: this function is fugly
         let extrema = self.extrema()
@@ -242,26 +239,21 @@ public class BezierCurve {
     
     // TODO: move to utils
     fileprivate static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
-        
         let c: Int = p.count
-        
-        var q: [BKPoint] = [BKPoint](repeating: BKPointZero, count: c * (c+1) / 2)
-        q[0..<c] = p[0..<c]
-        
+        var q: [BKPoint] = p
+        q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc
         // we lerp between all points (in-place), until we have 1 point left.
         var start: Int = 0
-        var j: Int = c
         for count in (1 ..< c).reversed()  {
             let end: Int = start + count
             for i in start ..< end {
                 let pt = Utils.lerp(t,q[i],q[i+1])
-                q[j] = pt
-                j += 1
+                q.append(pt)
             }
             start = end + 1
         }
+        assert(q.capacity == q.count, "optimization strategy failed!")
         return q
-        
     }
     
     public func hull(_ t: BKFloat) -> [BKPoint] {
