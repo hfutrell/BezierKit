@@ -336,11 +336,11 @@ public class BezierCurve {
     public func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
         assert(steps >= 0)
         var table: [BKPoint] = []
+        table.reserveCapacity(steps+1)
         for i in 0 ... steps {
             let t = BKFloat(i) / BKFloat(steps)
             table.append(self.compute(t))
         }
-        
         return table
     }
     // MARK: -
