@@ -87,27 +87,42 @@ public struct BKPoint {
         if x != other.x {
             return false
         }
-        if y != other.y {
+        else if y != other.y {
             return false
         }
-        if z != other.z {
+        else if z != other.z {
             return false
         }
         return true
     }
-    func dim(_ index: Int) -> BKFloat {
-        if index == 0 {
-            return self.x
+    subscript(index: Int) -> BKFloat {
+        get {
+            if index == 0 {
+                return self.x
+            }
+            else if index == 1 {
+                return self.y
+            }
+            else if index == 2 {
+                return self.z
+            }
+            else {
+                fatalError("bad subscript (out of bounds)")
+            }
         }
-        else if index == 1 {
-            return self.y
-        }
-        else if index == 2 {
-            return self.z
-        }
-        else {
-            assert(false, "bad dimension!")
-            return 0.0
+        set(newValue) {
+            if index == 0 {
+                self.x = newValue
+            }
+            else if index == 1 {
+                self.y = newValue
+            }
+            else if index == 2 {
+                self.z = newValue
+            }
+            else {
+                fatalError("bad subscript (out of bounds)")
+            }
         }
     }
 }
@@ -115,6 +130,14 @@ public struct BKPoint {
 public struct BoundingBox {
     var min: BKPoint
     var max: BKPoint
+    init() {
+        min = BKPointZero
+        max = BKPointZero
+    }
+    init(min: BKPoint, max: BKPoint) {
+        self.min = min
+        self.max = max
+    }
     var mid: BKPoint {
         return (min + max)/2.0
     }
@@ -138,10 +161,10 @@ public struct BoundingBox {
     
     func overlaps(_ other: BoundingBox) -> Bool {
         for i in 0..<3 {
-            if self.min.dim(i) > other.max.dim(i) {
+            if self.min[i] > other.max[i] {
                 return false
             }
-            if self.max.dim(i) < other.min.dim(i) {
+            if self.max[i] < other.min[i] {
                 return false
             }
         }

@@ -182,57 +182,53 @@ public class BezierCurve {
         
     // MARK:
     
-    public func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) {
-        var result: (xyz: [[BKFloat]], values: [BKFloat]) = (xyz: [[],[],[]], values: [])
-        var roots: [BKFloat] = []
+    // computes the extrema for each dimension
+    internal func internalExtrema(includeInflection: Bool) -> [[BKFloat]] {
+        var xyz: [[BKFloat]] = []
+        xyz.reserveCapacity(self.dimensions)
         for d in 0..<self.dimensions {
-            let mfn = {(v: BKPoint) in v.dim(d) }
+            let mfn = {(v: BKPoint) in v[d]}
             var p: [BKFloat] = self.dpoints[0].map(mfn)
-            result.xyz[d] = Utils.droots(p)
-            if self.order == 3 {
+            xyz.append(Utils.droots(p))
+            if includeInflection && self.order == 3 {
                 p = self.dpoints[1].map(mfn)
-                result.xyz[d] += Utils.droots(p)
+                xyz[d] += Utils.droots(p)
             }
-            result.xyz[d] = result.xyz[d].filter({ $0 >= 0 && $0 <= 1 })
-            roots += (result.xyz[d].sorted())
+            xyz[d] = xyz[d].filter({$0 >= 0 && $0 <= 1})
         }
-        let sortedRoots = roots.sorted()
-        if sortedRoots.count > 0 {
-            var last: BKFloat = sortedRoots[0]
-            result.values.append(last)
-            for idx in 1..<sortedRoots.count {
-                let v = sortedRoots[idx]
-                if v > last {
-                    result.values.append(v)
-                    last = v
+        return xyz
+    }
+    
+    public func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) {
+        let xyz = self.internalExtrema(includeInflection: true)
+        var roots = xyz.flatMap{$0}.sorted() // the roots for each dimension, flattened and sorted
+        var values: [BKFloat] = []
+        if roots.count > 0 {
+            values.reserveCapacity(roots.count)
+            var lastInserted: BKFloat = -BKFloat.infinity
+            for i in 0..<roots.count { // loop ensures (pre-sorted) roots are unique when added to values
+                let v = roots[i]
+                if v > lastInserted {
+                    values.append(v)
+                    lastInserted = v
                 }
             }
         }
-        return result
+        return (xyz: xyz, values: values)
     }
     
     public lazy var boundingBox: BoundingBox = {
-        // TODO: this function is fugly
-        let extrema = self.extrema()
-        var result: BoundingBox = BoundingBox(min: BKPointZero, max: BKPointZero)
+        let extrema = self.internalExtrema(includeInflection: false)
+        let p0 = self.compute(0)
+        let p1 = self.compute(1)
+        var result: BoundingBox = BoundingBox()
         for d in 0..<self.dimensions {
-            let computeDimension = { (t: BKFloat) -> BKFloat in
-                let p = self.compute(t)
-                return p.dim(d)
-            }
-            let (min, max) = Utils.getminmax(list: extrema.xyz[d], computeDimension: computeDimension )
-            if ( d == 0 ) {
-                result.min.x = min
-                result.max.x = max
-            }
-            if ( d == 1 ) {
-                result.min.y = min
-                result.max.y = max
-            }
-            if ( d == 2 ) {
-                result.min.z = min
-                result.max.z = max
-            }
+            let computeDimension = {(t: BKFloat) in self.compute(t)[d]}
+            let (min, max) = Utils.getminmax(list: extrema[d].map(computeDimension),
+                                             value0: p0[d],
+                                             value1: p1[d])
+            result.min[d] = min
+            result.max[d] = max
         }
         return result
     }()

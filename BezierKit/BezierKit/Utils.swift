@@ -138,26 +138,18 @@ internal class Utils {
     //        return Utils.lli4(v1,v1.c,v2,v2.c)
     //    }
     
-    static func getminmax(list: [BKFloat], computeDimension: (BKFloat) -> BKFloat) -> (min: BKFloat, max: BKFloat) {
-        var min = BKFloat.infinity
-        var max = -BKFloat.infinity
-        var listPrime = list
-        if listPrime.index(of: 0.0) == nil {
-            listPrime.insert(0.0, at: 0)
-        }
-        if listPrime.index(of :1.0) == nil {
-            listPrime.append(1.0)
-        }
-        for t in listPrime {
-            let c = computeDimension(t)
-            if c < min {
-                min = c
+    static func getminmax(list: [BKFloat], value0: BKFloat, value1: BKFloat) -> (min: BKFloat, max: BKFloat) {
+        var min = value0 < value1 ? value0 : value1
+        var max = value0 < value1 ? value1 : value0
+        for t in list {
+            if t < min {
+                min = t
             }
-            if c > max {
-                max = c
+            else if t > max {
+                max = t
             }
         }
-        return ( min:min, max: max )
+        return (min: min, max: max)
     }
     
     static func approximately(_ a: BKFloat,_ b: BKFloat, precision: BKFloat = epsilon) -> Bool {
