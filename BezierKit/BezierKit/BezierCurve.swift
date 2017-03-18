@@ -130,7 +130,7 @@ public class BezierCurve {
             var list: [BKPoint] = []
             list.reserveCapacity(c)
             for j:Int in 0..<c {
-                let dpt: BKPoint = (p[j+1] - p[j]) * BKFloat(c)
+                let dpt: BKPoint = BKFloat(c) * (p[j+1] - p[j])
                 list.append(dpt)
             }
             ret.append(list)
@@ -155,7 +155,7 @@ public class BezierCurve {
         }
         var n1 = self.normal(0)
         var n2 = self.normal(1)
-        var s = n1.x*n2.x + n1.y*n2.y + n1.z*n2.z
+        var s = n1.dot(n2)
         var angle = abs(acos(s))
         return angle < (BKFloat.pi / 3.0)
     }()
@@ -271,12 +271,9 @@ public class BezierCurve {
         
         // linear?
         if self.order == 1 {
-            var value = BKPoint(
-                x: mt*p[0].x + t*p[1].x,
-                y: mt*p[0].y + t*p[1].y
-            )
-            if self.threeD {
-                value.z = mt*p[0].z + t*p[1].z
+            var value = BKPointZero
+            for d in 0..<value.dimensions {
+                value[d] = mt * p[0][d] + t * p[1][d]
             }
             return value
         }
@@ -301,12 +298,13 @@ public class BezierCurve {
                 c = mt * t2 * 3.0
                 d = t * t2
             }
-            var ret = BKPoint(
-                x: a*p[0].x + b*p[1].x + c*p[2].x + d*p[3].x,
-                y: a*p[0].y + b*p[1].y + c*p[2].y + d*p[3].y
-            )
-            if self.threeD {
-                ret.z = a*p[0].z + b*p[1].z + c*p[2].z + d*p[3].z
+            var ret = BKPointZero
+            for dim in 0..<ret.dimensions {
+                let m1 = a * p[0][dim]
+                let m2 = b * p[1][dim]
+                let m3 = c * p[2][dim]
+                let m4 = d * p[3][dim]
+                ret[dim] = m1 + m2 + m3 + m4
             }
             return ret
         }
@@ -351,21 +349,23 @@ public class BezierCurve {
         let d: [BKPoint] = self.points
         let k: BKFloat = BKFloat(self.points.count-1)
         if self.order == 2 {
-            p = [(d[1] - d[0]) * k, (d[2] - d[1]) * k, BKPointZero]
+            p = [k * (d[1] - d[0]), k * (d[2] - d[1]), BKPointZero]
             a = mt
             b = t
         }
         else if self.order == 3 {
-            p = [(d[1] - d[0]) * k, (d[2] - d[1]) * k, (d[3] - d[2]) * k]
+            let p0 = k * (d[1] - d[0])
+            let p1 = k * (d[2] - d[1])
+            let p2 = k * (d[3] - d[2])
+            p = [p0, p1, p2]
             a = mt*mt
             b = mt*t*2
             c = t*t
         }
-        let ret = BKPoint(
-            x: a*p[0].x + b*p[1].x + c*p[2].x,
-            y: a*p[0].y + b*p[1].y + c*p[2].y,
-            z: a*p[0].z + b*p[1].z + c*p[2].z
-        )
+        var ret = BKPointZero
+        for dim in 0..<ret.dimensions {
+            ret[dim] = a*p[0][dim] + b*p[1][dim] + c*p[2][dim]
+        }
         return ret
     }
     
@@ -379,21 +379,20 @@ public class BezierCurve {
             let r1 = self.derivative(t).normalize()
             let r2 = self.derivative(t+0.01).normalize()
             // cross product
-            let c = BKPoint(
-                x: r2.y*r1.z - r2.z*r1.y,
-                y: r2.z*r1.x - r2.x*r1.z,
-                z: r2.x*r1.y - r2.y*r1.x
-                ).normalize()
+            var c = BKPointZero
+            c[0] = r2[1] * r1[2] - r2[2] * r1[1]
+            c[1] = r2[2] * r1[0] - r2[0] * r1[2]
+            c[2] = r2[0] * r1[1] - r2[1] * r1[0]
+            c = c.normalize()
             // rotation matrix
-            let R = [   c.x*c.x,   c.x*c.y-c.z, c.x*c.z+c.y,
-                        c.x*c.y+c.z,   c.y*c.y,   c.y*c.z-c.x,
-                        c.x*c.z-c.y, c.y*c.z+c.x,   c.z*c.z    ]
+            let R = [   c[0]*c[0],      c[0]*c[1]-c[2], c[0]*c[2]+c[1],
+                        c[0]*c[1]+c[2], c[1]*c[1],      c[1]*c[2]-c[0],
+                        c[0]*c[2]-c[1], c[1]*c[2]+c[0], c[2]*c[2]    ]
             // normal vector:
-            let n = BKPoint(
-                x: R[0] * r1.x + R[1] * r1.y + R[2] * r1.z,
-                y: R[3] * r1.x + R[4] * r1.y + R[5] * r1.z,
-                z: R[6] * r1.x + R[7] * r1.y + R[8] * r1.z
-            )
+            var n = BKPointZero
+            n[0] = R[0] * r1[0] + R[1] * r1[1] + R[2] * r1[2]
+            n[1] = R[3] * r1[0] + R[4] * r1[1] + R[5] * r1[2]
+            n[2] = R[6] * r1[0] + R[7] * r1[1] + R[8] * r1[2]
             return n
         }
         return self.threeD ? normal3(t) : normal2(t)
@@ -530,7 +529,7 @@ public class BezierCurve {
         // move end points by fixed distance along normal.
         for t in [0,1] {
             let p: BKPoint = points[t*order]
-            np[t*order] = p + (v[t].n * ((t != 0) ? r2 : r1))
+            np[t*order] = p + ((t != 0) ? r2 : r1) * v[t].n
         }
         
         if d != nil {
@@ -560,7 +559,7 @@ public class BezierCurve {
                 if !clockwise {
                     rc = -rc
                 }
-                np[t+1] = p + ov * rc
+                np[t+1] = p + rc * ov
             }
             return BezierCurve.curveWithPoints(points: np)
         }
@@ -572,7 +571,7 @@ public class BezierCurve {
         if self.linear {
             let n = self.normal(0)
             let coords: [BKPoint] = self.points.map({(p: BKPoint) -> BKPoint in
-                return p + n * d
+                return p + d * n
             })
             return [BezierCurve.curveWithPoints(points: coords)]
         }
@@ -590,7 +589,7 @@ public class BezierCurve {
     private func internalOffset(t: BKFloat, distance d: BKFloat) -> (c: BKPoint, n: BKPoint, p: BKPoint) {
         let c = self.compute(t)
         let n = self.normal(t)
-        return (c: c, n: n, p: c + n * d)
+        return (c: c, n: n, p: c + d * n)
     }
     
     // MARK: - intersection

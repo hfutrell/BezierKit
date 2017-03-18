@@ -8,6 +8,9 @@
 
 import Foundation
 
+public typealias BKFloat = CGFloat
+public typealias BKPoint = Point2<CGFloat>
+
 public struct Intersection {
     var t1: BKFloat
     var t2: BKFloat
@@ -43,124 +46,55 @@ public struct Shape {
     var endcap: Cap
     var forward: BezierCurve
     var back: BezierCurve
-    func boundingBox() -> BoundingBox { // TODO: convert me to a property that is computed once
-        var mx =  BKFloat.infinity
-        var my =  BKFloat.infinity
-        var MX = -BKFloat.infinity
-        var MY = -BKFloat.infinity
+    func boundingBox() -> BoundingBox {
+        var result: BoundingBox = BoundingBox()
         for s: BezierCurve? in [startcap.virtual ? nil : startcap.curve, forward, back, endcap.virtual ? nil : endcap.curve] {
             if s != nil {
                 let bbox: BoundingBox = s!.boundingBox
-                if mx > bbox.min.x {
-                    mx = bbox.min.x
-                }
-                if my > bbox.min.y {
-                    my = bbox.min.y
-                }
-                if MX < bbox.max.x {
-                    MX = bbox.max.x
-                }
-                if MY < bbox.max.y {
-                    MY = bbox.max.y
-                }
+                result = BoundingBox(first: result, second: bbox)
             }
         }
-        return BoundingBox(min: BKPoint(x: mx, y: my), max: BKPoint(x: MX, y: MY))
-    }
-}
-
-public struct BKPoint {
-    var x : BKFloat
-    var y : BKFloat
-    var z : BKFloat
-    init(x: BKFloat, y: BKFloat, z: BKFloat = 0.0) {
-        self.x = x
-        self.y = y
-        self.z = z
-    }
-    init(_ p: CGPoint) {
-        self.x = p.x
-        self.y = p.y
-        self.z = 0.0
-    }
-    func equalTo(_ other: BKPoint) -> Bool {
-        if x != other.x {
-            return false
-        }
-        else if y != other.y {
-            return false
-        }
-        else if z != other.z {
-            return false
-        }
-        return true
-    }
-    subscript(index: Int) -> BKFloat {
-        get {
-            if index == 0 {
-                return self.x
-            }
-            else if index == 1 {
-                return self.y
-            }
-            else if index == 2 {
-                return self.z
-            }
-            else {
-                fatalError("bad subscript (out of bounds)")
-            }
-        }
-        set(newValue) {
-            if index == 0 {
-                self.x = newValue
-            }
-            else if index == 1 {
-                self.y = newValue
-            }
-            else if index == 2 {
-                self.z = newValue
-            }
-            else {
-                fatalError("bad subscript (out of bounds)")
-            }
-        }
+        return result
     }
 }
 
 public struct BoundingBox {
+    static let dims = 2 // TODO: generify
     var min: BKPoint
     var max: BKPoint
     init() {
-        min = BKPointZero
-        max = BKPointZero
+        // by setting the min to infinity and the max to -infinity
+        // when we union this (invalid) rect with a valid rect, we'll
+        // get back the valid rect
+        min = BKPointInfinity
+        max = -BKPointInfinity
     }
     init(min: BKPoint, max: BKPoint) {
         self.min = min
         self.max = max
     }
+    init(first: BoundingBox, second: BoundingBox) {
+        var min = first.min
+        var max = second.max
+        for d in 0..<BoundingBox.dims {
+            if first.max[d] > max[d] {
+                max[d] = first.min[d]
+            }
+            if second.min[d] < min[d] {
+                min[d] = second.min[d]
+            }
+        }
+        self.min = min
+        self.max = max
+    }
     var mid: BKPoint {
-        return (min + max)/2.0
+        return 0.5 * (min + max)
     }
     var size: BKPoint {
         return max - min
     }
-
-// TODO: write union method and use it in the shape bounding box constructor
-    
-//    func overlaps(_ other: BoundingBox) -> Bool {
-//        for i in 0..<2 {
-//            let l = self.mid.dim(i)
-//            let t = other.mid.dim(i)
-//            let d = (self.size.dim(i) + other.size.dim(i)) * 0.5
-//            if abs(l-t) >= d {
-//                return false
-//            }
-//        }
-//        return true
-//    }
-    
     func overlaps(_ other: BoundingBox) -> Bool {
-        for i in 0..<3 {
+        for i in 0..<BoundingBox.dims {
             if self.min[i] > other.max[i] {
                 return false
             }
@@ -176,50 +110,6 @@ public struct BoundingBox {
     }
 }
 
-public let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0, z: 0.0)
+public let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0)
+public let BKPointInfinity: BKPoint = BKPoint(x: BKFloat.infinity, y: BKFloat.infinity)
 
-public extension CGPoint {
-    init(_ p: BKPoint) {
-        self.x = p.x
-        self.y = p.y
-    }
-}
-
-public typealias BKFloat = CGFloat
-public typealias BKRect = CGRect
-
-public extension BKPoint {
-    var length: BKFloat {
-        return sqrt(self.lengthSquared)
-    }
-    var lengthSquared: CGFloat {
-        let x = self.x
-        let y = self.y
-        let z = self.z
-        return x * x + y * y + z * z
-    }
-    func normalize() -> BKPoint {
-        return self / self.length
-    }
-    func toCGPoint() -> CGPoint {
-        return CGPoint(self)
-    }
-}
-public func += ( left: inout BKPoint, right: BKPoint) {
-    return left = left + right
-}
-public func -= ( left: inout BKPoint, right: BKPoint) {
-    return left = left - right
-}
-public func + (left: BKPoint, right: BKPoint) -> BKPoint {
-    return BKPoint(x: left.x + right.x, y: left.y + right.y, z: left.z + right.z)
-}
-public func - (left: BKPoint, right: BKPoint) -> BKPoint {
-    return BKPoint(x: left.x - right.x, y: left.y - right.y, z: left.z - right.z)
-}
-public func / (left: BKPoint, right: BKFloat) -> BKPoint {
-    return BKPoint(x: left.x / right, y: left.y / right, z: left.z / right)
-}
-public func * (left: BKPoint, right: BKFloat) -> BKPoint {
-    return BKPoint(x: left.x * right, y: left.y * right, z: left.z * right)
-}
