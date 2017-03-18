@@ -58,8 +58,9 @@ public struct Shape {
     }
 }
 
-public struct BoundingBox {
-    static let dims = 2 // TODO: generify
+public typealias BoundingBox = BBox<BKPoint>
+
+public struct BBox<P> where P: Point {
     var min: BKPoint
     var max: BKPoint
     init() {
@@ -76,7 +77,7 @@ public struct BoundingBox {
     init(first: BoundingBox, second: BoundingBox) {
         var min = first.min
         var max = second.max
-        for d in 0..<BoundingBox.dims {
+        for d in 0..<P.dimensions {
             if first.max[d] > max[d] {
                 max[d] = first.min[d]
             }
@@ -94,7 +95,7 @@ public struct BoundingBox {
         return max - min
     }
     func overlaps(_ other: BoundingBox) -> Bool {
-        for i in 0..<BoundingBox.dims {
+        for i in 0..<P.dimensions {
             if self.min[i] > other.max[i] {
                 return false
             }

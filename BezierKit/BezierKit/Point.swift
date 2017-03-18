@@ -33,7 +33,7 @@ public struct Point2<S>: Point where S: Scalar {
         return self / self.length
     }
     // conformance to VectorSpace protocol
-    public var dimensions: Int {
+    static public var dimensions: Int {
         return 2
     }
     public func dot(_ other: Point2<S>) -> S {
@@ -93,7 +93,7 @@ public struct Point3<S>: Point where S: Scalar {
         return self / self.length
     }
     // conformance to VectorSpace protocol
-    public var dimensions: Int {
+    static public var dimensions: Int {
         return 3
     }
     public func dot(_ other: Point3<S>) -> S {

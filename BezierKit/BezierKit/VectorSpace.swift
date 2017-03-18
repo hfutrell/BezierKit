@@ -16,7 +16,7 @@ public protocol Field {
 public protocol VectorSpace {
     // a vector space (in the Mathematical sense) over a scalar Field F
     associatedtype F: Field
-    var dimensions: Int { get }
+    static var dimensions: Int { get }
     func dot(_ other: Self) -> F
     subscript(index: Int) -> F {get set}
     static func + (left: Self, right: Self) -> Self

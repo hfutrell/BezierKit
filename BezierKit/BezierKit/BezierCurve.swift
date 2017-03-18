@@ -272,7 +272,7 @@ public class BezierCurve {
         // linear?
         if self.order == 1 {
             var value = BKPointZero
-            for d in 0..<value.dimensions {
+            for d in 0..<BKPoint.dimensions {
                 value[d] = mt * p[0][d] + t * p[1][d]
             }
             return value
@@ -299,7 +299,7 @@ public class BezierCurve {
                 d = t * t2
             }
             var ret = BKPointZero
-            for dim in 0..<ret.dimensions {
+            for dim in 0..<BKPoint.dimensions {
                 let m1 = a * p[0][dim]
                 let m2 = b * p[1][dim]
                 let m3 = c * p[2][dim]
@@ -363,7 +363,7 @@ public class BezierCurve {
             c = t*t
         }
         var ret = BKPointZero
-        for dim in 0..<ret.dimensions {
+        for dim in 0..<BKPoint.dimensions {
             ret[dim] = a*p[0][dim] + b*p[1][dim] + c*p[2][dim]
         }
         return ret
