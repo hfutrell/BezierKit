@@ -7,7 +7,7 @@
 //
 
 public protocol Point: VectorSpace, Normed {
-    associatedtype F: Scalar, Rootable // like VectorSpace, we have an associated type F, but we add the condition that F is rootable so that we can conform to Normed
+    associatedtype F: RealNumber // as in VectorSpace we have an associated type F. But F conforms to RealNumber, not just Field.
 }
 
 extension Point {
@@ -23,7 +23,7 @@ extension Point {
     }
 }
 
-public protocol Scalar: Field, Rootable {
+public protocol RealNumber: Field, Rootable {
     // intentionally empty (just defines a composite protocol)
 }
 
@@ -33,7 +33,7 @@ public protocol Rootable {
 
 private let badSubscriptError = "bad subscript (out of bounds)"
 
-public struct Point2<S>: Point where S: Scalar {
+public struct Point2<S>: Point where S: RealNumber {
     public typealias F = S // specify the type used by VectorSpace protocol
     var x : S, y : S
     // conformance to VectorSpace protocol
@@ -84,7 +84,7 @@ public struct Point2<S>: Point where S: Scalar {
     }
 }
 
-public struct Point3<S>: Point where S: Scalar {
+public struct Point3<S>: Point where S: RealNumber {
     public typealias F = S // specify the type used by VectorSpace protocol
     var x : S, y: S, z: S
     // conformance to VectorSpace protocol
