@@ -7,7 +7,20 @@
 //
 
 public protocol Point: VectorSpace, Normed {
-    // intentionally empty (just defines a composite protocol)
+    associatedtype F: Scalar, Rootable // like VectorSpace, we have an associated type F, but we add the condition that F is rootable so that we can conform to Normed
+}
+
+extension Point {
+    // this extension implements Normed protocol for all point types
+    public var length: F {
+        return F.sqrt(self.lengthSquared)
+    }
+    private var lengthSquared: F {
+        return self.dot(self)
+    }
+    public func normalize() -> Self {
+        return self / self.length
+    }
 }
 
 public protocol Scalar: Field, Rootable {
@@ -21,17 +34,8 @@ public protocol Rootable {
 private let badSubscriptError = "bad subscript (out of bounds)"
 
 public struct Point2<S>: Point where S: Scalar {
+    public typealias F = S // specify the type used by VectorSpace protocol
     var x : S, y : S
-    // conformance to Normed protocol
-    public var length: S {
-        return S.sqrt(self.lengthSquared)
-    }
-    private var lengthSquared: S {
-        return self.dot(self)
-    }
-    public func normalize() -> Point2<S> {
-        return self / self.length
-    }
     // conformance to VectorSpace protocol
     static public var dimensions: Int {
         return 2
@@ -81,23 +85,14 @@ public struct Point2<S>: Point where S: Scalar {
 }
 
 public struct Point3<S>: Point where S: Scalar {
+    public typealias F = S // specify the type used by VectorSpace protocol
     var x : S, y: S, z: S
-    // conformance to Normed protocol
-    public var length: S {
-        return F.sqrt(self.lengthSquared)
-    }
-    private var lengthSquared: S {
-        return self.dot(self)
-    }
-    public func normalize() -> Point3<S> {
-        return self / self.length
-    }
     // conformance to VectorSpace protocol
     static public var dimensions: Int {
         return 3
     }
     public func dot(_ other: Point3<S>) -> S {
-        return self.dot(self)
+        return self.x * other.x + self.y * other.y + self.z * other.z
     }
     public subscript(index: Int) -> S {
         get {
