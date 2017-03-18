@@ -266,7 +266,7 @@ internal class Utils {
     }
     
     static func lerp(_ r: BKFloat, _ v1: BKPoint, _ v2: BKPoint) -> BKPoint {
-        return v1 + (v2 - v1) * r
+        return v1 + r * (v2 - v1)
     }
     
     static func dist(_ p1: BKPoint,_ p2: BKPoint) -> BKFloat {
@@ -461,8 +461,8 @@ internal class Utils {
         let d2p = BKPoint(x: d2.x * cos(quart) - d2.y * sin(quart),
                           y: d2.x * sin(quart) + d2.y * cos(quart))
         // chord midpoints
-        let m1 = (p1 + p2) / 2.0
-        let m2 = (p2 + p3) / 2.0
+        let m1 = 0.5 * (p1 + p2)
+        let m2 = 0.5 * (p2 + p3)
         // midpoint offsets
         let m1n = m1 + d1p
         let m2n = m2 + d2p
