@@ -164,7 +164,7 @@ class Demos {
                                 for t in stride(from: 0, through: 1, by: 0.1) {
                                     let pt = curve.compute(BKFloat(t))
                                     let dv = curve.normal(BKFloat(t))
-                                    Draw.drawLine(context, from: pt, to: pt + dv * d )
+                                    Draw.drawLine(context, from: pt, to: pt + d * dv )
                                 }
     })
     static let demo8 = Demo(title: ".split(t) and .split(t1,t2)",
@@ -368,7 +368,7 @@ class Demos {
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                let line: Line = Line( p1: BKPoint(x:0, y:175), p2: BKPoint(x:200,y:25) )
+                                let line: Line = Line( p1: BKPoint(x:0.0, y:175.0), p2: BKPoint(x:200.0,y:25.0) )
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawLine(context, from: line.p1, to: line.p2)
                                 Draw.setColor(context, color: Draw.black)
@@ -381,7 +381,7 @@ class Demos {
                              cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
-                                let curve2 = demoState.quadratic ? QuadraticBezierCurve(points: [BKPoint(x: 68, y: 150), BKPoint(x: 74, y: 6), BKPoint(x: 143, y: 150)]) : CubicBezierCurve(points: [BKPoint(x: 68, y: 145), BKPoint(x: 74, y: 6), BKPoint(x: 143, y: 197), BKPoint(x: 138, y: 55)])
+                                let curve2 = demoState.quadratic ? QuadraticBezierCurve(points: [BKPoint(x: 68.0, y: 150.0), BKPoint(x: 74.0, y: 6.0), BKPoint(x: 143.0, y: 150.0)]) : CubicBezierCurve(points: [BKPoint(x: 68.0, y: 145.0), BKPoint(x: 74.0, y: 6.0), BKPoint(x: 143.0, y: 197.0), BKPoint(x: 138.0, y: 55.0)])
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
