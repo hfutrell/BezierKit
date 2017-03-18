@@ -27,7 +27,7 @@ public struct Point2<S>: Point where S: Scalar {
         return S.sqrt(self.lengthSquared)
     }
     private var lengthSquared: S {
-        return self.x * self.x + self.y * self.y
+        return self.dot(self)
     }
     public func normalize() -> Point2<S> {
         return self / self.length
@@ -97,7 +97,7 @@ public struct Point3<S>: Point where S: Scalar {
         return 3
     }
     public func dot(_ other: Point3<S>) -> S {
-        return self.x * other.x + self.y * other.y + self.z * other.z
+        return self.dot(self)
     }
     public subscript(index: Int) -> S {
         get {

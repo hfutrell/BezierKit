@@ -35,7 +35,7 @@ extension Point2 where S: CGFloatable {
     }
 }
 
-// MARK: allows Point2<CGFloat> and Point2<CGFloat> to be created
+// MARK: allows Point2<CGFloat> and Point3<CGFloat> to be created
 
 extension CGFloat: Scalar {
     public static func sqrt(_ x: CGFloat) -> CGFloat {
