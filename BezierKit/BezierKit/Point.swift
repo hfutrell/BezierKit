@@ -64,19 +64,19 @@ public struct Point2<S>: Point where S: Scalar {
         }
     }
     public static func + (left: Point2<S>, right: Point2<S>) -> Point2<S> {
-        return Point2<F>(x: left.x + right.x, y: left.y + right.y)
+        return Point2<S>(x: left.x + right.x, y: left.y + right.y)
     }
     public static func - (left: Point2<S>, right: Point2<S>) -> Point2<S> {
-        return Point2<F>(x: left.x - right.x, y: left.y - right.y)
+        return Point2<S>(x: left.x - right.x, y: left.y - right.y)
     }
     public static func / (left: Point2<S>, right: S) -> Point2<S> {
-        return Point2<F>(x: left.x / right, y: left.y / right)
+        return Point2<S>(x: left.x / right, y: left.y / right)
     }
     public static func * (left: S, right: Point2<S>) -> Point2<S> {
-        return Point2<F>(x: left * right.x, y: left * right.y)
+        return Point2<S>(x: left * right.x, y: left * right.y)
     }
     public static prefix func - (point: Point2<S>) -> Point2<S> {
-        return Point2<F>(x: -point.x, y: -point.y)
+        return Point2<S>(x: -point.x, y: -point.y)
     }
 }
 
