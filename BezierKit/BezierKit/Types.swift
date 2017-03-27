@@ -11,9 +11,23 @@ import Foundation
 public typealias BKFloat = CGFloat
 public typealias BKPoint = Point2<CGFloat>
 
-public struct Intersection {
+public struct Intersection: Equatable, Comparable {
     var t1: BKFloat
     var t2: BKFloat
+    public static func == (lhs: Intersection, rhs: Intersection) -> Bool {
+        return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
+    }
+    public static func < (lhs: Intersection, rhs: Intersection ) -> Bool {
+        if lhs.t1 < rhs.t2 {
+            return true
+        }
+        else if lhs.t1 == rhs.t1 {
+            return lhs.t2 < rhs.t2
+        }
+        else {
+            return false
+        }
+    }
 }
 
 public struct Line {

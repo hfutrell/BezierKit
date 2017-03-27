@@ -386,19 +386,22 @@ internal class Utils {
         var pairs = [
             (left: cc1.left, right: cc2.left ),
             (left: cc1.left, right: cc2.right ),
-            (left: cc1.right, right: cc2.right ),
-            (left: cc1.right, right: cc2.left )]
+            (left: cc1.right, right: cc2.left ),
+            (left: cc1.right, right: cc2.right )]
         pairs = pairs.filter( {(pair) in
             return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
         })
-        var results: [Intersection] = []
+        
+        var results: [Intersection] = Array<Intersection>()
         for pair in pairs {
             results += Utils.pairiteration(pair.left, pair.right, threshold)
         }
-        // TODO: remove duplicates
-        //        results = results.filter({(v,i) in
-        //            return results.index(of: v) == i
-        //        })
+        // sort the results by t1 (and by t2 if t1 equal)
+        results = results.sorted(by: <)
+        // de-dupe the sorted array
+        results = results.reduce(Array<Intersection>(), {(result: [Intersection], next: Intersection) in
+            return (result.count == 0 || result[result.count-1] != next) ? result + [next] : result
+        })
         return results
     }
     
