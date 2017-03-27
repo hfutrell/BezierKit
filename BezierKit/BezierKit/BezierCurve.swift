@@ -298,15 +298,11 @@ public class BezierCurve {
                 c = mt * t2 * 3.0
                 d = t * t2
             }
-            var ret = BKPointZero
-            for dim in 0..<BKPoint.dimensions {
-                let m1 = a * p[0][dim]
-                let m2 = b * p[1][dim]
-                let m3 = c * p[2][dim]
-                let m4 = d * p[3][dim]
-                ret[dim] = m1 + m2 + m3 + m4
-            }
-            return ret
+            let m1 = a * p[0]
+            let m2 = b * p[1]
+            let m3 = c * p[2]
+            let m4 = d * p[3]
+            return m1 + m2 + m3 + m4
         }
         
         //  higher order curves: use de Casteljau's computation
