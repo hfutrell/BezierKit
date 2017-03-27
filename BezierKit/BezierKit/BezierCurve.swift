@@ -309,23 +309,15 @@ public class BezierCurve {
             return ret
         }
         
-        // TODO: implement me
-        // higher order curves: use de Casteljau's computation
-        //        var dCpts = JSON.parse(JSON.stringify(this.points))
-        //        while dCpts.length > 1 {
-        //            for (var i=0; i<dCpts.length-1; i++) {
-        //                dCpts[i] = {
-        //                    x: dCpts[i].x + (dCpts[i+1].x - dCpts[i].x) * t,
-        //                    y: dCpts[i].y + (dCpts[i+1].y - dCpts[i].y) * t
-        //                }
-        //                if (typeof dCpts[i].z !== "undefined") {
-        //                    dCpts[i] = dCpts[i].z + (dCpts[i+1].z - dCpts[i].z) * t
-        //                }
-        //            }
-        //            dCpts.splice(dCpts.length-1, 1)
-        //        }
-        //        return dCpts[0]
-        fatalError("unimplemented")  // TODO: higher order unsupported for now
+        //  higher order curves: use de Casteljau's computation
+        var dCpts = self.points
+        while dCpts.count > 1 {
+            for i in 0..<dCpts.count-1 {
+                dCpts[i] = dCpts[i] + t * (dCpts[i+1] - dCpts[i])
+            }
+            dCpts.removeLast()
+        }
+        return dCpts[0]
     }
     
     public func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
@@ -865,7 +857,4 @@ public class BezierCurve {
         let circles: [Arc] = []
         return iterate(errorThreshold: errorThreshold, circles: circles)
     }
-    
-    // TODO: description method?
-    
 }
