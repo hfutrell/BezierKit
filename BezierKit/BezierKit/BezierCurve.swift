@@ -91,10 +91,8 @@ public class BezierCurve {
     
     public let points: [BKPoint]
     internal let order: Int
-    internal let threeD: Bool = false // TODO: fix this
-    
-    private var dimensions: Int {
-        return threeD ? 3 : 2
+    internal var threeD: Bool {
+        return BKPoint.dimensions == 3
     }
     
     // MARK: - factory method
@@ -185,8 +183,8 @@ public class BezierCurve {
     // computes the extrema for each dimension
     internal func internalExtrema(includeInflection: Bool) -> [[BKFloat]] {
         var xyz: [[BKFloat]] = []
-        xyz.reserveCapacity(self.dimensions)
-        for d in 0..<self.dimensions {
+        xyz.reserveCapacity(BKPoint.dimensions)
+        for d in 0..<BKPoint.dimensions {
             let mfn = {(v: BKPoint) in v[d]}
             var p: [BKFloat] = self.dpoints[0].map(mfn)
             xyz.append(Utils.droots(p))
@@ -222,7 +220,7 @@ public class BezierCurve {
         let p0 = self.compute(0)
         let p1 = self.compute(1)
         var result: BoundingBox = BoundingBox()
-        for d in 0..<self.dimensions {
+        for d in 0..<BKPoint.dimensions {
             let computeDimension = {(t: BKFloat) in self.compute(t)[d]}
             let (min, max) = Utils.getminmax(list: extrema[d].map(computeDimension),
                                              value0: p0[d],
