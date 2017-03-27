@@ -271,11 +271,7 @@ public class BezierCurve {
         
         // linear?
         if self.order == 1 {
-            var value = BKPointZero
-            for d in 0..<BKPoint.dimensions {
-                value[d] = mt * p[0][d] + t * p[1][d]
-            }
-            return value
+            return mt * p[0] + t * p[1]
         }
         
         // quadratic/cubic curve?
