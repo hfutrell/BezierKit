@@ -350,11 +350,7 @@ public class BezierCurve {
             b = mt*t*2
             c = t*t
         }
-        var ret = BKPointZero
-        for dim in 0..<BKPoint.dimensions {
-            ret[dim] = a*p[0][dim] + b*p[1][dim] + c*p[2][dim]
-        }
-        return ret
+        return a*p[0] + b*p[1] + c*p[2]
     }
     
     public func normal(_ t: BKFloat) -> BKPoint {
