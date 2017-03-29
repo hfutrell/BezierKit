@@ -16,12 +16,12 @@ public struct Subcurve {
     let curve: BezierCurve
     
     func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
-        let order = self.curve.order
-        let q1 = Utils.hull(self.curve.points, t1)
-        let p1 = order == 2 ? [q1[5], q1[4], q1[2]] : [q1[9], q1[8], q1[6], q1[3]]
         let tr = Utils.map(t2, t1, 1, 0, 1)
-        let q2 = Utils.hull(p1, tr)
-        let p2 = order == 2 ? [q2[0], q2[3], q2[5]] : [q2[0], q2[4], q2[7], q2[9]]
+        let quadratic = self.curve.order == 2
+        let h1 = Utils.hull(self.curve.points, t1)
+        let p1 = quadratic ? [h1[5], h1[4], h1[2]] : [h1[9], h1[8], h1[6], h1[3]]
+        let h2 = Utils.hull(p1, tr)
+        let p2 = quadratic ? [h2[0], h2[3], h2[5]] : [h2[0], h2[4], h2[7], h2[9]]
         return Subcurve(t1: Utils.map(t1, 0,1, self.t1, self.t2),
                         t2: Utils.map(t2, 0,1, self.t1, self.t2),
                         curve: BezierCurve.curveWithPoints(points: p2))
@@ -29,11 +29,11 @@ public struct Subcurve {
     
     func split(at t: BKFloat) -> (left: Subcurve, right: Subcurve) {
         // use "de Casteljau" iteration.
-        var q = self.curve.hull(t)
+        var h = self.curve.hull(t)
         
-        let order = self.curve.order
-        let pointsLeft = order == 2 ? [q[0],q[3],q[5]] : [q[0],q[4],q[7],q[9]]
-        let pointsRight = order == 2 ? [q[5],q[4],q[2]] : [q[9],q[8],q[6],q[3]]
+        let quadratic = self.curve.order == 2
+        let pointsLeft = quadratic ? [h[0], h[3], h[5]] : [h[0], h[4], h[7], h[9]]
+        let pointsRight = quadratic ? [h[5], h[4], h[2]] : [h[9], h[8], h[6], h[3]]
         
         let left = BezierCurve.curveWithPoints(points: pointsLeft)
         let right = BezierCurve.curveWithPoints(points: pointsRight)
