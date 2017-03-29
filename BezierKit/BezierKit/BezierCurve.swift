@@ -10,78 +10,43 @@ import Foundation
 
 public typealias DistanceFunction = (_ v: BKFloat) -> BKFloat
 
-// TODO: get rid of this whole stupid struct
-public struct TimeTaggedCurve {
-    let _t1: BKFloat
-    let _t2: BKFloat
+public struct Subcurve {
+    let t1: BKFloat
+    let t2: BKFloat
     let curve: BezierCurve
     
-    // TODO: refactor and fix ugliness
-    func split(from t1: BKFloat, to t2: BKFloat) -> BezierCurve {
-        var q = BezierCurve.Hull(self.curve.points, t1)
-        
-        let q2 = self.curve.order == 2 ? [q[5],q[4],q[2]] : [q[9],q[8],q[6],q[3]]
-        let t2Prime = Utils.map(t2,t1,1,0,1)
-        var p = BezierCurve.Hull(q2, t2Prime)
-        let left = self.curve.order == 2 ? BezierCurve.curveWithPoints(points: [p[0],p[3],p[5]]) : BezierCurve.curveWithPoints(points: [p[0],p[4],p[7],p[9]])
-        return left
+    func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
+        let order = self.curve.order
+        let q1 = Utils.hull(self.curve.points, t1)
+        let p1 = order == 2 ? [q1[5], q1[4], q1[2]] : [q1[9], q1[8], q1[6], q1[3]]
+        let tr = Utils.map(t2, t1, 1, 0, 1)
+        let q2 = Utils.hull(p1, tr)
+        let p2 = order == 2 ? [q2[0], q2[3], q2[5]] : [q2[0], q2[4], q2[7], q2[9]]
+        return Subcurve(t1: Utils.map(t1, 0,1, self.t1, self.t2),
+                        t2: Utils.map(t2, 0,1, self.t1, self.t2),
+                        curve: BezierCurve.curveWithPoints(points: p2))
     }
     
-    func split(_ t1: BKFloat, _ t2: BKFloat? = nil) -> SplitResult {
-        // shortcuts
-        if (t1 == 0.0) && (t2 != nil) && (t2 != 0.0) {
-            let splitResult: MultipleCurves = self.split(t2!) as! MultipleCurves
-            return SingleCurve(curve: splitResult.left)
-        }
-        if t2 == 1.0 {
-            let splitResult: MultipleCurves = self.split(t1) as! MultipleCurves
-            return SingleCurve(curve: splitResult.right)
-        }
+    func split(at t: BKFloat) -> (left: Subcurve, right: Subcurve) {
+        // use "de Casteljau" iteration.
+        var q = self.curve.hull(t)
         
-        // make sure we bind _t1/_t2 information!
-        let left_t1  = Utils.map(0,  0,1, self._t1, self._t2)
-        let left_t2  = Utils.map(t1, 0,1, self._t1, self._t2)
-        let right_t1 = Utils.map(t1, 0,1, self._t1, self._t2)
-        let right_t2 = Utils.map(1,  0,1, self._t1, self._t2)
+        let order = self.curve.order
+        let pointsLeft = order == 2 ? [q[0],q[3],q[5]] : [q[0],q[4],q[7],q[9]]
+        let pointsRight = order == 2 ? [q[5],q[4],q[2]] : [q[9],q[8],q[6],q[3]]
         
-        // no shortcut: use "de Casteljau" iteration.
-        var q = self.curve.hull(t1)
+        let left = BezierCurve.curveWithPoints(points: pointsLeft)
+        let right = BezierCurve.curveWithPoints(points: pointsRight)
         
-        let left = self.curve.order == 2 ? BezierCurve.curveWithPoints(points: [q[0],q[3],q[5]]) : BezierCurve.curveWithPoints(points: [q[0],q[4],q[7],q[9]])
-        let right = self.curve.order == 2 ? BezierCurve.curveWithPoints(points: [q[5],q[4],q[2]]) : BezierCurve.curveWithPoints(points: [q[9],q[8],q[6],q[3]])
-        
-        let taggedLeft = TimeTaggedCurve(_t1: left_t1, _t2: left_t2, curve: left)
-        let taggedRight = TimeTaggedCurve(_t1: right_t1, _t2: right_t2, curve: right)
-        
-        // if we have no t2, we're done
-        if t2 == nil {
-            let result = MultipleCurves(left: taggedLeft,
-                                        right: taggedRight,
-                                        span: q
-            )
-            return result
-        }
-        
-        // if we have a t2, split again:
-        let t2Prime = Utils.map(t2!,t1,1,0,1)
-        let subsplit: MultipleCurves = taggedRight.split(t2Prime) as! MultipleCurves
-        return SingleCurve(curve: subsplit.left)
+        let subcurveLeft = Subcurve(t1: Utils.map(0, 0,1, self.t1, self.t2),
+                                    t2: Utils.map(t, 0,1, self.t1, self.t2),
+                                    curve: left)
+        let subcurveRight = Subcurve(t1: Utils.map(t, 0,1, self.t1, self.t2),
+                                     t2: Utils.map(1, 0,1, self.t1, self.t2),
+                                     curve: right)
+        return (left: subcurveLeft, right: subcurveRight)
     }
-    
 }
-
-protocol SplitResult {
-    
-}
-struct SingleCurve: SplitResult {
-    let curve: TimeTaggedCurve
-}
-struct MultipleCurves: SplitResult {
-    let left: TimeTaggedCurve
-    let right: TimeTaggedCurve
-    let span: [BKPoint]
-}
-
 
 // MARK: -
 
@@ -232,48 +197,28 @@ public class BezierCurve {
     }()
     
     // MARK: -
-    
-    // TODO: move to utils
-    fileprivate static func Hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
-        let c: Int = p.count
-        var q: [BKPoint] = p
-        q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc
-        // we lerp between all points (in-place), until we have 1 point left.
-        var start: Int = 0
-        for count in (1 ..< c).reversed()  {
-            let end: Int = start + count
-            for i in start ..< end {
-                let pt = Utils.lerp(t,q[i],q[i+1])
-                q.append(pt)
-            }
-            start = end + 1
-        }
-        return q
-    }
-    
     public func hull(_ t: BKFloat) -> [BKPoint] {
-        return BezierCurve.Hull(self.points, t)
+        return Utils.hull(self.points, t)
     }
     
     public func compute(_ t: BKFloat) -> BKPoint {
         // shortcuts
-        if t==0 {
+        if t == 0 {
             return self.points[0]
         }
-        if t==1 {
+        if t == 1 {
             return self.points[self.order]
         }
         
         var p = self.points
         let mt = 1-t
         
-        // linear?
         if self.order == 1 {
+            // linear?
             return mt * p[0] + t * p[1]
         }
-        
-        // quadratic/cubic curve?
-        if self.order < 4 {
+        else if self.order < 4 {
+            // quadratic/cubic curve?
             let mt2: BKFloat = mt*mt
             let t2: BKFloat = t*t
             var a: BKFloat = 0
@@ -298,16 +243,16 @@ public class BezierCurve {
             let m4 = d * p[3]
             return m1 + m2 + m3 + m4
         }
-        
-        //  higher order curves: use de Casteljau's computation
-        var dCpts = self.points
-        while dCpts.count > 1 {
-            for i in 0..<dCpts.count-1 {
-                dCpts[i] = dCpts[i] + t * (dCpts[i+1] - dCpts[i])
+        else {
+            //  higher order curves: use de Casteljau's computation
+            while p.count > 1 {
+                for i in 0..<p.count-1 {
+                    p[i] = mt * p[i] + t * p[i+1]
+                }
+                p.removeLast()
             }
-            dCpts.removeLast()
+            return p[0]
         }
-        return dCpts[0]
     }
     
     public func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
@@ -381,22 +326,15 @@ public class BezierCurve {
     public func split(at t1: BKFloat) -> (left: BezierCurve, right: BezierCurve) {
         assert(t1 > 0)
         assert(t1 < 1)
-        let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
-        let splitResult: MultipleCurves = taggedSelf.split(t1) as! MultipleCurves
+        let fullcurve = Subcurve(t1: 0, t2: 1, curve: self)
+        let splitResult = fullcurve.split(at: t1)
         return (left: splitResult.left.curve, right: splitResult.right.curve)
     }
     
     public func split(from t1: BKFloat, to t2: BKFloat) -> BezierCurve {
         assert( t2 > t1 )
-        let taggedSelf = TimeTaggedCurve(_t1: 0, _t2: 1, curve: self)
-        let splitResult = taggedSelf.split(t1, t2)
-        if let multipleCurves = splitResult as? MultipleCurves {
-            return multipleCurves.right.curve
-        }
-        else {
-            let singleCurve = splitResult as! SingleCurve
-            return singleCurve.curve.curve
-        }
+        let fullcurve = Subcurve(t1: 0, t2: 1, curve: self)
+        return fullcurve.split(from: t1, to: t2).curve
     }
     
     // MARK: -
@@ -408,10 +346,10 @@ public class BezierCurve {
      
      
      */
-    public func reduce() -> [TimeTaggedCurve] {
+    public func reduce() -> [Subcurve] {
         let step: BKFloat = 0.01
-        var pass1: [TimeTaggedCurve] = []
-        var pass2: [TimeTaggedCurve] = []
+        var pass1: [Subcurve] = []
+        var pass2: [Subcurve] = []
         // first pass: split on extrema
         var extrema: [BKFloat] = self.extrema().values
         if extrema.index(of: 0.0) == nil {
@@ -426,15 +364,14 @@ public class BezierCurve {
             let t2 = extrema[i]
             if abs(t1 - t2) >= step { // TODO: I had to add this logic myself
                 let curve = self.split(from: t1, to: t2)
-                let taggedSegment = TimeTaggedCurve(_t1: t1, _t2: t2, curve: curve)
-                pass1.append(taggedSegment)
+                pass1.append(Subcurve(t1: t1, t2: t2, curve: curve))
                 t1 = t2
             }
         }
         
         // second pass: further reduce these segments to simple segments
         // TODO: this loop is INSANELY SLOW
-        pass1.forEach({(p1: TimeTaggedCurve) in
+        pass1.forEach({(p1: Subcurve) in
             var t1: BKFloat = 0.0
             while t1 < 1.0 {
                 var t2: BKFloat = 1.0
@@ -442,7 +379,7 @@ public class BezierCurve {
                     if t > 1.0 {
                         t = 1.0
                     }
-                    let segment = p1.split(from: t1, to: t)
+                    let segment = p1.split(from: t1, to: t).curve
                     if segment.simple {
                         t2 = t
                     }
@@ -451,10 +388,7 @@ public class BezierCurve {
                     }
                 }
                 let segment = p1.split(from: t1, to: t2)
-                let taggedSegment = TimeTaggedCurve(_t1: Utils.map(t1,0,1,p1._t1,p1._t2),
-                                                    _t2: Utils.map(t2,0,1,p1._t1,p1._t2),
-                                                    curve: segment)
-                pass2.append(taggedSegment)
+                pass2.append(segment)
                 t1 = t2
             }
         })
@@ -554,7 +488,7 @@ public class BezierCurve {
             return [BezierCurve.curveWithPoints(points: coords)]
         }
         // for non-linear curves we need to create a set of curves
-        let reduced: [TimeTaggedCurve] = self.reduce()
+        let reduced: [Subcurve] = self.reduce()
         return reduced.map({
             return $0.curve.scale(distance: d)
         })
@@ -639,12 +573,12 @@ public class BezierCurve {
     public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
         precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
         return BezierCurve.internalCurvesIntersect(c1: self.reduce(),
-                                                   c2: [TimeTaggedCurve(_t1: 0.0, _t2: 1.0, curve: curve)],
+                                                   c2: [Subcurve(t1: 0.0, t2: 1.0, curve: curve)],
                                                    curveIntersectionThreshold: curveIntersectionThreshold)
     }
     
-    private static func internalCurvesIntersect(c1: [TimeTaggedCurve], c2: [TimeTaggedCurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
-        var pairs: [(left: TimeTaggedCurve, right: TimeTaggedCurve)] = []
+    private static func internalCurvesIntersect(c1: [Subcurve], c2: [Subcurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
+        var pairs: [(left: Subcurve, right: Subcurve)] = []
         // step 1: pair off any overlapping segments
         for l in c1 {
             for r in c2 {

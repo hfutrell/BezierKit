@@ -113,7 +113,7 @@ internal class Utils {
         let d2 = te-ts
         let v2 =  v-ds
         let r = v2/d1
-        return ts + d2*r
+        return ts + d2*r        
     }
     
     static func lli8(_ x1: BKFloat,_ y1: BKFloat,_ x2: BKFloat,_ y2: BKFloat,_ x3: BKFloat,_ y3: BKFloat,_ x4: BKFloat,_ y4: BKFloat) -> BKPoint? {
@@ -341,7 +341,7 @@ internal class Utils {
         )
     }
     
-    static func pairiteration(_ c1: TimeTaggedCurve, _ c2: TimeTaggedCurve, _ threshold: BKFloat = 0.5) -> [Intersection] {
+    static func pairiteration(_ c1: Subcurve, _ c2: Subcurve, _ threshold: BKFloat = 0.5) -> [Intersection] {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
         if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
@@ -375,13 +375,13 @@ internal class Utils {
                 return [] // t2 out of interval [0, 1]
             }
             // segments intersect at t1, t2
-            return [Intersection(t1: t1 * c1._t2 + (1.0 - t1) * c1._t1,
-                                 t2: t2 * c2._t2 + (1.0 - t2) * c2._t1)]
+            return [Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
+                                 t2: t2 * c2.t2 + (1.0 - t2) * c2.t1)]
             
         }
         
-        let cc1 = c1.split(0.5) as! MultipleCurves
-        let cc2 = c2.split(0.5) as! MultipleCurves
+        let cc1 = c1.split(at: 0.5)
+        let cc2 = c2.split(at: 0.5)
         
         var pairs = [
             (left: cc1.left, right: cc2.left ),
@@ -504,5 +504,22 @@ internal class Utils {
             }
         }
         return Arc(origin: o, radius: r, start: s, end: e, interval: interval)
+    }
+    
+    static func hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
+        let c: Int = p.count
+        var q: [BKPoint] = p
+        q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc
+        // we lerp between all points (in-place), until we have 1 point left.
+        var start: Int = 0
+        for count in (1 ..< c).reversed()  {
+            let end: Int = start + count
+            for i in start ..< end {
+                let pt = Utils.lerp(t,q[i],q[i+1])
+                q.append(pt)
+            }
+            start = end + 1
+        }
+        return q
     }
 }
