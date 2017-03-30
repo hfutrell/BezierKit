@@ -348,24 +348,29 @@ public class BezierCurve {
      */
     public func reduce() -> [Subcurve] {
         let step: BKFloat = 0.01
-        var pass1: [Subcurve] = []
-        // first pass: split on extrema
         var extrema: [BKFloat] = self.extrema().values
-        if extrema.index(of: 0.0) == nil {
-            extrema.insert(0.0, at: 0)
-        }
-        if extrema.index(of: 1.0) == nil {
-            extrema.append(1.0)
-        }
-        
-        var t1 = extrema[0]
-        for i in 1..<extrema.count {
-            let t2 = extrema[i]
-            if abs(t1 - t2) >= step { // TODO: I had to add this logic myself
-                let curve = self.split(from: t1, to: t2)
-                pass1.append(Subcurve(t1: t1, t2: t2, curve: curve))
-                t1 = t2
+        extrema = extrema.filter {
+            if $0 < step {
+                return false // filter out extreme points very close to 0.0
             }
+            else if (1.0 - $0) < step {
+                return false // filter out extreme points very close to 1.0
+            }
+            else {
+                return true
+            }
+        }
+        // aritifically add 0.0 and 1.0 to our extreme points
+        extrema.insert(0.0, at: 0)
+        extrema.append(1.0)
+        
+        // first pass: split on extrema
+        var pass1: [Subcurve] = []
+        for i in 0..<extrema.count-1 {
+            let t1 = extrema[i]
+            let t2 = extrema[i+1]
+            let curve = self.split(from: t1, to: t2)
+            pass1.append(Subcurve(t1: t1, t2: t2, curve: curve))
         }
         
         func bisectionMethod(min: BKFloat, max: BKFloat, tolerance: BKFloat, callback: (_ value: BKFloat) -> Bool) -> BKFloat {
@@ -403,7 +408,6 @@ public class BezierCurve {
                     pass2.append(partialSegment)
                     t1 = t2
                 }
-                
             }
         })
         return pass2
