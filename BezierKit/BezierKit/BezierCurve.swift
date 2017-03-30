@@ -349,7 +349,6 @@ public class BezierCurve {
     public func reduce() -> [Subcurve] {
         let step: BKFloat = 0.01
         var pass1: [Subcurve] = []
-        var pass2: [Subcurve] = []
         // first pass: split on extrema
         var extrema: [BKFloat] = self.extrema().values
         if extrema.index(of: 0.0) == nil {
@@ -369,27 +368,42 @@ public class BezierCurve {
             }
         }
         
+        func bisectionMethod(min: BKFloat, max: BKFloat, tolerance: BKFloat, callback: (_ value: BKFloat) -> Bool) -> BKFloat {
+            var lb = min // lower bound (callback(x <= lb) should return true
+            var ub = max // upper bound (callback(x >= ub) should return false
+            while (ub - lb) > tolerance {
+                let val = 0.5 * (lb + ub)
+                if callback(val) {
+                    lb = val
+                }
+                else {
+                    ub = val
+                }
+            }
+            return lb
+        }
+        
         // second pass: further reduce these segments to simple segments
-        // TODO: this loop is INSANELY SLOW
+        var pass2: [Subcurve] = []
         pass1.forEach({(p1: Subcurve) in
             var t1: BKFloat = 0.0
             while t1 < 1.0 {
-                var t2: BKFloat = 1.0
-                for var t in stride(from: t1+step, to: 1.0 + step, by: step) {
-                    if t > 1.0 {
-                        t = 1.0
-                    }
-                    let segment = p1.split(from: t1, to: t).curve
-                    if segment.simple {
-                        t2 = t
-                    }
-                    else {
-                        break
-                    }
+                let fullSegment = p1.split(from: t1, to: 1.0)
+                if (1.0 - t1) <= step || fullSegment.curve.simple {
+                    // if the step is small or the full segment is simple, use it
+                    pass2.append(fullSegment)
+                    t1 = 1.0
                 }
-                let segment = p1.split(from: t1, to: t2)
-                pass2.append(segment)
-                t1 = t2
+                else {
+                    // otherwise use bisection method to find a suitable step size
+                    let t2 = bisectionMethod(min: t1 + step, max: 1.0, tolerance: step) {
+                        return p1.split(from: t1, to: $0).curve.simple
+                    }
+                    let partialSegment = p1.split(from: t1, to: t2)
+                    pass2.append(partialSegment)
+                    t1 = t2
+                }
+                
             }
         })
         return pass2
@@ -572,7 +586,7 @@ public class BezierCurve {
     
     public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
         precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
-        return BezierCurve.internalCurvesIntersect(c1: self.reduce(),
+        return BezierCurve.internalCurvesIntersect(c1: [Subcurve(t1: 0.0, t2: 1.0, curve: self)],
                                                    c2: [Subcurve(t1: 0.0, t2: 1.0, curve: curve)],
                                                    curveIntersectionThreshold: curveIntersectionThreshold)
     }
