@@ -149,6 +149,7 @@ public class BezierCurve {
     internal func internalExtrema(includeInflection: Bool) -> [[BKFloat]] {
         var xyz: [[BKFloat]] = []
         xyz.reserveCapacity(BKPoint.dimensions)
+        // TODO: this code can be made a lot faster through inlining the droots computation such that allocations need not occur
         for d in 0..<BKPoint.dimensions {
             let mfn = {(v: BKPoint) in v[d]}
             var p: [BKFloat] = self.dpoints[0].map(mfn)
