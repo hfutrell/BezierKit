@@ -35,8 +35,12 @@ private let badSubscriptError = "bad subscript (out of bounds)"
 
 public struct Point2<S>: Point where S: RealNumber {
     public typealias F = S // specify the type used by VectorSpace protocol
-    var x : S, y : S
+    public var x : S, y : S
     // conformance to VectorSpace protocol
+    public init(x: S, y: S) {
+        self.x = x
+        self.y = y
+    }
     static public var dimensions: Int {
         return 2
     }
@@ -86,7 +90,12 @@ public struct Point2<S>: Point where S: RealNumber {
 
 public struct Point3<S>: Point where S: RealNumber {
     public typealias F = S // specify the type used by VectorSpace protocol
-    var x : S, y: S, z: S
+    public var x : S, y: S, z: S
+    public init(x: S, y: S, z: S) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
     // conformance to VectorSpace protocol
     static public var dimensions: Int {
         return 3
