@@ -8,11 +8,24 @@
 
 import Foundation
 
+//#if os(iOS)
+//    import CoreGraphics
+//#endif
+
 // should Draw just be an extension of CGContext, or have a CGContext instead of passing it in to all these functions?
-class Draw {
+public class Draw {
     
     // MARK: - helpers
-    
+    private static func Color(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> CGColor {
+        // needed because this initializer is normally only available in MacOS 10.5+ (not iOS)
+        #if os(macOS)
+            return CGColor.init(red: red, green: green, blue: blue, alpha: alpha)
+        #else
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            return CGColor.init(colorSpace: colorSpace, components: [red, green, blue, alpha])!
+        #endif
+    }
+
     /**
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
@@ -78,12 +91,12 @@ class Draw {
     }
 
     // MARK: - some useful hard-coded colors
-    static let lightGrey = CGColor(red: 211.0 / 255.0, green: 211.0 / 255.0, blue: 211.0 / 255.0, alpha: 1.0)
-    static let black = CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
-    static let red = CGColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
-    static let pinkish = CGColor(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
-    static let transparentBlue = CGColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.3)
-    static let transparentBlack = CGColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.2)
+    public static let lightGrey = Draw.Color(red: 211.0 / 255.0, green: 211.0 / 255.0, blue: 211.0 / 255.0, alpha: 1.0)
+    public static let black = Draw.Color(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+    public static let red = Draw.Color(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
+    public static let pinkish = Draw.Color(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
+    public static let transparentBlue = Draw.Color(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.3)
+    public static let transparentBlack = Draw.Color(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.2)
     
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
@@ -95,40 +108,40 @@ class Draw {
             var b: CGFloat = 0.0
             HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5, outR: &r, outG: &g, outB: &b)
             
-            temp.append(CGColor(red: r, green: g, blue: b, alpha: 1.0))
+            temp.append(Draw.Color(red: r, green: g, blue: b, alpha: 1.0))
         }
         return temp
     }()
     
     // MARK: -
     
-    static func reset(_ context: CGContext) {
+    public static func reset(_ context: CGContext) {
         context.setStrokeColor(black)
         randomIndex = 0
     }
     
     // MARK: - setting colors
     
-    static func setRandomColor(_ context: CGContext) {
+    public static func setRandomColor(_ context: CGContext) {
         randomIndex = (randomIndex+1) % randomColors.count
         let c = randomColors[randomIndex]
         context.setStrokeColor(c)
     }
     
-    static func setRandomFill(_ context: CGContext, alpha a: CGFloat = 1.0) {
+    public static func setRandomFill(_ context: CGContext, alpha a: CGFloat = 1.0) {
         randomIndex = (randomIndex+1) % randomColors.count
         let c = randomColors[randomIndex]
         let c2 = c.copy(alpha: a)
         context.setFillColor(c2!)
     }
     
-    static func setColor(_ context: CGContext, color: CGColor) {
+    public static func setColor(_ context: CGContext, color: CGColor) {
         context.setStrokeColor(color)
     }
     
     // MARK: - drawing various geometry
     
-    static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
         if let quadraticCurve = curve as? QuadraticBezierCurve {
             context.move(to: (quadraticCurve.p0 + offset).toCGPoint())
@@ -144,7 +157,7 @@ class Draw {
         context.strokePath()
     }
     
-    static func drawCircle(_ context: CGContext, center: BKPoint, radius r : BKFloat, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+    public static func drawCircle(_ context: CGContext, center: BKPoint, radius r : BKFloat, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
         context.beginPath()
         context.addEllipse(in: CGRect(origin: CGPoint(x: center.x - r + offset.x, y: center.y - r + offset.y),
                             size: CGSize(width: 2.0 * r, height: 2.0 * r))
@@ -152,12 +165,12 @@ class Draw {
         context.strokePath()
     }
     
-    static func drawPoint(_ context: CGContext, origin o: BKPoint, offset: BKPoint=BKPointZero) {
+    public static func drawPoint(_ context: CGContext, origin o: BKPoint, offset: BKPoint=BKPointZero) {
         self.drawCircle(context, center: o, radius: 5.0, offset: offset)
         
     }
     
-    static func drawPoints(_ context: CGContext,
+    public static func drawPoints(_ context: CGContext,
                     points: [BKPoint],
                     offset: BKPoint=BKPoint(x: 0.0, y: 0.0)) {
         for p in points {
@@ -165,7 +178,7 @@ class Draw {
         }
     }
     
-    static func drawLine(_ context: CGContext,
+    public static func drawLine(_ context: CGContext,
                   from p0: BKPoint,
                   to p1: BKPoint,
                   offset: BKPoint=BKPoint(x: 0.0, y: 0.0)) {
@@ -175,11 +188,15 @@ class Draw {
         context.strokePath()
     }
     
-    static func drawText(_ context: CGContext, text: String, offset: BKPoint = BKPointZero) {
+    public static func drawText(_ context: CGContext, text: String, offset: BKPoint = BKPointZero) {
+    #if os(macOS)
         (text as NSString).draw(at: NSPoint(x: offset.x, y: offset.y), withAttributes: [:])
+    #else
+        (text as NSString).draw(at: CGPoint(x: offset.x, y: offset.y), withAttributes: [:])
+    #endif
     }
  
-    static func drawSkeleton(_ context: CGContext,
+    public static func drawSkeleton(_ context: CGContext,
                              curve: BezierCurve,
                              offset: BKPoint=BKPoint(x: 0.0, y: 0.0),
                              coords: Bool=true) {
@@ -202,7 +219,7 @@ class Draw {
         
     }
     
-    static func draw(_ context: CGContext, arc: Arc, offset: BKPoint = BKPointZero) {
+    public static func draw(_ context: CGContext, arc: Arc, offset: BKPoint = BKPointZero) {
         let o = offset
         context.beginPath()
         context.move(to: (arc.origin + o).toCGPoint())
@@ -215,7 +232,7 @@ class Draw {
         context.drawPath(using: CGPathDrawingMode.fillStroke)
     }
     
-    static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
+    public static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
         context.beginPath()
         if hull.count == 6 {
             context.move(to: hull[0].toCGPoint())
@@ -238,14 +255,14 @@ class Draw {
         context.strokePath()
     }
 
-    static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : BKPoint = BKPointZero) {
+    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : BKPoint = BKPointZero) {
         context.beginPath()
         context.addRect(boundingBox.toCGRect)
         context.closePath()
         context.strokePath()
     }
 
-    static func drawShape(_ context: CGContext, shape: Shape, offset: BKPoint = BKPointZero) {
+    public static func drawShape(_ context: CGContext, shape: Shape, offset: BKPoint = BKPointZero) {
         let order = shape.forward.points.count - 1
         context.beginPath()
         context.move(to: (offset + shape.startcap.curve.points[0]).toCGPoint())
