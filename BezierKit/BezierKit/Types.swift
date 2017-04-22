@@ -8,12 +8,16 @@
 
 import Foundation
 
+#if os(iOS)
+    import CoreGraphics
+#endif
+
 public typealias BKFloat = CGFloat
 public typealias BKPoint = Point2<CGFloat>
 
 public struct Intersection: Equatable, Comparable {
-    var t1: BKFloat
-    var t2: BKFloat
+    public var t1: BKFloat
+    public var t2: BKFloat
     public static func == (lhs: Intersection, rhs: Intersection) -> Bool {
         return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
     }
@@ -31,8 +35,12 @@ public struct Intersection: Equatable, Comparable {
 }
 
 public struct Line {
-    var p1: BKPoint
-    var p2: BKPoint
+    public var p1: BKPoint
+    public var p2: BKPoint
+    public init(p1: BKPoint, p2: BKPoint) {
+        self.p1 = p1
+        self.p2 = p2
+    }
 }
 
 public struct Arc {
@@ -75,8 +83,8 @@ public struct Shape {
 public typealias BoundingBox = BBox<BKPoint>
 
 public struct BBox<P> where P: Point {
-    var min: BKPoint
-    var max: BKPoint
+    public var min: BKPoint
+    public var max: BKPoint
     init() {
         // by setting the min to infinity and the max to -infinity
         // when we union this (invalid) rect with a valid rect, we'll
@@ -84,11 +92,11 @@ public struct BBox<P> where P: Point {
         min = BKPointInfinity
         max = -BKPointInfinity
     }
-    init(min: BKPoint, max: BKPoint) {
+    public init(min: BKPoint, max: BKPoint) {
         self.min = min
         self.max = max
     }
-    init(first: BoundingBox, second: BoundingBox) {
+    public init(first: BoundingBox, second: BoundingBox) {
         var min = first.min
         var max = second.max
         for d in 0..<P.dimensions {
@@ -102,13 +110,13 @@ public struct BBox<P> where P: Point {
         self.min = min
         self.max = max
     }
-    var mid: BKPoint {
+    public var mid: BKPoint {
         return 0.5 * (min + max)
     }
-    var size: BKPoint {
+    public var size: BKPoint {
         return max - min
     }
-    func overlaps(_ other: BoundingBox) -> Bool {
+    public func overlaps(_ other: BoundingBox) -> Bool {
         for i in 0..<P.dimensions {
             if self.min[i] > other.max[i] {
                 return false
@@ -119,7 +127,7 @@ public struct BBox<P> where P: Point {
         }
         return true
     }
-    var toCGRect: CGRect {
+    public var toCGRect: CGRect {
         let s = self.size
         return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
     }
