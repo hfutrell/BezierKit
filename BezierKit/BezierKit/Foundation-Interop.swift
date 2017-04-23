@@ -8,24 +8,28 @@
 
 import Foundation
 
+#if os(iOS)
+    import CoreGraphics
+#endif
+
 // MARK: allows Point2 to be converted back and forth to CGPoint
 
 extension CGFloat: CGFloatable {
     public static func convertFrom(_ x: CGFloat) -> CGFloat {
         return CGFloat(x)
     }
-    func convertTo() -> CGFloat {
+    public func convertTo() -> CGFloat {
         return self
     }
 }
 
-protocol CGFloatable {
+public protocol CGFloatable {
     static func convertFrom(_ x: CGFloat) -> Self
     func convertTo() -> CGFloat
 }
 
 // in Swift 3.1 I believe this can be claned up to S == CGFloat (and CGFloatable protocol can be removed)
-extension Point2 where S: CGFloatable {
+public extension Point2 where S: CGFloatable {
     init(_ p: CGPoint)  {
         self.x = S.convertFrom(p.x)
         self.y = S.convertFrom(p.y)
@@ -39,6 +43,10 @@ extension Point2 where S: CGFloatable {
 
 extension CGFloat: RealNumber {
     public static func sqrt(_ x: CGFloat) -> CGFloat {
-        return Foundation.sqrt(x)
+        #if os(macOS)
+            return Foundation.sqrt(x)
+        #elseif os(iOS)
+            return CoreGraphics.sqrt(x)
+        #endif
     }
 }

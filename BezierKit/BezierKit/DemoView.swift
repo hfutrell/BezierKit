@@ -7,6 +7,7 @@
 //
 
 import AppKit
+import BezierKit_Mac
 
 class DemoView: NSView, DraggableDelegate {
     

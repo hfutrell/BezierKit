@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import BezierKit_Mac
 
 typealias DemoDrawFunction = (_ context: CGContext, _ demoState: DemoState) -> Void
 

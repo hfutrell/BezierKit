@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import BezierKit_Mac
 
 typealias DraggableCallback = (_ dragPosition: CGPoint) -> (CGPoint)
 
