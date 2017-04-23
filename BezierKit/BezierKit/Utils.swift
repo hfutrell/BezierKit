@@ -8,6 +8,10 @@
 
 import Foundation
 
+#if os(iOS)
+import CoreGraphics
+#endif
+
 internal class Utils {
 
     // float precision significant decimal

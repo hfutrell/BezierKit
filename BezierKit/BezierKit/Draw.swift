@@ -8,24 +8,19 @@
 
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
-
-//#if os(iOS)
-//    import CoreGraphics
-//#endif
 
 // should Draw just be an extension of CGContext, or have a CGContext instead of passing it in to all these functions?
 public class Draw {
     
+    private static let deviceColorspace = CGColorSpaceCreateDeviceRGB()
+    
     // MARK: - helpers
     private static func Color(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> CGColor {
-        // needed because this initializer is normally only available in MacOS 10.5+ (not iOS)
-        #if os(macOS)
-            return CGColor.init(red: red, green: green, blue: blue, alpha: alpha)
-        #else
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
-            return CGColor.init(colorSpace: colorSpace, components: [red, green, blue, alpha])!
-        #endif
+        // have to use this initializer because simpler one is MacOS 10.5+ (not iOS)
+        return CGColor.init(colorSpace: Draw.deviceColorspace, components: [red, green, blue, alpha])!
     }
 
     /**

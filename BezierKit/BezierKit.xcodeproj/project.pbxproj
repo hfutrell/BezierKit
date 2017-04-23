@@ -10,6 +10,7 @@
 		FD0F54FB1DC43FFB0084CDCD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */; };
 		FD0F54FE1DC43FFB0084CDCD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */; };
 		FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
+		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD4A0DCD1EAAD02A0031A393 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF41DCC68D10059D787 /* Utils.swift */; };
 		FD4A0DCE1EAAD02D0031A393 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF21DCC59FC0059D787 /* Types.swift */; };
@@ -27,6 +28,17 @@
 		FD4A0DDD1EAAD6AB0031A393 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */; };
 		FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
 		FD4A0E0F1EAC794B0031A393 /* BezierKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FD89E39F1EAC7BEF00494D50 /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5EC36A1DC5A5D70079982F /* Draw.swift */; };
+		FD89E3A01EAC7BF100494D50 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF41DCC68D10059D787 /* Utils.swift */; };
+		FD89E3A11EAC7BF500494D50 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF21DCC59FC0059D787 /* Types.swift */; };
+		FD89E3A21EAC7BF800494D50 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */; };
+		FD89E3A31EAC7BFA00494D50 /* Point.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2F5DAE1E7C963700EDD2E0 /* Point.swift */; };
+		FD89E3A41EAC7BFD00494D50 /* Normed.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD31E6531E7CD14F00B6E4F9 /* Normed.swift */; };
+		FD89E3A51EAC7BFF00494D50 /* VectorSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */; };
+		FD89E3A61EAC7C0500494D50 /* Foundation-Interop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDECAFCD1E7CD66D00A339E8 /* Foundation-Interop.swift */; };
+		FD89E3A71EAC7C0800494D50 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */; };
+		FD89E3A81EAC7C0B00494D50 /* QuadraticBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */; };
+		FD89E3A91EAC7C0E00494D50 /* CubicBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */; };
 		FDD7ABF11DCC58A50059D787 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF01DCC58A50059D787 /* Draggable.swift */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +82,9 @@
 		FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTests.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FD26253B1EAC7B9A00C64652 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_iOS.h; sourceTree = "<group>"; };
+		FD26253E1EAC7B9A00C64652 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FD2F5DAE1E7C963700EDD2E0 /* Point.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Point.swift; sourceTree = "<group>"; };
 		FD3104711E6E356C001CB39F /* Demos.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Demos.swift; sourceTree = "<group>"; };
 		FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VectorSpace.swift; sourceTree = "<group>"; };
@@ -105,6 +120,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FD2625371EAC7B9A00C64652 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FD4A0DBC1EAAD01F0031A393 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -121,6 +143,7 @@
 				FD0F54F71DC43FFB0084CDCD /* BezierKit */,
 				FD0F55071DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DC11EAAD01F0031A393 /* BezierKit_Mac */,
+				FD26253C1EAC7B9A00C64652 /* BezierKit_iOS */,
 				FD0F54F61DC43FFB0084CDCD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -131,6 +154,7 @@
 				FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */,
 				FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */,
 				FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */,
+				FD26253B1EAC7B9A00C64652 /* BezierKit.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -157,6 +181,15 @@
 				FD0F550A1DC43FFB0084CDCD /* Info.plist */,
 			);
 			path = BezierKitTests;
+			sourceTree = "<group>";
+		};
+		FD26253C1EAC7B9A00C64652 /* BezierKit_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */,
+				FD26253E1EAC7B9A00C64652 /* Info.plist */,
+			);
+			path = BezierKit_iOS;
 			sourceTree = "<group>";
 		};
 		FD3104731E6E3D6A001CB39F /* Lib */ = {
@@ -205,6 +238,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		FD2625381EAC7B9A00C64652 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FD4A0DBD1EAAD01F0031A393 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -253,6 +294,24 @@
 			productReference = FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		FD26253A1EAC7B9A00C64652 /* BezierKit_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FD2625401EAC7B9A00C64652 /* Build configuration list for PBXNativeTarget "BezierKit_iOS" */;
+			buildPhases = (
+				FD2625361EAC7B9A00C64652 /* Sources */,
+				FD2625371EAC7B9A00C64652 /* Frameworks */,
+				FD2625381EAC7B9A00C64652 /* Headers */,
+				FD2625391EAC7B9A00C64652 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BezierKit_iOS;
+			productName = BezierKit_iOS;
+			productReference = FD26253B1EAC7B9A00C64652 /* BezierKit.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FD4A0DCB1EAAD01F0031A393 /* Build configuration list for PBXNativeTarget "BezierKit_Mac" */;
@@ -290,6 +349,10 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = FD0F54F41DC43FFB0084CDCD;
 					};
+					FD26253A1EAC7B9A00C64652 = {
+						CreatedOnToolsVersion = 8.3.2;
+						ProvisioningStyle = Automatic;
+					};
 					FD4A0DBF1EAAD01F0031A393 = {
 						CreatedOnToolsVersion = 8.3.2;
 						ProvisioningStyle = Automatic;
@@ -312,6 +375,7 @@
 				FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */,
 				FD0F55031DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */,
+				FD26253A1EAC7B9A00C64652 /* BezierKit_iOS */,
 			);
 		};
 /* End PBXProject section */
@@ -327,6 +391,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		FD0F55021DC43FFB0084CDCD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FD2625391EAC7B9A00C64652 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -359,6 +430,24 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FD2625361EAC7B9A00C64652 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD89E3A61EAC7C0500494D50 /* Foundation-Interop.swift in Sources */,
+				FD89E3A21EAC7BF800494D50 /* PolyBezier.swift in Sources */,
+				FD89E3A51EAC7BFF00494D50 /* VectorSpace.swift in Sources */,
+				FD89E3A91EAC7C0E00494D50 /* CubicBezierCurve.swift in Sources */,
+				FD89E3A31EAC7BFA00494D50 /* Point.swift in Sources */,
+				FD89E3A71EAC7C0800494D50 /* BezierCurve.swift in Sources */,
+				FD89E3A41EAC7BFD00494D50 /* Normed.swift in Sources */,
+				FD89E3A11EAC7BF500494D50 /* Types.swift in Sources */,
+				FD89E3A81EAC7C0B00494D50 /* QuadraticBezierCurve.swift in Sources */,
+				FD89E39F1EAC7BEF00494D50 /* Draw.swift in Sources */,
+				FD89E3A01EAC7BF100494D50 /* Utils.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -557,6 +646,59 @@
 			};
 			name = Release;
 		};
+		FD2625411EAC7B9A00C64652 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = BezierKit_iOS/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_NAME = BezierKit;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		FD2625421EAC7B9A00C64652 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = BezierKit_iOS/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_NAME = BezierKit;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		FD4A0DC91EAAD01F0031A393 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -631,6 +773,15 @@
 			buildConfigurations = (
 				FD0F55111DC43FFB0084CDCD /* Debug */,
 				FD0F55121DC43FFB0084CDCD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FD2625401EAC7B9A00C64652 /* Build configuration list for PBXNativeTarget "BezierKit_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FD2625411EAC7B9A00C64652 /* Debug */,
+				FD2625421EAC7B9A00C64652 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

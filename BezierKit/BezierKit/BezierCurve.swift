@@ -119,7 +119,7 @@ public class BezierCurve {
         var n1 = self.normal(0)
         var n2 = self.normal(1)
         var s = n1.dot(n2)
-        var angle = abs(acos(s))
+        var angle: BKFloat = BKFloat(abs(acos(Double(s))))
         return angle < (BKFloat.pi / 3.0)
     }()
     
@@ -309,14 +309,20 @@ public class BezierCurve {
             c[2] = r2[0] * r1[1] - r2[1] * r1[0]
             c = c.normalize()
             // rotation matrix
-            let R = [   c[0]*c[0],      c[0]*c[1]-c[2], c[0]*c[2]+c[1],
-                        c[0]*c[1]+c[2], c[1]*c[1],      c[1]*c[2]-c[0],
-                        c[0]*c[2]-c[1], c[1]*c[2]+c[0], c[2]*c[2]    ]
+            let R00 = c[0]*c[0]
+            let R01 = c[0]*c[1]-c[2]
+            let R02 = c[0]*c[2]+c[1]
+            let R10 = c[0]*c[1]+c[2]
+            let R11 = c[1]*c[1]
+            let R12 = c[1]*c[2]-c[0]
+            let R20 = c[0]*c[2]-c[1]
+            let R21 = c[1]*c[2]+c[0]
+            let R22 = c[2]*c[2]
             // normal vector:
             var n = BKPointZero
-            n[0] = R[0] * r1[0] + R[1] * r1[1] + R[2] * r1[2]
-            n[1] = R[3] * r1[0] + R[4] * r1[1] + R[5] * r1[2]
-            n[2] = R[6] * r1[0] + R[7] * r1[1] + R[8] * r1[2]
+            n[0] = R00 * r1[0] + R01 * r1[1] + R02 * r1[2]
+            n[1] = R10 * r1[0] + R11 * r1[1] + R12 * r1[2]
+            n[2] = R20 * r1[0] + R21 * r1[1] + R22 * r1[2]
             return n
         }
         return self.threeD ? normal3(t) : normal2(t)
@@ -544,7 +550,7 @@ public class BezierCurve {
         let t1 = BKFloat(mpos-1) / BKFloat(l)
         let t2 = BKFloat(mpos+1) / BKFloat(l)
         let step = 0.1 / BKFloat(l)
-        mdist += 1
+        mdist = mdist + 1
         var ft = t1
         for t in stride(from: t1, to: t2+step, by: step) {
             let p = self.compute(t)
@@ -659,7 +665,7 @@ public class BezierCurve {
                 fcurves.append(segment.curve.scale(distance: d1))
                 bcurves.append(segment.curve.scale(distance: -d2))
             }
-            alen += slen
+            alen = alen + slen
         }
         
         // reverse the "return" outline
