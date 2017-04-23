@@ -11,8 +11,6 @@
 		FD0F54FE1DC43FFB0084CDCD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */; };
 		FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		FD4A0DC71EAAD01F0031A393 /* BezierKit_Mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit_Mac.framework */; };
-		FD4A0DC81EAAD01F0031A393 /* BezierKit_Mac.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit_Mac.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FD4A0DCD1EAAD02A0031A393 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF41DCC68D10059D787 /* Utils.swift */; };
 		FD4A0DCE1EAAD02D0031A393 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF21DCC59FC0059D787 /* Types.swift */; };
 		FD4A0DCF1EAAD0310031A393 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */; };
@@ -27,6 +25,8 @@
 		FD4A0DDB1EAAD05C0031A393 /* Demos.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3104711E6E356C001CB39F /* Demos.swift */; };
 		FD4A0DDC1EAAD0690031A393 /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5EC36A1DC5A5D70079982F /* Draw.swift */; };
 		FD4A0DDD1EAAD6AB0031A393 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */; };
+		FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
+		FD4A0E0F1EAC794B0031A393 /* BezierKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FDD7ABF11DCC58A50059D787 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF01DCC58A50059D787 /* Draggable.swift */; };
 /* End PBXBuildFile section */
 
@@ -38,7 +38,7 @@
 			remoteGlobalIDString = FD0F54F41DC43FFB0084CDCD;
 			remoteInfo = BezierKit;
 		};
-		FD4A0DC51EAAD01F0031A393 /* PBXContainerItemProxy */ = {
+		FD4A0E101EAC794B0031A393 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FD0F54ED1DC43FFB0084CDCD /* Project object */;
 			proxyType = 1;
@@ -48,13 +48,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		FD4A0DCC1EAAD01F0031A393 /* Embed Frameworks */ = {
+		FD4A0E121EAC794B0031A393 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				FD4A0DC81EAAD01F0031A393 /* BezierKit_Mac.framework in Embed Frameworks */,
+				FD4A0E0F1EAC794B0031A393 /* BezierKit.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -62,7 +62,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FD0F54F51DC43FFB0084CDCD /* BezierKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BezierKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BezierKitMacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FD0F54FD1DC43FFB0084CDCD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -74,7 +74,7 @@
 		FD3104711E6E356C001CB39F /* Demos.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Demos.swift; sourceTree = "<group>"; };
 		FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VectorSpace.swift; sourceTree = "<group>"; };
 		FD31E6531E7CD14F00B6E4F9 /* Normed.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Normed.swift; sourceTree = "<group>"; };
-		FD4A0DC01EAAD01F0031A393 /* BezierKit_Mac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit_Mac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_Mac.h; sourceTree = "<group>"; };
 		FD4A0DC31EAAD01F0031A393 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FD5EC36A1DC5A5D70079982F /* Draw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Draw.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -94,7 +94,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD4A0DC71EAAD01F0031A393 /* BezierKit_Mac.framework in Frameworks */,
+				FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,9 +128,9 @@
 		FD0F54F61DC43FFB0084CDCD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FD0F54F51DC43FFB0084CDCD /* BezierKit.app */,
+				FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */,
 				FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */,
-				FD4A0DC01EAAD01F0031A393 /* BezierKit_Mac.framework */,
+				FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -216,23 +216,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		FD0F54F41DC43FFB0084CDCD /* BezierKit */ = {
+		FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKit" */;
+			buildConfigurationList = FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitMacDemos" */;
 			buildPhases = (
 				FD0F54F11DC43FFB0084CDCD /* Sources */,
 				FD0F54F21DC43FFB0084CDCD /* Frameworks */,
 				FD0F54F31DC43FFB0084CDCD /* Resources */,
-				FD4A0DCC1EAAD01F0031A393 /* Embed Frameworks */,
+				FD4A0E121EAC794B0031A393 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				FD4A0DC61EAAD01F0031A393 /* PBXTargetDependency */,
+				FD4A0E111EAC794B0031A393 /* PBXTargetDependency */,
 			);
-			name = BezierKit;
+			name = BezierKitMacDemos;
 			productName = BezierKit;
-			productReference = FD0F54F51DC43FFB0084CDCD /* BezierKit.app */;
+			productReference = FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FD0F55031DC43FFB0084CDCD /* BezierKitTests */ = {
@@ -268,7 +268,7 @@
 			);
 			name = BezierKit_Mac;
 			productName = BezierKit_Mac;
-			productReference = FD4A0DC01EAAD01F0031A393 /* BezierKit_Mac.framework */;
+			productReference = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -309,7 +309,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FD0F54F41DC43FFB0084CDCD /* BezierKit */,
+				FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */,
 				FD0F55031DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */,
 			);
@@ -385,13 +385,13 @@
 /* Begin PBXTargetDependency section */
 		FD0F55061DC43FFB0084CDCD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FD0F54F41DC43FFB0084CDCD /* BezierKit */;
+			target = FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */;
 			targetProxy = FD0F55051DC43FFB0084CDCD /* PBXContainerItemProxy */;
 		};
-		FD4A0DC61EAAD01F0031A393 /* PBXTargetDependency */ = {
+		FD4A0E111EAC794B0031A393 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */;
-			targetProxy = FD4A0DC51EAAD01F0031A393 /* PBXContainerItemProxy */;
+			targetProxy = FD4A0E101EAC794B0031A393 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -507,7 +507,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = BezierKit/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKit;
+				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKitMacDemos;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 3.0;
 			};
@@ -521,7 +521,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = BezierKit/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKit;
+				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKitMacDemos;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 3.0;
 			};
@@ -572,8 +572,8 @@
 				INFOPLIST_FILE = BezierKit_Mac/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.myCompany.BezierKit-Mac";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -596,8 +596,8 @@
 				INFOPLIST_FILE = BezierKit_Mac/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.myCompany.BezierKit-Mac";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -617,7 +617,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKit" */ = {
+		FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitMacDemos" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FD0F550E1DC43FFB0084CDCD /* Debug */,
@@ -642,6 +642,7 @@
 				FD4A0DCA1EAAD01F0031A393 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

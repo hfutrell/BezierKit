@@ -6,7 +6,9 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+#if os(macOS)
+import AppKit
+#endif
 
 //#if os(iOS)
 //    import CoreGraphics
