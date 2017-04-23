@@ -11,11 +11,11 @@ import Foundation
 public typealias DistanceFunction = (_ v: BKFloat) -> BKFloat
 
 public struct Subcurve {
-    let t1: BKFloat
-    let t2: BKFloat
-    let curve: BezierCurve
+    public let t1: BKFloat
+    public let t2: BKFloat
+    public let curve: BezierCurve
     
-    func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
+    internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
         let tr = Utils.map(t2, t1, 1, 0, 1)
         let quadratic = self.curve.order == 2
         let h1 = Utils.hull(self.curve.points, t1)
@@ -27,7 +27,7 @@ public struct Subcurve {
                         curve: BezierCurve.curveWithPoints(points: p2))
     }
     
-    func split(at t: BKFloat) -> (left: Subcurve, right: Subcurve) {
+    internal func split(at t: BKFloat) -> (left: Subcurve, right: Subcurve) {
         // use "de Casteljau" iteration.
         var h = self.curve.hull(t)
         
