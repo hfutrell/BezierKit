@@ -25,7 +25,19 @@ Pod::Spec.new do |s|
   #   * Write the description between the DESC delimiters below.
   #   * Finally, don't worry about the indent, CocoaPods strips it!
   s.description  = <<-DESC
-                   DESC
+  					A library for performing Bezier curve computation.
+  					Create linear, quadratic, cubic, or even higher order Bezier curves.
+  					Compute values, derivatives, and normals along curves.
+  					Compute lengths, extrema, bounding boxes, and hulls.
+  					Split curves or create sub-curves over a given range.
+  					Project points to the nearest location on a curve.
+  					Reduce curves to a series of "simple" sub-curves.
+  					Offset, scale, and create outlines for curves.
+  					Intersect other curves, lines, or perform self-intersection.
+  					Approximate a curve by a series of arcs.
+  					Draw curves to views with various drawing utilities.
+  					Visualize curves in XCode Playgrounds or debugger.
+  					DESC
 
   s.homepage     = "https://github.com/hfutrell/BezierKit"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
@@ -52,7 +64,7 @@ Pod::Spec.new do |s|
   #  profile URL.
   #
 
-  s.author             = { "Holmes Futrell" => “holmesfutrell@gmail.com” }
+  s.author             = { "Holmes Futrell" => "holmesfutrell@gmail.com" }
   # Or just: s.author    = "Holmes Futrell"
   # s.authors            = { "Holmes Futrell" => "holmesfutrell@gmail.com" }
   # s.social_media_url   = "http://twitter.com/[BLANK]“
@@ -64,7 +76,7 @@ Pod::Spec.new do |s|
   #
 
   # s.platform     = :ios
-  # s.platform     = :ios, "5.0"
+  # s.platform     = :ios, "8.0"
 
   #  When using multiple platforms
   # s.ios.deployment_target = "5.0"
@@ -79,7 +91,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/hfutrell/BezierKit.git", :branch => “dev” }
+  s.source       = { :git => "https://github.com/hfutrell/BezierKit.git", :tag => "v#{s.version}"}
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -90,7 +102,7 @@ Pod::Spec.new do |s|
   #  Not including the public_header_files will make all headers public.
   #
 
-  s.source_files  = “BezierKit/BezierKit”
+  s.source_files  = "BezierKit/BezierKit"
   s.exclude_files = "Classes/Exclude"
 
   # s.public_header_files = "Classes/**/*.h"
