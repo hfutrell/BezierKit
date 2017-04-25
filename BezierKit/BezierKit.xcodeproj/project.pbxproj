@@ -7,39 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FD0F54FB1DC43FFB0084CDCD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */; };
-		FD0F54FE1DC43FFB0084CDCD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */; };
 		FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		FD4A0DCD1EAAD02A0031A393 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF41DCC68D10059D787 /* Utils.swift */; };
-		FD4A0DCE1EAAD02D0031A393 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF21DCC59FC0059D787 /* Types.swift */; };
-		FD4A0DCF1EAAD0310031A393 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */; };
-		FD4A0DD01EAAD0350031A393 /* Point.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2F5DAE1E7C963700EDD2E0 /* Point.swift */; };
-		FD4A0DD11EAAD0380031A393 /* Normed.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD31E6531E7CD14F00B6E4F9 /* Normed.swift */; };
-		FD4A0DD21EAAD03B0031A393 /* VectorSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */; };
-		FD4A0DD31EAAD03E0031A393 /* Foundation-Interop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDECAFCD1E7CD66D00A339E8 /* Foundation-Interop.swift */; };
-		FD4A0DD41EAAD0410031A393 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */; };
-		FD4A0DD51EAAD0440031A393 /* QuadraticBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */; };
-		FD4A0DD61EAAD0480031A393 /* CubicBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */; };
-		FD4A0DD91EAAD0500031A393 /* DemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD476621DC44EDB00A1FAF3 /* DemoView.swift */; };
-		FD4A0DDB1EAAD05C0031A393 /* Demos.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3104711E6E356C001CB39F /* Demos.swift */; };
-		FD4A0DDC1EAAD0690031A393 /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5EC36A1DC5A5D70079982F /* Draw.swift */; };
-		FD4A0DDD1EAAD6AB0031A393 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */; };
 		FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
 		FD4A0E0F1EAC794B0031A393 /* BezierKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		FD89E39F1EAC7BEF00494D50 /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5EC36A1DC5A5D70079982F /* Draw.swift */; };
-		FD89E3A01EAC7BF100494D50 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF41DCC68D10059D787 /* Utils.swift */; };
-		FD89E3A11EAC7BF500494D50 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF21DCC59FC0059D787 /* Types.swift */; };
-		FD89E3A21EAC7BF800494D50 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */; };
-		FD89E3A31EAC7BFA00494D50 /* Point.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2F5DAE1E7C963700EDD2E0 /* Point.swift */; };
-		FD89E3A41EAC7BFD00494D50 /* Normed.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD31E6531E7CD14F00B6E4F9 /* Normed.swift */; };
-		FD89E3A51EAC7BFF00494D50 /* VectorSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */; };
-		FD89E3A61EAC7C0500494D50 /* Foundation-Interop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDECAFCD1E7CD66D00A339E8 /* Foundation-Interop.swift */; };
-		FD89E3A71EAC7C0800494D50 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */; };
-		FD89E3A81EAC7C0B00494D50 /* QuadraticBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */; };
-		FD89E3A91EAC7C0E00494D50 /* CubicBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */; };
-		FDD7ABF11DCC58A50059D787 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD7ABF01DCC58A50059D787 /* Draggable.swift */; };
+		FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */; };
+		FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */; };
+		FDB6B4041EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */; };
+		FDB6B4051EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */; };
+		FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F91EAFD6DF00001C61 /* Draw.swift */; };
+		FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F91EAFD6DF00001C61 /* Draw.swift */; };
+		FDB6B4081EAFD6DF00001C61 /* Foundation-Interop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */; };
+		FDB6B4091EAFD6DF00001C61 /* Foundation-Interop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */; };
+		FDB6B40A1EAFD6DF00001C61 /* Normed.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */; };
+		FDB6B40B1EAFD6DF00001C61 /* Normed.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */; };
+		FDB6B40C1EAFD6DF00001C61 /* Point.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FC1EAFD6DF00001C61 /* Point.swift */; };
+		FDB6B40D1EAFD6DF00001C61 /* Point.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FC1EAFD6DF00001C61 /* Point.swift */; };
+		FDB6B40E1EAFD6DF00001C61 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FD1EAFD6DF00001C61 /* PolyBezier.swift */; };
+		FDB6B40F1EAFD6DF00001C61 /* PolyBezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FD1EAFD6DF00001C61 /* PolyBezier.swift */; };
+		FDB6B4101EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */; };
+		FDB6B4111EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */; };
+		FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FF1EAFD6DF00001C61 /* Types.swift */; };
+		FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3FF1EAFD6DF00001C61 /* Types.swift */; };
+		FDB6B4141EAFD6DF00001C61 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B4001EAFD6DF00001C61 /* Utils.swift */; };
+		FDB6B4151EAFD6DF00001C61 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B4001EAFD6DF00001C61 /* Utils.swift */; };
+		FDB6B4161EAFD6DF00001C61 /* VectorSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B4011EAFD6DF00001C61 /* VectorSpace.swift */; };
+		FDB6B4171EAFD6DF00001C61 /* VectorSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B4011EAFD6DF00001C61 /* VectorSpace.swift */; };
+		FDB6B42F1EAFD6F200001C61 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B4191EAFD6E600001C61 /* AppDelegate.swift */; };
+		FDB6B4301EAFD6F600001C61 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FDB6B41A1EAFD6E600001C61 /* Assets.xcassets */; };
+		FDB6B4311EAFD6F900001C61 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FDB6B41B1EAFD6E600001C61 /* MainMenu.xib */; };
+		FDB6B4321EAFD6FD00001C61 /* Demos.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B41D1EAFD6E600001C61 /* Demos.swift */; };
+		FDB6B4331EAFD6FF00001C61 /* DemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B41E1EAFD6E600001C61 /* DemoView.swift */; };
+		FDB6B4341EAFD70200001C61 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B41F1EAFD6E600001C61 /* Draggable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,34 +74,34 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BezierKitMacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		FD0F54FD1DC43FFB0084CDCD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		FD0F54FF1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FD0F54F51DC43FFB0084CDCD /* MacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTests.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FD26253B1EAC7B9A00C64652 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_iOS.h; sourceTree = "<group>"; };
 		FD26253E1EAC7B9A00C64652 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FD2F5DAE1E7C963700EDD2E0 /* Point.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Point.swift; sourceTree = "<group>"; };
-		FD3104711E6E356C001CB39F /* Demos.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Demos.swift; sourceTree = "<group>"; };
-		FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VectorSpace.swift; sourceTree = "<group>"; };
-		FD31E6531E7CD14F00B6E4F9 /* Normed.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Normed.swift; sourceTree = "<group>"; };
 		FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_Mac.h; sourceTree = "<group>"; };
 		FD4A0DC31EAAD01F0031A393 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FD5EC36A1DC5A5D70079982F /* Draw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Draw.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PolyBezier.swift; sourceTree = "<group>"; };
-		FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = CubicBezierCurve.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		FDD476621DC44EDB00A1FAF3 /* DemoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = DemoView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		FDD7ABF01DCC58A50059D787 /* Draggable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Draggable.swift; sourceTree = "<group>"; };
-		FDD7ABF21DCC59FC0059D787 /* Types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Types.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		FDD7ABF41DCC68D10059D787 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Utils.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
-		FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuadraticBezierCurve.swift; sourceTree = "<group>"; };
-		FDECAFCD1E7CD66D00A339E8 /* Foundation-Interop.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Foundation-Interop.swift"; sourceTree = "<group>"; };
+		FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
+		FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicBezierCurve.swift; sourceTree = "<group>"; };
+		FDB6B3F91EAFD6DF00001C61 /* Draw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Draw.swift; sourceTree = "<group>"; };
+		FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Foundation-Interop.swift"; sourceTree = "<group>"; };
+		FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Normed.swift; sourceTree = "<group>"; };
+		FDB6B3FC1EAFD6DF00001C61 /* Point.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Point.swift; sourceTree = "<group>"; };
+		FDB6B3FD1EAFD6DF00001C61 /* PolyBezier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PolyBezier.swift; sourceTree = "<group>"; };
+		FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuadraticBezierCurve.swift; sourceTree = "<group>"; };
+		FDB6B3FF1EAFD6DF00001C61 /* Types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
+		FDB6B4001EAFD6DF00001C61 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		FDB6B4011EAFD6DF00001C61 /* VectorSpace.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VectorSpace.swift; sourceTree = "<group>"; };
+		FDB6B4191EAFD6E600001C61 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FDB6B41A1EAFD6E600001C61 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FDB6B41C1EAFD6E600001C61 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		FDB6B41D1EAFD6E600001C61 /* Demos.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Demos.swift; sourceTree = "<group>"; };
+		FDB6B41E1EAFD6E600001C61 /* DemoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoView.swift; sourceTree = "<group>"; };
+		FDB6B41F1EAFD6E600001C61 /* Draggable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Draggable.swift; sourceTree = "<group>"; };
+		FDB6B4201EAFD6E600001C61 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,7 +140,8 @@
 		FD0F54EC1DC43FFB0084CDCD = {
 			isa = PBXGroup;
 			children = (
-				FD0F54F71DC43FFB0084CDCD /* BezierKit */,
+				FDB6B4181EAFD6E600001C61 /* MacDemos */,
+				FDB6B3F61EAFD6DF00001C61 /* Library */,
 				FD0F55071DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DC11EAAD01F0031A393 /* BezierKit_Mac */,
 				FD26253C1EAC7B9A00C64652 /* BezierKit_iOS */,
@@ -151,27 +152,12 @@
 		FD0F54F61DC43FFB0084CDCD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */,
+				FD0F54F51DC43FFB0084CDCD /* MacDemos.app */,
 				FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */,
 				FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */,
 				FD26253B1EAC7B9A00C64652 /* BezierKit.framework */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		FD0F54F71DC43FFB0084CDCD /* BezierKit */ = {
-			isa = PBXGroup;
-			children = (
-				FD3104731E6E3D6A001CB39F /* Lib */,
-				FD0F54F81DC43FFB0084CDCD /* AppDelegate.swift */,
-				FDD476621DC44EDB00A1FAF3 /* DemoView.swift */,
-				FD3104711E6E356C001CB39F /* Demos.swift */,
-				FDD7ABF01DCC58A50059D787 /* Draggable.swift */,
-				FD0F54FA1DC43FFB0084CDCD /* Assets.xcassets */,
-				FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */,
-				FD0F54FF1DC43FFB0084CDCD /* Info.plist */,
-			);
-			path = BezierKit;
 			sourceTree = "<group>";
 		};
 		FD0F55071DC43FFB0084CDCD /* BezierKitTests */ = {
@@ -192,30 +178,6 @@
 			path = BezierKit_iOS;
 			sourceTree = "<group>";
 		};
-		FD3104731E6E3D6A001CB39F /* Lib */ = {
-			isa = PBXGroup;
-			children = (
-				FD5EC36A1DC5A5D70079982F /* Draw.swift */,
-				FDD7ABF41DCC68D10059D787 /* Utils.swift */,
-				FDD7ABF21DCC59FC0059D787 /* Types.swift */,
-				FDADC2F81DE6823C00B2D384 /* PolyBezier.swift */,
-				FD31E6551E7CD15D00B6E4F9 /* Point */,
-				FDE5E2F41E6A51FF001F51DE /* Curve */,
-			);
-			name = Lib;
-			sourceTree = "<group>";
-		};
-		FD31E6551E7CD15D00B6E4F9 /* Point */ = {
-			isa = PBXGroup;
-			children = (
-				FD2F5DAE1E7C963700EDD2E0 /* Point.swift */,
-				FD31E6531E7CD14F00B6E4F9 /* Normed.swift */,
-				FD31E63E1E7C996900B6E4F9 /* VectorSpace.swift */,
-				FDECAFCD1E7CD66D00A339E8 /* Foundation-Interop.swift */,
-			);
-			name = Point;
-			sourceTree = "<group>";
-		};
 		FD4A0DC11EAAD01F0031A393 /* BezierKit_Mac */ = {
 			isa = PBXGroup;
 			children = (
@@ -225,14 +187,36 @@
 			path = BezierKit_Mac;
 			sourceTree = "<group>";
 		};
-		FDE5E2F41E6A51FF001F51DE /* Curve */ = {
+		FDB6B3F61EAFD6DF00001C61 /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				FDE5E2F01E5A69EA001F51DE /* BezierCurve.swift */,
-				FDE5E2F21E6A51F3001F51DE /* QuadraticBezierCurve.swift */,
-				FDD476601DC4422400A1FAF3 /* CubicBezierCurve.swift */,
+				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
+				FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */,
+				FDB6B3F91EAFD6DF00001C61 /* Draw.swift */,
+				FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */,
+				FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */,
+				FDB6B3FC1EAFD6DF00001C61 /* Point.swift */,
+				FDB6B3FD1EAFD6DF00001C61 /* PolyBezier.swift */,
+				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
+				FDB6B3FF1EAFD6DF00001C61 /* Types.swift */,
+				FDB6B4001EAFD6DF00001C61 /* Utils.swift */,
+				FDB6B4011EAFD6DF00001C61 /* VectorSpace.swift */,
 			);
-			name = Curve;
+			path = Library;
+			sourceTree = "<group>";
+		};
+		FDB6B4181EAFD6E600001C61 /* MacDemos */ = {
+			isa = PBXGroup;
+			children = (
+				FDB6B4191EAFD6E600001C61 /* AppDelegate.swift */,
+				FDB6B41A1EAFD6E600001C61 /* Assets.xcassets */,
+				FDB6B41B1EAFD6E600001C61 /* MainMenu.xib */,
+				FDB6B41D1EAFD6E600001C61 /* Demos.swift */,
+				FDB6B41E1EAFD6E600001C61 /* DemoView.swift */,
+				FDB6B41F1EAFD6E600001C61 /* Draggable.swift */,
+				FDB6B4201EAFD6E600001C61 /* Info.plist */,
+			);
+			path = MacDemos;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,9 +241,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */ = {
+		FD0F54F41DC43FFB0084CDCD /* MacDemos */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitMacDemos" */;
+			buildConfigurationList = FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "MacDemos" */;
 			buildPhases = (
 				FD0F54F11DC43FFB0084CDCD /* Sources */,
 				FD0F54F21DC43FFB0084CDCD /* Frameworks */,
@@ -271,9 +255,9 @@
 			dependencies = (
 				FD4A0E111EAC794B0031A393 /* PBXTargetDependency */,
 			);
-			name = BezierKitMacDemos;
+			name = MacDemos;
 			productName = BezierKit;
-			productReference = FD0F54F51DC43FFB0084CDCD /* BezierKitMacDemos.app */;
+			productReference = FD0F54F51DC43FFB0084CDCD /* MacDemos.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FD0F55031DC43FFB0084CDCD /* BezierKitTests */ = {
@@ -337,7 +321,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0800;
-				LastUpgradeCheck = 0820;
+				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = "Holmes Futrell";
 				TargetAttributes = {
 					FD0F54F41DC43FFB0084CDCD = {
@@ -372,7 +356,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */,
+				FD0F54F41DC43FFB0084CDCD /* MacDemos */,
 				FD0F55031DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */,
 				FD26253A1EAC7B9A00C64652 /* BezierKit_iOS */,
@@ -385,8 +369,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD0F54FB1DC43FFB0084CDCD /* Assets.xcassets in Resources */,
-				FD0F54FE1DC43FFB0084CDCD /* MainMenu.xib in Resources */,
+				FDB6B4301EAFD6F600001C61 /* Assets.xcassets in Resources */,
+				FDB6B4311EAFD6F900001C61 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,10 +402,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD4A0DDD1EAAD6AB0031A393 /* AppDelegate.swift in Sources */,
-				FDD7ABF11DCC58A50059D787 /* Draggable.swift in Sources */,
-				FD4A0DD91EAAD0500031A393 /* DemoView.swift in Sources */,
-				FD4A0DDB1EAAD05C0031A393 /* Demos.swift in Sources */,
+				FDB6B4321EAFD6FD00001C61 /* Demos.swift in Sources */,
+				FDB6B4331EAFD6FF00001C61 /* DemoView.swift in Sources */,
+				FDB6B42F1EAFD6F200001C61 /* AppDelegate.swift in Sources */,
+				FDB6B4341EAFD70200001C61 /* Draggable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -437,17 +421,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD89E3A61EAC7C0500494D50 /* Foundation-Interop.swift in Sources */,
-				FD89E3A21EAC7BF800494D50 /* PolyBezier.swift in Sources */,
-				FD89E3A51EAC7BFF00494D50 /* VectorSpace.swift in Sources */,
-				FD89E3A91EAC7C0E00494D50 /* CubicBezierCurve.swift in Sources */,
-				FD89E3A31EAC7BFA00494D50 /* Point.swift in Sources */,
-				FD89E3A71EAC7C0800494D50 /* BezierCurve.swift in Sources */,
-				FD89E3A41EAC7BFD00494D50 /* Normed.swift in Sources */,
-				FD89E3A11EAC7BF500494D50 /* Types.swift in Sources */,
-				FD89E3A81EAC7C0B00494D50 /* QuadraticBezierCurve.swift in Sources */,
-				FD89E39F1EAC7BEF00494D50 /* Draw.swift in Sources */,
-				FD89E3A01EAC7BF100494D50 /* Utils.swift in Sources */,
+				FDB6B40B1EAFD6DF00001C61 /* Normed.swift in Sources */,
+				FDB6B4111EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
+				FDB6B4091EAFD6DF00001C61 /* Foundation-Interop.swift in Sources */,
+				FDB6B40D1EAFD6DF00001C61 /* Point.swift in Sources */,
+				FDB6B40F1EAFD6DF00001C61 /* PolyBezier.swift in Sources */,
+				FDB6B4151EAFD6DF00001C61 /* Utils.swift in Sources */,
+				FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */,
+				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
+				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
+				FDB6B4171EAFD6DF00001C61 /* VectorSpace.swift in Sources */,
+				FDB6B4051EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -455,17 +439,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD4A0DD11EAAD0380031A393 /* Normed.swift in Sources */,
-				FD4A0DD61EAAD0480031A393 /* CubicBezierCurve.swift in Sources */,
-				FD4A0DDC1EAAD0690031A393 /* Draw.swift in Sources */,
-				FD4A0DD21EAAD03B0031A393 /* VectorSpace.swift in Sources */,
-				FD4A0DD41EAAD0410031A393 /* BezierCurve.swift in Sources */,
-				FD4A0DD51EAAD0440031A393 /* QuadraticBezierCurve.swift in Sources */,
-				FD4A0DD01EAAD0350031A393 /* Point.swift in Sources */,
-				FD4A0DCF1EAAD0310031A393 /* PolyBezier.swift in Sources */,
-				FD4A0DCD1EAAD02A0031A393 /* Utils.swift in Sources */,
-				FD4A0DD31EAAD03E0031A393 /* Foundation-Interop.swift in Sources */,
-				FD4A0DCE1EAAD02D0031A393 /* Types.swift in Sources */,
+				FDB6B40A1EAFD6DF00001C61 /* Normed.swift in Sources */,
+				FDB6B4101EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
+				FDB6B4081EAFD6DF00001C61 /* Foundation-Interop.swift in Sources */,
+				FDB6B40C1EAFD6DF00001C61 /* Point.swift in Sources */,
+				FDB6B40E1EAFD6DF00001C61 /* PolyBezier.swift in Sources */,
+				FDB6B4141EAFD6DF00001C61 /* Utils.swift in Sources */,
+				FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */,
+				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
+				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
+				FDB6B4161EAFD6DF00001C61 /* VectorSpace.swift in Sources */,
+				FDB6B4041EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -474,7 +458,7 @@
 /* Begin PBXTargetDependency section */
 		FD0F55061DC43FFB0084CDCD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FD0F54F41DC43FFB0084CDCD /* BezierKitMacDemos */;
+			target = FD0F54F41DC43FFB0084CDCD /* MacDemos */;
 			targetProxy = FD0F55051DC43FFB0084CDCD /* PBXContainerItemProxy */;
 		};
 		FD4A0E111EAC794B0031A393 /* PBXTargetDependency */ = {
@@ -485,10 +469,10 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		FD0F54FC1DC43FFB0084CDCD /* MainMenu.xib */ = {
+		FDB6B41B1EAFD6E600001C61 /* MainMenu.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				FD0F54FD1DC43FFB0084CDCD /* Base */,
+				FDB6B41C1EAFD6E600001C61 /* Base */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -537,7 +521,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -581,7 +566,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -594,7 +580,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = BezierKit/Info.plist;
+				INFOPLIST_FILE = MacDemos/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKitMacDemos;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -608,7 +594,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = BezierKit/Info.plist;
+				INFOPLIST_FILE = MacDemos/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKitMacDemos;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -651,7 +637,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -659,7 +645,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = BezierKit_iOS/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
 				PRODUCT_NAME = BezierKit;
@@ -677,7 +663,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -685,7 +671,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = BezierKit_iOS/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
 				PRODUCT_NAME = BezierKit;
@@ -714,6 +700,7 @@
 				INFOPLIST_FILE = BezierKit_Mac/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
@@ -738,6 +725,7 @@
 				INFOPLIST_FILE = BezierKit_Mac/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
@@ -759,7 +747,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitMacDemos" */ = {
+		FD0F550D1DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "MacDemos" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FD0F550E1DC43FFB0084CDCD /* Debug */,

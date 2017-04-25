@@ -26,7 +26,7 @@ Pod::Spec.new do |s|
   #   * Finally, don't worry about the indent, CocoaPods strips it!
   s.description  = <<-DESC
   					A library for performing Bezier curve computation.
-  					Create linear, quadratic, cubic, or even higher order Bezier curves.
+  					Create quadratic, cubic, or even higher order Bezier curves.
   					Compute values, derivatives, and normals along curves.
   					Compute lengths, extrema, bounding boxes, and hulls.
   					Split curves or create sub-curves over a given range.
@@ -76,11 +76,11 @@ Pod::Spec.new do |s|
   #
 
   # s.platform     = :ios
-  # s.platform     = :ios, "8.0"
+  # s.platform     = :ios, "9.0"
 
   #  When using multiple platforms
-  # s.ios.deployment_target = "5.0"
-  # s.osx.deployment_target = "10.7"
+  s.ios.deployment_target = "9.0"
+  s.osx.deployment_target = "10.10"
   # s.watchos.deployment_target = "2.0"
   # s.tvos.deployment_target = "9.0"
 
@@ -102,7 +102,7 @@ Pod::Spec.new do |s|
   #  Not including the public_header_files will make all headers public.
   #
 
-  s.source_files  = "BezierKit/BezierKit"
+  s.source_files  = "BezierKit/Library"
   s.exclude_files = "Classes/Exclude"
 
   # s.public_header_files = "Classes/**/*.h"
