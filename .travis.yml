@@ -9,28 +9,26 @@ env:
   - IOS_SDK=iphonesimulator10.3
   - OSX_SCHEME=BezierKit_Mac
   - OSX_SDK=macosx10.12
- # matrix:
- #   - DESTINATION="OS=8.0,name=iPhone 4S"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
- #   - DESTINATION="OS=9.0,name=iPhone 4S"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
- #   - DESTINATION="OS=8.0,name=iPhone 6"         SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
- #   - DESTINATION="OS=9.0,name=iPhone 6"         SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-  #  - DESTINATION="OS=10.3,name=iPhone 6"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
- #   - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+  matrix:
+    - DESTINATION="OS=8.0,name=iPhone 4S"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=9.0,name=iPhone 4S"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=8.0,name=iPhone 6"         SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=9.0,name=iPhone 6"         SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=10.3,name=iPhone 6"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
 
 script:
   - set -o pipefail
   - xcodebuild -version
   - xcodebuild -showsdks
   - xcodebuild test -project BezierKit/BezierKit.xcodeproj -list -sdk iphonesimulator10.3
-  - xcodebuild -project BezierKit/BezierKit.xcodeproj -scheme BezierKit_iOS -sdk iphonesimulator10.3 -destination OS="10.3,name=iPhone 6" -configuration Debug ONLY_ACTIVE_ARCH=NO test
-
 
   # Build Framework in Debug and Run Tests if specified
-#  - if [ $RUN_TESTS == "YES" ]; then
-#      xcodebuild -project "$PROJECT" -scheme "$SCHEME" -sdk "$SDK" -destination "$DESTINATION" -configuration Debug ONLY_ACTIVE_ARCH=NO test | xcpretty -c;
- #   else
- #     xcodebuild -project "$PROJECT" -scheme "$SCHEME" -sdk "$SDK" -destination "$DESTINATION" -configuration Debug ONLY_ACTIVE_ARCH=NO build | xcpretty -c;
-#    fi
+  - if [ $RUN_TESTS == "YES" ]; then
+      xcodebuild -project "$PROJECT" -scheme "$SCHEME" -sdk "$SDK" -destination "$DESTINATION" -configuration Debug ONLY_ACTIVE_ARCH=NO test | xcpretty -c;
+    else
+      xcodebuild -project "$PROJECT" -scheme "$SCHEME" -sdk "$SDK" -destination "$DESTINATION" -configuration Debug ONLY_ACTIVE_ARCH=NO build | xcpretty -c;
+    fi
 
   # Run `pod lib lint` if specified
 #  - if [ $POD_LINT == "YES" ]; then
