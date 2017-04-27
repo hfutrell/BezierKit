@@ -21,6 +21,7 @@ script:
   - set -o pipefail
   - xcodebuild -version
   - xcodebuild -showsdks
+  - xcodebuild test -project BezierKit/BezierKit.xcodeproj -list -sdk iphonesimulator10.3
 
   # Build Framework in Debug and Run Tests if specified
   - if [ $RUN_TESTS == "YES" ]; then
