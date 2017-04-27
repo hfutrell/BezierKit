@@ -10,10 +10,7 @@ env:
   - OSX_SCHEME=BezierKit_Mac
   - OSX_SDK=macosx10.12
   matrix:
-    - DESTINATION="OS=8.1,name=iPhone 4S"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-    - DESTINATION="OS=9.0,name=iPhone 4S"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-    - DESTINATION="OS=8.1,name=iPhone 6"         SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-    - DESTINATION="OS=9.0,name=iPhone 6"         SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=9.0,name=iPhone 5"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
     - DESTINATION="OS=10.3,name=iPhone 6"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
     - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
 
