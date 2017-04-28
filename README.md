@@ -1,4 +1,4 @@
-https://travis-ci.org/hfutrell/BezierKit.svg?branch=0.0.2-release
+[![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 
 # BezierKit
 a library for dealing with bezier curves
