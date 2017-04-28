@@ -1,3 +1,5 @@
+https://travis-ci.org/hfutrell/BezierKit.svg?branch=0.0.2-release
+
 # BezierKit
 a library for dealing with bezier curves
 
