@@ -1,8 +1,9 @@
-[![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=0.0.2-release)](https://travis-ci.org/hfutrell/BezierKit)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # BezierKit
 a library for dealing with bezier curves
+
+[![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=0.0.2-release)](https://travis-ci.org/hfutrell/BezierKit)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Goals for v0.0.2
 1. unit testing
