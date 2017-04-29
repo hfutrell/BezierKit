@@ -8,29 +8,23 @@
 
 import Foundation
 
-public class QuadraticBezierCurve: BezierCurve {
+public struct QuadraticBezierCurve: BezierCurve {
     
-    public var p0: BKPoint {
-        return self.points[0]
-    }
-    public var p1: BKPoint {
-        return self.points[1]
-    }
-    public var p2: BKPoint {
-        return self.points[2]
-    }
+    let p0, p1, p2: BKPoint
     
-    public override init(points: [BKPoint]) {
+    public init(points: [BKPoint]) {
         precondition(points.count == 3)
-        super.init(points: points)
+        self.p0 = points[0]
+        self.p1 = points[1]
+        self.p2 = points[2]
     }
     
-    public convenience init(p0: BKPoint, p1: BKPoint, p2: BKPoint) {
+    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint) {
         let points = [p0, p1, p2]
         self.init(points: points)
     }
     
-    public convenience init(p0: BKPoint, p1: BKPoint, p2: BKPoint, t: BKFloat = 0.5) {
+    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, t: BKFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
             self.init(p0: p1, p1: p1, p2: p2)
@@ -45,6 +39,13 @@ public class QuadraticBezierCurve: BezierCurve {
         }
     }
 
+    public var points: [BKPoint] {
+        return [p0, p1, p2]
+    }
+    
+    public var order: Int {
+        return 2
+    }
     
     // MARK: quadratic specific methods
     

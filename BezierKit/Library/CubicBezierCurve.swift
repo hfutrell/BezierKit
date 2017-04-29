@@ -8,32 +8,32 @@
 
 import Foundation
 
-public class CubicBezierCurve: BezierCurve {
+public struct CubicBezierCurve: BezierCurve {
  
-    public var p0: BKPoint {
-        return self.points[0]
-    }
-    public var p1: BKPoint {
-        return self.points[1]
-    }
-    public var p2: BKPoint {
-        return self.points[2]
-    }
-    public var p3: BKPoint {
-        return self.points[3]
+    let p0, p1, p2, p3: BKPoint
+    
+    public var points: [BKPoint] {
+        return [p0, p1, p2, p3]
     }
     
-    public override init(points: [BKPoint]) {
+    public var order: Int {
+        return 3
+    }
+    
+    public init(points: [BKPoint]) {
         precondition(points.count == 4)
-        super.init(points: points)
+        self.p0 = points[0]
+        self.p1 = points[1]
+        self.p2 = points[2]
+        self.p3 = points[3]
     }
     
-    public convenience init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
+    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
         let points = [p0, p1, p2, p3]
         self.init(points: points)
     }
 
-    public convenience init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
+    public init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
                 
         let abc = Utils.getABC(n: 3, S: S, B: B, E: E, t: t)
         

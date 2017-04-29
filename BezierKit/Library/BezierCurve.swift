@@ -10,10 +10,10 @@ import Foundation
 
 public typealias DistanceFunction = (_ v: BKFloat) -> BKFloat
 
-public struct Subcurve {
+public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t1: BKFloat
     public let t2: BKFloat
-    public let curve: BezierCurve
+    public let curve: CurveType
     
     internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
         let tr = Utils.map(t2, t1, 1, 0, 1)
@@ -24,7 +24,7 @@ public struct Subcurve {
         let p2 = quadratic ? [h2[0], h2[3], h2[5]] : [h2[0], h2[4], h2[7], h2[9]]
         return Subcurve(t1: Utils.map(t1, 0,1, self.t1, self.t2),
                         t2: Utils.map(t2, 0,1, self.t1, self.t2),
-                        curve: BezierCurve.curveWithPoints(points: p2))
+                        curve: CurveType.init(points: p2))
     }
     
     internal func split(at t: BKFloat) -> (left: Subcurve, right: Subcurve) {
@@ -35,8 +35,8 @@ public struct Subcurve {
         let pointsLeft = quadratic ? [h[0], h[3], h[5]] : [h[0], h[4], h[7], h[9]]
         let pointsRight = quadratic ? [h[5], h[4], h[2]] : [h[9], h[8], h[6], h[3]]
         
-        let left = BezierCurve.curveWithPoints(points: pointsLeft)
-        let right = BezierCurve.curveWithPoints(points: pointsRight)
+        let left = CurveType.init(points: pointsLeft)
+        let right = CurveType.init(points: pointsRight)
         
         let subcurveLeft = Subcurve(t1: Utils.map(0, 0,1, self.t1, self.t2),
                                     t2: Utils.map(t, 0,1, self.t1, self.t2),
@@ -50,41 +50,20 @@ public struct Subcurve {
 
 // MARK: -
 
-public class BezierCurve {
-    
+public class BezierCurveConstants {
     public static let defaultCurveIntersectionThreshold: BKFloat = 0.5
+}
+
+extension BezierCurve {
     
-    public let points: [BKPoint]
-    internal let order: Int
-    internal var threeD: Bool {
+    
+    // MARK: -
+    
+    var threeD: Bool {
         return BKPoint.dimensions == 3
     }
     
-    // MARK: - factory method
-    public static func curveWithPoints(points: [BKPoint]) -> BezierCurve {
-        if points.count == 3 {
-            return QuadraticBezierCurve(points: points)
-        }
-        else if points.count == 4 {
-            return CubicBezierCurve(points: points)
-        }
-        else {
-            return BezierCurve(points: points)
-        }
-    }
-    
-    // MARK: - initializers
-    
-    internal init(points: [BKPoint]) {
-        // internal because external users should use factory method
-        // to get back proper subclass
-        self.points = points
-        self.order = points.count - 1
-    }
-            
-    // MARK: -
-    
-    private lazy var dpoints: [[BKPoint]] = {
+    private var dpoints: [[BKPoint]] {
         var ret: [[BKPoint]] = []
         var p: [BKPoint] = self.points
         ret.reserveCapacity(p.count-1)
@@ -100,30 +79,30 @@ public class BezierCurve {
             p = list
         }
         return ret
-    }()
+    }
     
-    private lazy var clockwise: Bool = {
+    private var clockwise: Bool {
         let points = self.points
         let angle = Utils.angle(o: points[0], v1: points[self.order], v2: points[1])
         return angle > 0
-    }()
+    }
     
-    internal lazy var simple: Bool =  {
+    internal var simple: Bool {
         if self.order == 3 {
-            var a1 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[1])
-            var a2 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[2])
+            let a1 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[1])
+            let a2 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[2])
             if a1>0 && a2<0 || a1<0 && a2>0 {
                 return false
             }
         }
-        var n1 = self.normal(0)
-        var n2 = self.normal(1)
-        var s = n1.dot(n2)
-        var angle: BKFloat = BKFloat(abs(acos(Double(s))))
+        let n1 = self.normal(0)
+        let n2 = self.normal(1)
+        let s = n1.dot(n2)
+        let angle: BKFloat = BKFloat(abs(acos(Double(s))))
         return angle < (BKFloat.pi / 3.0)
-    }()
+    }
     
-    private lazy var linear: Bool = {
+    private var linear: Bool {
         let order = self.order
         let points = self.points
         var a = Utils.align(points, p1:points[0], p2:points[order])
@@ -134,7 +113,7 @@ public class BezierCurve {
             }
         }
         return true
-    }()
+    }
     
     /*
      Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
@@ -142,7 +121,7 @@ public class BezierCurve {
     public func length() -> BKFloat {
         return Utils.length({(_ t: BKFloat) in self.derivative(t)})
     }
-        
+    
     // MARK:
     
     // computes the extrema for each dimension
@@ -181,7 +160,7 @@ public class BezierCurve {
         return (xyz: xyz, values: values)
     }
     
-    public lazy var boundingBox: BoundingBox = {
+    public var boundingBox: BoundingBox {
         let extrema = self.internalExtrema(includeInflection: false)
         let p0 = self.compute(0)
         let p1 = self.compute(1)
@@ -195,7 +174,7 @@ public class BezierCurve {
             result.max[d] = max
         }
         return result
-    }()
+    }
     
     // MARK: -
     public func hull(_ t: BKFloat) -> [BKPoint] {
@@ -327,10 +306,10 @@ public class BezierCurve {
         }
         return self.threeD ? normal3(t) : normal2(t)
     }
-
+    
     // MARK: -
     
-    public func split(at t1: BKFloat) -> (left: BezierCurve, right: BezierCurve) {
+    public func split(at t1: BKFloat) -> (left: Self, right: Self) {
         assert(t1 > 0)
         assert(t1 < 1)
         let fullcurve = Subcurve(t1: 0, t2: 1, curve: self)
@@ -338,7 +317,7 @@ public class BezierCurve {
         return (left: splitResult.left.curve, right: splitResult.right.curve)
     }
     
-    public func split(from t1: BKFloat, to t2: BKFloat) -> BezierCurve {
+    public func split(from t1: BKFloat, to t2: BKFloat) -> Self {
         assert( t2 > t1 )
         let fullcurve = Subcurve(t1: 0, t2: 1, curve: self)
         return fullcurve.split(from: t1, to: t2).curve
@@ -353,7 +332,7 @@ public class BezierCurve {
      
      
      */
-    public func reduce() -> [Subcurve] {
+    public func reduce() -> [Subcurve<Self>] {
         let step: BKFloat = 0.01
         var extrema: [BKFloat] = self.extrema().values
         extrema = extrema.filter {
@@ -372,7 +351,7 @@ public class BezierCurve {
         extrema.append(1.0)
         
         // first pass: split on extrema
-        var pass1: [Subcurve] = []
+        var pass1: [Subcurve<Self>] = []
         for i in 0..<extrema.count-1 {
             let t1 = extrema[i]
             let t2 = extrema[i+1]
@@ -396,8 +375,8 @@ public class BezierCurve {
         }
         
         // second pass: further reduce these segments to simple segments
-        var pass2: [Subcurve] = []
-        pass1.forEach({(p1: Subcurve) in
+        var pass2: [Subcurve<Self>] = []
+        pass1.forEach({(p1: Subcurve<Self>) in
             var t1: BKFloat = 0.0
             while t1 < 1.0 {
                 let fullSegment = p1.split(from: t1, to: 1.0)
@@ -425,20 +404,20 @@ public class BezierCurve {
     /*
      Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
      */
-    public func scale(distance d: BKFloat) -> BezierCurve {
+    public func scale(distance d: BKFloat) -> Self {
         return internalScale(distance: d, distanceFunction: nil)
     }
     
-    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> BezierCurve {
+    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> Self {
         return internalScale(distance: nil, distanceFunction: distanceFn)
     }
     
-    private enum ScaleEnum {
-        case d(BKFloat)
-        case distanceFunction(DistanceFunction)
-    }
+//    private enum ScaleEnum {
+//        case d(BKFloat)
+//        case distanceFunction(DistanceFunction)
+//    }
     
-    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> BezierCurve {
+    private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> Self {
         
         // TODO: this is a good candidate for enum, d is EITHER constant or a function
         assert((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
@@ -481,7 +460,7 @@ public class BezierCurve {
                 let p2 = p + d
                 np[t+1] = Utils.lli4(p, p2, o!, points[t+1])!
             }
-            return BezierCurve.curveWithPoints(points: np)
+            return Self.init(points: np)
         }
         else {
             
@@ -498,7 +477,7 @@ public class BezierCurve {
                 }
                 np[t+1] = p + rc * ov
             }
-            return BezierCurve.curveWithPoints(points: np)
+            return Self.init(points: np)
         }
     }
     
@@ -510,10 +489,10 @@ public class BezierCurve {
             let coords: [BKPoint] = self.points.map({(p: BKPoint) -> BKPoint in
                 return p + d * n
             })
-            return [BezierCurve.curveWithPoints(points: coords)]
+            return [Self.init(points: coords)]
         }
         // for non-linear curves we need to create a set of curves
-        let reduced: [Subcurve] = self.reduce()
+        let reduced: [Subcurve<Self>] = self.reduce()
         return reduced.map({
             return $0.curve.scale(distance: d)
         })
@@ -566,7 +545,7 @@ public class BezierCurve {
         return p
     }
     
-    public func intersects(line: Line, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [BKFloat] {
+    public func intersects(line: Line, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [BKFloat] {
         let mx = min(line.p1.x, line.p2.x)
         let my = min(line.p1.y, line.p2.y)
         let MX = max(line.p1.x, line.p2.x)
@@ -577,7 +556,7 @@ public class BezierCurve {
         })
     }
     
-    public func intersects(curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
         let reduced = self.reduce()
         // "simple" curves cannot intersect with their direct
         // neighbour, so for each segment X we check whether
@@ -588,22 +567,22 @@ public class BezierCurve {
             for i in 0..<len {
                 let left = [reduced[i]]
                 let right = Array(reduced.suffix(from: i+2))
-                let result = BezierCurve.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
+                let result = Self.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
                 results += result
             }
         }
         return results
     }
     
-    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Intersection] {
-        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
-        return BezierCurve.internalCurvesIntersect(c1: [Subcurve(t1: 0.0, t2: 1.0, curve: self)],
-                                                   c2: [Subcurve(t1: 0.0, t2: 1.0, curve: curve)],
-                                                   curveIntersectionThreshold: curveIntersectionThreshold)
+    public func intersects<CurveType>(curve: CurveType, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] where CurveType: BezierCurve {
+//        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
+        return Self.internalCurvesIntersect(c1: [Subcurve<Self>(t1: 0.0, t2: 1.0, curve: self)],
+                                            c2: [Subcurve<CurveType>(t1: 0.0, t2: 1.0, curve: curve)],
+                                            curveIntersectionThreshold: curveIntersectionThreshold)
     }
     
-    private static func internalCurvesIntersect(c1: [Subcurve], c2: [Subcurve], curveIntersectionThreshold: BKFloat) -> [Intersection] {
-        var pairs: [(left: Subcurve, right: Subcurve)] = []
+    private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], curveIntersectionThreshold: BKFloat) -> [Intersection] {
+        var pairs: [(left: Subcurve<C1>, right: Subcurve<C2>)] = []
         // step 1: pair off any overlapping segments
         for l in c1 {
             for r in c2 {
@@ -671,7 +650,7 @@ public class BezierCurve {
         // reverse the "return" outline
         bcurves = bcurves.map({(s: BezierCurve) in
             let p = s.points
-            return BezierCurve.curveWithPoints(points: p.reversed())
+            return type(of: s).init(points: p.reversed())
         }).reversed()
         
         // form the endcaps as lines
@@ -690,11 +669,11 @@ public class BezierCurve {
     
     // MARK: shapes
     
-    public func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Shape] {
         return self.outlineShapes(distance: d1, d2: d1, curveIntersectionThreshold: curveIntersectionThreshold)
     }
     
-    public func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = defaultCurveIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Shape] {
         var outline = self.outline(distance: d1, d2: d2).curves
         var shapes: [Shape] = []
         let len = outline.count
@@ -802,4 +781,14 @@ public class BezierCurve {
         let circles: [Arc] = []
         return iterate(errorThreshold: errorThreshold, circles: circles)
     }
+}
+
+public protocol BezierCurve {
+    
+//    associatedtype P: Point
+    
+    var points: [BKPoint] { get }
+    var order: Int { get }
+    init(points: [BKPoint])
+
 }

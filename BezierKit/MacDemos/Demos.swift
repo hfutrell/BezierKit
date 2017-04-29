@@ -243,28 +243,28 @@ class Demos {
                                 Draw.drawPoint(context, origin: curve.offset(t: 0.5, distance: 25))
                                 
     })
-    static let demo14 = Demo(title: ".reduce(t)",
-                             quadraticControlPoints: quadraticControlPoints,
-                             cubicControlPoints: cubicControlPoints,
-                             drawFunction: {(context: CGContext, demoState: DemoState) in
-                                let curve = demoState.curve!
-                                Draw.drawSkeleton(context, curve: curve)
-                                let reduced = curve.reduce()
-                                if reduced.count > 0 {
-                                    for i in 0..<reduced.count {
-                                        let c = reduced[i].curve
-                                        Draw.setColor(context, color: Draw.black)
-                                        if i > 0 {
-                                            Draw.drawCircle(context, center: c.points[0], radius: 3)
-                                        }
-                                        Draw.setRandomColor(context)
-                                        Draw.drawCurve(context, curve: c)
-                                    }
-                                }
-                                else {
-                                    Draw.drawCurve(context, curve: curve)
-                                }
-    })
+//    static let demo14 = Demo(title: ".reduce(t)",
+//                             quadraticControlPoints: quadraticControlPoints,
+//                             cubicControlPoints: cubicControlPoints,
+//                             drawFunction: {(context: CGContext, demoState: DemoState) in
+//                                let curve = demoState.curve!
+//                                Draw.drawSkeleton(context, curve: curve)
+//                                let reduced = curve.reduce()
+//                                if reduced.count > 0 {
+//                                    for i in 0..<reduced.count {
+//                                        let c = reduced[i].curve
+//                                        Draw.setColor(context, color: Draw.black)
+//                                        if i > 0 {
+//                                            Draw.drawCircle(context, center: c.points[0], radius: 3)
+//                                        }
+//                                        Draw.setRandomColor(context)
+//                                        Draw.drawCurve(context, curve: c)
+//                                    }
+//                                }
+//                                else {
+//                                    Draw.drawCurve(context, curve: curve)
+//                                }
+//    })
     static let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
@@ -278,30 +278,30 @@ class Demos {
                                     Draw.draw(context, arc: arc)
                                 }
     })
-    static let demo16 = Demo(title: ".scale(d)",
-                             quadraticControlPoints: quadraticControlPoints,
-                             cubicControlPoints: cubicControlPoints,
-                             drawFunction: {(context: CGContext, demoState: DemoState) in
-                                let curve = demoState.curve!
-                                Draw.drawSkeleton(context, curve: curve)
-                                Draw.setColor(context, color: Draw.black)
-                                let reduced = curve.reduce()
-                                if reduced.count > 0 {
-                                    for i in 0..<reduced.count {
-                                        let c = reduced[i].curve
-                                        if i > 0 {
-                                            Draw.drawCircle(context, center: c.points[0], radius: 3)
-                                        }
-                                        Draw.drawCurve(context, curve: c)
-                                    }
-                                    for i in stride(from: -30, through: 30, by: 10) {
-                                        Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)))
-                                    }
-                                }
-                                else {
-                                    Draw.drawCurve(context, curve: curve)
-                                }
-    })
+//    static let demo16 = Demo(title: ".scale(d)",
+//                             quadraticControlPoints: quadraticControlPoints,
+//                             cubicControlPoints: cubicControlPoints,
+//                             drawFunction: {(context: CGContext, demoState: DemoState) in
+//                                let curve = demoState.curve!
+//                                Draw.drawSkeleton(context, curve: curve)
+//                                Draw.setColor(context, color: Draw.black)
+//                                let reduced = curve.reduce()
+//                                if reduced.count > 0 {
+//                                    for i in 0..<reduced.count {
+//                                        let c = reduced[i].curve
+//                                        if i > 0 {
+//                                            Draw.drawCircle(context, center: c.points[0], radius: 3)
+//                                        }
+//                                        Draw.drawCurve(context, curve: c)
+//                                    }
+//                                    for i in stride(from: -30, through: 30, by: 10) {
+//                                        Draw.drawCurve(context, curve: reduced[(reduced.count/2)].curve.scale(distance: BKFloat(i)))
+//                                    }
+//                                }
+//                                else {
+//                                    Draw.drawCurve(context, curve: curve)
+//                                }
+//    })
     static let demo17 = Demo(title: ".outline(d)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: [CGPoint(x: 102, y: 33),
@@ -377,20 +377,20 @@ class Demos {
                                     Draw.drawPoint(context, origin: curve.compute(intersection))
                                 }
     })
-    static let demo22 = Demo(title: ".intersects(curve)",
-                             quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
-                             cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
-                             drawFunction: {(context: CGContext, demoState: DemoState) in
-                                let curve = demoState.curve!
-                                let curve2 = demoState.quadratic ? QuadraticBezierCurve(points: [BKPoint(x: 68.0, y: 150.0), BKPoint(x: 74.0, y: 6.0), BKPoint(x: 143.0, y: 150.0)]) : CubicBezierCurve(points: [BKPoint(x: 68.0, y: 145.0), BKPoint(x: 74.0, y: 6.0), BKPoint(x: 143.0, y: 197.0), BKPoint(x: 138.0, y: 55.0)])
-                                Draw.drawSkeleton(context, curve: curve)
-                                Draw.drawCurve(context, curve: curve)
-                                Draw.setColor(context, color: Draw.red)
-                                Draw.drawCurve(context, curve: curve2)
-                                Draw.setColor(context, color: Draw.black)
-                                for intersection in curve.intersects(curve: curve2) {
-                                    Draw.drawPoint(context, origin: curve.compute(intersection.t1))
-                                }
-    })
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22]
+//    static let demo22 = Demo(title: ".intersects(curve)",
+//                             quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
+//                             cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
+//                             drawFunction: {(context: CGContext, demoState: DemoState) in
+//                                let curve = demoState.curve!
+//                                let curve2 = demoState.quadratic ? QuadraticBezierCurve(points: [BKPoint(x: 68.0, y: 150.0), BKPoint(x: 74.0, y: 6.0), BKPoint(x: 143.0, y: 150.0)]) : CubicBezierCurve(points: [BKPoint(x: 68.0, y: 145.0), BKPoint(x: 74.0, y: 6.0), BKPoint(x: 143.0, y: 197.0), BKPoint(x: 138.0, y: 55.0)])
+//                                Draw.drawSkeleton(context, curve: curve)
+//                                Draw.drawCurve(context, curve: curve)
+//                                Draw.setColor(context, color: Draw.red)
+//                                Draw.drawCurve(context, curve: curve2)
+//                                Draw.setColor(context, color: Draw.black)
+//                                for intersection in curve.intersects(curve: curve2) {
+//                                    Draw.drawPoint(context, origin: curve.compute(intersection.t1))
+//                                }
+//    })
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, /*demo14,*/ demo15, /*demo16,*/ demo17, demo18, demo19, demo20, demo21/*, demo22*/]
 }
