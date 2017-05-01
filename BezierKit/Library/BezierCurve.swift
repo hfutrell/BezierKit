@@ -87,21 +87,6 @@ extension BezierCurve {
         return angle > 0
     }
     
-    internal var simple: Bool {
-        if self.order == 3 {
-            let a1 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[1])
-            let a2 = Utils.angle(o: self.points[0], v1: self.points[3], v2: self.points[2])
-            if a1>0 && a2<0 || a1<0 && a2>0 {
-                return false
-            }
-        }
-        let n1 = self.normal(0)
-        let n2 = self.normal(1)
-        let s = n1.dot(n2)
-        let angle: BKFloat = BKFloat(abs(acos(Double(s))))
-        return angle < (BKFloat.pi / 3.0)
-    }
-    
     private var linear: Bool {
         let order = self.order
         let points = self.points
@@ -246,32 +231,7 @@ extension BezierCurve {
         return table
     }
     // MARK: -
-    
-    public func derivative(_ t: BKFloat) -> BKPoint {
-        let mt: BKFloat = 1-t
-        var a: BKFloat = 0.0
-        var b: BKFloat = 0.0
-        var c: BKFloat = 0.0
-        var p: [BKPoint] = []
-        let d: [BKPoint] = self.points
-        let k: BKFloat = BKFloat(self.points.count-1)
-        if self.order == 2 {
-            p = [k * (d[1] - d[0]), k * (d[2] - d[1]), BKPointZero]
-            a = mt
-            b = t
-        }
-        else if self.order == 3 {
-            let p0 = k * (d[1] - d[0])
-            let p1 = k * (d[2] - d[1])
-            let p2 = k * (d[3] - d[2])
-            p = [p0, p1, p2]
-            a = mt*mt
-            b = mt*t*2
-            c = t*t
-        }
-        return a*p[0] + b*p[1] + c*p[2]
-    }
-    
+        
     public func normal(_ t: BKFloat) -> BKPoint {
         func normal2(_ t: BKFloat) -> BKPoint {
             let d = self.derivative(t)
@@ -376,6 +336,7 @@ extension BezierCurve {
         
         // second pass: further reduce these segments to simple segments
         var pass2: [Subcurve<Self>] = []
+        pass2.reserveCapacity(pass1.count)
         pass1.forEach({(p1: Subcurve<Self>) in
             var t1: BKFloat = 0.0
             while t1 < 1.0 {
@@ -787,8 +748,10 @@ public protocol BezierCurve {
     
 //    associatedtype P: Point
     
+    var simple: Bool { get }
     var points: [BKPoint] { get }
     var order: Int { get }
     init(points: [BKPoint])
+    func derivative(_ t: BKFloat) -> BKPoint
 
 }

@@ -243,28 +243,28 @@ class Demos {
                                 Draw.drawPoint(context, origin: curve.offset(t: 0.5, distance: 25))
                                 
     })
-//    static let demo14 = Demo(title: ".reduce(t)",
-//                             quadraticControlPoints: quadraticControlPoints,
-//                             cubicControlPoints: cubicControlPoints,
-//                             drawFunction: {(context: CGContext, demoState: DemoState) in
-//                                let curve = demoState.curve!
-//                                Draw.drawSkeleton(context, curve: curve)
-//                                let reduced = curve.reduce()
-//                                if reduced.count > 0 {
-//                                    for i in 0..<reduced.count {
-//                                        let c = reduced[i].curve
-//                                        Draw.setColor(context, color: Draw.black)
-//                                        if i > 0 {
-//                                            Draw.drawCircle(context, center: c.points[0], radius: 3)
-//                                        }
-//                                        Draw.setRandomColor(context)
-//                                        Draw.drawCurve(context, curve: c)
-//                                    }
-//                                }
-//                                else {
-//                                    Draw.drawCurve(context, curve: curve)
-//                                }
-//    })
+    static let demo14 = Demo(title: ".reduce(t)",
+                             quadraticControlPoints: quadraticControlPoints,
+                             cubicControlPoints: cubicControlPoints,
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+                                let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
+                                Draw.drawSkeleton(context, curve: curve)
+                                let reduced = curve.reduce()
+                                if reduced.count > 0 {
+                                    for i in 0..<reduced.count {
+                                        let c = reduced[i].curve
+                                        Draw.setColor(context, color: Draw.black)
+                                        if i > 0 {
+                                            Draw.drawCircle(context, center: c.points[0], radius: 3)
+                                        }
+                                        Draw.setRandomColor(context)
+                                        Draw.drawCurve(context, curve: c)
+                                    }
+                                }
+                                else {
+                                    Draw.drawCurve(context, curve: curve)
+                                }
+    })
     static let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
@@ -392,5 +392,5 @@ class Demos {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, /*demo14,*/ demo15, /*demo16,*/ demo17, demo18, demo19, demo20, demo21, demo22]
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, /*demo16,*/ demo17, demo18, demo19, demo20, demo21, demo22]
 }

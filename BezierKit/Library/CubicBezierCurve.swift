@@ -61,4 +61,30 @@ public struct CubicBezierCurve: BezierCurve {
         
     }
     
+    public var simple: Bool {
+        let a1 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p1)
+        let a2 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p2)
+        if a1>0 && a2<0 || a1<0 && a2>0 {
+            return false
+        }
+        let n1 = self.normal(0)
+        let n2 = self.normal(1)
+        let s = n1.dot(n2)
+        let angle: BKFloat = BKFloat(abs(acos(Double(s))))
+        return angle < (BKFloat.pi / 3.0)
+    }
+    
+    public func derivative(_ t: BKFloat) -> BKPoint {
+        let mt: BKFloat = 1-t
+        let k: BKFloat = 3
+        let p0 = k * (self.p1 - self.p0)
+        let p1 = k * (self.p2 - self.p1)
+        let p2 = k * (self.p3 - self.p2)
+        let a = mt*mt
+        let b = mt*t*2
+        let c = t*t
+        return a*p0 + b*p1 + c*p2
+    }
+
+    
 }

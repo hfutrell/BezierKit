@@ -47,6 +47,24 @@ public struct QuadraticBezierCurve: BezierCurve {
         return 2
     }
     
+    public var simple: Bool {
+        let n1 = self.normal(0)
+        let n2 = self.normal(1)
+        let s = n1.dot(n2)
+        let angle: BKFloat = BKFloat(abs(acos(Double(s))))
+        return angle < (BKFloat.pi / 3.0)
+    }
+    
+    public func derivative(_ t: BKFloat) -> BKPoint {
+        let mt: BKFloat = 1-t
+        let k: BKFloat = 2
+        let p0 = k * (self.p1 - self.p0)
+        let p1 = k * (self.p2 - self.p1)
+        let a = mt*mt
+        let b = mt*t*2
+        return a*p0 + b*p1
+    }
+
     // MARK: quadratic specific methods
     
 //    public raise() -> CubicBezierCurve {

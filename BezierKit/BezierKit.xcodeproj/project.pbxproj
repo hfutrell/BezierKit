@@ -218,13 +218,13 @@
 			isa = PBXGroup;
 			children = (
 				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
+				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */,
 				FDB6B3F91EAFD6DF00001C61 /* Draw.swift */,
 				FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */,
 				FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */,
 				FDB6B3FC1EAFD6DF00001C61 /* Point.swift */,
 				FDB6B3FD1EAFD6DF00001C61 /* PolyBezier.swift */,
-				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
 				FDB6B3FF1EAFD6DF00001C61 /* Types.swift */,
 				FDB6B4001EAFD6DF00001C61 /* Utils.swift */,
 				FDB6B4011EAFD6DF00001C61 /* VectorSpace.swift */,
