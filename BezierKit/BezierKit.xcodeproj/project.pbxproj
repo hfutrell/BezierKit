@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
@@ -40,17 +39,28 @@
 		FDB6B4321EAFD6FD00001C61 /* Demos.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B41D1EAFD6E600001C61 /* Demos.swift */; };
 		FDB6B4331EAFD6FF00001C61 /* DemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B41E1EAFD6E600001C61 /* DemoView.swift */; };
 		FDB6B4341EAFD70200001C61 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B41F1EAFD6E600001C61 /* Draggable.swift */; };
+		FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB9D7321EB28CEB00413F0E /* BezierKit_iOSTests.swift */; };
+		FDB9D7351EB28CEB00413F0E /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD26253B1EAC7B9A00C64652 /* BezierKit.framework */; };
+		FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB9D7411EB28D1900413F0E /* BezierKit_MacTests.swift */; };
+		FDB9D7441EB28D1900413F0E /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		FD0F55051DC43FFB0084CDCD /* PBXContainerItemProxy */ = {
+		FD4A0E101EAC794B0031A393 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FD0F54ED1DC43FFB0084CDCD /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = FD0F54F41DC43FFB0084CDCD;
-			remoteInfo = BezierKit;
+			remoteGlobalIDString = FD4A0DBF1EAAD01F0031A393;
+			remoteInfo = BezierKit_Mac;
 		};
-		FD4A0E101EAC794B0031A393 /* PBXContainerItemProxy */ = {
+		FDB9D7361EB28CEB00413F0E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FD0F54ED1DC43FFB0084CDCD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FD26253A1EAC7B9A00C64652;
+			remoteInfo = BezierKit_iOS;
+		};
+		FDB9D7451EB28D1900413F0E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FD0F54ED1DC43FFB0084CDCD /* Project object */;
 			proxyType = 1;
@@ -75,7 +85,6 @@
 
 /* Begin PBXFileReference section */
 		FD0F54F51DC43FFB0084CDCD /* MacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTests.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FD26253B1EAC7B9A00C64652 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -102,6 +111,12 @@
 		FDB6B41E1EAFD6E600001C61 /* DemoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoView.swift; sourceTree = "<group>"; };
 		FDB6B41F1EAFD6E600001C61 /* Draggable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Draggable.swift; sourceTree = "<group>"; };
 		FDB6B4201EAFD6E600001C61 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FDB9D7301EB28CEB00413F0E /* BezierKit_iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKit_iOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDB9D7321EB28CEB00413F0E /* BezierKit_iOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKit_iOSTests.swift; sourceTree = "<group>"; };
+		FDB9D7341EB28CEB00413F0E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FDB9D73F1EB28D1900413F0E /* BezierKit_MacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKit_MacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDB9D7411EB28D1900413F0E /* BezierKit_MacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKit_MacTests.swift; sourceTree = "<group>"; };
+		FDB9D7431EB28D1900413F0E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,13 +125,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FD0F55011DC43FFB0084CDCD /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,6 +142,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FDB9D72D1EB28CEB00413F0E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDB9D7351EB28CEB00413F0E /* BezierKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDB9D73C1EB28D1900413F0E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDB9D7441EB28D1900413F0E /* BezierKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -145,6 +169,8 @@
 				FD0F55071DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DC11EAAD01F0031A393 /* BezierKit_Mac */,
 				FD26253C1EAC7B9A00C64652 /* BezierKit_iOS */,
+				FDB9D7311EB28CEB00413F0E /* BezierKit_iOSTests */,
+				FDB9D7401EB28D1900413F0E /* BezierKit_MacTests */,
 				FD0F54F61DC43FFB0084CDCD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -153,9 +179,10 @@
 			isa = PBXGroup;
 			children = (
 				FD0F54F51DC43FFB0084CDCD /* MacDemos.app */,
-				FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */,
 				FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */,
 				FD26253B1EAC7B9A00C64652 /* BezierKit.framework */,
+				FDB9D7301EB28CEB00413F0E /* BezierKit_iOSTests.xctest */,
+				FDB9D73F1EB28D1900413F0E /* BezierKit_MacTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -219,6 +246,24 @@
 			path = MacDemos;
 			sourceTree = "<group>";
 		};
+		FDB9D7311EB28CEB00413F0E /* BezierKit_iOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				FDB9D7321EB28CEB00413F0E /* BezierKit_iOSTests.swift */,
+				FDB9D7341EB28CEB00413F0E /* Info.plist */,
+			);
+			path = BezierKit_iOSTests;
+			sourceTree = "<group>";
+		};
+		FDB9D7401EB28D1900413F0E /* BezierKit_MacTests */ = {
+			isa = PBXGroup;
+			children = (
+				FDB9D7411EB28D1900413F0E /* BezierKit_MacTests.swift */,
+				FDB9D7431EB28D1900413F0E /* Info.plist */,
+			);
+			path = BezierKit_MacTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -260,24 +305,6 @@
 			productReference = FD0F54F51DC43FFB0084CDCD /* MacDemos.app */;
 			productType = "com.apple.product-type.application";
 		};
-		FD0F55031DC43FFB0084CDCD /* BezierKitTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FD0F55101DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitTests" */;
-			buildPhases = (
-				FD0F55001DC43FFB0084CDCD /* Sources */,
-				FD0F55011DC43FFB0084CDCD /* Frameworks */,
-				FD0F55021DC43FFB0084CDCD /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				FD0F55061DC43FFB0084CDCD /* PBXTargetDependency */,
-			);
-			name = BezierKitTests;
-			productName = BezierKitTests;
-			productReference = FD0F55041DC43FFB0084CDCD /* BezierKitTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		FD26253A1EAC7B9A00C64652 /* BezierKit_iOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FD2625401EAC7B9A00C64652 /* Build configuration list for PBXNativeTarget "BezierKit_iOS" */;
@@ -314,13 +341,49 @@
 			productReference = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		FDB9D72F1EB28CEB00413F0E /* BezierKit_iOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDB9D7381EB28CEB00413F0E /* Build configuration list for PBXNativeTarget "BezierKit_iOSTests" */;
+			buildPhases = (
+				FDB9D72C1EB28CEB00413F0E /* Sources */,
+				FDB9D72D1EB28CEB00413F0E /* Frameworks */,
+				FDB9D72E1EB28CEB00413F0E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FDB9D7371EB28CEB00413F0E /* PBXTargetDependency */,
+			);
+			name = BezierKit_iOSTests;
+			productName = BezierKit_iOSTests;
+			productReference = FDB9D7301EB28CEB00413F0E /* BezierKit_iOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FDB9D73E1EB28D1900413F0E /* BezierKit_MacTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDB9D7471EB28D1900413F0E /* Build configuration list for PBXNativeTarget "BezierKit_MacTests" */;
+			buildPhases = (
+				FDB9D73B1EB28D1900413F0E /* Sources */,
+				FDB9D73C1EB28D1900413F0E /* Frameworks */,
+				FDB9D73D1EB28D1900413F0E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FDB9D7461EB28D1900413F0E /* PBXTargetDependency */,
+			);
+			name = BezierKit_MacTests;
+			productName = BezierKit_MacTests;
+			productReference = FDB9D73F1EB28D1900413F0E /* BezierKit_MacTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		FD0F54ED1DC43FFB0084CDCD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0800;
+				LastSwiftUpdateCheck = 0830;
 				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = "Holmes Futrell";
 				TargetAttributes = {
@@ -328,16 +391,19 @@
 						CreatedOnToolsVersion = 8.0;
 						ProvisioningStyle = Automatic;
 					};
-					FD0F55031DC43FFB0084CDCD = {
-						CreatedOnToolsVersion = 8.0;
-						ProvisioningStyle = Automatic;
-						TestTargetID = FD0F54F41DC43FFB0084CDCD;
-					};
 					FD26253A1EAC7B9A00C64652 = {
 						CreatedOnToolsVersion = 8.3.2;
 						ProvisioningStyle = Automatic;
 					};
 					FD4A0DBF1EAAD01F0031A393 = {
+						CreatedOnToolsVersion = 8.3.2;
+						ProvisioningStyle = Automatic;
+					};
+					FDB9D72F1EB28CEB00413F0E = {
+						CreatedOnToolsVersion = 8.3.2;
+						ProvisioningStyle = Automatic;
+					};
+					FDB9D73E1EB28D1900413F0E = {
 						CreatedOnToolsVersion = 8.3.2;
 						ProvisioningStyle = Automatic;
 					};
@@ -357,9 +423,10 @@
 			projectRoot = "";
 			targets = (
 				FD0F54F41DC43FFB0084CDCD /* MacDemos */,
-				FD0F55031DC43FFB0084CDCD /* BezierKitTests */,
 				FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */,
 				FD26253A1EAC7B9A00C64652 /* BezierKit_iOS */,
+				FDB9D72F1EB28CEB00413F0E /* BezierKit_iOSTests */,
+				FDB9D73E1EB28D1900413F0E /* BezierKit_MacTests */,
 			);
 		};
 /* End PBXProject section */
@@ -371,13 +438,6 @@
 			files = (
 				FDB6B4301EAFD6F600001C61 /* Assets.xcassets in Resources */,
 				FDB6B4311EAFD6F900001C61 /* MainMenu.xib in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FD0F55021DC43FFB0084CDCD /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,6 +455,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FDB9D72E1EB28CEB00413F0E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDB9D73D1EB28D1900413F0E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -406,14 +480,6 @@
 				FDB6B4331EAFD6FF00001C61 /* DemoView.swift in Sources */,
 				FDB6B42F1EAFD6F200001C61 /* AppDelegate.swift in Sources */,
 				FDB6B4341EAFD70200001C61 /* Draggable.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FD0F55001DC43FFB0084CDCD /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FD0F55091DC43FFB0084CDCD /* BezierKitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -453,18 +519,39 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FDB9D72C1EB28CEB00413F0E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDB9D73B1EB28D1900413F0E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		FD0F55061DC43FFB0084CDCD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = FD0F54F41DC43FFB0084CDCD /* MacDemos */;
-			targetProxy = FD0F55051DC43FFB0084CDCD /* PBXContainerItemProxy */;
-		};
 		FD4A0E111EAC794B0031A393 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */;
 			targetProxy = FD4A0E101EAC794B0031A393 /* PBXContainerItemProxy */;
+		};
+		FDB9D7371EB28CEB00413F0E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FD26253A1EAC7B9A00C64652 /* BezierKit_iOS */;
+			targetProxy = FDB9D7361EB28CEB00413F0E /* PBXContainerItemProxy */;
+		};
+		FDB9D7461EB28D1900413F0E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FD4A0DBF1EAAD01F0031A393 /* BezierKit_Mac */;
+			targetProxy = FDB9D7451EB28D1900413F0E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -602,36 +689,6 @@
 			};
 			name = Release;
 		};
-		FD0F55111DC43FFB0084CDCD /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = BezierKitTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKitTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BezierKit.app/Contents/MacOS/BezierKit";
-			};
-			name = Debug;
-		};
-		FD0F55121DC43FFB0084CDCD /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = BezierKitTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = HolmesFutrell.BezierKitTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BezierKit.app/Contents/MacOS/BezierKit";
-			};
-			name = Release;
-		};
 		FD2625411EAC7B9A00C64652 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -645,9 +702,9 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = BezierKit_iOS/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -671,9 +728,9 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = BezierKit_iOS/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -701,7 +758,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
@@ -726,12 +783,71 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.myCompany.BezierKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		FDB9D7391EB28CEB00413F0E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				INFOPLIST_FILE = BezierKit_iOSTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-iOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		FDB9D73A1EB28CEB00413F0E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				INFOPLIST_FILE = BezierKit_iOSTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-iOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 3.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FDB9D7481EB28D1900413F0E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = BezierKit_MacTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-MacTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		FDB9D7491EB28D1900413F0E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = BezierKit_MacTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-MacTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -756,15 +872,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FD0F55101DC43FFB0084CDCD /* Build configuration list for PBXNativeTarget "BezierKitTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FD0F55111DC43FFB0084CDCD /* Debug */,
-				FD0F55121DC43FFB0084CDCD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		FD2625401EAC7B9A00C64652 /* Build configuration list for PBXNativeTarget "BezierKit_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -779,6 +886,24 @@
 			buildConfigurations = (
 				FD4A0DC91EAAD01F0031A393 /* Debug */,
 				FD4A0DCA1EAAD01F0031A393 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FDB9D7381EB28CEB00413F0E /* Build configuration list for PBXNativeTarget "BezierKit_iOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDB9D7391EB28CEB00413F0E /* Debug */,
+				FDB9D73A1EB28CEB00413F0E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FDB9D7471EB28D1900413F0E /* Build configuration list for PBXNativeTarget "BezierKit_MacTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDB9D7481EB28D1900413F0E /* Debug */,
+				FDB9D7491EB28D1900413F0E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
