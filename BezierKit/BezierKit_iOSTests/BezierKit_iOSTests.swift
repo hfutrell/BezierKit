@@ -13,6 +13,7 @@ class BezierKit_iOSTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
+        
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
     
@@ -26,10 +27,33 @@ class BezierKit_iOSTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
     
-    func testPerformanceExample() {
+    func testPerformanceExtrema() {
+        // should test extrema
+        // then bounding box (uses extrema)
+        // the intersect (uses bounding box)
+    }
+    
+    func randomPoint() -> BKPoint {
+        return BKPoint(x: BKFloat(drand48()), y: BKFloat(drand48()))
+    }
+
+    func randomCubicCurve() -> CubicBezierCurve {
+        let p0 = self.randomPoint()
+        let p1 = self.randomPoint()
+        let p2 = self.randomPoint()
+        let p3 = self.randomPoint()
+        let curve = CubicBezierCurve(p0: p0, p1: p1, p2: p2, p3: p3)
+        return curve
+    }
+    
+    func testPerformanceReduce() {
         // This is an example of a performance test case.
         self.measure {
             // Put the code you want to measure the time of here.
+            for _ in 0...1000 {
+                let c = self.randomCubicCurve()
+                let _: [Subcurve] = c.reduce()
+            }
         }
     }
     
