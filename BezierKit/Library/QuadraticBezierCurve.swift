@@ -65,6 +65,30 @@ public struct QuadraticBezierCurve: BezierCurve {
         return a*p0 + b*p1
     }
 
+    public func split(from t1: BKFloat, to t2: BKFloat) -> QuadraticBezierCurve {
+    
+        let h0 = self.p0
+        let h1 = self.p1
+        let h2 = self.p2
+        let h3 = Utils.lerp(t1, h0, h1)
+        let h4 = Utils.lerp(t1, h1, h2)
+        let h5 = Utils.lerp(t1, h3, h4)
+        
+        let tr = Utils.map(t2, t1, 1, 0, 1)
+        
+        let i0 = h5
+        let i1 = h4
+        let i2 = h2
+        let i3 = Utils.lerp(tr, i0, i1)
+        let i4 = Utils.lerp(tr, i1, i2)
+        let i5 = Utils.lerp(tr, i3, i4)
+        
+        return QuadraticBezierCurve(p0: i0, p1: i3, p2: i5)
+
+    
+    }
+
+    
     // MARK: quadratic specific methods
     
 //    public raise() -> CubicBezierCurve {
