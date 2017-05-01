@@ -84,11 +84,23 @@ public struct QuadraticBezierCurve: BezierCurve {
         let i5 = Utils.lerp(tr, i3, i4)
         
         return QuadraticBezierCurve(p0: i0, p1: i3, p2: i5)
-
-    
     }
 
+    public func split(at t: BKFloat) -> (left: QuadraticBezierCurve, right: QuadraticBezierCurve) {
+        // use "de Casteljau" iteration.
+        let h0 = self.p0
+        let h1 = self.p1
+        let h2 = self.p2
+        let h3 = Utils.lerp(t, h0, h1)
+        let h4 = Utils.lerp(t, h1, h2)
+        let h5 = Utils.lerp(t, h3, h4)
+        
+        let leftCurve = QuadraticBezierCurve(p0: h0, p1: h3, p2: h5)
+        let rightCurve = QuadraticBezierCurve(p0: h5, p1: h4, p2: h2)
     
+        return (left: leftCurve, right: rightCurve)
+    }
+
     // MARK: quadratic specific methods
     
 //    public raise() -> CubicBezierCurve {

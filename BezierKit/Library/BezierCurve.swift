@@ -17,8 +17,10 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     
     internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
         let curve = self.curve.split(from: t1, to: t2)
-        return Subcurve(t1: Utils.map(t1, 0,1, self.t1, self.t2),
-                        t2: Utils.map(t2, 0,1, self.t1, self.t2),
+        let t1 = self.t1
+        let t2 = self.t2
+        return Subcurve(t1: Utils.map(t1, 0,1, t1, t2),
+                        t2: Utils.map(t2, 0,1, t1, t2),
                         curve: curve)
     }
 
@@ -255,25 +257,6 @@ extension BezierCurve {
         return self.threeD ? normal3(t) : normal2(t)
     }
     
-    // MARK: -
-    
-    public func split(at t: BKFloat) -> (left: Self, right: Self) {
-        assert(t > 0)
-        assert(t < 1)
-
-        // use "de Casteljau" iteration.
-        var h = self.hull(t)
-        
-        let quadratic = self.order == 2
-        let pointsLeft = quadratic ? [h[0], h[3], h[5]] : [h[0], h[4], h[7], h[9]]
-        let pointsRight = quadratic ? [h[5], h[4], h[2]] : [h[9], h[8], h[6], h[3]]
-        
-        let left = Self.init(points: pointsLeft)
-        let right = Self.init(points: pointsRight)
-        
-        return (left: left, right: right)
-    }
-        
     // MARK: -
     
     /*
@@ -746,4 +729,5 @@ public protocol BezierCurve {
     init(points: [BKPoint])
     func derivative(_ t: BKFloat) -> BKPoint
     func split(from t1: BKFloat, to t2: BKFloat) -> Self
+    func split(at t: BKFloat) -> (left: Self, right: Self)
 }

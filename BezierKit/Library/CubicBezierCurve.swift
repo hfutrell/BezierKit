@@ -116,6 +116,25 @@ public struct CubicBezierCurve: BezierCurve {
         
     }
 
+    public func split(at t: BKFloat) -> (left: CubicBezierCurve, right: CubicBezierCurve) {
+        
+        let h0 = self.p0
+        let h1 = self.p1
+        let h2 = self.p2
+        let h3 = self.p3
+        let h4 = Utils.lerp(t, h0, h1)
+        let h5 = Utils.lerp(t, h1, h2)
+        let h6 = Utils.lerp(t, h2, h3)
+        let h7 = Utils.lerp(t, h4, h5)
+        let h8 = Utils.lerp(t, h5, h6)
+        let h9 = Utils.lerp(t, h7, h8)
+        
+        let leftCurve  = CubicBezierCurve(p0: h0, p1: h4, p2: h7, p3: h9)
+        let rightCurve = CubicBezierCurve(p0: h9, p1: h8, p2: h6, p3: h3)
+        
+        return (left: leftCurve, right: rightCurve)
+
+    }
 
     
 }
