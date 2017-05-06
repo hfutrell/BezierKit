@@ -101,6 +101,44 @@ public struct QuadraticBezierCurve: BezierCurve {
         return (left: leftCurve, right: rightCurve)
     }
 
+    public var boundingBox: BoundingBox {
+        
+        let p0: BKPoint = self.p0
+        let p1: BKPoint = self.p1
+        let p2: BKPoint = self.p2
+        
+        var mmin: BKPoint = min(p0, p2)
+        var mmax: BKPoint = max(p0, p2)
+        
+        let d0: BKPoint = p1 - p0
+        let d1: BKPoint = p2 - p1
+        
+        for d in 0..<BKPoint.dimensions {
+            Utils.droots(d0[d], d1[d], 0) {(t: BKFloat) in
+                if t <= 0.0 || t >= 1.0 {
+                    return
+                }
+
+                // eval the curve
+                // TODO: replacing this code with self.compute(t)[d] crashes in profile mode
+                let mt = 1.0 - t
+                let a = mt * mt
+                let b = mt * t * 2.0
+                let c = t * t
+                let value = a * p0[d] + b * p1[d] + c * p2[d]
+                
+                if value < mmin[d] {
+                    mmin[d] = value
+                }
+                else if value > mmax[d] {
+                    mmax[d] = value
+                }
+            }
+        }
+        return BoundingBox(min: mmin, max: mmax)
+    }
+
+    
     // MARK: quadratic specific methods
     
 //    public raise() -> CubicBezierCurve {

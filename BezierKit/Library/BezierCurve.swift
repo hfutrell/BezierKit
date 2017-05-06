@@ -135,22 +135,6 @@ extension BezierCurve {
         return (xyz: xyz, values: values)
     }
     
-    public var boundingBox: BoundingBox {
-        let extrema = self.internalExtrema(includeInflection: false)
-        let p0 = self.compute(0)
-        let p1 = self.compute(1)
-        var result: BoundingBox = BoundingBox()
-        for d in 0..<BKPoint.dimensions {
-            let computeDimension = {(t: BKFloat) in self.compute(t)[d]}
-            let (min, max) = Utils.getminmax(list: extrema[d].map(computeDimension),
-                                             value0: p0[d],
-                                             value1: p1[d])
-            result.min[d] = min
-            result.max[d] = max
-        }
-        return result
-    }
-    
     // MARK: -
     public func hull(_ t: BKFloat) -> [BKPoint] {
         return Utils.hull(self.points, t)
@@ -267,6 +251,9 @@ extension BezierCurve {
      
      */
     public func reduce() -> [Subcurve<Self>] {
+        
+        // todo: handle degenerate case of Cubic with all zero points better!
+        
         let step: BKFloat = 0.01
         var extrema: [BKFloat] = self.extrema().values
         extrema = extrema.filter {
@@ -730,4 +717,6 @@ public protocol BezierCurve {
     func derivative(_ t: BKFloat) -> BKPoint
     func split(from t1: BKFloat, to t2: BKFloat) -> Self
     func split(at t: BKFloat) -> (left: Self, right: Self)
+    var boundingBox: BoundingBox { get }
+
 }

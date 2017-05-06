@@ -237,37 +237,50 @@ internal class Utils {
         }
     }
     
+    static func droots(_ a: BKFloat, _ b: BKFloat, _ c: BKFloat, callback:((BKFloat)->())) {
+        // quadratic roots are easy
+        // do something with each root
+        let d: BKFloat = a - 2.0*b + c
+        if d != 0 {
+            let m1 = -sqrt(b*b-a*c)
+            let m2 = -a+b
+            let v1 = -( m1+m2)/d
+            let v2 = -(-m1+m2)/d
+            callback(v1)
+            callback(v2)
+        }
+        else if (b != c) && (d == 0) {
+            callback((2*b-c)/(2*(b-c)))
+        }
+    }
+    
+    static func droots(_ a: BKFloat, _ b: BKFloat, callback:((BKFloat)->())) {
+        // linear roots are super easy
+        // do something with the root, if it exists
+        if a != b {
+            callback(a/(a-b))
+        }
+    }
+    
     static func droots(_ p: [BKFloat]) -> [BKFloat] {
         // quadratic roots are easy
+        var result: [BKFloat] = []
         if p.count == 3 {
-            let a = p[0]
-            let b = p[1]
-            let c = p[2]
-            let d = a - 2*b + c
-            if d != 0 {
-                let m1 = -sqrt(b*b-a*c)
-                let m2 = -a+b
-                let v1 = -( m1+m2)/d
-                let v2 = -(-m1+m2)/d
-                return [v1, v2]
+            droots(p[0], p[1], p[2]) {
+                result.append($0)
             }
-            else if (b != c) && (d == 0) {
-                return [(2*b-c)/(2*(b-c))]
-            }
-            return []
         }
-        // linear roots are even easier
-        if p.count == 2 {
-            let a = p[0]
-            let b = p[1]
-            if a != b {
-                return [a/(a-b)]
+        else if p.count == 2 {
+            droots(p[0], p[1]) {
+                result.append($0)
             }
-            return []
         }
-        assert(false, "nope!")
-        return []
+        else {
+            assert(false, "unsupported")
+        }
+        return result
     }
+
     
     static func lerp(_ r: BKFloat, _ v1: BKPoint, _ v2: BKPoint) -> BKPoint {
         return v1 + r * (v2 - v1)

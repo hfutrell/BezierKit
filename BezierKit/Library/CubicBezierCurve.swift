@@ -135,6 +135,37 @@ public struct CubicBezierCurve: BezierCurve {
         return (left: leftCurve, right: rightCurve)
 
     }
+    
+    public var boundingBox: BoundingBox {
 
+        let p0: BKPoint = self.p0
+        let p1: BKPoint = self.p1
+        let p2: BKPoint = self.p2
+        let p3: BKPoint = self.p3
+        
+        var mmin = min(p0, p3)
+        var mmax = max(p0, p3)
+        
+        let d0 = p1 - p0
+        let d1 = p2 - p1
+        let d2 = p3 - p2
+
+        for d in 0..<BKPoint.dimensions {
+            Utils.droots(d0[d], d1[d], d2[d]) {(r: BKFloat) in
+                if r <= 0.0 || r >= 1.0 {
+                    return
+                }
+                let value = self.compute(r)[d]
+                if value < mmin[d] {
+                    mmin[d] = value
+                }
+                else if value > mmax[d] {
+                    mmax[d] = value
+                }
+            }
+        }
+        return BoundingBox(min: mmin, max: mmax)
+    }
+    
     
 }

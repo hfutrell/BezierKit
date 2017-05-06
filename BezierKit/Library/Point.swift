@@ -10,6 +10,19 @@ public protocol Point: VectorSpace, Normed {
     associatedtype F: RealNumber // as in VectorSpace we have an associated type F. But F conforms to RealNumber, not just Field.
 }
 
+func min<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> where F: Ordered {
+    // optimized version of min for Point2
+    return Point2<F>(x: p1.x < p2.x ? p1.x : p2.x,
+                     y: p1.y < p2.y ? p1.y : p2.y)
+}
+
+func max<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> where F: Ordered {
+    // optimized version of max for Point2
+    return Point2<F>(x: p1.x > p2.x ? p1.x : p2.x,
+                     y: p1.y > p2.y ? p1.y : p2.y)
+}
+
+
 extension Point {
     // this extension implements Normed protocol for all point types
     public var length: F {
@@ -23,8 +36,15 @@ extension Point {
     }
 }
 
-public protocol RealNumber: Field, Rootable {
+public protocol RealNumber: Field, Rootable, Ordered {
     // intentionally empty (just defines a composite protocol)
+}
+
+public protocol Ordered {
+    static func < (left: Self, right: Self) -> Bool
+    static func > (left: Self, right: Self) -> Bool
+    static func <= (left: Self, right: Self) -> Bool
+    static func >= (left: Self, right: Self) -> Bool
 }
 
 public protocol Rootable {
