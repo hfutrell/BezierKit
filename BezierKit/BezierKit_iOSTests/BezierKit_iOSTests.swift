@@ -57,7 +57,7 @@ class BezierKit_iOSTests: XCTestCase {
         }
     }
     
-    func testPerformanceIntersectsCurve() { // 0.112 s ... now 0.021 s
+    func testPerformanceIntersectsCurve() { // 0.112 s ... now 0.023 s
         self.measure {
             // Put the code you want to measure the time of here.
             var totalIntersections = 0

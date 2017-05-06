@@ -505,23 +505,14 @@ extension BezierCurve {
     }
     
     private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], curveIntersectionThreshold: BKFloat) -> [Intersection] {
-        var pairs: [(left: Subcurve<C1>, right: Subcurve<C2>)] = []
-        // step 1: pair off any overlapping segments
+
+        var intersections: [Intersection] = []
         for l in c1 {
             for r in c2 {
-                if l.curve.boundingBox.overlaps(r.curve.boundingBox) {
-                    pairs.append((left: l, right: r))
-                }
+
+                Utils.pairiteration(l, r, &intersections, curveIntersectionThreshold)
             }
         }
-        // step 2: for each pairing, run through the convergence algorithm.
-        var intersections: [Intersection] = []
-        for pair in pairs {
-            if let i = Utils.pairiteration(pair.left, pair.right, curveIntersectionThreshold) {
-                intersections += i
-            }
-        }
-        
         // TODO: you should probably have a unit test that ensures de-duping actually works
         
         // sort the results by t1 (and by t2 if t1 equal)
