@@ -358,16 +358,16 @@ internal class Utils {
         )
     }
     
-    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ threshold: BKFloat = 0.5) -> [Intersection] {
+    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ threshold: BKFloat = 0.5) -> [Intersection]? {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
         if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
             // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
             
-            let a1 = c1.curve.points[0]
-            let b1 = c1.curve.points.last! - c1.curve.points[0]
-            let a2 = c2.curve.points[0]
-            let b2 = c2.curve.points.last! - c2.curve.points[0]
+            let a1 = c1.curve.first
+            let b1 = c1.curve.last - c1.curve.first
+            let a2 = c2.curve.first
+            let b2 = c2.curve.last - c2.curve.first
             
             let _a = b1.x
             let _b = -b2.x
@@ -385,11 +385,11 @@ internal class Utils {
             let inv_det = 1.0 / det
             let t1 = ( _e * _d - _b * _f ) * inv_det
             if t1 >= 1.0 || t1 <= 0.0  {
-                return [] // t1 out of interval [0, 1]
+                return nil // t1 out of interval [0, 1]
             }
             let t2 = ( _a * _f - _e * _c ) * inv_det
             if t2 >= 1.0 || t2 <= 0.0 {
-                return [] // t2 out of interval [0, 1]
+                return nil // t2 out of interval [0, 1]
             }
             // segments intersect at t1, t2
             return [Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
@@ -400,25 +400,35 @@ internal class Utils {
         let cc1 = c1.split(at: 0.5)
         let cc2 = c2.split(at: 0.5)
         
-        var pairs = [
-            (left: cc1.left, right: cc2.left ),
-            (left: cc1.left, right: cc2.right ),
-            (left: cc1.right, right: cc2.left ),
-            (left: cc1.right, right: cc2.right )]
-        pairs = pairs.filter( {(pair) in
-            return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
-        })
+        let bbcc1l = cc1.left.curve.boundingBox
+        let bbcc2l = cc2.left.curve.boundingBox
+        let bbcc1r = cc1.right.curve.boundingBox
+        let bbcc2r = cc2.right.curve.boundingBox
         
-        var results: [Intersection] = Array<Intersection>()
-        for pair in pairs {
-            results += Utils.pairiteration(pair.left, pair.right, threshold)
+        var results: [Intersection]? = nil
+        let callback = { (c1: Subcurve<C1>, _ c2: Subcurve<C2>) -> () in
+            if let i = Utils.pairiteration(c1, c2, threshold) {
+                if results == nil {
+                    results = i
+                }
+                else {
+                    results! += i
+                }
+            }
         }
-        // sort the results by t1 (and by t2 if t1 equal)
-        results = results.sorted(by: <)
-        // de-dupe the sorted array
-        results = results.reduce(Array<Intersection>(), {(result: [Intersection], next: Intersection) in
-            return (result.count == 0 || result[result.count-1] != next) ? result + [next] : result
-        })
+        
+        if bbcc1l.overlaps(bbcc2l) {
+            callback(cc1.left, cc2.left)
+        }
+        if bbcc1l.overlaps(bbcc2r) {
+            callback(cc1.left, cc2.right)
+        }
+        if bbcc1r.overlaps(bbcc2l) {
+            callback(cc1.right, cc2.left)
+        }
+        if bbcc1r.overlaps(bbcc2r) {
+            callback(cc1.right, cc2.right)
+        }
         return results
     }
     

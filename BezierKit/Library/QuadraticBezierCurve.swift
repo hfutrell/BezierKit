@@ -43,6 +43,15 @@ public struct QuadraticBezierCurve: BezierCurve {
         return [p0, p1, p2]
     }
     
+    public var first: BKPoint {
+        return p0
+    }
+    
+    public var last: BKPoint {
+        return p2
+    }
+
+    
     public var order: Int {
         return 2
     }

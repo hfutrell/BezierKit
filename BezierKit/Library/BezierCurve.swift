@@ -15,23 +15,23 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t2: BKFloat
     public let curve: CurveType
     
-    internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve {
-        let curve = self.curve.split(from: t1, to: t2)
+    internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve<CurveType> {
+        let curve: CurveType = self.curve.split(from: t1, to: t2)
         let t1 = self.t1
         let t2 = self.t2
-        return Subcurve(t1: Utils.map(t1, 0,1, t1, t2),
-                        t2: Utils.map(t2, 0,1, t1, t2),
-                        curve: curve)
+        return Subcurve<CurveType>(t1: Utils.map(t1, 0,1, t1, t2),
+                                   t2: Utils.map(t2, 0,1, t1, t2),
+                                   curve: curve)
     }
 
-    internal func split(at t: BKFloat) -> (left: Subcurve, right: Subcurve) {
+    internal func split(at t: BKFloat) -> (left: Subcurve<CurveType>, right: Subcurve<CurveType>) {
         let (left, right) = curve.split(at: t)
         let t1 = self.t1
         let t2 = self.t2
-        let subcurveLeft = Subcurve(t1: Utils.map(0, 0,1, t1, t2),
+        let subcurveLeft = Subcurve<CurveType>(t1: Utils.map(0, 0,1, t1, t2),
                                     t2: Utils.map(t, 0,1, t1, t2),
                                     curve: left)
-        let subcurveRight = Subcurve(t1: Utils.map(t, 0,1, t1, t2),
+        let subcurveRight = Subcurve<CurveType>(t1: Utils.map(t, 0,1, t1, t2),
                                      t2: Utils.map(1, 0,1, t1, t2),
                                      curve: right)
         return (left: subcurveLeft, right: subcurveRight)
@@ -517,8 +517,20 @@ extension BezierCurve {
         // step 2: for each pairing, run through the convergence algorithm.
         var intersections: [Intersection] = []
         for pair in pairs {
-            intersections += Utils.pairiteration(pair.left, pair.right, curveIntersectionThreshold)
+            if let i = Utils.pairiteration(pair.left, pair.right, curveIntersectionThreshold) {
+                intersections += i
+            }
         }
+        
+        // TODO: you should probably have a unit test that ensures de-duping actually works
+        
+        // sort the results by t1 (and by t2 if t1 equal)
+        intersections = intersections.sorted(by: <)
+        // de-dupe the sorted array
+        intersections = intersections.reduce(Array<Intersection>(), {(intersection: [Intersection], next: Intersection) in
+            return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
+        })
+
         return intersections
     }
     
@@ -712,6 +724,8 @@ public protocol BezierCurve {
     
     var simple: Bool { get }
     var points: [BKPoint] { get }
+    var first: BKPoint { get }
+    var last: BKPoint { get }
     var order: Int { get }
     init(points: [BKPoint])
     func derivative(_ t: BKFloat) -> BKPoint

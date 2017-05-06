@@ -28,6 +28,14 @@ public struct CubicBezierCurve: BezierCurve {
         self.p3 = points[3]
     }
     
+    public var first: BKPoint {
+        return p0
+    }
+    
+    public var last: BKPoint {
+        return p3
+    }
+    
     public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
         let points = [p0, p1, p2, p3]
         self.init(points: points)
