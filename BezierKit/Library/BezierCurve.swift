@@ -140,60 +140,6 @@ extension BezierCurve {
         return Utils.hull(self.points, t)
     }
     
-    public func compute(_ t: BKFloat) -> BKPoint {
-        // shortcuts
-        if t == 0 {
-            return self.points[0]
-        }
-        if t == 1 {
-            return self.points[self.order]
-        }
-        
-        var p = self.points
-        let mt = 1-t
-        
-        if self.order == 1 {
-            // linear?
-            return mt * p[0] + t * p[1]
-        }
-        else if self.order < 4 {
-            // quadratic/cubic curve?
-            let mt2: BKFloat = mt*mt
-            let t2: BKFloat = t*t
-            var a: BKFloat = 0
-            var b: BKFloat = 0
-            var c: BKFloat = 0
-            var d: BKFloat = 0
-            if self.order == 2 {
-                p = [p[0], p[1], p[2], BKPointZero]
-                a = mt2
-                b = mt * t*2
-                c = t2
-            }
-            else if self.order == 3 {
-                a = mt2 * mt
-                b = mt2 * t * 3.0
-                c = mt * t2 * 3.0
-                d = t * t2
-            }
-            let m1 = a * p[0]
-            let m2 = b * p[1]
-            let m3 = c * p[2]
-            let m4 = d * p[3]
-            return m1 + m2 + m3 + m4
-        }
-        else {
-            //  higher order curves: use de Casteljau's computation
-            while p.count > 1 {
-                for i in 0..<p.count-1 {
-                    p[i] = mt * p[i] + t * p[i+1]
-                }
-                p.removeLast()
-            }
-            return p[0]
-        }
-    }
-    
     public func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
         assert(steps >= 0)
         var table: [BKPoint] = []
@@ -723,5 +669,5 @@ public protocol BezierCurve {
     func split(from t1: BKFloat, to t2: BKFloat) -> Self
     func split(at t: BKFloat) -> (left: Self, right: Self)
     var boundingBox: BoundingBox { get }
-
+    func compute(_ t: BKFloat) -> BKPoint
 }

@@ -147,6 +147,22 @@ public struct QuadraticBezierCurve: BezierCurve {
         return BoundingBox(min: mmin, max: mmax)
     }
 
+    public func compute(_ t: BKFloat) -> BKPoint {
+        if t == 0 {
+            return self.p0
+        }
+        else if t == 1 {
+            return self.p2
+        }
+        let mt = 1.0 - t
+        let mt2: BKFloat    = mt*mt
+        let t2: BKFloat     = t*t
+        let a = mt2
+        let b = mt * t*2
+        let c = t2
+        return a * self.p0 + b * self.p1 + c * self.p2
+    }
+
     
     // MARK: quadratic specific methods
     

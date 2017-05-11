@@ -175,5 +175,21 @@ public struct CubicBezierCurve: BezierCurve {
         return BoundingBox(min: mmin, max: mmax)
     }
     
+    public func compute(_ t: BKFloat) -> BKPoint {
+        if t == 0 {
+            return self.p0
+        }
+        else if t == 1 {
+            return self.p3
+        }
+        let mt = 1.0 - t
+        let mt2: BKFloat    = mt*mt
+        let t2: BKFloat     = t*t
+        let a = mt2 * mt
+        let b = mt2 * t * 3.0
+        let c = mt * t2 * 3.0
+        let d = t * t2
+        return a * self.p0 + b * self.p1 + c * self.p2 + d * self.p3
+    }
     
 }
