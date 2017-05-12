@@ -47,7 +47,6 @@ class BezierKit_iOSTests: XCTestCase {
     }
     
     func testSelfIntersection() {
-        // should have a single intersection at t = 0.5 (because it's a symmetric loop)
         let curve = CubicBezierCurve(p0: BKPoint(x: 0.0, y: 0.0),
                                      p1: BKPoint(x: 2.0, y: 1.0),
                                      p2: BKPoint(x: -1.0, y: 1.0),
