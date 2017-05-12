@@ -315,7 +315,7 @@ extension BezierCurve {
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
         let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
         if o == nil { // TODO: replace with guard let
-            assert(false, "cannot scale this curve. Try reducing it first.")
+            fatalError("cannot scale this curve. Try reducing it first.")
         }
         // move all points by distance 'd' wrt the origin 'o'
         var points: [BKPoint] = self.points
@@ -465,7 +465,7 @@ extension BezierCurve {
             return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], curveIntersectionThreshold: curveIntersectionThreshold)
         }
         else {
-            assert(false, "unsupported")
+            fatalError("unsupported")
         }
         
     }

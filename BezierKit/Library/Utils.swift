@@ -276,7 +276,7 @@ internal class Utils {
             }
         }
         else {
-            assert(false, "unsupported")
+            fatalError("unsupported")
         }
         return result
     }
