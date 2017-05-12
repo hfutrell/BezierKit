@@ -365,7 +365,6 @@ internal class Utils {
             return
         }
         else if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
-            // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
             
             let a1 = c1.curve.startingPoint
             let b1 = c1.curve.endingPoint - c1.curve.startingPoint
@@ -416,29 +415,29 @@ internal class Utils {
         var intersection: [Intersection]
     }
     
-//    static func shapeintersections(_ s1: Shape,_ bbox1: BoundingBox,_ s2: Shape,_ bbox2: BoundingBox,_ curveIntersectionThreshold: BKFloat) -> [ShapeIntersection] {
-//        if !bbox1.overlaps(bbox2) {
-//            return []
-//        }
-//        var intersections: [ShapeIntersection] = []
-//        let a1: [BezierCurve?] = [s1.startcap.virtual ? nil : s1.startcap.curve, s1.forward, s1.back, s1.endcap.virtual ? nil : s1.endcap.curve]
-//        let a2: [BezierCurve?] = [s2.startcap.virtual ? nil : s1.startcap.curve, s2.forward, s2.back, s2.endcap.virtual ? nil : s1.endcap.curve]
-//        for l1 in a1 {
-//            if l1 == nil {
-//                continue
-//            }
-//            for l2 in a2 {
-//                if l2 == nil {
-//                    continue
-//                }
-//                let iss = l1!.intersects(curve: l2!, curveIntersectionThreshold: curveIntersectionThreshold)
-//                if iss.count > 0 {
-//                    intersections.append(ShapeIntersection(c1: l1!, c2: l2!, /*, s1: s1, s2: s2,*/ intersection: iss))
-//                }
-//            }
-//        }
-//        return intersections
-//    }
+    static func shapeintersections(_ s1: Shape,_ bbox1: BoundingBox,_ s2: Shape,_ bbox2: BoundingBox,_ curveIntersectionThreshold: BKFloat) -> [ShapeIntersection] {
+        if !bbox1.overlaps(bbox2) {
+            return []
+        }
+        var intersections: [ShapeIntersection] = []
+        let a1: [BezierCurve?] = [s1.startcap.virtual ? nil : s1.startcap.curve, s1.forward, s1.back, s1.endcap.virtual ? nil : s1.endcap.curve]
+        let a2: [BezierCurve?] = [s2.startcap.virtual ? nil : s1.startcap.curve, s2.forward, s2.back, s2.endcap.virtual ? nil : s1.endcap.curve]
+        for l1 in a1 {
+            if l1 == nil {
+                continue
+            }
+            for l2 in a2 {
+                if l2 == nil {
+                    continue
+                }
+                let iss = l1!.intersects(curve: l2!, curveIntersectionThreshold: curveIntersectionThreshold)
+                if iss.count > 0 {
+                    intersections.append(ShapeIntersection(c1: l1!, c2: l2!, /*, s1: s1, s2: s2,*/ intersection: iss))
+                }
+            }
+        }
+        return intersections
+    }
     
     static func makeshape(_ forward: BezierCurve,_ back: BezierCurve,_ curveIntersectionThreshold: BKFloat) -> Shape {
         let bpl = back.points.count

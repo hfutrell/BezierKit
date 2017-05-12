@@ -15,6 +15,18 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t2: BKFloat
     public let curve: CurveType
     
+    internal init(curve: CurveType) {
+        self.t1 = 0.0
+        self.t2 = 1.0
+        self.curve = curve
+    }
+    
+    internal init(t1: BKFloat, t2: BKFloat, curve: CurveType) {
+        self.t1 = t1
+        self.t2 = t2
+        self.curve = curve
+    }
+    
     internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve<CurveType> {
         let curve: CurveType = self.curve.split(from: t1, to: t2)
         return Subcurve<CurveType>(t1: Utils.map(t1, 0,1, self.t1, self.t2),
@@ -441,11 +453,21 @@ extension BezierCurve {
         return results
     }
     
-    public func intersects<CurveType>(curve: CurveType, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] where CurveType: BezierCurve {
+    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
 //        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
-        return Self.internalCurvesIntersect(c1: [Subcurve<Self>(t1: 0.0, t2: 1.0, curve: self)],
-                                            c2: [Subcurve<CurveType>(t1: 0.0, t2: 1.0, curve: curve)],
-                                            curveIntersectionThreshold: curveIntersectionThreshold)
+        
+        let s = Subcurve<Self>(curve: self)
+        
+        if let c = curve as? CubicBezierCurve {
+            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: c)], curveIntersectionThreshold: curveIntersectionThreshold)
+        }
+        else if let q = curve as? QuadraticBezierCurve {
+            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], curveIntersectionThreshold: curveIntersectionThreshold)
+        }
+        else {
+            assert(false, "unsupported")
+        }
+        
     }
     
     private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], curveIntersectionThreshold: BKFloat) -> [Intersection] {
@@ -453,7 +475,6 @@ extension BezierCurve {
         var intersections: [Intersection] = []
         for l in c1 {
             for r in c2 {
-
                 Utils.pairiteration(l, r, &intersections, curveIntersectionThreshold)
             }
         }
