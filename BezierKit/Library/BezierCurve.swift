@@ -17,10 +17,8 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     
     internal func split(from t1: BKFloat, to t2: BKFloat) -> Subcurve<CurveType> {
         let curve: CurveType = self.curve.split(from: t1, to: t2)
-        let t1 = self.t1
-        let t2 = self.t2
-        return Subcurve<CurveType>(t1: Utils.map(t1, 0,1, t1, t2),
-                                   t2: Utils.map(t2, 0,1, t1, t2),
+        return Subcurve<CurveType>(t1: Utils.map(t1, 0,1, self.t1, self.t2),
+                                   t2: Utils.map(t2, 0,1, self.t1, self.t2),
                                    curve: curve)
     }
 
@@ -661,8 +659,8 @@ public protocol BezierCurve {
     
     var simple: Bool { get }
     var points: [BKPoint] { get }
-    var first: BKPoint { get }
-    var last: BKPoint { get }
+    var startingPoint: BKPoint { get }
+    var endingPoint: BKPoint { get }
     var order: Int { get }
     init(points: [BKPoint])
     func derivative(_ t: BKFloat) -> BKPoint

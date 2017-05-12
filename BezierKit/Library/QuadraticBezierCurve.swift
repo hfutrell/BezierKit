@@ -10,7 +10,7 @@ import Foundation
 
 public struct QuadraticBezierCurve: BezierCurve {
     
-    let p0, p1, p2: BKPoint
+    public var p0, p1, p2: BKPoint
     
     public init(points: [BKPoint]) {
         precondition(points.count == 3)
@@ -43,11 +43,11 @@ public struct QuadraticBezierCurve: BezierCurve {
         return [p0, p1, p2]
     }
     
-    public var first: BKPoint {
+    public var startingPoint: BKPoint {
         return p0
     }
     
-    public var last: BKPoint {
+    public var endingPoint: BKPoint {
         return p2
     }
 

@@ -367,10 +367,10 @@ internal class Utils {
         else if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
             // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
             
-            let a1 = c1.curve.first
-            let b1 = c1.curve.last - c1.curve.first
-            let a2 = c2.curve.first
-            let b2 = c2.curve.last - c2.curve.first
+            let a1 = c1.curve.startingPoint
+            let b1 = c1.curve.endingPoint - c1.curve.startingPoint
+            let a2 = c2.curve.startingPoint
+            let b2 = c2.curve.endingPoint - c2.curve.startingPoint
             
             let _a = b1.x
             let _b = -b2.x

@@ -10,7 +10,7 @@ import Foundation
 
 public struct CubicBezierCurve: BezierCurve {
  
-    let p0, p1, p2, p3: BKPoint
+    public var p0, p1, p2, p3: BKPoint
     
     public var points: [BKPoint] {
         return [p0, p1, p2, p3]
@@ -28,11 +28,11 @@ public struct CubicBezierCurve: BezierCurve {
         self.p3 = points[3]
     }
     
-    public var first: BKPoint {
+    public var startingPoint: BKPoint {
         return p0
     }
     
-    public var last: BKPoint {
+    public var endingPoint: BKPoint {
         return p3
     }
     
