@@ -46,6 +46,18 @@ class BezierKit_iOSTests: XCTestCase {
         return curve
     }
     
+    func testSelfIntersection() {
+        // should have a single intersection at t = 0.5 (because it's a symmetric loop)
+        let curve = CubicBezierCurve(p0: BKPoint(x: 0.0, y: 0.0),
+                                     p1: BKPoint(x: 2.0, y: 1.0),
+                                     p2: BKPoint(x: -1.0, y: 1.0),
+                                     p3: BKPoint(x: 1.0, y: 0.0))
+        let threshold: BKFloat = 0.001
+        let i = curve.intersects(curveIntersectionThreshold: threshold)
+        XCTAssertEqual(i.count, 1, "wrong number of intersections!")
+        XCTAssert( (curve.compute(i[0].t1) - curve.compute(i[0].t2)).length < threshold, "wrong or inaccurate intersection!" )
+    }
+    
     func testPerformanceReduce() {
         // This is an example of a performance test case.
         self.measure {
