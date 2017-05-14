@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct QuadraticBezierCurve: BezierCurve {
+public struct QuadraticBezierCurve: BezierCurve, Equatable {
     
     public var p0, p1, p2: BKPoint
     
@@ -162,6 +162,13 @@ public struct QuadraticBezierCurve: BezierCurve {
         let c = t2
         return a * self.p0 + b * self.p1 + c * self.p2
     }
+    
+    // -- MARK: equitable
+    
+    public static func == (left: QuadraticBezierCurve, right: QuadraticBezierCurve) -> Bool {
+        return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2
+    }
+
 
     
     // MARK: quadratic specific methods

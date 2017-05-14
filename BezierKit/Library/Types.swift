@@ -73,7 +73,7 @@ public struct Shape {
 
 public typealias BoundingBox = BBox<BKPoint>
 
-public struct BBox<P> where P: Point, P.F: Ordered {
+public struct BBox<P>: Equatable where P: Point, P.F: Ordered {
     public var min: BKPoint
     public var max: BKPoint
     init() {
@@ -114,6 +114,9 @@ public struct BBox<P> where P: Point, P.F: Ordered {
     public var toCGRect: CGRect {
         let s = self.size
         return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
+    }
+    public static func == (left: BBox<P>, right: BBox<P>) -> Bool {
+        return (left.min == right.min && left.max == right.max)
     }
 }
 

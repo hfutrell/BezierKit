@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct LineSegment: BezierCurve {
+public struct LineSegment: BezierCurve, Equatable {
 
     public var p0, p1: BKPoint
     
@@ -71,6 +71,12 @@ public struct LineSegment: BezierCurve {
     
     public func compute(_ t: BKFloat) -> BKPoint {
         return Utils.lerp(t, self.p0, self.p1)
+    }
+    
+    // -- MARK: equitable
+    
+    public static func == (left: LineSegment, right: LineSegment) -> Bool {
+        return left.p0 == right.p0 && left.p1 == right.p1
     }
 
     

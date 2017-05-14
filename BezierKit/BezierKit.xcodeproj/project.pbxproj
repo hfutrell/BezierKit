@@ -45,6 +45,8 @@
 		FDB9D7441EB28D1900413F0E /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
 		FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 		FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
+		FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
+		FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,6 +122,7 @@
 		FDB9D7411EB28D1900413F0E /* BezierKit_MacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKit_MacTests.swift; sourceTree = "<group>"; };
 		FDB9D7431EB28D1900413F0E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
+		FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegmentTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -195,6 +198,7 @@
 			children = (
 				FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */,
 				FD0F550A1DC43FFB0084CDCD /* Info.plist */,
+				FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */,
 			);
 			path = BezierKitTests;
 			sourceTree = "<group>";
@@ -530,6 +534,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
+				FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -538,6 +543,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
+				FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

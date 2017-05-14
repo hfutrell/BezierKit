@@ -36,7 +36,7 @@ extension Point {
     }
 }
 
-public protocol RealNumber: Field, Rootable, Ordered {
+public protocol RealNumber: Field, Rootable, Ordered, Equatable {
     // intentionally empty (just defines a composite protocol)
 }
 
@@ -106,6 +106,9 @@ public struct Point2<S>: Point where S: RealNumber {
     public static prefix func - (point: Point2<S>) -> Point2<S> {
         return Point2<S>(x: -point.x, y: -point.y)
     }
+    public static func == (left: Point2<S>, right: Point2<S>) -> Bool {
+        return (left.x == right.x && left.y == right.y)
+    }
 }
 
 public struct Point3<S>: Point where S: RealNumber {
@@ -168,4 +171,8 @@ public struct Point3<S>: Point where S: RealNumber {
     public static prefix func - (point: Point3<S>) -> Point3<S> {
         return Point3<S>(x: -point.x, y: -point.y, z: -point.z)
     }
+    public static func == (left: Point3<S>, right: Point3<S>) -> Bool {
+        return (left.x == right.x && left.y == right.y && left.z == right.z)
+    }
+
 }

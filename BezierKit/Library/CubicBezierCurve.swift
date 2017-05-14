@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct CubicBezierCurve: BezierCurve {
+public struct CubicBezierCurve: BezierCurve, Equatable {
  
     public var p0, p1, p2, p3: BKPoint
     
@@ -190,6 +190,12 @@ public struct CubicBezierCurve: BezierCurve {
         let c = mt * t2 * 3.0
         let d = t * t2
         return a * self.p0 + b * self.p1 + c * self.p2 + d * self.p3
+    }
+    
+    // -- MARK: equitable
+    
+    public static func == (left: CubicBezierCurve, right: CubicBezierCurve) -> Bool {
+        return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2 && left.p3 == right.p3
     }
     
 }

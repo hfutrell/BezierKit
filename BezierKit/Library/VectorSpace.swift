@@ -13,7 +13,7 @@ public protocol Field {
     static prefix func - (value: Self) -> Self
 }
 
-public protocol VectorSpace {
+public protocol VectorSpace: Equatable {
     // a vector space (in the Mathematical sense) over a scalar Field F
     associatedtype F: Field
     static var dimensions: Int { get }
