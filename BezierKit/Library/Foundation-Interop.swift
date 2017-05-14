@@ -50,3 +50,7 @@ extension CGFloat: RealNumber {
         #endif
     }
 }
+
+extension CGFloat: Ordered {
+    
+}

@@ -237,37 +237,50 @@ internal class Utils {
         }
     }
     
+    static func droots(_ a: BKFloat, _ b: BKFloat, _ c: BKFloat, callback:((BKFloat)->())) {
+        // quadratic roots are easy
+        // do something with each root
+        let d: BKFloat = a - 2.0*b + c
+        if d != 0 {
+            let m1 = -sqrt(b*b-a*c)
+            let m2 = -a+b
+            let v1 = -( m1+m2)/d
+            let v2 = -(-m1+m2)/d
+            callback(v1)
+            callback(v2)
+        }
+        else if (b != c) && (d == 0) {
+            callback((2*b-c)/(2*(b-c)))
+        }
+    }
+    
+    static func droots(_ a: BKFloat, _ b: BKFloat, callback:((BKFloat)->())) {
+        // linear roots are super easy
+        // do something with the root, if it exists
+        if a != b {
+            callback(a/(a-b))
+        }
+    }
+    
     static func droots(_ p: [BKFloat]) -> [BKFloat] {
         // quadratic roots are easy
+        var result: [BKFloat] = []
         if p.count == 3 {
-            let a = p[0]
-            let b = p[1]
-            let c = p[2]
-            let d = a - 2*b + c
-            if d != 0 {
-                let m1 = -sqrt(b*b-a*c)
-                let m2 = -a+b
-                let v1 = -( m1+m2)/d
-                let v2 = -(-m1+m2)/d
-                return [v1, v2]
+            droots(p[0], p[1], p[2]) {
+                result.append($0)
             }
-            else if (b != c) && (d == 0) {
-                return [(2*b-c)/(2*(b-c))]
-            }
-            return []
         }
-        // linear roots are even easier
-        if p.count == 2 {
-            let a = p[0]
-            let b = p[1]
-            if a != b {
-                return [a/(a-b)]
+        else if p.count == 2 {
+            droots(p[0], p[1]) {
+                result.append($0)
             }
-            return []
         }
-        assert(false, "nope!")
-        return []
+        else {
+            fatalError("unsupported")
+        }
+        return result
     }
+
     
     static func lerp(_ r: BKFloat, _ v1: BKPoint, _ v2: BKPoint) -> BKPoint {
         return v1 + r * (v2 - v1)
@@ -345,16 +358,18 @@ internal class Utils {
         )
     }
     
-    static func pairiteration(_ c1: Subcurve, _ c2: Subcurve, _ threshold: BKFloat = 0.5) -> [Intersection] {
+    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: BKFloat = 0.5) {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
-        if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
-            // return [ Intersection(t1: (c1._t1+c1._t2) / 2.0, t2: (c2._t1+c2._t2) / 2.0) ]
+        if c1b.overlaps(c2b) == false {
+            return
+        }
+        else if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
             
-            let a1 = c1.curve.points[0]
-            let b1 = c1.curve.points.last! - c1.curve.points[0]
-            let a2 = c2.curve.points[0]
-            let b2 = c2.curve.points.last! - c2.curve.points[0]
+            let a1 = c1.curve.startingPoint
+            let b1 = c1.curve.endingPoint - c1.curve.startingPoint
+            let a2 = c2.curve.startingPoint
+            let b2 = c2.curve.endingPoint - c2.curve.startingPoint
             
             let _a = b1.x
             let _b = -b2.x
@@ -371,44 +386,27 @@ internal class Utils {
             
             let inv_det = 1.0 / det
             let t1 = ( _e * _d - _b * _f ) * inv_det
-            if t1 >= 1.0 || t1 <= 0.0  {
-                return [] // t1 out of interval [0, 1]
+            if t1 > 1.0 || t1 < 0.0  {
+                return // t1 out of interval [0, 1]
             }
             let t2 = ( _a * _f - _e * _c ) * inv_det
-            if t2 >= 1.0 || t2 <= 0.0 {
-                return [] // t2 out of interval [0, 1]
+            if t2 > 1.0 || t2 < 0.0 {
+                return // t2 out of interval [0, 1]
             }
             // segments intersect at t1, t2
-            return [Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
-                                 t2: t2 * c2.t2 + (1.0 - t2) * c2.t1)]
-            
+            results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
+                                        t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
         }
-        
-        let cc1 = c1.split(at: 0.5)
-        let cc2 = c2.split(at: 0.5)
-        
-        var pairs = [
-            (left: cc1.left, right: cc2.left ),
-            (left: cc1.left, right: cc2.right ),
-            (left: cc1.right, right: cc2.left ),
-            (left: cc1.right, right: cc2.right )]
-        pairs = pairs.filter( {(pair) in
-            return pair.left.curve.boundingBox.overlaps(pair.right.curve.boundingBox)
-        })
-        
-        var results: [Intersection] = Array<Intersection>()
-        for pair in pairs {
-            results += Utils.pairiteration(pair.left, pair.right, threshold)
+        else {
+            let cc1 = c1.split(at: 0.5)
+            let cc2 = c2.split(at: 0.5)
+            Utils.pairiteration(cc1.left, cc2.left, &results, threshold)
+            Utils.pairiteration(cc1.left, cc2.right, &results, threshold)
+            Utils.pairiteration(cc1.right, cc2.left, &results, threshold)
+            Utils.pairiteration(cc1.right, cc2.right, &results, threshold)
         }
-        // sort the results by t1 (and by t2 if t1 equal)
-        results = results.sorted(by: <)
-        // de-dupe the sorted array
-        results = results.reduce(Array<Intersection>(), {(result: [Intersection], next: Intersection) in
-            return (result.count == 0 || result[result.count-1] != next) ? result + [next] : result
-        })
-        return results
     }
-    
+        
     struct ShapeIntersection {
         var c1: BezierCurve
         var c2: BezierCurve

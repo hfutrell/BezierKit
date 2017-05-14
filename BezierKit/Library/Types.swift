@@ -82,10 +82,13 @@ public struct Shape {
 
 public typealias BoundingBox = BBox<BKPoint>
 
-public struct BBox<P> where P: Point {
+public struct BBox<P> where P: Point, P.F: Ordered {
     public var min: BKPoint
     public var max: BKPoint
     init() {
+        
+        // TODO: I really dislike this function
+        
         // by setting the min to infinity and the max to -infinity
         // when we union this (invalid) rect with a valid rect, we'll
         // get back the valid rect
@@ -97,18 +100,8 @@ public struct BBox<P> where P: Point {
         self.max = max
     }
     public init(first: BoundingBox, second: BoundingBox) {
-        var min = first.min
-        var max = second.max
-        for d in 0..<P.dimensions {
-            if first.max[d] > max[d] {
-                max[d] = first.min[d]
-            }
-            if second.min[d] < min[d] {
-                min[d] = second.min[d]
-            }
-        }
-        self.min = min
-        self.max = max
+        self.min = BezierKit.min(first.min, second.min)
+        self.max = BezierKit.max(first.max, second.max)
     }
     public var mid: BKPoint {
         return 0.5 * (min + max)
