@@ -169,9 +169,9 @@ internal class Utils {
         return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
     }
     
-    static func roots(points: [BKPoint], line: Line = Line(p1: BKPoint(x: 0.0, y: 0.0), p2: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
+    static func roots(points: [BKPoint], line: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
         let order = points.count - 1
-        let p = Utils.align(points, p1: line.p1, p2: line.p2)
+        let p = Utils.align(points, p1: line.p0, p2: line.p1)
         let reduce: (BKFloat) -> Bool = { 0 <= $0 && $0 <= 1 }
         
         if order == 2 {

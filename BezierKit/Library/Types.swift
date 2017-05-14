@@ -34,15 +34,6 @@ public struct Intersection: Equatable, Comparable {
     }
 }
 
-public struct Line {
-    public var p1: BKPoint
-    public var p2: BKPoint
-    public init(p1: BKPoint, p2: BKPoint) {
-        self.p1 = p1
-        self.p2 = p2
-    }
-}
-
 public struct Arc {
     struct Interval {
         var start: BKFloat

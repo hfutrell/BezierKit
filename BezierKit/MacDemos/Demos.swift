@@ -381,9 +381,9 @@ class Demos {
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                let line: Line = Line( p1: BKPoint(x:0.0, y:175.0), p2: BKPoint(x:200.0,y:25.0) )
+                                let line: LineSegment = LineSegment( p0: BKPoint(x:0.0, y:175.0), p1: BKPoint(x:200.0,y:25.0) )
                                 Draw.setColor(context, color: Draw.red)
-                                Draw.drawLine(context, from: line.p1, to: line.p2)
+                                Draw.drawLine(context, from: line.p0, to: line.p1)
                                 Draw.setColor(context, color: Draw.black)
                                 for intersection in curve.intersects(line: line) {
                                     Draw.drawPoint(context, origin: curve.compute(intersection))

@@ -424,11 +424,11 @@ extension BezierCurve {
         return p
     }
     
-    public func intersects(line: Line, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [BKFloat] {
-        let mx = min(line.p1.x, line.p2.x)
-        let my = min(line.p1.y, line.p2.y)
-        let MX = max(line.p1.x, line.p2.x)
-        let MY = max(line.p1.y, line.p2.y)
+    public func intersects(line: LineSegment, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [BKFloat] {
+        let mx = min(line.p0.x, line.p1.x)
+        let my = min(line.p0.y, line.p1.y)
+        let MX = max(line.p0.x, line.p1.x)
+        let MY = max(line.p0.y, line.p1.y)
         return Utils.roots(points: self.points, line: line).filter({(t: BKFloat) in
             let p = self.compute(t)
             return Utils.between(p.x, mx, MX) && Utils.between(p.y, my, MY)

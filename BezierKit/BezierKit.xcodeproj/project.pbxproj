@@ -43,6 +43,8 @@
 		FDB9D7351EB28CEB00413F0E /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD26253B1EAC7B9A00C64652 /* BezierKit.framework */; };
 		FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB9D7411EB28D1900413F0E /* BezierKit_MacTests.swift */; };
 		FDB9D7441EB28D1900413F0E /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
+		FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
+		FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -117,6 +119,7 @@
 		FDB9D73F1EB28D1900413F0E /* BezierKit_MacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BezierKit_MacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDB9D7411EB28D1900413F0E /* BezierKit_MacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKit_MacTests.swift; sourceTree = "<group>"; };
 		FDB9D7431EB28D1900413F0E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +223,7 @@
 				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
 				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */,
+				FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */,
 				FDB6B3F91EAFD6DF00001C61 /* Draw.swift */,
 				FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */,
 				FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */,
@@ -498,6 +502,7 @@
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
 				FDB6B4171EAFD6DF00001C61 /* VectorSpace.swift in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
+				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -516,6 +521,7 @@
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
 				FDB6B4161EAFD6DF00001C61 /* VectorSpace.swift in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
+				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
