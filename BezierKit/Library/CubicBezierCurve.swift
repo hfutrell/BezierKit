@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct CubicBezierCurve: BezierCurve, Equatable {
+public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
  
     public var p0, p1, p2, p3: BKPoint
     

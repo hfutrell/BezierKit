@@ -273,7 +273,7 @@ class Demos {
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
                              drawFunction: {(context: CGContext, demoState: DemoState) in
-                                let curve = demoState.curve!
+                                let curve = demoState.curve! as! ArcApproximateable
                                 Draw.drawSkeleton(context, curve: curve)
                                 let arcs = curve.arcs()
                                 Draw.setColor(context, color: Draw.black)

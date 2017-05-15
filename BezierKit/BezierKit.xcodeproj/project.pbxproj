@@ -47,6 +47,8 @@
 		FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 		FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
 		FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
+		FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */; };
+		FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +125,7 @@
 		FDB9D7431EB28D1900413F0E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegmentTests.swift; sourceTree = "<group>"; };
+		FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArcApproximateable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -228,6 +231,7 @@
 				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */,
 				FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */,
+				FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */,
 				FDB6B3F91EAFD6DF00001C61 /* Draw.swift */,
 				FDB6B3FA1EAFD6DF00001C61 /* Foundation-Interop.swift */,
 				FDB6B3FB1EAFD6DF00001C61 /* Normed.swift */,
@@ -504,6 +508,7 @@
 				FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
+				FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
 				FDB6B4171EAFD6DF00001C61 /* VectorSpace.swift in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
@@ -523,6 +528,7 @@
 				FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
+				FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
 				FDB6B4161EAFD6DF00001C61 /* VectorSpace.swift in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
