@@ -193,7 +193,7 @@ internal class Utils {
                 return []
             }
         }
-        else {
+        else if order == 3 {
             // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
             let pa = p[0].y
             let pb = p[1].y
@@ -234,6 +234,9 @@ internal class Utils {
                 let v1 = crt(q2+sd)
                 return [u1-v1-a/3].filter(reduce)
             }
+        }
+        else {
+            fatalError("unsupported")
         }
     }
     

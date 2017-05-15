@@ -78,6 +78,21 @@ public struct LineSegment: BezierCurve, Equatable {
     public static func == (left: LineSegment, right: LineSegment) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1
     }
-
     
+    // -- MARK: - overrides
+    
+    public func length() -> BKFloat {
+        return (self.p1 - self.p0).length
+    }
+    
+    public func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] ) {
+        // for a line segment the extrema are trivially just the start and end points
+        // which have t = 0.0 and 1.0
+        var xyz: [[BKFloat]] = []
+        for _ in 0..<BKPoint.dimensions {
+            xyz.append([0.0, 1.0])
+        }
+        return (xyz: xyz, [0.0, 1.0])
+    }
+        
 }

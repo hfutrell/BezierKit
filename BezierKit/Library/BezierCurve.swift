@@ -689,4 +689,6 @@ public protocol BezierCurve {
     func split(at t: BKFloat) -> (left: Self, right: Self)
     var boundingBox: BoundingBox { get }
     func compute(_ t: BKFloat) -> BKPoint
+    func length() -> BKFloat
+    func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] )
 }

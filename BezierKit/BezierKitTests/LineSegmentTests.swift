@@ -70,10 +70,58 @@ class LineSegmentTests: XCTestCase {
     
     func testCompute() {
         let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
-        
         XCTAssertEqual(l.compute(0.0), BKPoint(x: 3.0, y: 5.0))
         XCTAssertEqual(l.compute(0.5), BKPoint(x: 2.0, y: 4.0))
         XCTAssertEqual(l.compute(1.0), BKPoint(x: 1.0, y: 3.0))
     }
+    
+    func testLength() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 6.0))
+        XCTAssertEqual(l.length(), 5.0)
+    }
+    
+    func testExtrema() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 6.0))
+        let (xyz, values) = l.extrema()
+        XCTAssert(xyz.count == 2) // one array for each dimension
+        XCTAssertEqual(xyz[0].count, 2)
+        XCTAssertEqual(xyz[1].count, 2)
+        XCTAssertEqual(values.count, 2) // two extrema total
+        XCTAssertEqual(values[0], 0.0)
+        XCTAssertEqual(values[1], 1.0)
+        XCTAssertEqual(xyz[0][0], 0.0)
+        XCTAssertEqual(xyz[0][1], 1.0)
+        XCTAssertEqual(xyz[1][0], 0.0)
+        XCTAssertEqual(xyz[1][1], 1.0)
+    }
+    
+    func testHull() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 3.0, y: 4.0))
+        let h = l.hull(0.5)
+        XCTAssert(h.count == 3)
+        XCTAssertEqual(h[0], BKPoint(x: 1.0, y: 2.0))
+        XCTAssertEqual(h[1], BKPoint(x: 3.0, y: 4.0))
+        XCTAssertEqual(h[2], BKPoint(x: 2.0, y: 3.0))
+    }
+    
+    /*
+ testGenerateLookupTable
+ testNormal
+ testReduce
+ testScaleDistance
+ testScaleDistanceFunc
+ testOffsetDistance
+ testOffsetTimeDistance
+ testProject
+ testIntersects
+ testIntersectsLine
+ testIntersectsCurve
+ testOuline
+ testOutline2
+ testOutline3
+ testOutlineShapes
+ testOutlinesShapes2
+ testArcs
+    */
 
 }
