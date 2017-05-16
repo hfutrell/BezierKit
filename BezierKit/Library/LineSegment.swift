@@ -73,7 +73,7 @@ public struct LineSegment: BezierCurve, Equatable {
         return Utils.lerp(t, self.p0, self.p1)
     }
     
-    // -- MARK: equitable
+    // -- MARK: Equatable
     
     public static func == (left: LineSegment, right: LineSegment) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1
@@ -94,5 +94,52 @@ public struct LineSegment: BezierCurve, Equatable {
         }
         return (xyz: xyz, [0.0, 1.0])
     }
+    
+    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
+        if let l = curve as? LineSegment {
+            // use fast line / line intersection algorithm
+            return self.intersects(line: l)
+        }
+        else {
+            // call into the curve's line intersection algorithm
+            let intersections = curve.intersects(line: self)
+            // invert and re-sort the order of the intersections since
+            // intersects was called on the line and not the curve
+            return intersections.map({(i: Intersection) in
+                return Intersection(t1: i.t2, t2: i.t1)
+            }).sorted()
+        }
+    }
+    
+    public func intersects(line: LineSegment) -> [Intersection] {
+        let a1 = self.p0
+        let b1 = self.p1 - self.p0
+        let a2 = line.p0
+        let b2 = line.p1 - line.p0
         
+        let _a = b1.x
+        let _b = -b2.x
+        let _c = b1.y
+        let _d = -b2.y
+        
+        // by Cramer's rule we have
+        // t1 = ed - bf / ad - bc
+        // t2 = af - ec / ad - bc
+        let det = _a * _d - _b * _c
+        
+        let _e = -a1.x + a2.x
+        let _f = -a1.y + a2.y
+        
+        let inv_det = 1.0 / det
+        let t1 = ( _e * _d - _b * _f ) * inv_det
+        if t1 > 1.0 || t1 < 0.0  {
+            return [] // t1 out of interval [0, 1]
+        }
+        let t2 = ( _a * _f - _e * _c ) * inv_det
+        if t2 > 1.0 || t2 < 0.0 {
+            return [] // t2 out of interval [0, 1]
+        }
+        return [Intersection(t1: t1, t2: t2)]
+    }
+    
 }

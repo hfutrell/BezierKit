@@ -192,7 +192,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return a * self.p0 + b * self.p1 + c * self.p2 + d * self.p3
     }
     
-    // -- MARK: equitable
+    // -- MARK: Equatable
     
     public static func == (left: CubicBezierCurve, right: CubicBezierCurve) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2 && left.p3 == right.p3

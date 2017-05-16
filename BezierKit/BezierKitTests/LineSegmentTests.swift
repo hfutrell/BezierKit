@@ -104,24 +104,212 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(h[2], BKPoint(x: 2.0, y: 3.0))
     }
     
+    func testNormal() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+        let n1 = l.normal(0.0)
+        let n2 = l.normal(0.5)
+        let n3 = l.normal(1.0)
+        XCTAssertEqual(n1, BKPoint(x: -1.0 / sqrt(2.0), y: 1.0 / sqrt(2.0)))
+        XCTAssertEqual(n1, n2)
+        XCTAssertEqual(n2, n3)
+    }
+    
+    func testReduce() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+        let r = l.reduce() // reduce should just return the original line back
+        XCTAssertEqual(r.count, 1)
+        XCTAssertEqual(r[0].t1, 0.0)
+        XCTAssertEqual(r[0].t2, 1.0)
+        XCTAssertEqual(r[0].curve, l)
+    }
+    
+//    func testScaleDistance() {
+//        // TODO: scale doesn't work with line segments or even higher order curves when they are linear
+//        // this is a bug that exists in Bezier.js
+//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+//        let s = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
+//        XCTAssertEqual(s, LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0)))
+//    }
+
+//    TODO: write me ... scale doesn't work for lines
+//    func testScaleDistanceFunc {
+//        
+//    }
+    
+//    TODO: write me .. offset currently does not work for lines
+//    func testOffsetDistance {
+//
+//    }
+    
+//    TODO: write me ... offset currently does not work for lines
+//    func testOffsetTimeDistance {
+//
+//    }
+
+    func testProject() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+        let p1 = l.project(point: BKPoint(x: 0.0, y: 0.0)) // should project to p0
+        XCTAssertEqual(p1, BKPoint(x: 1.0, y: 2.0))
+        let p2 = l.project(point: BKPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
+        XCTAssertEqual(p2, BKPoint(x: 2.0, y: 3.0))
+        let p3 = l.project(point: BKPoint(x: 6.0, y: 7.0))
+        XCTAssertEqual(p3, BKPoint(x: 5.0, y: 6.0)) // should project to p1
+    }
+    
+    func testIntersects() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+        let i = l.intersects()
+        XCTAssert(i.count == 0) // lines never self-intersect
+    }
+    
+    // -- MARK: - line-line intersection tests
+    
+    func testIntersectsLineYesInsideInterval() {
+        // a normal line-line intersection that happens in the middle of a line
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 7.0, y: 8.0))
+        let l2 = LineSegment(p0: BKPoint(x: 1.0, y: 4.0), p1: BKPoint(x: 5.0, y: 0.0))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 1.0 / 6.0)
+        XCTAssertEqual(i[0].t2, 1.0 / 4.0)
+    }
+    
+    func testIntersectsLineNoOutsideInterval1() {
+        // two lines that do not intersect because the intersection happens outside the line-segment
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
+        let l2 = LineSegment(p0: BKPoint(x: 0.0, y: 2.001), p1: BKPoint(x: 2.0, y: 2.001))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 0)
+    }
+    
+    func testIntersectsLineNoOutsideInterval2() {
+        // two lines that do not intersect because the intersection happens outside the *other* line segment
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
+        let l2 = LineSegment(p0: BKPoint(x: 2.0, y: 1.0), p1: BKPoint(x: 1.001, y: 1.0))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 0)
+    }
+    
+    func testIntersectsLineYesEdge1() {
+        // two lines that intersect on the 1st line's edge
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
+        let l2 = LineSegment(p0: BKPoint(x: 2.0, y: 1.0), p1: BKPoint(x: 1.0, y: 1.0))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 0.5)
+        XCTAssertEqual(i[0].t2, 1.0)
+    }
+    
+    func testIntersectsLineYesEdge2() {
+        // two lines that intersect on the 2nd line's edge
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
+        let l2 = LineSegment(p0: BKPoint(x: 0.0, y: 2.0), p1: BKPoint(x: 2.0, y: 2.0))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 1.0)
+        XCTAssertEqual(i[0].t2, 0.5)
+    }
+
+    func testIntersectsLineYesLineStart() {
+        // two lines that intersect at the start of the first line
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 2.0, y: 1.0))
+        let l2 = LineSegment(p0: BKPoint(x: -2.0, y: 2.0), p1: BKPoint(x: 1.0, y: 0.0))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 0.0)
+        XCTAssertEqual(i[0].t2, 1.0)
+    }
+    
+    func testIntersectsLineYesLineEnd() {
+        // two lines that intersect at the end of the first line
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 2.0, y: 1.0))
+        let l2 = LineSegment(p0: BKPoint(x: 2.0, y: 1.0), p1: BKPoint(x: -2.0, y: 2.0))
+        let i = l1.intersects(line: l2)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 1.0)
+        XCTAssertEqual(i[0].t2, 0.0)
+    }
+    
+    func testIntersectsLineAsCurve() {
+        // ensure that intersects(curve:) calls into the proper implementation
+        let l1: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0))
+        let l2: BezierCurve = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 0.0)) as BezierCurve!
+        let i = l1.intersects(curve: l2)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 0.5)
+        XCTAssertEqual(i[0].t2, 0.5)
+    }
+    
+    // -- MARK: - line-curve intersection tests
+    
+    func testIntersectsQuadratic() {
+        // we mostly just care that we call into the proper implementation and that the results are ordered correctly
+        // q is a quadratic where y(x) = 2 - 2(x-1)^2
+        let epsilon: BKFloat = 0.00001
+        let q: QuadraticBezierCurve = QuadraticBezierCurve.init(p0: BKPoint(x: 0.0, y: 0.0),
+                                                                p1: BKPoint(x: 1.0, y: 2.0),
+                                                                p2: BKPoint(x: 2.0, y: 0.0),
+                                                                t: 0.5)
+        let l1: LineSegment = LineSegment(p0: BKPoint(x: -1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 1.0))
+        let l2: LineSegment = LineSegment(p0: BKPoint(x: 3.0, y: 1.0), p1: BKPoint(x: -1.0, y: 1.0)) // same line as l1, but reversed
+        // the intersections for both lines occur at x = 1±sqrt(1/2)
+        let i1 = l1.intersects(curve: q)
+        let r1: BKFloat = 1.0 - sqrt(1.0 / 2.0)
+        let r2: BKFloat = 1.0 + sqrt(1.0 / 2.0)
+        XCTAssertEqual(i1.count, 2)
+        XCTAssertEqualWithAccuracy(i1[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[0].t2, r1 / 2.0, accuracy: epsilon)
+        XCTAssert((l1.compute(i1[0].t1) - q.compute(i1[0].t2)).length < epsilon)
+        XCTAssertEqualWithAccuracy(i1[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[1].t2, r2 / 2.0, accuracy: epsilon)
+        XCTAssert((l1.compute(i1[1].t1) - q.compute(i1[1].t2)).length < epsilon)
+        // do the same thing as above but using l2
+        let i2 = l2.intersects(curve: q)
+        XCTAssertEqual(i2.count, 2)
+        XCTAssertEqualWithAccuracy(i2[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[0].t2, r2 / 2.0, accuracy: epsilon)
+        XCTAssert((l2.compute(i2[0].t1) - q.compute(i2[0].t2)).length < epsilon)
+        XCTAssertEqualWithAccuracy(i2[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[1].t2, r1 / 2.0, accuracy: epsilon)
+        XCTAssert((l2.compute(i2[1].t1) - q.compute(i2[1].t2)).length < epsilon)
+    }
+    
+    func testIntersectsCubic() {
+        // we mostly just care that we call into the proper implementation and that the results are ordered correctly
+        let epsilon: BKFloat = 0.00001
+        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: -1, y: 0),
+                                                   p1: BKPoint(x: -1, y: 1),
+                                                   p2: BKPoint(x:  1, y: -1),
+                                                   p3: BKPoint(x:  1, y: 0))
+        let l1: LineSegment = LineSegment(p0: BKPoint(x: -2.0, y: 0.0), p1: BKPoint(x: 2.0, y: 0.0))
+        let i1 = l1.intersects(curve: c)
+      
+        XCTAssertEqual(i1.count, 3)
+        XCTAssertEqualWithAccuracy(i1[0].t1, 0.25, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[0].t2, 0.0, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[1].t2, 0.5, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[2].t1, 0.75, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i1[2].t2, 1.0, accuracy: epsilon)
+        // l2 is the same line going in the opposite direction
+        // by checking this we ensure the intersections are ordered by the line and not the cubic
+        let l2: LineSegment = LineSegment(p0: BKPoint(x: 2.0, y: 0.0), p1: BKPoint(x: -2.0, y: 0.0))
+        let i2 = l2.intersects(curve: c)
+        XCTAssertEqual(i2.count, 3)
+        XCTAssertEqualWithAccuracy(i2[0].t1, 0.25, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[0].t2, 1.0, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[1].t2, 0.5, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[2].t1, 0.75, accuracy: epsilon)
+        XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
+    }
+    
     /*
- testGenerateLookupTable
- testNormal
- testReduce
- testScaleDistance
- testScaleDistanceFunc
- testOffsetDistance
- testOffsetTimeDistance
- testProject
- testIntersects
- testIntersectsLine
- testIntersectsCurve
  testOuline
  testOutline2
  testOutline3
  testOutlineShapes
  testOutlinesShapes2
- testArcs
     */
 
 }

@@ -386,7 +386,7 @@ class Demos {
                                 Draw.drawLine(context, from: line.p0, to: line.p1)
                                 Draw.setColor(context, color: Draw.black)
                                 for intersection in curve.intersects(line: line) {
-                                    Draw.drawPoint(context, origin: curve.compute(intersection))
+                                    Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
     static let demo22 = Demo(title: ".intersects(curve)",
