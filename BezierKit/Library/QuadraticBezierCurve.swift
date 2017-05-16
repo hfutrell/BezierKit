@@ -70,8 +70,8 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let k: BKFloat = 2
         let p0 = k * (self.p1 - self.p0)
         let p1 = k * (self.p2 - self.p1)
-        let a = mt*mt
-        let b = mt*t*2
+        let a = mt
+        let b = t
         return a*p0 + b*p1
     }
 
