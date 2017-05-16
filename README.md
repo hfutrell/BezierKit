@@ -10,6 +10,8 @@ a library for dealing with bezier curves
 3. write unit tests for self intersection and determine why it's broken in structure refactoring branch
 4. merge in structure refactoring
 5. implement LinearBezierCurve class
+6. ensure types known at callsight for specialized generic (get rid of protocol witness table overhead), make sure its accessible otuside of module
+7. make sure p0, p1, etc use public accessor!
 
 ## Goals for v0.0.2 (done and merged to master)
 1. unit testing
