@@ -172,7 +172,14 @@ internal class Utils {
     static func roots(points: [BKPoint], line: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
-        let reduce: (BKFloat) -> Bool = { 0 <= $0 && $0 <= 1 }
+        
+        let epsilon: BKFloat = 1.0e-8
+        let reduce: (BKFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
+        let clamp: (BKFloat) -> BKFloat = {
+            if $0 < 0.0 { return 0.0 }
+            else if $0 > 1.0 { return 1.0 }
+            else { return $0 }
+        }
         
         if order == 2 {
             let a = p[0].y
@@ -184,10 +191,10 @@ internal class Utils {
                 let m2 = -a+b
                 let v1: BKFloat = -( m1+m2)/d
                 let v2: BKFloat = -(-m1+m2)/d
-                return [v1, v2].filter(reduce)
+                return [v1, v2].filter(reduce).map(clamp)
             }
             else if b != c && d == BKFloat(0.0) {
-                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce)
+                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce).map(clamp)
             }
             else {
                 return []
@@ -220,19 +227,19 @@ internal class Utils {
                 let x1 = t1 * cos(phi/3) - a/3
                 let x2 = t1 * cos((phi+tau)/3) - a/3
                 let x3 = t1 * cos((phi+2*tau)/3) - a/3
-                return [x1, x2, x3].filter(reduce)
+                return [x1, x2, x3].filter(reduce).map(clamp)
             }
             else if discriminant == 0 {
                 let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
                 let x1 = 2*u1-a/3
                 let x2 = -u1 - a/3
-                return [x1,x2].filter(reduce)
+                return [x1,x2].filter(reduce).map(clamp)
             }
             else {
                 let sd = sqrt(discriminant)
                 let u1 = crt(-q2+sd)
                 let v1 = crt(q2+sd)
-                return [u1-v1-a/3].filter(reduce)
+                return [u1-v1-a/3].filter(reduce).map(clamp)
             }
         }
         else {
