@@ -22,7 +22,7 @@ public struct Intersection: Equatable, Comparable {
         return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
     }
     public static func < (lhs: Intersection, rhs: Intersection ) -> Bool {
-        if lhs.t1 < rhs.t2 {
+        if lhs.t1 < rhs.t1 {
             return true
         }
         else if lhs.t1 == rhs.t1 {
