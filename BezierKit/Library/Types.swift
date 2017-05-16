@@ -22,7 +22,7 @@ public struct Intersection: Equatable, Comparable {
         return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
     }
     public static func < (lhs: Intersection, rhs: Intersection ) -> Bool {
-        if lhs.t1 < rhs.t2 {
+        if lhs.t1 < rhs.t1 {
             return true
         }
         else if lhs.t1 == rhs.t1 {
@@ -31,15 +31,6 @@ public struct Intersection: Equatable, Comparable {
         else {
             return false
         }
-    }
-}
-
-public struct Line {
-    public var p1: BKPoint
-    public var p2: BKPoint
-    public init(p1: BKPoint, p2: BKPoint) {
-        self.p1 = p1
-        self.p2 = p2
     }
 }
 
@@ -82,10 +73,13 @@ public struct Shape {
 
 public typealias BoundingBox = BBox<BKPoint>
 
-public struct BBox<P> where P: Point {
+public struct BBox<P>: Equatable where P: Point, P.F: Ordered {
     public var min: BKPoint
     public var max: BKPoint
     init() {
+        
+        // TODO: I really dislike this function
+        
         // by setting the min to infinity and the max to -infinity
         // when we union this (invalid) rect with a valid rect, we'll
         // get back the valid rect
@@ -97,18 +91,8 @@ public struct BBox<P> where P: Point {
         self.max = max
     }
     public init(first: BoundingBox, second: BoundingBox) {
-        var min = first.min
-        var max = second.max
-        for d in 0..<P.dimensions {
-            if first.max[d] > max[d] {
-                max[d] = first.min[d]
-            }
-            if second.min[d] < min[d] {
-                min[d] = second.min[d]
-            }
-        }
-        self.min = min
-        self.max = max
+        self.min = BezierKit.min(first.min, second.min)
+        self.max = BezierKit.max(first.max, second.max)
     }
     public var mid: BKPoint {
         return 0.5 * (min + max)
@@ -130,6 +114,9 @@ public struct BBox<P> where P: Point {
     public var toCGRect: CGRect {
         let s = self.size
         return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
+    }
+    public static func == (left: BBox<P>, right: BBox<P>) -> Bool {
+        return (left.min == right.min && left.max == right.max)
     }
 }
 
