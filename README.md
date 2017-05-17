@@ -6,8 +6,8 @@ a library for dealing with bezier curves
 
 ## Goals for v0.0.4 (upcoming)
 1. figure out if we can change intersection to return BezierCurve in protocol but concrete instance int he classes themselves 
-a. is it possible?
-b. does it prevent performance optimizations?
+ * is it possible?
+ * does it prevent performance optimizations?
 
 ## Goals for v0.0.5 (upcoming)
 1. unit test *all* the things
