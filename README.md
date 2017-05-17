@@ -11,10 +11,11 @@ a library for dealing with bezier curves
 
 ## Goals for v0.0.5 (upcoming)
 1. unit test *all* the things
-2. add ray support
-3. no more unnecessary sorting and de-duping of intersections
-4. profiling of intersections and removal of all overhead
-5. tbd
+2. drop Utils.makeline in favor of LineSegment where applicable
+3. add ray support
+4. no more unnecessary sorting and de-duping of intersections
+5. profiling of intersections and removal of all overhead
+6. tbd
 
 ## Goals for v0.0.3 (done and merged to master)
 1. fix intersection behavior at t = 0 and t = 1
