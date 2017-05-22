@@ -5,7 +5,8 @@ a library for dealing with bezier curves
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Goals for v0.0.4 (upcoming)
-1. figure out if we can change intersection to return BezierCurve in protocol but concrete instance int he classes themselves 
+1. quadratic and cubic intersected with lines will fail because: unsupported (the reverse will succeed!)
+2. figure out if we can change intersection to return BezierCurve in protocol but concrete instance int he classes themselves 
  * is it possible?
  * does it prevent performance optimizations?
 
