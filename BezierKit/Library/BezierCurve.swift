@@ -463,6 +463,9 @@ extension BezierCurve {
         else if let q = curve as? QuadraticBezierCurve {
             return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], curveIntersectionThreshold: curveIntersectionThreshold)
         }
+        else if let l = curve as? LineSegment {
+            return self.intersects(line: l)
+        }
         else {
             fatalError("unsupported")
         }
@@ -596,4 +599,5 @@ public protocol BezierCurve {
     func length() -> BKFloat
     func extrema() -> (xyz: [[BKFloat]], values: [BKFloat] )
     func generateLookupTable(withSteps steps: Int) -> [BKPoint]
+    func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat) -> [Intersection]
 }
