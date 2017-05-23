@@ -16,7 +16,8 @@ a library for dealing with bezier curves
 3. add ray support
 4. no more unnecessary sorting and de-duping of intersections
 5. profiling of intersections and removal of all overhead
-6. tbd
+6. we do about 2x as many bounding box computations in pairIteration as necessary ... can really slow things down
+7. tbd
 
 ## Goals for v0.0.3 (done and merged to master)
 1. fix intersection behavior at t = 0 and t = 1
