@@ -40,6 +40,10 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.startingPoint, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
     }
+  
+//  test this one too
+//    public init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
+
     
     func testCubicIntersectsLine() {
         let epsilon: BKFloat = 0.00001
