@@ -306,6 +306,17 @@ class LineSegmentTests: XCTestCase {
     
     func testIntersectsDegenerateCubic1() {
         // a special case where the cubic is degenerate (it can actually be described as a quadratic)
+        let epsilon: BKFloat = 0.00001
+        let fiveThirds: BKFloat = 5.0 / 3.0
+        let sevenThirds: BKFloat = 7.0 / 3.0
+        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                                   p1: BKPoint(x: fiveThirds, y: fiveThirds),
+                                                   p2: BKPoint(x: sevenThirds, y: fiveThirds),
+                                                   p3: BKPoint(x: 3.0, y: 1.0))
+        let l1 = LineSegment(p0: BKPoint(x:1.0, y: 1.1), p1: BKPoint(x: 3.0, y: 1.1))
+        let i1 = l1.intersects(curve: c)
+        XCTAssertEqual(i1.count, 2)
+
     }
     
     func testIntersectsDegenerateCubic2() {
