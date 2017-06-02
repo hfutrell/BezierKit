@@ -304,6 +304,15 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
     }
     
+    func testIntersectsDegenerateCubic1() {
+        // a special case where the cubic is degenerate (it can actually be described as a quadratic)
+    }
+    
+    func testIntersectsDegenerateCubic2() {
+        // a special case where the cubic is degenerate (it can actually be described as a line)
+    }
+
+    
     /*
  testOuline
  testOutline2
