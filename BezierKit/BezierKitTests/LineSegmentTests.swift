@@ -304,6 +304,17 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
     }
     
+    private func intersections(_ intersections: [Intersection], betweenCurve c1: BezierCurve, andOtherCurve c2: BezierCurve, areWithinTolerance epsilon: BKFloat) -> Bool {
+        for i in intersections {
+            let p1 = c1.compute(i.t1)
+            let p2 = c2.compute(i.t2)
+            if (p1 - p2).length > epsilon {
+                return false
+            }
+        }
+        return true
+    }
+    
     func testIntersectsDegenerateCubic1() {
         // a special case where the cubic is degenerate (it can actually be described as a quadratic)
         let epsilon: BKFloat = 0.00001
@@ -313,14 +324,23 @@ class LineSegmentTests: XCTestCase {
                                                    p1: BKPoint(x: fiveThirds, y: fiveThirds),
                                                    p2: BKPoint(x: sevenThirds, y: fiveThirds),
                                                    p3: BKPoint(x: 3.0, y: 1.0))
-        let l1 = LineSegment(p0: BKPoint(x:1.0, y: 1.1), p1: BKPoint(x: 3.0, y: 1.1))
-        let i1 = l1.intersects(curve: c)
-        XCTAssertEqual(i1.count, 2)
-
+        let l = LineSegment(p0: BKPoint(x:1.0, y: 1.1), p1: BKPoint(x: 3.0, y: 1.1))
+        let i = l.intersects(curve: c)
+        XCTAssertEqual(i.count, 2)
+        XCTAssert(intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
     
     func testIntersectsDegenerateCubic2() {
         // a special case where the cubic is degenerate (it can actually be described as a line)
+        let epsilon: BKFloat = 0.00001
+        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                                   p1: BKPoint(x: 2.0, y: 2.0),
+                                                   p2: BKPoint(x: 3.0, y: 3.0),
+                                                   p3: BKPoint(x: 4.0, y: 4.0))
+        let l = LineSegment(p0: BKPoint(x:1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 2.0))
+        let i = l.intersects(curve: c)
+        XCTAssertEqual(i.count, 1)
+        XCTAssert(intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
     
