@@ -186,15 +186,16 @@ internal class Utils {
             let b = p[1].y
             let c = p[2].y
             let d = a - 2*b + c
-            if d != 0 {
+            if abs(d) > epsilon {
                 let m1 = -sqrt(b*b-a*c)
                 let m2 = -a+b
                 let v1: BKFloat = -( m1+m2)/d
                 let v2: BKFloat = -(-m1+m2)/d
                 return [v1, v2].filter(reduce).map(clamp)
             }
-            else if b != c && d == BKFloat(0.0) {
-                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce).map(clamp)
+            else if a != b {
+                // TODO: also fix in droots!
+                return [BKFloat(0.5 * a / (a-b))].filter(reduce).map(clamp)
             }
             else {
                 return []
@@ -207,6 +208,13 @@ internal class Utils {
             let pc = p[2].y
             let pd = p[3].y
             let d = (-pa + 3*pb - 3*pc + pd)
+            if d == 0.0 {
+                // TODO: epsilon testing ... use demos upgrade the quadratic to a cubic!
+                let a = (3*points[0] - 6*points[1] + 3*points[2])
+                let b = (-3*points[0] + 3*points[1])
+                let c = points[0]
+                return roots(points: [c, b / 2.0 + c, a + b + c], line: line)
+            }
             let a = (3*pa - 6*pb + 3*pc) / d
             let b = (-3*pa + 3*pb) / d
             let c = pa / d

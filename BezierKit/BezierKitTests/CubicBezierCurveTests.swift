@@ -40,6 +40,34 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.startingPoint, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
     }
+    
+    func testConstructorLine() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 2.0, y: 3.0))
+        let c = CubicBezierCurve(lineSegment: l)
+        XCTAssertEqual(c.p0, l.p0)
+        XCTAssertEqual(c.p1, (2.0 / 3.0) * l.p0 + (1.0 / 3.0) * l.p1)
+        XCTAssertEqual(c.p2, (1.0 / 3.0) * l.p0 + (2.0 / 3.0) * l.p1)
+        XCTAssertEqual(c.p3, l.p1)
+    }
+    
+    func testConstructorQuadratic() {
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 3.0, y: 1.0))
+        let c = CubicBezierCurve(quadratic: q)
+        let epsilon: BKFloat = 1.0e-6
+        // check for equality via lookup table
+        let steps = 10
+        for (p1, p2) in zip(q.generateLookupTable(withSteps: steps), c.generateLookupTable(withSteps: steps)) {
+            XCTAssert((p1 - p2).length < epsilon)
+        }
+        // check for proper values in control points
+        let fiveThirds: BKFloat = 5.0 / 3.0
+        let sevenThirds: BKFloat = 7.0 / 3.0
+        XCTAssert((c.p0 - BKPoint(x: 1.0, y: 1.0)).length < epsilon)
+        XCTAssert((c.p1 - BKPoint(x: fiveThirds, y: fiveThirds)).length < epsilon)
+        XCTAssert((c.p2 - BKPoint(x: sevenThirds, y: fiveThirds)).length < epsilon)
+        XCTAssert((c.p3 - BKPoint(x: 3.0, y: 1.0)).length < epsilon)
+    }
+
   
 //  test this one too
 //    public init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
