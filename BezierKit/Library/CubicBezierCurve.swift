@@ -221,7 +221,12 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let b = mt2 * t * 3.0
         let c = mt * t2 * 3.0
         let d = t * t2
-        return a * self.p0 + b * self.p1 + c * self.p2 + d * self.p3
+        // making the final sum one line of code makes XCode take forever to compiler! Hence the temporary variables.
+        let temp1 = a * self.p0
+        let temp2 = b * self.p1
+        let temp3 = c * self.p2
+        let temp4 = d * self.p3
+        return temp1 + temp2 + temp3 + temp4
     }
     
     // -- MARK: Equatable
