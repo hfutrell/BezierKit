@@ -20,14 +20,14 @@ internal class Utils {
     static let quart: BKFloat = BKFloat(Double.pi) / 2.0
     
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
-    static let Tvalues: [BKFloat] = [
+    static let Tvalues: ContiguousArray<BKFloat> = [
         -0.0640568928626056260850430826247450385909,
         0.0640568928626056260850430826247450385909,
         -0.1911188674736163091586398207570696318404,
         0.1911188674736163091586398207570696318404,
         -0.3150426796961633743867932913198102407864,
         0.3150426796961633743867932913198102407864,
-        -0.4337935076260451384870842319133497124524,
+        -0.4337935076260451384870842319133497124525,
         0.4337935076260451384870842319133497124524,
         -0.5454214713888395356583756172183723700107,
         0.5454214713888395356583756172183723700107,
@@ -48,7 +48,7 @@ internal class Utils {
     ]
     
     // Legendre-Gauss weights with n=24 (w_i values, defined by a function linked to in the Bezier primer article)
-    static let Cvalues: [BKFloat] = [
+    static let Cvalues: ContiguousArray<BKFloat> = [
         0.1279381953467521569740561652246953718517,
         0.1279381953467521569740561652246953718517,
         0.1258374563468282961213753825111836887264,

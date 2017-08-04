@@ -67,11 +67,28 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert((c.p2 - BKPoint(x: sevenThirds, y: fiveThirds)).length < epsilon)
         XCTAssert((c.p3 - BKPoint(x: 3.0, y: 1.0)).length < epsilon)
     }
-
-  
-//  test this one too
-//    public init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
-
+    
+    func testConstructorStartEndMidTStrutLength() {
+        
+        let epsilon: BKFloat = 0.00001
+        
+        let start = BKPoint(x: 1.0, y: 1.0)
+        let mid = BKPoint(x: 2.0, y: 2.0)
+        let end = BKPoint(x: 4.0, y: 0.0)
+        let t: BKFloat = 7.0 / 9.0
+        let d: BKFloat = 1.5
+        
+        let c = CubicBezierCurve.init(start: start, end: end, mid: mid, t: t, strutLength: strutLength)
+        XCTAssertEqual(c.compute(0.0), start)
+        XCTAssert((c.compute(t) - mid).length < epsilon)
+        XCTAssertEqual(c.compute(1.0), end)
+        // make sure our solution has the proper strut length
+        let e1 = c.hull(t)[7]
+        let e2 = c.hull(t)[8]
+        let l = (e2 - e1).length
+        XCTAssertEqualWithAccuracy(l, d * 1.0 / t, accuracy: epsilon)
+        
+    }
     
     func testCubicIntersectsLine() {
         let epsilon: BKFloat = 0.00001

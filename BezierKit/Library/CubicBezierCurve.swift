@@ -8,6 +8,9 @@
 
 import Foundation
 
+/**
+ Cubic Bezier Curve
+ */
 public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
  
     public var p0, p1, p2, p3: BKPoint
@@ -41,31 +44,44 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.init(points: points)
     }
 
-    public init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
-                
-        let abc = Utils.getABC(n: 3, S: S, B: B, E: E, t: t)
+/**
+     Returns a CubicBezierCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
+     
+- parameter start: the starting point of the curve
+- parameter end: the ending point of the curve
+- parameter mid: an intermediate point falling on the curve
+- parameter t: optional t-value at which the curve will pass through the point `mid` (default = 0.5)
+- parameter d: optional strut length with the full strut being length d * (1-t)/t. If omitted or `nil` the distance from `mid` to the baseline (line from `start` to `end`) is used.
+*/
+    public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5, d: BKFloat? = nil) {
         
-        let d1 = (tempD1 != nil) ? tempD1! : Utils.dist(B,abc.C)
-        let d2 = d1 * (1-t) / t
+        let s = start
+        let b = mid
+        let e = end
         
-        let selen = Utils.dist(S,E)
-        let lx = (E.x-S.x) / selen
-        let ly = (E.y-S.y) / selen
+        let abc = Utils.getABC(n: 3, S: s, B: b, E: e, t: t)
+        
+        let d1 = (d != nil) ? d! : Utils.dist(b, abc.C)
+        let d2 = d1 * (1.0-t) / t
+        
+        let selen = Utils.dist(start, end)
+        let lx = (e.x-s.x) / selen
+        let ly = (e.y-s.y) / selen
         let bx1 = d1 * lx
         let by1 = d1 * ly
         let bx2 = d2 * lx
         let by2 = d2 * ly
         
         // derivation of new hull coordinates
-        let e1  = BKPoint( x: B.x - bx1, y: B.y - by1 )
-        let e2  = BKPoint( x: B.x + bx2, y: B.y + by2 )
+        let e1  = BKPoint( x: b.x - bx1, y: b.y - by1 )
+        let e2  = BKPoint( x: b.x + bx2, y: b.y + by2 )
         let A   = abc.A
         let v1  = BKPoint( x: A.x + (e1.x-A.x)/(1-t), y: A.y + (e1.y-A.y)/(1-t) )
         let v2  = BKPoint( x: A.x + (e2.x-A.x)/(t), y: A.y + (e2.y-A.y)/(t) )
-        let nc1 = BKPoint( x: S.x + (v1.x-S.x)/(t), y: S.y + (v1.y-S.y)/(t) )
-        let nc2 = BKPoint( x: E.x + (v2.x-E.x)/(1-t), y: E.y + (v2.y-E.y)/(1-t) )
+        let nc1 = BKPoint( x: s.x + (v1.x-s.x)/(t), y: s.y + (v1.y-s.y)/(t) )
+        let nc2 = BKPoint( x: e.x + (v2.x-e.x)/(1-t), y: e.y + (v2.y-e.y)/(1-t) )
         // ...done
-        self.init(p0:S, p1: nc1, p2: nc2, p3: E)
+        self.init(p0:s, p1: nc1, p2: nc2, p3: e)
         
     }
     
