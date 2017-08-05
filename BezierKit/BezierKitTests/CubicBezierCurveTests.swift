@@ -391,4 +391,24 @@ class CubicBezierCurveTests: XCTestCase {
 //     testOutlinesShapes2
 //     */
 
+    // MARK: -
+    
+    func testEquatable() {
+        let p0 = BKPoint(x: 1.0, y: 2.0)
+        let p1 = BKPoint(x: 2.0, y: 3.0)
+        let p2 = BKPoint(x: 3.0, y: 3.0)
+        let p3 = BKPoint(x: 4.0, y: 2.0)
+
+        let c1 = CubicBezierCurve(p0: p0, p1: p1, p2: p2, p3: p3)
+        let c2 = CubicBezierCurve(p0: BKPoint(x: 5.0, y: 6.0), p1: p1, p2: p2, p3: p3)
+        let c3 = CubicBezierCurve(p0: p0, p1: BKPoint(x: 1.0, y: 3.0), p2: p2, p3: p3)
+        let c4 = CubicBezierCurve(p0: p0, p1: p1, p2: BKPoint(x: 3.0, y: 6.0), p3: p3)
+        let c5 = CubicBezierCurve(p0: p0, p1: p1, p2: p2, p3: BKPoint(x: -4.0, y: 2.0))
+
+        XCTAssertEqual(c1, c1)
+        XCTAssertNotEqual(c1, c2)
+        XCTAssertNotEqual(c1, c3)
+        XCTAssertNotEqual(c1, c4)
+        XCTAssertNotEqual(c1, c5)
+    }
 }
