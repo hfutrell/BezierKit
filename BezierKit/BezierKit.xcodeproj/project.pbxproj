@@ -51,6 +51,8 @@
 		FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
 		FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */; };
 		FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */; };
+		FDEB70A11F36568B00539003 /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
+		FDEB70A21F36568B00539003 /* BezierKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -546,6 +548,7 @@
 				FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
 				FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
+				FDEB70A11F36568B00539003 /* BezierKitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -556,6 +559,7 @@
 				FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
 				FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
+				FDEB70A21F36568B00539003 /* BezierKitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
