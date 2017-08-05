@@ -21,7 +21,7 @@ class CubicBezierCurveTests: XCTestCase {
         super.tearDown()
     }
     
-    func testConstructorList() {
+    func testInitializerList() {
         let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 5.0, y: 3.0), p3: BKPoint(x: 7.0, y: 4.0))
         XCTAssertEqual(c.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(c.p1, BKPoint(x: 3.0, y: 2.0))
@@ -31,7 +31,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
     }
     
-    func testConstructorArray() {
+    func testInitializerArray() {
         let c = CubicBezierCurve(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0), BKPoint(x: 5.0, y: 3.0), BKPoint(x: 7.0, y: 4.0)])
         XCTAssertEqual(c.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(c.p1, BKPoint(x: 3.0, y: 2.0))
@@ -41,7 +41,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
     }
     
-    func testConstructorLine() {
+    func testInitializerLine() {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 2.0, y: 3.0))
         let c = CubicBezierCurve(lineSegment: l)
         XCTAssertEqual(c.p0, l.p0)
@@ -52,7 +52,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.p3, l.p1)
     }
     
-    func testConstructorQuadratic() {
+    func testInitializerQuadratic() {
         let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 3.0, y: 1.0))
         let c = CubicBezierCurve(quadratic: q)
         let epsilon: BKFloat = 1.0e-6
@@ -70,7 +70,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert((c.p3 - BKPoint(x: 3.0, y: 1.0)).length < epsilon)
     }
     
-    func testConstructorStartEndMidTStrutLength() {
+    func testInitializerStartEndMidTStrutLength() {
         
         let epsilon: BKFloat = 0.00001
         

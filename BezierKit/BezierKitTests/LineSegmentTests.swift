@@ -21,7 +21,7 @@ class LineSegmentTests: XCTestCase {
         super.tearDown()
     }
 
-    func testConstructorList() {
+    func testInitializerList() {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.p1, BKPoint(x: 3.0, y: 2.0))
@@ -29,7 +29,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(l.endingPoint, BKPoint(x: 3.0, y: 2.0))
     }
     
-    func testConstructorArray() {
+    func testInitializerArray() {
         let l = LineSegment(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0)])
         XCTAssertEqual(l.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.p1, BKPoint(x: 3.0, y: 2.0))
