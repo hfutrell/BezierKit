@@ -77,10 +77,17 @@ class CubicBezierCurveTests: XCTestCase {
         let start = BKPoint(x: 1.0, y: 1.0)
         let mid = BKPoint(x: 2.0, y: 2.0)
         let end = BKPoint(x: 4.0, y: 0.0)
+        
+        // first test passing without passing a t or d paramter
+        var c = CubicBezierCurve.init(start: start, end: end, mid: mid)
+        XCTAssertEqual(c.compute(0.0), start)
+        XCTAssert((c.compute(0.5) - mid).length < epsilon)
+        XCTAssertEqual(c.compute(1.0), end)
+       
+        // now test passing in a manual t and length d
         let t: BKFloat = 7.0 / 9.0
         let d: BKFloat = 1.5
-        
-        let c = CubicBezierCurve.init(start: start, end: end, mid: mid, t: t, d: d)
+        c = CubicBezierCurve.init(start: start, end: end, mid: mid, t: t, d: d)
         XCTAssertEqual(c.compute(0.0), start)
         XCTAssert((c.compute(t) - mid).length < epsilon)
         XCTAssertEqual(c.compute(1.0), end)
@@ -89,7 +96,6 @@ class CubicBezierCurveTests: XCTestCase {
         let e2 = c.hull(t)[8]
         let l = (e2 - e1).length
         XCTAssertEqualWithAccuracy(l, d * 1.0 / t, accuracy: epsilon)
-        
     }
     
     func testCubicIntersectsLine() {
