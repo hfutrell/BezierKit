@@ -9,7 +9,7 @@
 import Foundation
 
 /**
- Cubic Bezier Curve
+ Cubic Bézier Curve
  */
 public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
  
@@ -22,6 +22,16 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public var order: Int {
         return 3
     }
+
+    public var startingPoint: BKPoint {
+        return p0
+    }
+    
+    public var endingPoint: BKPoint {
+        return p3
+    }
+    
+    // MARK: - Initializers
     
     public init(points: [BKPoint]) {
         precondition(points.count == 4)
@@ -29,14 +39,6 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.p1 = points[1]
         self.p2 = points[2]
         self.p3 = points[3]
-    }
-    
-    public var startingPoint: BKPoint {
-        return p0
-    }
-    
-    public var endingPoint: BKPoint {
-        return p3
     }
     
     public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
@@ -83,7 +85,6 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let nc2 = e + (v2-e) / oneMinusT
         // ...done
         self.init(p0:s, p1: nc1, p2: nc2, p3: e)
-        
     }
     
     public init(lineSegment l: LineSegment) {
@@ -101,6 +102,8 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let p3 = q.p2
         self.init(p0: p0, p1: p1, p2: p2, p3: p3)
     }
+    
+    // MARK: -
     
     public var simple: Bool {
         let a1 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p1)
@@ -234,7 +237,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return temp1 + temp2 + temp3 + temp4
     }
     
-    // -- MARK: Equatable
+    // MARK: - Equatable
     
     public static func == (left: CubicBezierCurve, right: CubicBezierCurve) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2 && left.p3 == right.p3
