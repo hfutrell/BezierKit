@@ -76,10 +76,11 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let e1  = BKPoint( x: b.x - bx1, y: b.y - by1 )
         let e2  = BKPoint( x: b.x + bx2, y: b.y + by2 )
         let A   = abc.A
-        let v1  = BKPoint( x: A.x + (e1.x-A.x)/(1-t), y: A.y + (e1.y-A.y)/(1-t) )
-        let v2  = BKPoint( x: A.x + (e2.x-A.x)/(t), y: A.y + (e2.y-A.y)/(t) )
-        let nc1 = BKPoint( x: s.x + (v1.x-s.x)/(t), y: s.y + (v1.y-s.y)/(t) )
-        let nc2 = BKPoint( x: e.x + (v2.x-e.x)/(1-t), y: e.y + (v2.y-e.y)/(1-t) )
+        let oneMinusT = 1.0 - t
+        let v1  = A + (e1-A) / oneMinusT
+        let v2  = A + (e2-A) / t
+        let nc1 = s + (v1-s) / t
+        let nc2 = e + (v2-e) / oneMinusT
         // ...done
         self.init(p0:s, p1: nc1, p2: nc2, p3: e)
         
@@ -123,7 +124,11 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let a = mt*mt
         let b = mt*t*2
         let c = t*t
-        return a*p0 + b*p1 + c*p2
+        // making the final sum one line of code makes XCode take forever to compiler! Hence the temporary variables.
+        let temp1 = a*p0
+        let temp2 = b*p1
+        let temp3 = c*p2
+        return temp1 + temp2 + temp3
     }
     
     public func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezierCurve {

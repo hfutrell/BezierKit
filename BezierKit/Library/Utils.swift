@@ -207,11 +207,19 @@ internal class Utils {
             let pb = p[1].y
             let pc = p[2].y
             let pd = p[3].y
-            let d = (-pa + 3*pb - 3*pc + pd)
+            let temp1 = -pa
+            let temp2 = 3*pb
+            let temp3 = -3*pc
+            let d = temp1 + temp2 + temp3 + pd
             if d == 0.0 {
                 // TODO: epsilon testing ... use demos upgrade the quadratic to a cubic!
-                let a = (3*points[0] - 6*points[1] + 3*points[2])
-                let b = (-3*points[0] + 3*points[1])
+                let temp1 = 3*points[0]
+                let temp2 = -6*points[1]
+                let temp3 = 3*points[2]
+                let a = (temp1 + temp2 + temp3)
+                let temp4 = -3*points[0]
+                let temp5 = 3*points[1]
+                let b = (temp4 + temp5)
                 let c = points[0]
                 return roots(points: [c, b / 2.0 + c, a + b + c], line: line)
             }

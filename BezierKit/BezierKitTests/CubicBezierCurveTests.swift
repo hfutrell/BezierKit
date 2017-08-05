@@ -45,8 +45,10 @@ class CubicBezierCurveTests: XCTestCase {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 2.0, y: 3.0))
         let c = CubicBezierCurve(lineSegment: l)
         XCTAssertEqual(c.p0, l.p0)
-        XCTAssertEqual(c.p1, (2.0 / 3.0) * l.p0 + (1.0 / 3.0) * l.p1)
-        XCTAssertEqual(c.p2, (1.0 / 3.0) * l.p0 + (2.0 / 3.0) * l.p1)
+        let oneThird: BKFloat = 1.0 / 3.0
+        let twoThirds: BKFloat = 2.0 / 3.0
+        XCTAssertEqual(c.p1, twoThirds * l.p0 + oneThird * l.p1)
+        XCTAssertEqual(c.p2, oneThird * l.p0 + twoThirds * l.p1)
         XCTAssertEqual(c.p3, l.p1)
     }
     
@@ -78,7 +80,7 @@ class CubicBezierCurveTests: XCTestCase {
         let t: BKFloat = 7.0 / 9.0
         let d: BKFloat = 1.5
         
-        let c = CubicBezierCurve.init(start: start, end: end, mid: mid, t: t, strutLength: strutLength)
+        let c = CubicBezierCurve.init(start: start, end: end, mid: mid, t: t, d: d)
         XCTAssertEqual(c.compute(0.0), start)
         XCTAssert((c.compute(t) - mid).length < epsilon)
         XCTAssertEqual(c.compute(1.0), end)
