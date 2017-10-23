@@ -8,7 +8,7 @@ env:
   - IOS_SCHEME=BezierKit_iOS
   - IOS_SDK=iphoneos11.0
   - OSX_SCHEME=BezierKit_Mac
-  - OSX_SDK=macosx10.12
+  - OSX_SDK=macosx10.13
   matrix:
     - DESTINATION="OS=9.0,name=iPhone 5"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
     - DESTINATION="OS=11.0,name=iPhone 6"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
