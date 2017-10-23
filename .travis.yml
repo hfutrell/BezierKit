@@ -6,7 +6,7 @@ env:
   - LANG=en_US.UTF-8
   - PROJECT=BezierKit/BezierKit.xcodeproj
   - IOS_SCHEME=BezierKit_iOS
-  - IOS_SDK=iphoneos11.0
+  - IOS_SDK=iphonesimulator11.0
   - OSX_SCHEME=BezierKit_Mac
   - OSX_SDK=macosx10.13
   matrix:
