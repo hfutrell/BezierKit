@@ -246,9 +246,9 @@ class LineSegmentTests: XCTestCase {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         // q is a quadratic where y(x) = 2 - 2(x-1)^2
         let epsilon: BKFloat = 0.00001
-        let q: QuadraticBezierCurve = QuadraticBezierCurve.init(p0: BKPoint(x: 0.0, y: 0.0),
-                                                                p1: BKPoint(x: 1.0, y: 2.0),
-                                                                p2: BKPoint(x: 2.0, y: 0.0),
+        let q: QuadraticBezierCurve = QuadraticBezierCurve.init(start: BKPoint(x: 0.0, y: 0.0),
+                                                                end: BKPoint(x: 2.0, y: 0.0),
+                                                                mid: BKPoint(x: 1.0, y: 2.0),
                                                                 t: 0.5)
         let l1: LineSegment = LineSegment(p0: BKPoint(x: -1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 1.0))
         let l2: LineSegment = LineSegment(p0: BKPoint(x: 3.0, y: 1.0), p1: BKPoint(x: -1.0, y: 1.0)) // same line as l1, but reversed

@@ -34,16 +34,34 @@ public struct Intersection: Equatable, Comparable {
     }
 }
 
-public struct Arc {
-    struct Interval {
-        var start: BKFloat
-        var end: BKFloat
+public struct Interval: Equatable {
+    public var start: BKFloat
+    public var end: BKFloat
+    public init(start: BKFloat, end: BKFloat) {
+        self.start = start
+        self.end = end
     }
-    var origin: BKPoint
-    var radius: BKFloat
-    var start: BKFloat // starting angle
-    var end: BKFloat // starting angle
-    var interval: Interval // represents t-values [0, 1] on curve
+    public static func == (left: Interval, right: Interval) -> Bool {
+        return (left.start == right.start && left.end == right.end)
+    }
+}
+
+public struct Arc: Equatable {
+    public var origin: BKPoint
+    public var radius: BKFloat
+    public var start: BKFloat // starting angle (in radians)
+    public var end: BKFloat // ending angle (in radians)
+    public var interval: Interval // represents t-values [0, 1] on curve
+    public init(origin: BKPoint, radius: BKFloat, start: BKFloat, end: BKFloat, interval: Interval = Interval(start: 0.0, end: 1.0)) {
+        self.origin = origin
+        self.radius = radius
+        self.start = start
+        self.end = end
+        self.interval = interval
+    }
+    public static func == (left: Arc, right: Arc) -> Bool {
+        return (left.origin == right.origin && left.radius == right.radius && left.start == right.start && left.end == right.end && left.interval == right.interval)
+    }
 }
 
 public struct Shape {

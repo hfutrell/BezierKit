@@ -484,7 +484,7 @@ internal class Utils {
         return shape
     }
     
-    static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Arc.Interval) -> Arc {
+    static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Interval) -> Arc {
         let d1 = p2 - p1
         let d2 = p3 - p2
         let d1p = BKPoint(x: d1.x * cos(quart) - d1.y * sin(quart),

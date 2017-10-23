@@ -24,19 +24,18 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.init(points: points)
     }
     
-    // TODO: rename this method, it's very easy to confuse with the regular initializer, especially because t is optional!
-    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, t: BKFloat = 0.5) {
+    public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
-            self.init(p0: p1, p1: p1, p2: p2)
+            self.init(p0: mid, p1: mid, p2: end)
         }
         else if t == 1 {
-            self.init(p0: p0, p1: p1, p2: p1)
+            self.init(p0: start, p1: mid, p2: mid)
         }
         else {
             // real fitting.
-            let abc = Utils.getABC(n:2, S: p0, B: p1, E: p2, t: t)
-            self.init(p0: p0, p1: abc.A, p2: p2)
+            let abc = Utils.getABC(n:2, S: start, B: mid, E: end, t: t)
+            self.init(p0: start, p1: abc.A, p2: end)
         }
     }
 
