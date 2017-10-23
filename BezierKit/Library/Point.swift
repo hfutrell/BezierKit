@@ -6,17 +6,17 @@
 //  Copyright © 2017 Holmes Futrell. All rights reserved.
 //
 
-public protocol Point: VectorSpace, Normed {
-    associatedtype F: RealNumber // as in VectorSpace we have an associated type F. But F conforms to RealNumber, not just Field.
+public protocol Point: VectorSpace, Normed where F: RealNumber {
+
 }
 
-func min<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> where F: Ordered {
+func min<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> {
     // optimized version of min for Point2
     return Point2<F>(x: p1.x < p2.x ? p1.x : p2.x,
                      y: p1.y < p2.y ? p1.y : p2.y)
 }
 
-func max<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> where F: Ordered {
+func max<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> {
     // optimized version of max for Point2
     return Point2<F>(x: p1.x > p2.x ? p1.x : p2.x,
                      y: p1.y > p2.y ? p1.y : p2.y)

@@ -91,7 +91,7 @@ public struct Shape {
 
 public typealias BoundingBox = BBox<BKPoint>
 
-public struct BBox<P>: Equatable where P: Point, P.F: Ordered {
+public struct BBox<P>: Equatable where P: Point {
     public var min: BKPoint
     public var max: BKPoint
     init() {

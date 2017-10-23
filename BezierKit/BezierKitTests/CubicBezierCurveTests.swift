@@ -95,7 +95,7 @@ class CubicBezierCurveTests: XCTestCase {
         let e1 = c.hull(t)[7]
         let e2 = c.hull(t)[8]
         let l = (e2 - e1).length
-        XCTAssertEqualWithAccuracy(l, d * 1.0 / t, accuracy: epsilon)
+        XCTAssertEqual(l, d * 1.0 / t, accuracy: epsilon)
     }
     
     func testCubicIntersectsLine() {
@@ -108,12 +108,12 @@ class CubicBezierCurveTests: XCTestCase {
         let i = c.intersects(curve: l)
         
         XCTAssertEqual(i.count, 3)
-        XCTAssertEqualWithAccuracy(i[0].t2, 0.25, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i[0].t1, 0.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i[1].t2, 0.5, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i[1].t1, 0.5, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i[2].t2, 0.75, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i[2].t1, 1.0, accuracy: epsilon)
+        XCTAssertEqual(i[0].t2, 0.25, accuracy: epsilon)
+        XCTAssertEqual(i[0].t1, 0.0, accuracy: epsilon)
+        XCTAssertEqual(i[1].t2, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i[2].t2, 0.75, accuracy: epsilon)
+        XCTAssertEqual(i[2].t1, 1.0, accuracy: epsilon)
     }
     
 //    func testBasicProperties() {
