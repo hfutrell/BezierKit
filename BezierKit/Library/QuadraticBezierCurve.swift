@@ -123,7 +123,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let d1: BKPoint = p2 - p1
         
         for d in 0..<BKPoint.dimensions {
-            Utils.droots(d0[d], d1[d], 0) {(t: BKFloat) in
+            Utils.droots(d0[d], d1[d]) {(t: BKFloat) in
                 if t <= 0.0 || t >= 1.0 {
                     return
                 }
