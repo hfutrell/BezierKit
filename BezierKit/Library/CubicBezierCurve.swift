@@ -229,7 +229,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let b = mt2 * t * 3.0
         let c = mt * t2 * 3.0
         let d = t * t2
-        // making the final sum one line of code makes XCode take forever to compiler! Hence the temporary variables.
+        // usage of temp variables are because of Swift Compiler error 'Expression was too complex to be solved in reasonable time; consider breaking up the expression into distinct sub extpressions'
         let temp1 = a * self.p0
         let temp2 = b * self.p1
         let temp3 = c * self.p2

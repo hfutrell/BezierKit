@@ -64,8 +64,8 @@ class DemoView: NSView, DraggableDelegate {
     var useQuadratic: Bool = false {
         didSet {
            self.resetDemoState()
-            quadraticRadioButton.state = self.useQuadratic ? NSControl.StateValue.on : NSControl.StateValue.off
-            cubicRadioButton.state = self.useQuadratic ? NSControl.StateValue.off : NSControl.StateValue.on
+            quadraticRadioButton.state = self.useQuadratic ? .on : .off
+            cubicRadioButton.state = self.useQuadratic ? .off : .on
         }
     }
     
