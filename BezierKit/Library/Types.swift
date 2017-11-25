@@ -62,6 +62,11 @@ public struct Arc: Equatable {
     public static func == (left: Arc, right: Arc) -> Bool {
         return (left.origin == right.origin && left.radius == right.radius && left.start == right.start && left.end == right.end && left.interval == right.interval)
     }
+    public func compute(_ t: BKFloat) -> BKPoint {
+        // computes a value on the arc with t in [0, 1]
+        let theta: BKFloat = t * self.end + (1.0 - t) * self.start
+        return self.origin + self.radius * BKPoint(x: cos(theta), y: sin(theta))
+    }
 }
 
 public struct Shape {
