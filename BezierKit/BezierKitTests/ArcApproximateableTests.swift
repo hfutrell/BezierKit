@@ -49,8 +49,8 @@ class ArcApproximateableTests: XCTestCase {
             // these t1, t2 values and error function come from the way evaluate error internally in ArcApproximateable.swift
             let t1: BKFloat = 0.25
             let t2: BKFloat = 0.75
-            let d1: BKFloat = BKPoint.distance(a.origin, subCurve.compute(t1))
-            let d2: BKFloat = BKPoint.distance(a.origin, subCurve.compute(t2))
+            let d1: BKFloat = distance(a.origin, subCurve.compute(t1))
+            let d2: BKFloat = distance(a.origin, subCurve.compute(t2))
             let error = fabs(a.radius - d1) + fabs(a.radius - d2)
             if error > errorThreshold {
                 return false

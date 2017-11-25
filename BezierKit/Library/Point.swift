@@ -36,6 +36,10 @@ extension Point {
     }
 }
 
+public func distance<F, P>(_ p1: P, _ p2: P) -> F where P: Point, P.F == F {
+    return (p1 - p2).length
+}
+
 public protocol RealNumber: Field, Rootable, Ordered, Equatable {
     // intentionally empty (just defines a composite protocol)
 }
