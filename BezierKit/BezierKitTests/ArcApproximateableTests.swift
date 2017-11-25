@@ -22,10 +22,6 @@ class ArcApproximateableTests: XCTestCase {
     }
     
     func isGoodApproximation(arcs: [Arc], curve: BezierCurve, errorThreshold: BKFloat) -> Bool {
-        let eval = {(arc: Arc, t: BKFloat) -> BKPoint in
-            let theta = t * arc.end + (1.0 - t) * arc.start
-            return arc.origin + arc.radius * BKPoint(x: cos(theta), y: sin(theta))
-        }
         // we need at least one arc
         if arcs.count == 0 {
             return false
@@ -47,13 +43,17 @@ class ArcApproximateableTests: XCTestCase {
         if arcs.last!.interval.end != 1.0 {
             return false // last interval must complete the approximated curve
         }
-        // for each arc verify that it projects within the error threshold onto the curve
+        // for each arc verify that the discrepency between it an the subcurve it represents falls within the error threshold
         for a: Arc in arcs {
-            for t in stride(from: 0.0, to: 1.0, by: 0.1) { // evaluate several points on the arc
-                let p = eval(a, BKFloat(t))
-                if (curve.project(point: p) - p).length > errorThreshold {
-                    return false
-                }
+            let subCurve = curve.split(from: a.interval.start, to: a.interval.end)
+            // these t1, t2 values and error function come from the way evaluate error internally in ArcApproximateable.swift
+            let t1: BKFloat = 0.25
+            let t2: BKFloat = 0.75
+            let d1: BKFloat = BKPoint.distance(a.origin, subCurve.compute(t1))
+            let d2: BKFloat = BKPoint.distance(a.origin, subCurve.compute(t2))
+            let error = fabs(a.radius - d1) + fabs(a.radius - d2)
+            if error > errorThreshold {
+                return false
             }
         }
         return true
@@ -93,7 +93,7 @@ class ArcApproximateableTests: XCTestCase {
                                  p3: BKPoint(x: 4.0, y: 0.0))
         let errorThreshold: BKFloat = 0.01
         let result = c.arcs(errorThreshold: errorThreshold)
-        XCTAssert(isGoodApproximation(arcs: result, curve: c, errorThreshold: 0.05)) // TODO: I'm not really sure how the arc's error threshold really relates to the maximum error
+        XCTAssert(isGoodApproximation(arcs: result, curve: c, errorThreshold: errorThreshold))
     }
     
 }
