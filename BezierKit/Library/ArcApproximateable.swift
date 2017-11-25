@@ -89,14 +89,11 @@ extension ArcApproximateable {
                     safety += 1
                 } while !done && safety <= 100
                 
-                if safety >= 100 {
-                    // TODO: replace this log
-                    NSLog("arc abstraction somehow failed...")
-                    break
-                }
-                
-                // console.log("[F] arc found", s, prev_e, prev_arc.x, prev_arc.y, prev_arc.s, prev_arc.e)
-                
+//                if safety >= 100 {
+//                    NSLog("arc abstraction somehow failed...")
+//                    break
+//                }
+            
                 prev_arc = prev_arc != nil ? prev_arc : arc
                 result.append(prev_arc!)
                 s = prev_e
