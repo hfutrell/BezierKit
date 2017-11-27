@@ -95,7 +95,7 @@ Pod::Spec.new do |s|
   #
 
   #s.source       = { :git => "https://github.com/hfutrell/BezierKit.git", :tag => "v#{s.version}"}
-  s.source	  = { :git => "https://github.com/hfutrell/BezierKit.git", :branch => "{s.version}-release"}
+  s.source	  = { :git => "https://github.com/hfutrell/BezierKit.git", :branch => "#{s.version}-release"}
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
