@@ -16,7 +16,7 @@ env:
 
 script:
   - set -o pipefail
-  - pod spec lint
+  - pod spec lint --allow-warnings
   - xcodebuild -version
   - xcodebuild -showsdks
 
