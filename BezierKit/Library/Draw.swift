@@ -20,7 +20,7 @@ public class Draw {
     // MARK: - helpers
     private static func Color(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> CGColor {
         // have to use this initializer because simpler one is MacOS 10.5+ (not iOS)
-        return CGColor.init(colorSpace: Draw.deviceColorspace, components: [red, green, blue, alpha])!
+        return CGColor(colorSpace: Draw.deviceColorspace, components: [red, green, blue, alpha])!
     }
 
     /**

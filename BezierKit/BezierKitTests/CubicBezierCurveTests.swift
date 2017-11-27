@@ -79,7 +79,7 @@ class CubicBezierCurveTests: XCTestCase {
         let end = BKPoint(x: 4.0, y: 0.0)
         
         // first test passing without passing a t or d paramter
-        var c = CubicBezierCurve.init(start: start, end: end, mid: mid)
+        var c = CubicBezierCurve(start: start, end: end, mid: mid)
         XCTAssertEqual(c.compute(0.0), start)
         XCTAssert((c.compute(0.5) - mid).length < epsilon)
         XCTAssertEqual(c.compute(1.0), end)
@@ -87,7 +87,7 @@ class CubicBezierCurveTests: XCTestCase {
         // now test passing in a manual t and length d
         let t: BKFloat = 7.0 / 9.0
         let d: BKFloat = 1.5
-        c = CubicBezierCurve.init(start: start, end: end, mid: mid, t: t, d: d)
+        c = CubicBezierCurve(start: start, end: end, mid: mid, t: t, d: d)
         XCTAssertEqual(c.compute(0.0), start)
         XCTAssert((c.compute(t) - mid).length < epsilon)
         XCTAssertEqual(c.compute(1.0), end)
