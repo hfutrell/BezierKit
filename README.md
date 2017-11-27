@@ -2,6 +2,7 @@
 a library for dealing with bezier curves
 
 [![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
+[![codecov.io](https://codecov.io/github/hfutrell/BezierKit/coverage.svg?branch=0.0.4-release)](https://codecov.io/github/BezierKit/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Goals for v0.0.4 (upcoming)
