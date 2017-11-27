@@ -121,12 +121,19 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert(c.simple)
         XCTAssertEqual(c.order, 3)
     }
+
+    func testDerivative() {
+        let epsilon: BKFloat = 0.00001
+        let p0 = BKPoint(x: 1.0, y: 1.0)
+        let p1 = BKPoint(x: 3.0, y: 2.0)
+        let p2 = BKPoint(x: 5.0, y: 2.0)
+        let p3 = BKPoint(x: 7.0, y: 1.0)
+        let c = CubicBezierCurve(p0: p0, p1: p1, p2: p2, p3: p3)
+        XCTAssert(distance(c.derivative(0.0), 3.0 * (p1 - p0)) < epsilon)
+        XCTAssert(distance(c.derivative(0.5), BKPoint(x: 6.0, y: 0.0)) < epsilon)
+        XCTAssert(distance(c.derivative(1.0), 3.0 * (p3 - p2)) < epsilon)
+    }
 //
-//    func testDerivative() {
-//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0))
-//        XCTAssertEqual(l.derivative(0.23), BKPoint(x: 2.0, y: 1.0))
-//    }
-//    
 //    func testSplitFromTo() {
 //        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 4.0, y: 7.0))
 //        let t1: BKFloat = 1.0 / 3.0
