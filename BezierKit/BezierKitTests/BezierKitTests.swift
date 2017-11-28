@@ -22,6 +22,20 @@ class BezierKitTests: XCTestCase {
         return true
     }
     
+    static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval, accuracy: BKFloat) -> Bool {
+        // checks if c1 over [0, 1] matches c2 over [interval.start, interval.end]
+        // useful for checking if splitting a curve over a given interval worked correctly
+        let numPointsToCheck = 10
+        for i in 0..<numPointsToCheck {
+            let t1 = BKFloat(i) / BKFloat(numPointsToCheck-1)
+            let t2 = interval.start * (1.0 - t1) + interval.end * t1
+            if (distance(c1.compute(t1), c2.compute(t2)) > accuracy) {
+                return false
+            }
+        }
+        return true
+    }
+    
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.

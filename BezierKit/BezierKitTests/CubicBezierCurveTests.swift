@@ -133,22 +133,25 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert(distance(c.derivative(0.5), BKPoint(x: 6.0, y: 0.0)) < epsilon)
         XCTAssert(distance(c.derivative(1.0), 3.0 * (p3 - p2)) < epsilon)
     }
-//
-//    func testSplitFromTo() {
-//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 4.0, y: 7.0))
-//        let t1: BKFloat = 1.0 / 3.0
-//        let t2: BKFloat = 2.0 / 3.0
-//        let s = l.split(from: t1, to: t2)
-//        XCTAssertEqual(s, LineSegment(p0: BKPoint(x: 2.0, y: 3.0), p1: BKPoint(x: 3.0, y: 5.0)))
-//    }
-//    
-//    func testSplitAt() {
-//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 5.0))
-//        let (left, right) = l.split(at: 0.5)
-//        XCTAssertEqual(left, LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 3.0)))
-//        XCTAssertEqual(right, LineSegment(p0: BKPoint(x: 2.0, y: 3.0), p1: BKPoint(x: 3.0, y: 5.0)))
-//    }
-//    
+
+    func testSplitFromTo() {
+        let epsilon: BKFloat = 0.00001
+        let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 4.0, y: 2.0), p3: BKPoint(x: 6.0, y: 1.0))
+        let t1: BKFloat = 1.0 / 3.0
+        let t2: BKFloat = 2.0 / 3.0
+        let s = c.split(from: t1, to: t2)
+        XCTAssert(BezierKitTests.curve(s, matchesCurve: c, overInterval: Interval(start: t1,end: t2), accuracy: epsilon))
+    }
+
+    func testSplitAt() {
+        let epsilon: BKFloat = 0.00001
+        let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 4.0, y: 2.0), p3: BKPoint(x: 6.0, y: 1.0))
+        let t: BKFloat = 0.25
+        let (left, right) = c.split(at: t)
+        XCTAssert(BezierKitTests.curve(left, matchesCurve: c, overInterval: Interval(start: 0,end: t), accuracy: epsilon))
+        XCTAssert(BezierKitTests.curve(right, matchesCurve: c, overInterval: Interval(start: t,end: 1), accuracy: epsilon))
+    }
+    
 //    func testBoundingBox() {
 //        let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
 //        XCTAssertEqual(l.boundingBox, BoundingBox.init(min: BKPoint(x: 1.0, y: 3.0), max: BKPoint(x: 3.0, y: 5.0)))
