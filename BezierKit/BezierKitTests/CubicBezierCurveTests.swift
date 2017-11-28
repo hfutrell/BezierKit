@@ -120,6 +120,8 @@ class CubicBezierCurveTests: XCTestCase {
         let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 4.0, y: 2.0), p3: BKPoint(x: 6.0, y: 1.0))
         XCTAssert(c.simple)
         XCTAssertEqual(c.order, 3)
+        XCTAssertEqual(c.startingPoint, BKPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(c.endingPoint, BKPoint(x: 6.0, y: 1.0))
     }
 
     func testDerivative() {
