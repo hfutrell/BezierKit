@@ -41,6 +41,8 @@ class LineSegmentTests: XCTestCase {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 5.0))
         XCTAssert(l.simple)
         XCTAssertEqual(l.order, 1)
+        XCTAssertEqual(l.startingPoint, BKPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(l.endingPoint, BKPoint(x: 2.0, y: 5.0))
     }
     
     func testDerivative() {
