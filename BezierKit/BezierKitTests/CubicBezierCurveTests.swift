@@ -154,11 +154,25 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert(BezierKitTests.curve(right, matchesCurve: c, overInterval: Interval(start: t,end: 1), accuracy: epsilon))
     }
     
-//    func testBoundingBox() {
-//        let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
-//        XCTAssertEqual(l.boundingBox, BoundingBox.init(min: BKPoint(x: 1.0, y: 3.0), max: BKPoint(x: 3.0, y: 5.0)))
-//    }
-//    
+    func testBoundingBox() {
+        // hits codepath where midpoint pushes up y coordinate of bounding box
+        let c1 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 5.0, y: 2.0), p3: BKPoint(x: 7.0, y: 1.0))
+        let expectedBoundingBox1 = BoundingBox(min: BKPoint(x: 1.0, y: 1.0),
+                                              max: BKPoint(x: 7.0, y: 1.75))
+        XCTAssertEqual(c1.boundingBox, expectedBoundingBox1)
+        // hits codepath where midpoint pushes down x coordinate of bounding box
+        let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: -3.0, y: 2.0), p2: BKPoint(x: -3.0, y: 3.0), p3: BKPoint(x: 1.0, y: 4.0))
+        let expectedBoundingBox2 = BoundingBox(min: BKPoint(x: -2.0, y: 1.0),
+                                               max: BKPoint(x: 1.0, y: 4.0))
+        XCTAssertEqual(c2.boundingBox, expectedBoundingBox2)
+        // this one is designed to hit an unusual codepath: c3 has an extrema that would expand the bounding box,
+        // but it falls outside of the range 0<=t<=1, and therefore must be excluded
+        let c3 = c1.split(at: 0.25).left
+        let expectedBoundingBox3 = BoundingBox(min: BKPoint(x: 1.0, y: 1.0),
+                                               max: BKPoint(x: 2.5, y: 1.5625))
+        XCTAssertEqual(c3.boundingBox, expectedBoundingBox3)
+    }
+//
 //    func testCompute() {
 //        let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
 //        XCTAssertEqual(l.compute(0.0), BKPoint(x: 3.0, y: 5.0))
