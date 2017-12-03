@@ -551,9 +551,9 @@ extension BezierCurve {
         let fe = fcurves[len-1].points[fcurves[len-1].points.count-1]
         let bs = bcurves[len-1].points[bcurves[len-1].points.count-1]
         let be = bcurves[0].points[0]
-        let ls = Utils.makeline(bs,fs)
-        let le = Utils.makeline(fe,be)
-        let segments = ([ls] as [BezierCurve]) + fcurves + ([le] as [BezierCurve]) + bcurves
+        let ls = LineSegment(p0: bs, p1: fs)
+        let le = LineSegment(p0: fe, p1: be)
+        let segments = [ls] + fcurves + [le] + bcurves
         //        let slen = segments.count
         
         return PolyBezier(curves: segments)

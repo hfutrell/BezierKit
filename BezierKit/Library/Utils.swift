@@ -370,20 +370,6 @@ internal class Utils {
         return ( mdist:mdist, mpos:mpos! )
     }
     
-    static func makeline(_ p1: BKPoint,_ p2: BKPoint) -> CubicBezierCurve {
-        let x1 = p1.x
-        let y1 = p1.y
-        let x2 = p2.x
-        let y2 = p2.y
-        let dx = (x2-x1) / 3.0
-        let dy = (y2-y1) / 3.0
-        return CubicBezierCurve(p0: BKPoint(x: x1, y: y1),
-                                p1: BKPoint(x: x1+dx, y: y1+dy),
-                                p2: BKPoint(x: x1+2.0*dx, y: y1+2.0*dy),
-                                p3: BKPoint(x: x2, y: y2)
-        )
-    }
-    
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: BKFloat = 0.5) {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox

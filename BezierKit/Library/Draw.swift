@@ -151,6 +151,13 @@ public class Draw {
                              control1: (cubicCurve.p1 + offset).toCGPoint(),
                              control2: (cubicCurve.p2 + offset).toCGPoint())
         }
+        else if let lineSegment = curve as? LineSegment {
+            context.move(to: (lineSegment.p0 + offset).toCGPoint())
+            context.addLine(to: (lineSegment.p1 + offset).toCGPoint())
+        }
+        else {
+            fatalError("unsupported curve type")
+        }
         context.strokePath()
     }
     
