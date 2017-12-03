@@ -143,8 +143,8 @@ public struct LineSegment: BezierCurve, Equatable {
     public func project(point: BKPoint) -> BKPoint {
         // optimized implementation for line segments can be directly computed
         // default project implementation is found in BezierCurve protocol extension
-        let relativePoint    = point - self.startingPoint
-        let delta            = self.endingPoint - self.startingPoint
+        let relativePoint    = point - self.p0
+        let delta            = self.p1 - self.p0
         var t                = relativePoint.dot(delta) / delta.dot(delta)
         if t < 0 {
             t = 0.0
