@@ -50,7 +50,6 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public var endingPoint: BKPoint {
         return p2
     }
-
     
     public var order: Int {
         return 2
