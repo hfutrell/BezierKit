@@ -71,9 +71,9 @@ public struct Arc: Equatable {
 
 public struct Shape {
     struct Cap {
-        var curve: CubicBezierCurve
+        var curve: BezierCurve
         var virtual: Bool
-        init(curve: CubicBezierCurve) {
+        init(curve: BezierCurve) {
             self.curve = curve
             self.virtual = false
         }

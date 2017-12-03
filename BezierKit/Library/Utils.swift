@@ -454,8 +454,8 @@ internal class Utils {
     static func makeshape(_ forward: BezierCurve,_ back: BezierCurve,_ curveIntersectionThreshold: BKFloat) -> Shape {
         let bpl = back.points.count
         let fpl = forward.points.count
-        let start  = Utils.makeline(back.points[bpl-1], forward.points[0])
-        let end    = Utils.makeline(forward.points[fpl-1], back.points[0])
+        let start  = LineSegment(p0: back.points[bpl-1], p1: forward.points[0])
+        let end    = LineSegment(p0: forward.points[fpl-1], p1: back.points[0])
         let shape  = Shape(
             startcap: Shape.Cap(curve: start),
             endcap: Shape.Cap(curve: end),
