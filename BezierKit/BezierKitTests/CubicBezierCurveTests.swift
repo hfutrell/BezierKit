@@ -180,11 +180,15 @@ class CubicBezierCurveTests: XCTestCase {
 //        XCTAssertEqual(l.compute(1.0), BKPoint(x: 1.0, y: 3.0))
 //    }
 //    
-//    func testLength() {
-//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 6.0))
-//        XCTAssertEqual(l.length(), 5.0)
-//    }
-//    
+    func testLength() {
+        let c1 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 2.0),
+                                  p1: BKPoint(x: 7.0 / 3.0, y: 3.0),
+                                  p2: BKPoint(x: 11.0 / 3.0, y: 4.0),
+                                  p3: BKPoint(x: 5.0, y: 5.0)
+        ) // represents a straight line of length 5
+        XCTAssertEqual(c1.length(), 5.0)
+    }
+//
 //    func testExtrema() {
 //        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 6.0))
 //        let (xyz, values) = l.extrema()
