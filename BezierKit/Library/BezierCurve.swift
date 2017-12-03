@@ -390,6 +390,7 @@ extension BezierCurve {
     // MARK: - intersection
     
     public func project(point: BKPoint) -> BKPoint {
+        // TODO: needlessly complex implementation for line segments
         // step 1: coarse check
         let LUT = self.generateLookupTable()
         let l = LUT.count-1

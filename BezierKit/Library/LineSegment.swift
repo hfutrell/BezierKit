@@ -140,4 +140,20 @@ public struct LineSegment: BezierCurve, Equatable {
         return [Intersection(t1: t1, t2: t2)]
     }
     
+    public func project(point: BKPoint) -> BKPoint {
+        // optimized implementation for line segments can be directly computed
+        // default project implementation is found in BezierCurve protocol extension
+        let relativePoint    = point - self.startingPoint
+        let delta            = self.endingPoint - self.startingPoint
+        var t                = relativePoint.dot(delta) / delta.dot(delta)
+        if t < 0 {
+            t = 0.0
+        }
+        else if t > 1 {
+            t = 1
+        }
+        return self.compute(t)
+    }
+
+    
 }
