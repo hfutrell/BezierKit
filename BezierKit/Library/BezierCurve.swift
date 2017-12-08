@@ -122,7 +122,7 @@ extension BezierCurve {
                 p = self.dpoints[1].map(mfn)
                 xyz[d] += Utils.droots(p)
             }
-            xyz[d] = xyz[d].filter({$0 >= 0 && $0 <= 1})
+            xyz[d] = xyz[d].filter({$0 >= 0 && $0 <= 1}).sorted()
         }
         return xyz
     }

@@ -189,22 +189,27 @@ class CubicBezierCurveTests: XCTestCase {
         ) // represents a straight line of length 5 -- most curves won't have an easy reference solution
         XCTAssertEqual(c1.length(), 5.0, accuracy: epsilon)
     }
-//
-//    func testExtrema() {
-//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 6.0))
-//        let (xyz, values) = l.extrema()
-//        XCTAssert(xyz.count == 2) // one array for each dimension
-//        XCTAssertEqual(xyz[0].count, 2)
-//        XCTAssertEqual(xyz[1].count, 2)
-//        XCTAssertEqual(values.count, 2) // two extrema total
-//        XCTAssertEqual(values[0], 0.0)
-//        XCTAssertEqual(values[1], 1.0)
-//        XCTAssertEqual(xyz[0][0], 0.0)
-//        XCTAssertEqual(xyz[0][1], 1.0)
-//        XCTAssertEqual(xyz[1][0], 0.0)
-//        XCTAssertEqual(xyz[1][1], 1.0)
-//    }
-//    
+
+    func testExtrema() {
+        let f: [BKFloat] = [1, -1, 0, 0] // f(t) = t^3 - t^2, which has two local minimum at t=0, t=2/3 and an inflection point t=1/3
+        let g: [BKFloat] = [0, 3, -2, 0] // g(t) = 3t^2 - 2t, which has a local minimum at t=1/3
+        let c = BezierKitTests.cubicBezierCurveFromPolynomials(f, g)
+        let (xyz, values) = c.extrema()
+        XCTAssert(xyz.count == 2) // one array for each dimension
+        XCTAssertEqual(xyz[0].count, 3)
+        XCTAssertEqual(xyz[1].count, 1)
+        XCTAssertEqual(values.count, 3) // three extrema total (both dimensions share t = 1/3)
+        XCTAssertEqual(values[0], 0.0)
+        XCTAssertEqual(values[1], 1.0 / 3.0)
+        XCTAssertEqual(values[2], 2.0 / 3.0)
+        XCTAssertEqual(xyz[0].count, 3) // two local minima and inflection point
+        XCTAssertEqual(xyz[0][0], 0.0)
+        XCTAssertEqual(xyz[0][1], 1.0 / 3.0)
+        XCTAssertEqual(xyz[0][2], 2.0 / 3.0)
+        XCTAssertEqual(xyz[1].count, 1) // inflection point
+        XCTAssertEqual(xyz[1][0], 1.0 / 3.0)
+    }
+    
 //    func testHull() {
 //        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 3.0, y: 4.0))
 //        let h = l.hull(0.5)
