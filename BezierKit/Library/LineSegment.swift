@@ -66,7 +66,7 @@ public struct LineSegment: BezierCurve, Equatable {
     public var boundingBox: BoundingBox {
         let p0: BKPoint = self.p0
         let p1: BKPoint = self.p1
-        return BoundingBox(min: BezierKit.min(p0, p1), max: BezierKit.max(p0, p1))
+        return BoundingBox(min: BKPoint.min(p0, p1), max: BKPoint.max(p0, p1))
     }
     
     public func compute(_ t: BKFloat) -> BKPoint {

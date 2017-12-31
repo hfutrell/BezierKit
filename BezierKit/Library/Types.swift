@@ -114,8 +114,8 @@ public struct BBox<P>: Equatable where P: Point {
         self.max = max
     }
     public init(first: BoundingBox, second: BoundingBox) {
-        self.min = BezierKit.min(first.min, second.min)
-        self.max = BezierKit.max(first.max, second.max)
+        self.min = BKPoint.min(first.min, second.min)
+        self.max = BKPoint.max(first.max, second.max)
     }
     public var mid: BKPoint {
         return 0.5 * (min + max)

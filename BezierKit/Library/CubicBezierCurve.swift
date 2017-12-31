@@ -191,8 +191,8 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let p2: BKPoint = self.p2
         let p3: BKPoint = self.p3
         
-        var mmin = min(p0, p3)
-        var mmax = max(p0, p3)
+        var mmin = BKPoint.min(p0, p3)
+        var mmax = BKPoint.max(p0, p3)
         
         let d0 = p1 - p0
         let d1 = p2 - p1
