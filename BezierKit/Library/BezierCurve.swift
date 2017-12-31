@@ -118,7 +118,7 @@ extension BezierCurve {
             let mfn = {(v: BKPoint) in v[d]}
             var p: [BKFloat] = self.dpoints[0].map(mfn)
             xyz.append(Utils.droots(p))
-            if includeInflection && self.order == 3 {
+            if includeInflection && self.order >= 3 {
                 p = self.dpoints[1].map(mfn)
                 xyz[d] += Utils.droots(p)
             }
