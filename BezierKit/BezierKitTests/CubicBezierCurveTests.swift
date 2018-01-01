@@ -21,16 +21,6 @@ class CubicBezierCurveTests: XCTestCase {
         super.tearDown()
     }
     
-    func testInitializerList() {
-        let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 5.0, y: 3.0), p3: BKPoint(x: 7.0, y: 4.0))
-        XCTAssertEqual(c.p0, BKPoint(x: 1.0, y: 1.0))
-        XCTAssertEqual(c.p1, BKPoint(x: 3.0, y: 2.0))
-        XCTAssertEqual(c.p2, BKPoint(x: 5.0, y: 3.0))
-        XCTAssertEqual(c.p3, BKPoint(x: 7.0, y: 4.0))
-        XCTAssertEqual(c.startingPoint, BKPoint(x: 1.0, y: 1.0))
-        XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
-    }
-    
     func testInitializerArray() {
         let c = CubicBezierCurve(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0), BKPoint(x: 5.0, y: 3.0), BKPoint(x: 7.0, y: 4.0)])
         XCTAssertEqual(c.p0, BKPoint(x: 1.0, y: 1.0))
@@ -41,7 +31,17 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
     }
     
-    func testInitializerLine() {
+    func testInitializerIndividualPoints() {
+        let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 5.0, y: 3.0), p3: BKPoint(x: 7.0, y: 4.0))
+        XCTAssertEqual(c.p0, BKPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(c.p1, BKPoint(x: 3.0, y: 2.0))
+        XCTAssertEqual(c.p2, BKPoint(x: 5.0, y: 3.0))
+        XCTAssertEqual(c.p3, BKPoint(x: 7.0, y: 4.0))
+        XCTAssertEqual(c.startingPoint, BKPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(c.endingPoint, BKPoint(x: 7.0, y: 4.0))
+    }
+    
+    func testInitializerLineSegment() {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 2.0, y: 3.0))
         let c = CubicBezierCurve(lineSegment: l)
         XCTAssertEqual(c.p0, l.p0)
@@ -96,24 +96,6 @@ class CubicBezierCurveTests: XCTestCase {
         let e2 = c.hull(t)[8]
         let l = (e2 - e1).length
         XCTAssertEqual(l, d * 1.0 / t, accuracy: epsilon)
-    }
-    
-    func testCubicIntersectsLine() {
-        let epsilon: BKFloat = 0.00001
-        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: -1, y: 0),
-                                                   p1: BKPoint(x: -1, y: 1),
-                                                   p2: BKPoint(x:  1, y: -1),
-                                                   p3: BKPoint(x:  1, y: 0))
-        let l: BezierCurve = LineSegment(p0: BKPoint(x: -2.0, y: 0.0), p1: BKPoint(x: 2.0, y: 0.0))
-        let i = c.intersects(curve: l)
-        
-        XCTAssertEqual(i.count, 3)
-        XCTAssertEqual(i[0].t2, 0.25, accuracy: epsilon)
-        XCTAssertEqual(i[0].t1, 0.0, accuracy: epsilon)
-        XCTAssertEqual(i[1].t2, 0.5, accuracy: epsilon)
-        XCTAssertEqual(i[1].t1, 0.5, accuracy: epsilon)
-        XCTAssertEqual(i[2].t2, 0.75, accuracy: epsilon)
-        XCTAssertEqual(i[2].t1, 1.0, accuracy: epsilon)
     }
     
     func testBasicProperties() {
@@ -172,14 +154,19 @@ class CubicBezierCurveTests: XCTestCase {
                                                max: BKPoint(x: 2.5, y: 1.5625))
         XCTAssertEqual(c3.boundingBox, expectedBoundingBox3)
     }
-//
-//    func testCompute() {
-//        let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
-//        XCTAssertEqual(l.compute(0.0), BKPoint(x: 3.0, y: 5.0))
-//        XCTAssertEqual(l.compute(0.5), BKPoint(x: 2.0, y: 4.0))
-//        XCTAssertEqual(l.compute(1.0), BKPoint(x: 1.0, y: 3.0))
-//    }
-//    
+
+    func testCompute() {
+        let c = CubicBezierCurve(p0: BKPoint(x: 3.0, y: 5.0),
+                                 p1: BKPoint(x: 4.0, y: 6.0),
+                                 p2: BKPoint(x: 6.0, y: 6.0),
+                                 p3: BKPoint(x: 7.0, y: 5.0))
+        XCTAssertEqual(c.compute(0.0), BKPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(c.compute(0.5), BKPoint(x: 5.0, y: 5.75))
+        XCTAssertEqual(c.compute(1.0), BKPoint(x: 7.0, y: 5.0))
+    }
+    
+// -- MARK: - methods for which default implementations provided by protocol
+
     func testLength() {
         let epsilon: BKFloat = 0.00001
         let c1 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 2.0),
@@ -431,6 +418,24 @@ class CubicBezierCurveTests: XCTestCase {
 //     testOutlineShapes
 //     testOutlinesShapes2
 //     */
+    
+    func testCubicIntersectsLine() {
+        let epsilon: BKFloat = 0.00001
+        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: -1, y: 0),
+                                                   p1: BKPoint(x: -1, y: 1),
+                                                   p2: BKPoint(x:  1, y: -1),
+                                                   p3: BKPoint(x:  1, y: 0))
+        let l: BezierCurve = LineSegment(p0: BKPoint(x: -2.0, y: 0.0), p1: BKPoint(x: 2.0, y: 0.0))
+        let i = c.intersects(curve: l)
+        
+        XCTAssertEqual(i.count, 3)
+        XCTAssertEqual(i[0].t2, 0.25, accuracy: epsilon)
+        XCTAssertEqual(i[0].t1, 0.0, accuracy: epsilon)
+        XCTAssertEqual(i[1].t2, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i[2].t2, 0.75, accuracy: epsilon)
+        XCTAssertEqual(i[2].t1, 1.0, accuracy: epsilon)
+    }
 
     // MARK: -
     

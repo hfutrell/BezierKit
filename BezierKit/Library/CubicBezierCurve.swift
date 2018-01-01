@@ -45,7 +45,22 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let points = [p0, p1, p2, p3]
         self.init(points: points)
     }
-
+    
+    public init(lineSegment l: LineSegment) {
+        let oneThird: BKFloat = 1.0 / 3.0
+        let twoThirds: BKFloat = 2.0 / 3.0
+        self.init(p0: l.p0, p1: twoThirds * l.p0 + oneThird * l.p1, p2: oneThird * l.p0 + twoThirds * l.p1, p3: l.p1)
+    }
+    
+    public init(quadratic q: QuadraticBezierCurve) {
+        let oneThird: BKFloat = 1.0 / 3.0
+        let twoThirds: BKFloat = 2.0 / 3.0
+        let p0 = q.p0
+        let p1 = twoThirds * q.p1 + oneThird * q.p0
+        let p2 = oneThird * q.p2 + twoThirds * q.p1
+        let p3 = q.p2
+        self.init(p0: p0, p1: p1, p2: p2, p3: p3)
+    }
 /**
      Returns a CubicBezierCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
      
@@ -85,22 +100,6 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let nc2 = e + (v2-e) / oneMinusT
         // ...done
         self.init(p0:s, p1: nc1, p2: nc2, p3: e)
-    }
-    
-    public init(lineSegment l: LineSegment) {
-        let oneThird: BKFloat = 1.0 / 3.0
-        let twoThirds: BKFloat = 2.0 / 3.0
-        self.init(p0: l.p0, p1: twoThirds * l.p0 + oneThird * l.p1, p2: oneThird * l.p0 + twoThirds * l.p1, p3: l.p1)
-    }
-    
-    public init(quadratic q: QuadraticBezierCurve) {
-        let oneThird: BKFloat = 1.0 / 3.0
-        let twoThirds: BKFloat = 2.0 / 3.0
-        let p0 = q.p0
-        let p1 = twoThirds * q.p1 + oneThird * q.p0
-        let p2 = oneThird * q.p2 + twoThirds * q.p1
-        let p3 = q.p2
-        self.init(p0: p0, p1: p1, p2: p2, p3: p3)
     }
     
     // MARK: -

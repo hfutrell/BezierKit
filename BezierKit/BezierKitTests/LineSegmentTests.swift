@@ -20,17 +20,17 @@ class LineSegmentTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-
-    func testInitializerList() {
-        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0))
+    
+    func testInitializerArray() {
+        let l = LineSegment(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0)])
         XCTAssertEqual(l.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.p1, BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.startingPoint, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.endingPoint, BKPoint(x: 3.0, y: 2.0))
     }
-    
-    func testInitializerArray() {
-        let l = LineSegment(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0)])
+
+    func testInitializerIndividualPoints() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.p1, BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.startingPoint, BKPoint(x: 1.0, y: 1.0))
