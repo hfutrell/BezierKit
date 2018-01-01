@@ -308,18 +308,24 @@ extension BezierCurve {
         let r1 = (distanceFn != nil) ? distanceFn!(0) : d!
         let r2 = (distanceFn != nil) ? distanceFn!(1) : d!
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
-        let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
-        if o == nil { // TODO: replace with guard let
-            fatalError("cannot scale this curve. Try reducing it first.")
-        }
         // move all points by distance 'd' wrt the origin 'o'
         var points: [BKPoint] = self.points
-        var np: [BKPoint] = [BKPoint](repeating: BKPointZero, count: self.order + 1) // TODO: is this length correct?
+        var np: [BKPoint] = [BKPoint](repeating: BKPointZero, count: self.order + 1)
         
         // move end points by fixed distance along normal.
         for t in [0,1] {
             let p: BKPoint = points[t*order]
             np[t*order] = p + ((t != 0) ? r2 : r1) * v[t].n
+        }
+        
+        if self.order < 2 {
+            // for offsetting line segments, we are done
+            return Self.init(points: np)
+        }
+        
+        guard let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c) else {
+            // this can happen when offsetting line segments or degenerate cases
+            fatalError("cannot scale this curve. Try reducing it first.")
         }
         
         if d != nil {
@@ -332,7 +338,7 @@ extension BezierCurve {
                 let p = np[t*order] // either the first or last of np
                 let d = self.derivative(BKFloat(t))
                 let p2 = p + d
-                np[t+1] = Utils.lli4(p, p2, o!, points[t+1])!
+                np[t+1] = Utils.lli4(p, p2, o, points[t+1])!
             }
             return Self.init(points: np)
         }
@@ -344,7 +350,7 @@ extension BezierCurve {
                     break
                 }
                 let p = self.points[t+1]
-                let ov = (p - o!).normalize()
+                let ov = (p - o).normalize()
                 var rc: BKFloat = distanceFn!(BKFloat(t+1) / BKFloat(self.order))
                 if !clockwise {
                     rc = -rc
