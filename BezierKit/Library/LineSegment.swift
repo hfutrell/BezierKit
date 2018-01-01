@@ -146,11 +146,11 @@ public struct LineSegment: BezierCurve, Equatable {
         let relativePoint    = point - self.p0
         let delta            = self.p1 - self.p0
         var t                = relativePoint.dot(delta) / delta.dot(delta)
-        if t < 0 {
+        if t < 0.0 {
             t = 0.0
         }
-        else if t > 1 {
-            t = 1
+        else if t > 1.0 {
+            t = 1.0
         }
         return self.compute(t)
     }
