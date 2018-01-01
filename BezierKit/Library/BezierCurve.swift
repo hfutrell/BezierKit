@@ -50,12 +50,7 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
 
 // MARK: -
 
-public class BezierCurveConstants {
-    public static let defaultCurveIntersectionThreshold: BKFloat = 0.5
-}
-
 extension BezierCurve {
-    
     
     // MARK: -
     
@@ -424,7 +419,7 @@ extension BezierCurve {
         return p
     }
     
-    public func intersects(line: LineSegment, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(line: LineSegment) -> [Intersection] {
         let lineDirection = (line.p1 - line.p0).normalize()
         let lineLength = (line.p1 - line.p0).length
         return Utils.roots(points: self.points, line: line).map({(t: BKFloat) -> Intersection in
@@ -434,7 +429,7 @@ extension BezierCurve {
         }).filter({$0.t2 >= 0.0 && $0.t2 <= 1.0}).sorted()
     }
     
-    public func intersects(curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Intersection] {
         let reduced = self.reduce()
         // "simple" curves cannot intersect with their direct
         // neighbour, so for each segment X we check whether
@@ -452,7 +447,7 @@ extension BezierCurve {
         return results
     }
     
-    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Intersection] {
 //        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
         
         let s = Subcurve<Self>(curve: self)
@@ -562,11 +557,11 @@ extension BezierCurve {
     
     // MARK: shapes
     
-    public func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
         return self.outlineShapes(distance: d1, d2: d1, curveIntersectionThreshold: curveIntersectionThreshold)
     }
     
-    public func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
         var outline = self.outline(distance: d1, d2: d2).curves
         var shapes: [Shape] = []
         let len = outline.count
@@ -578,13 +573,13 @@ extension BezierCurve {
         }
         return shapes
     }
-        
+    
+    public static var defaultCurveIntersectionThreshold: BKFloat {
+        return 0.5
+    }
 }
 
 public protocol BezierCurve {
-    
-//    associatedtype P: Point
-    
     var simple: Bool { get }
     var points: [BKPoint] { get }
     var startingPoint: BKPoint { get }

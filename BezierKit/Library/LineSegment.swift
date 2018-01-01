@@ -94,14 +94,14 @@ public struct LineSegment: BezierCurve, Equatable {
         }
         return (xyz: xyz, [0.0, 1.0])
     }
-    
-    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
+        
+    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = LineSegment.defaultCurveIntersectionThreshold) -> [Intersection] {
         if let l = curve as? LineSegment {
             // use fast line / line intersection algorithm
             return self.intersects(line: l)
         }
         // call into the curve's line intersection algorithm
-        let intersections = curve.intersects(line: self, curveIntersectionThreshold: curveIntersectionThreshold)
+        let intersections = curve.intersects(line: self)
         // invert and re-sort the order of the intersections since
         // intersects was called on the line and not the curve
         return intersections.map({(i: Intersection) in
