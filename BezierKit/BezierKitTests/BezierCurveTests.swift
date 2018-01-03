@@ -23,11 +23,12 @@ class BezierCurveTests: XCTestCase {
     
     func testScaleDistance() {
         // line segment
-        let epsilon: BKFloat = 1.0e-9
+        let epsilon: BKFloat = 1.0e-6
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
         let ls = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
-        XCTAssertEqual(ls, LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0)))
-        
+        let expectedLine = LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0))
+        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: ls, curve2: expectedLine, accuracy: epsilon))
+
         // quadratic
         let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
                                      p1: BKPoint(x: 2.0, y: 2.0),
