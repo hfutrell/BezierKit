@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import BezierKit
 
 class BezierCurveTests: XCTestCase {
     
@@ -20,16 +21,38 @@ class BezierCurveTests: XCTestCase {
         super.tearDown()
     }
     
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testScaleDistance() {
+        // line segment
+        let epsilon: BKFloat = 1.0e-9
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+        let ls = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
+        XCTAssertEqual(ls, LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0)))
+        
+        // quadratic
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                     p1: BKPoint(x: 2.0, y: 2.0),
+                                     p2: BKPoint(x: 3.0, y: 1.0))
+        let qs = q.scale(distance: sqrt(2))
+        let expectedQuadratic = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 2.0),
+                                                p1: BKPoint(x: 2.0, y: 4.0),
+                                                p2: BKPoint(x: 4.0, y: 2.0))
+        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: qs, curve2: expectedQuadratic, accuracy: epsilon))
+        // cubic
+        let c = CubicBezierCurve(p0: BKPoint(x: -4.0, y: +0.0),
+                                 p1: BKPoint(x: -2.0, y: +2.0),
+                                 p2: BKPoint(x: +2.0, y: +2.0),
+                                 p3: BKPoint(x: +4.0, y: +0.0))
+        let cs = c.scale(distance: 2.0 * sqrt(2))
+        let expectedCubic = CubicBezierCurve(p0: BKPoint(x: -6.0, y: +2.0),
+                                p1: BKPoint(x: -3.0, y: +5.0),
+                                p2: BKPoint(x: +3.0, y: +5.0),
+                                p3: BKPoint(x: +6.0, y: +2.0))
+        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, accuracy: epsilon))
+
     }
     
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    func testScaleDistanceDegenerate() {
+        // todo: test when normals are parallel for quadratic and cubic
     }
-    
+
 }

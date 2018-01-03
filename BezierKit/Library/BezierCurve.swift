@@ -323,10 +323,7 @@ extension BezierCurve {
             return Self.init(points: np)
         }
         
-        guard let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c) else {
-            // this can happen when offsetting line segments or degenerate cases
-            fatalError("cannot scale this curve. Try reducing it first.")
-        }
+        let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
         
         if d != nil {
             // move control points to lie on the intersection of the offset
@@ -338,7 +335,8 @@ extension BezierCurve {
                 let p = np[t*order] // either the first or last of np
                 let d = self.derivative(BKFloat(t))
                 let p2 = p + d
-                np[t+1] = Utils.lli4(p, p2, o, points[t+1])!
+                let o2 = (o != nil) ? o! : points[t+1] - self.normal(BKFloat(t))
+                np[t+1] = Utils.lli4(p, p2, o2, points[t+1])!
             }
             return Self.init(points: np)
         }
@@ -350,7 +348,7 @@ extension BezierCurve {
                     break
                 }
                 let p = self.points[t+1]
-                let ov = (p - o).normalize()
+                let ov = ((o != nil) ? (p - o!) : (p - self.normal(BKFloat(t)))).normalize()
                 var rc: BKFloat = distanceFn!(BKFloat(t+1) / BKFloat(self.order))
                 if !clockwise {
                     rc = -rc

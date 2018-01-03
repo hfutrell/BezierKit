@@ -22,6 +22,18 @@ class BezierKitTests: XCTestCase {
         return true
     }
     
+    static internal func curveControlPointsEqual(curve1 c1: BezierCurve, curve2 c2: BezierCurve, accuracy epsilon: BKFloat) -> Bool {
+        if c1.order != c2.order {
+            return false
+        }
+        for i in 0...c1.order {
+            if (c1.points[i] - c2.points[i]).length > epsilon {
+                return false
+            }
+        }
+        return true
+    }
+    
     static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval, accuracy: BKFloat) -> Bool {
         // checks if c1 over [0, 1] matches c2 over [interval.start, interval.end]
         // useful for checking if splitting a curve over a given interval worked correctly
