@@ -282,7 +282,7 @@ extension BezierCurve {
         return internalScale(distance: d, distanceFunction: nil)
     }
     
-    public func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> Self {
+    private func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> Self {
         return internalScale(distance: nil, distanceFunction: distanceFn)
     }
     
@@ -294,7 +294,7 @@ extension BezierCurve {
     private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> Self {
         
         // TODO: this is a good candidate for enum, d is EITHER constant or a function
-        assert((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
+        precondition((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
         
         let order = self.order
         

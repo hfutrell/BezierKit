@@ -52,8 +52,17 @@ class BezierCurveTests: XCTestCase {
 
     }
     
-    func testScaleDistanceDegenerate() {
-        // todo: test when normals are parallel for quadratic and cubic
+    func testOffsetTimeDistance() {
+        let epsilon: BKFloat = 1.0e-6
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                     p1: BKPoint(x: 2.0, y: 2.0),
+                                     p2: BKPoint(x: 3.0, y: 1.0))
+        let p0 = q.offset(t: 0.0, distance: sqrt(2))
+        let p1 = q.offset(t: 0.5, distance: 1.5)
+        let p2 = q.offset(t: 1.0, distance: sqrt(2))
+        XCTAssert(distance(p0, BKPoint(x: 0.0, y: 2.0)) < epsilon)
+        XCTAssert(distance(p1, BKPoint(x: 2.0, y: 3.0)) < epsilon)
+        XCTAssert(distance(p2, BKPoint(x: 4.0, y: 2.0)) < epsilon)
     }
 
 }
