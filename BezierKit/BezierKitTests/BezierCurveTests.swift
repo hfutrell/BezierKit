@@ -28,7 +28,6 @@ class BezierCurveTests: XCTestCase {
         let ls = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
         let expectedLine = LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0))
         XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: ls, curve2: expectedLine, accuracy: epsilon))
-
         // quadratic
         let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
                                      p1: BKPoint(x: 2.0, y: 2.0),
@@ -49,7 +48,6 @@ class BezierCurveTests: XCTestCase {
                                 p2: BKPoint(x: +3.0, y: +5.0),
                                 p3: BKPoint(x: +6.0, y: +2.0))
         XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, accuracy: epsilon))
-
     }
     
     func testOffsetTimeDistance() {
@@ -65,4 +63,12 @@ class BezierCurveTests: XCTestCase {
         XCTAssert(distance(p2, BKPoint(x: 4.0, y: 2.0)) < epsilon)
     }
 
+    func testOffsetDistance() {
+        // line segments (or isLinear) have a separate codepath, so be sure to test those
+        
+        // next test a simple curve (=1 output)
+        
+        // next test a non-simple curve (=multiple output, first mapped and then offset)
+    }
+    
 }
