@@ -169,16 +169,30 @@ internal class Utils {
         return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
     }
     
+    static func clamp(_ x: BKFloat, _ a: BKFloat, _ b: BKFloat) -> BKFloat {
+        precondition(b >= a)
+        if x < a {
+            return a
+        }
+        else if x > b {
+            return b
+        }
+        else {
+            return x
+        }
+    }
+    
     static func roots(points: [BKPoint], line: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
         
-        let epsilon: BKFloat = 1.0e-6
+        let epsilon: BKFloat = 0
         let reduce: (BKFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
         let clamp: (BKFloat) -> BKFloat = {
             if $0 < 0.0 { return 0.0 }
             else if $0 > 1.0 { return 1.0 }
-            else { return $0 }
+            else { return $0 }            
+            return $0
         }
         
         if order == 2 {

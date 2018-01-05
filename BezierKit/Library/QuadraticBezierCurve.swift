@@ -58,7 +58,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public var simple: Bool {
         let n1 = self.normal(0)
         let n2 = self.normal(1)
-        let s = n1.dot(n2)
+        let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
         let angle: BKFloat = BKFloat(abs(acos(Double(s))))
         return angle < (BKFloat.pi / 3.0)
     }
