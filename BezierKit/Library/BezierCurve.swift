@@ -76,12 +76,6 @@ extension BezierCurve {
         return ret
     }
     
-    private var clockwise: Bool {
-        let points = self.points
-        let angle = Utils.angle(o: points[0], v1: points[self.order], v2: points[1])
-        return angle > 0
-    }
-    
     private var linear: Bool {
         let order = self.order
         let points = self.points
@@ -292,7 +286,6 @@ extension BezierCurve {
 //    }
     
     private func internalScale(distance d: BKFloat?, distanceFunction distanceFn: DistanceFunction?) -> Self {
-        
         // TODO: this is a good candidate for enum, d is EITHER constant or a function
         precondition((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
         
@@ -341,8 +334,11 @@ extension BezierCurve {
             return Self.init(points: np)
         }
         else {
-            
-            let clockwise = self.clockwise
+            let clockwise: Bool = {
+                let points = self.points
+                let angle = Utils.angle(o: points[0], v1: points[self.order], v2: points[1])
+                return angle > 0
+            }()
             for t in [0,1] {
                 if (self.order==2) && (t != 0) {
                     break
