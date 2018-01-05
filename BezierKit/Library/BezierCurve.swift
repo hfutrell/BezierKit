@@ -54,10 +54,6 @@ extension BezierCurve {
     
     // MARK: -
     
-    var threeD: Bool {
-        return BKPoint.dimensions == 3
-    }
-    
     private var dpoints: [[BKPoint]] {
         var ret: [[BKPoint]] = []
         var p: [BKPoint] = self.points
@@ -157,7 +153,7 @@ extension BezierCurve {
             let q = d.length
             return BKPoint( x: -d.y/q, y: d.x/q )
         }
-        func normal3(_ t: BKFloat) -> BKPoint {
+        /*func normal3(_ t: BKFloat) -> BKPoint {
             let r1 = self.derivative(t).normalize()
             let r2 = self.derivative(t+0.01).normalize()
             // cross product
@@ -182,8 +178,8 @@ extension BezierCurve {
             n[1] = R10 * r1[0] + R11 * r1[1] + R12 * r1[2]
             n[2] = R20 * r1[0] + R21 * r1[1] + R22 * r1[2]
             return n
-        }
-        return self.threeD ? normal3(t) : normal2(t)
+        }*/
+        return /*(BKPoint.dimensions == 3) ? normal3(t) : */ normal2(t)
     }
     
     // MARK: -
