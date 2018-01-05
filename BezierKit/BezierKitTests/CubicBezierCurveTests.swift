@@ -106,6 +106,21 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.endingPoint, BKPoint(x: 6.0, y: 1.0))
     }
 
+    func testSimple() {
+        // create a simple cubic curve (very simple, because it's equal to a line segment)
+        let c1 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 3.0, y: 3.0), p3: BKPoint(x: 4.0, y: 4.0))
+        XCTAssert(c1.simple == true)
+        // a non-trivial example of a simple curve -- almost a straight line
+        let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 1.05), p2: BKPoint(x: 3.0, y: 1.05), p3: BKPoint(x: 4.0, y: 1.0))
+        XCTAssert(c2.simple == true)
+        // non-simple curve, control points fall on different sides of the baseline
+        let c3 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 1.05), p2: BKPoint(x: 3.0, y: 0.95), p3: BKPoint(x: 4.0, y: 1.0))
+        XCTAssert(c3.simple == false)
+        // non-simple curve, angle between end point normals > 60 degrees (pi/3) -- in this case the angle is 45 degrees (pi/2)
+        let c4 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 1.0, y: 2.0), p2: BKPoint(x: 2.0, y: 3.0), p3: BKPoint(x: 3.0, y: 3.0))
+        XCTAssert(c4.simple == false)
+    }
+    
     func testDerivative() {
         let epsilon: BKFloat = 0.00001
         let p0 = BKPoint(x: 1.0, y: 1.0)
