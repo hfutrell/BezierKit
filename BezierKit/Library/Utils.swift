@@ -186,13 +186,12 @@ internal class Utils {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
         
-        let epsilon: BKFloat = 0
+        let epsilon: BKFloat = 1.0e-6
         let reduce: (BKFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
         let clamp: (BKFloat) -> BKFloat = {
             if $0 < 0.0 { return 0.0 }
             else if $0 > 1.0 { return 1.0 }
-            else { return $0 }            
-            return $0
+            else { return $0 }
         }
         
         if order == 2 {
