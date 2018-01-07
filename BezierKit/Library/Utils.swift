@@ -170,6 +170,8 @@ internal class Utils {
     }
     
     static func clamp(_ x: BKFloat, _ a: BKFloat, _ b: BKFloat) -> BKFloat {
+        // note that if x is NaN all comparisons fail so we return NaN
+        // this is purposeful behavior, should probably have unit test
         precondition(b >= a)
         if x < a {
             return a
