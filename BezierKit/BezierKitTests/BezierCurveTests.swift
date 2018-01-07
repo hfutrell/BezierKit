@@ -65,10 +65,33 @@ class BezierCurveTests: XCTestCase {
 
     func testOffsetDistance() {
         // line segments (or isLinear) have a separate codepath, so be sure to test those
-        
-        // next test a simple curve (=1 output)
-        
-        // next test a non-simple curve (=multiple output, first mapped and then offset)
+        let epsilon: BKFloat = 1.0e-6
+        let c1 = CubicBezierCurve(lineSegment: LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0)))
+        let c1Offset = c1.offset(distance: sqrt(2))
+        let expectedOffset1 = CubicBezierCurve(lineSegment: LineSegment(p0: BKPoint(x: -1.0, y: 1.0), p1: BKPoint(x: 0.0, y: 2.0)))
+        XCTAssertEqual(c1Offset.count, 1)
+        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: c1Offset[0] as! CubicBezierCurve, curve2: expectedOffset1, accuracy: epsilon))
+        // next test a non-simple curve
+        let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 3.0, y: 2.0), p3: BKPoint(x: 4.0, y: 1.0))
+        let c2Offset = c2.offset(distance: sqrt(2))
+        for i in 0..<c2Offset.count {
+            let c = c2Offset[i]
+            XCTAssert(c.simple)
+            if i == 0 {
+                // segment starts where un-reduced segment started (after ofsetting)
+                XCTAssert(distance(c.startingPoint, BKPoint(x: 0.0, y: 2.0)) < epsilon)
+            }
+            else {
+                // segment starts where last ended
+                XCTAssertEqual(c.startingPoint, c2Offset[i-1].endingPoint)
+            }
+            if i == c2Offset.count - 1 {
+                // segment ends where un-reduced segment ended (after ofsetting)
+                XCTAssert(distance(c.endingPoint, BKPoint(x: 5.0, y: 2.0)) < epsilon)
+            }
+        }
+        // TODO: fix reduce behavior for cusps (cannot be simplified because derivative is zero so normal is zero at cusp)
+        // let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 1.0, y: 2.0), p3: BKPoint(x: 2.0, y: 1.0))
     }
     
 }
