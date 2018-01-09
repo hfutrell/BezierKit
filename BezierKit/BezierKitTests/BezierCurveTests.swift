@@ -94,4 +94,28 @@ class BezierCurveTests: XCTestCase {
         // let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 1.0, y: 2.0), p3: BKPoint(x: 2.0, y: 1.0))
     }
     
+    func testProject() {
+        // line segments override the project implementation, so test them specifically
+        let epsilon: BKFloat = 1.0e-3 // TODO: notice that this epsilon value is actually pretty big? it's because project uses a fixed number of iterations. See the flatness-project branch for a potential better solution.
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
+        let p1 = l.project(point: BKPoint(x: 0.0, y: 0.0)) // should project to p0
+        XCTAssertEqual(p1, BKPoint(x: 1.0, y: 2.0))
+        let p2 = l.project(point: BKPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
+        XCTAssertEqual(p2, BKPoint(x: 2.0, y: 3.0))
+        let p3 = l.project(point: BKPoint(x: 6.0, y: 7.0))
+        XCTAssertEqual(p3, BKPoint(x: 5.0, y: 6.0)) // should project to p1
+        // test a cubic
+        let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 4.0, y: 2.0), p3: BKPoint(x: 5.0, y: 1.0))
+        let p4 = c.project(point: BKPoint(x: 0.95, y: 1.05)) // should project to p0
+        XCTAssertEqual(p4, BKPoint(x: 1.0, y: 1.0))
+        let p5 = c.project(point: BKPoint(x: 5.05, y: 1.05)) // should project to p3
+        XCTAssertEqual(p5, BKPoint(x: 5.0, y: 1.0))
+        let p6 = c.project(point: BKPoint(x: 3.0, y: 2.0)) // should project to center of curve
+        XCTAssertEqual(p6, BKPoint(x: 3.0, y: 1.75))
+        let p7 = c.project(point: c.compute(0.831211) + c.normal(0.831211)) // should project back to (roughly) c.compute(0.831211)
+        XCTAssert(distance(p7, c.compute(0.831211)) < epsilon)
+
+    }
+
+    
 }

@@ -147,16 +147,6 @@ class LineSegmentTests: XCTestCase {
 //    func testOffsetTimeDistance {
 //
 //    }
-
-    func testProject() {
-        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
-        let p1 = l.project(point: BKPoint(x: 0.0, y: 0.0)) // should project to p0
-        XCTAssertEqual(p1, BKPoint(x: 1.0, y: 2.0))
-        let p2 = l.project(point: BKPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
-        XCTAssertEqual(p2, BKPoint(x: 2.0, y: 3.0))
-        let p3 = l.project(point: BKPoint(x: 6.0, y: 7.0))
-        XCTAssertEqual(p3, BKPoint(x: 5.0, y: 6.0)) // should project to p1
-    }
     
     func testIntersects() {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
