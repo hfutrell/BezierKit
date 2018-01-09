@@ -123,6 +123,17 @@ public struct BBox<P>: Equatable where P: Point {
     public var size: BKPoint {
         return max - min
     }
+    public func minimumDistance(point: BKPoint) -> BKFloat {
+        let projection = BKPoint(x: Utils.clamp(point.x, self.min.x, self.max.x),
+                                 y: Utils.clamp(point.y, self.min.y, self.max.y))
+        return distance(point, projection)
+    }
+    public func maximumDistance(point: BKPoint) -> BKFloat {
+        let x = abs(self.max.x - point.x) > abs(self.min.x - point.x) ? self.max.x : self.min.x
+        let y = abs(self.max.y - point.y) > abs(self.min.y - point.y) ? self.max.y : self.min.y
+        let projection = BKPoint(x: x, y: y)
+        return distance(point, projection)
+    }
     public func overlaps(_ other: BoundingBox) -> Bool {
         for i in 0..<P.dimensions {
             if self.min[i] > other.max[i] {

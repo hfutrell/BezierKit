@@ -135,6 +135,96 @@ extension BezierCurve {
         return Utils.hull(self.points, t)
     }
     
+    public func flatness() -> BKFloat {
+        // https://jeremykun.com/2013/05/11/bezier-curves-and-picasso/
+        if self.order == 3 {
+            let P0 = self.points[0]
+            let P1 = self.points[1]
+            let P2 = self.points[2]
+            let P3 = self.points[3]
+            let a: BKPoint = 3.0 * P1 - 2.0 * P0 - P3
+            let b: BKPoint = 3.0 * P2 - P0 - 2.0 * P3
+            let temp1 = max(a.x * a.x, b.x * b.x)
+            let temp2 = max(a.y * a.y, b.y * b.y)
+            return 1.0 / 16.0 * ( temp1 + temp2 )
+        }
+        else if self.order == 2 {
+            // TODO: implement me
+            assert(false, "unimplemented!")
+            return 0.0
+        }
+        else {
+            return 0.0
+        }
+    }
+
+    func upperBound(_ point: BKPoint, _ curve: Self) -> BKFloat {
+        // distance from point to curve <= this number
+        let d1 = distance(point, curve.startingPoint)
+        let d2 = distance(point, curve.endingPoint)
+        let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
+        let flatness = curve.flatness()
+        let f = sqrt(flatness)
+        let d3 = distance(point, line.project(point: point)) + f
+        return min(d3, min(d1, d2))
+    }
+    func lowerBound(_ point: BKPoint, _ curve: Self) -> BKFloat {
+        // distance from point to curve >= this number
+        let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
+        let flatness = curve.flatness()
+        let f = sqrt(flatness)
+        let d = distance(point, line.project(point: point)) - f
+        return d < 0 ? 0 : d
+    }
+    
+    public func project(point: BKPoint, errorThreshold: BKFloat = 0.01) -> BKPoint {
+
+        var list: [Self] = [self]
+        var iterations = 0
+        var bestCurve: Self? = nil
+        var bestMax = BKFloat.infinity
+
+        var done = false
+        while list.count > 0 && !done {
+            
+            bestMax = BKFloat.infinity
+            bestCurve = nil
+            
+            var nextList: [Self] = []
+            nextList.reserveCapacity(10)
+            // find the best upper bound
+            for c in list {
+                iterations += 1
+                let mmax = self.upperBound(point, c)
+                if mmax < bestMax {
+                    bestMax = mmax
+                    bestCurve = c
+                }
+            }
+            // check if our best curve is good enough to be done
+            let temp1 = distance(bestCurve!.startingPoint, bestCurve!.endingPoint)
+            let temp2 = 2.0 * sqrt(bestCurve!.flatness())
+            if (temp1 + temp2) < errorThreshold {
+                // TODO: this just means that within the segment the answer is sufficiently close
+                // but it might be another segment entirely that has the clost point if worst(lb) < best(up)
+                // so what we should do is compile a list of candidates
+                done = true
+                break
+            }
+            // for each curve, recurse on those whose lower bound is equal or better than the best upper bound
+            for c in list {
+                if self.lowerBound(point, c) <= bestMax {
+                    let (left, right) = c.split(at: 0.5)
+                    nextList.append(left)
+                    nextList.append(right)
+                }
+            }
+            list = nextList
+        }
+        print("finished with \(iterations) iterations")
+        return LineSegment(p0: bestCurve!.startingPoint, p1: bestCurve!.endingPoint).project(point: point)
+    }
+    
     public func generateLookupTable(withSteps steps: Int = 100) -> [BKPoint] {
         assert(steps >= 0)
         var table: [BKPoint] = []
@@ -379,41 +469,6 @@ extension BezierCurve {
     }
     
     // MARK: - intersection
-    
-    public func project(point: BKPoint) -> BKPoint {
-        // step 1: coarse check
-        let LUT = self.generateLookupTable()
-        let l = LUT.count-1
-        let closest = Utils.closest(LUT, point)
-        var mdist = closest.mdist
-        let mpos = closest.mpos
-        if (mpos == 0) || (mpos == l) {
-            let t = BKFloat(mpos) / BKFloat(l)
-            let pt = self.compute(t)
-            //            pt.t = t
-            //            pt.d = mdist
-            return pt
-        }
-        
-        // step 2: fine check
-        let t1 = BKFloat(mpos-1) / BKFloat(l)
-        let t2 = BKFloat(mpos+1) / BKFloat(l)
-        let step = 0.1 / BKFloat(l)
-        mdist = mdist + 1
-        var ft = t1
-        for t in stride(from: t1, to: t2+step, by: step) {
-            let p = self.compute(t)
-            let d = Utils.dist(point, p)
-            if d<mdist {
-                mdist = d
-                ft = t
-            }
-        }
-        let p = self.compute(ft)
-        //        p.t = ft
-        //        p.d = mdist
-        return p
-    }
     
     public func intersects(line: LineSegment) -> [Intersection] {
         let lineDirection = (line.p1 - line.p0).normalize()
