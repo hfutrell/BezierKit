@@ -94,8 +94,8 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  #s.source       = { :git => "https://github.com/hfutrell/BezierKit.git", :tag => "v#{s.version}"}
-  s.source	  = { :git => "https://github.com/hfutrell/BezierKit.git", :branch => "#{s.version}-release"}
+  s.source       = { :git => "https://github.com/hfutrell/BezierKit.git", :tag => "v#{s.version}"}
+  #s.source	  = { :git => "https://github.com/hfutrell/BezierKit.git", :branch => "#{s.version}-release"}
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
