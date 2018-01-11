@@ -8,6 +8,9 @@
 
 import Foundation
 
+/**
+ Cubic Bézier Curve
+ */
 public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
  
     public var p0, p1, p2, p3: BKPoint
@@ -19,6 +22,16 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public var order: Int {
         return 3
     }
+
+    public var startingPoint: BKPoint {
+        return p0
+    }
+    
+    public var endingPoint: BKPoint {
+        return p3
+    }
+    
+    // MARK: - Initializers
     
     public init(points: [BKPoint]) {
         precondition(points.count == 4)
@@ -28,46 +41,68 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.p3 = points[3]
     }
     
-    public var startingPoint: BKPoint {
-        return p0
-    }
-    
-    public var endingPoint: BKPoint {
-        return p3
-    }
-    
     public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
         let points = [p0, p1, p2, p3]
         self.init(points: points)
     }
-
-    public init(fromPointsWithS S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5, d1 tempD1: BKFloat? = nil) {
-                
-        let abc = Utils.getABC(n: 3, S: S, B: B, E: E, t: t)
+    
+    public init(lineSegment l: LineSegment) {
+        let oneThird: BKFloat = 1.0 / 3.0
+        let twoThirds: BKFloat = 2.0 / 3.0
+        self.init(p0: l.p0, p1: twoThirds * l.p0 + oneThird * l.p1, p2: oneThird * l.p0 + twoThirds * l.p1, p3: l.p1)
+    }
+    
+    public init(quadratic q: QuadraticBezierCurve) {
+        let oneThird: BKFloat = 1.0 / 3.0
+        let twoThirds: BKFloat = 2.0 / 3.0
+        let p0 = q.p0
+        let p1 = twoThirds * q.p1 + oneThird * q.p0
+        let p2 = oneThird * q.p2 + twoThirds * q.p1
+        let p3 = q.p2
+        self.init(p0: p0, p1: p1, p2: p2, p3: p3)
+    }
+/**
+     Returns a CubicBezierCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
+     
+- parameter start: the starting point of the curve
+- parameter end: the ending point of the curve
+- parameter mid: an intermediate point falling on the curve
+- parameter t: optional t-value at which the curve will pass through the point `mid` (default = 0.5)
+- parameter d: optional strut length with the full strut being length d * (1-t)/t. If omitted or `nil` the distance from `mid` to the baseline (line from `start` to `end`) is used.
+*/
+    public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5, d: BKFloat? = nil) {
         
-        let d1 = (tempD1 != nil) ? tempD1! : Utils.dist(B,abc.C)
-        let d2 = d1 * (1-t) / t
+        let s = start
+        let b = mid
+        let e = end
         
-        let selen = Utils.dist(S,E)
-        let lx = (E.x-S.x) / selen
-        let ly = (E.y-S.y) / selen
+        let abc = Utils.getABC(n: 3, S: s, B: b, E: e, t: t)
+        
+        let d1 = (d != nil) ? d! : Utils.dist(b, abc.C)
+        let d2 = d1 * (1.0-t) / t
+        
+        let selen = Utils.dist(start, end)
+        let lx = (e.x-s.x) / selen
+        let ly = (e.y-s.y) / selen
         let bx1 = d1 * lx
         let by1 = d1 * ly
         let bx2 = d2 * lx
         let by2 = d2 * ly
         
         // derivation of new hull coordinates
-        let e1  = BKPoint( x: B.x - bx1, y: B.y - by1 )
-        let e2  = BKPoint( x: B.x + bx2, y: B.y + by2 )
+        let e1  = BKPoint( x: b.x - bx1, y: b.y - by1 )
+        let e2  = BKPoint( x: b.x + bx2, y: b.y + by2 )
         let A   = abc.A
-        let v1  = BKPoint( x: A.x + (e1.x-A.x)/(1-t), y: A.y + (e1.y-A.y)/(1-t) )
-        let v2  = BKPoint( x: A.x + (e2.x-A.x)/(t), y: A.y + (e2.y-A.y)/(t) )
-        let nc1 = BKPoint( x: S.x + (v1.x-S.x)/(t), y: S.y + (v1.y-S.y)/(t) )
-        let nc2 = BKPoint( x: E.x + (v2.x-E.x)/(1-t), y: E.y + (v2.y-E.y)/(1-t) )
+        let oneMinusT = 1.0 - t
+        let v1  = A + (e1-A) / oneMinusT
+        let v2  = A + (e2-A) / t
+        let nc1 = s + (v1-s) / t
+        let nc2 = e + (v2-e) / oneMinusT
         // ...done
-        self.init(p0:S, p1: nc1, p2: nc2, p3: E)
-        
+        self.init(p0:s, p1: nc1, p2: nc2, p3: e)
     }
+    
+    // MARK: -
     
     public var simple: Bool {
         let a1 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p1)
@@ -77,7 +112,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         }
         let n1 = self.normal(0)
         let n2 = self.normal(1)
-        let s = n1.dot(n2)
+        let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
         let angle: BKFloat = BKFloat(abs(acos(Double(s))))
         return angle < (BKFloat.pi / 3.0)
     }
@@ -91,7 +126,11 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let a = mt*mt
         let b = mt*t*2
         let c = t*t
-        return a*p0 + b*p1 + c*p2
+        // making the final sum one line of code makes XCode take forever to compiler! Hence the temporary variables.
+        let temp1 = a*p0
+        let temp2 = b*p1
+        let temp3 = c*p2
+        return temp1 + temp2 + temp3
     }
     
     public func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezierCurve {
@@ -151,8 +190,8 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let p2: BKPoint = self.p2
         let p3: BKPoint = self.p3
         
-        var mmin = min(p0, p3)
-        var mmax = max(p0, p3)
+        var mmin = BKPoint.min(p0, p3)
+        var mmax = BKPoint.max(p0, p3)
         
         let d0 = p1 - p0
         let d1 = p2 - p1
@@ -189,10 +228,15 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let b = mt2 * t * 3.0
         let c = mt * t2 * 3.0
         let d = t * t2
-        return a * self.p0 + b * self.p1 + c * self.p2 + d * self.p3
+        // usage of temp variables are because of Swift Compiler error 'Expression was too complex to be solved in reasonable time; consider breaking up the expression into distinct sub extpressions'
+        let temp1 = a * self.p0
+        let temp2 = b * self.p1
+        let temp3 = c * self.p2
+        let temp4 = d * self.p3
+        return temp1 + temp2 + temp3 + temp4
     }
     
-    // -- MARK: Equatable
+    // MARK: - Equatable
     
     public static func == (left: CubicBezierCurve, right: CubicBezierCurve) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2 && left.p3 == right.p3

@@ -20,7 +20,7 @@ public class Draw {
     // MARK: - helpers
     private static func Color(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> CGColor {
         // have to use this initializer because simpler one is MacOS 10.5+ (not iOS)
-        return CGColor.init(colorSpace: Draw.deviceColorspace, components: [red, green, blue, alpha])!
+        return CGColor(colorSpace: Draw.deviceColorspace, components: [red, green, blue, alpha])!
     }
 
     /**
@@ -150,6 +150,13 @@ public class Draw {
             context.addCurve(to: (cubicCurve.p3 + offset).toCGPoint(),
                              control1: (cubicCurve.p1 + offset).toCGPoint(),
                              control2: (cubicCurve.p2 + offset).toCGPoint())
+        }
+        else if let lineSegment = curve as? LineSegment {
+            context.move(to: (lineSegment.p0 + offset).toCGPoint())
+            context.addLine(to: (lineSegment.p1 + offset).toCGPoint())
+        }
+        else {
+            fatalError("unsupported curve type")
         }
         context.strokePath()
     }

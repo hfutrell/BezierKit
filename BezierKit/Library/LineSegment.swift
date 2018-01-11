@@ -66,7 +66,7 @@ public struct LineSegment: BezierCurve, Equatable {
     public var boundingBox: BoundingBox {
         let p0: BKPoint = self.p0
         let p1: BKPoint = self.p1
-        return BoundingBox(min: BezierKit.min(p0, p1), max: BezierKit.max(p0, p1))
+        return BoundingBox(min: BKPoint.min(p0, p1), max: BKPoint.max(p0, p1))
     }
     
     public func compute(_ t: BKFloat) -> BKPoint {
@@ -94,21 +94,19 @@ public struct LineSegment: BezierCurve, Equatable {
         }
         return (xyz: xyz, [0.0, 1.0])
     }
-    
-    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = BezierCurveConstants.defaultCurveIntersectionThreshold) -> [Intersection] {
+        
+    public func intersects(curve: BezierCurve, curveIntersectionThreshold: BKFloat = LineSegment.defaultCurveIntersectionThreshold) -> [Intersection] {
         if let l = curve as? LineSegment {
             // use fast line / line intersection algorithm
             return self.intersects(line: l)
         }
-        else {
-            // call into the curve's line intersection algorithm
-            let intersections = curve.intersects(line: self)
-            // invert and re-sort the order of the intersections since
-            // intersects was called on the line and not the curve
-            return intersections.map({(i: Intersection) in
-                return Intersection(t1: i.t2, t2: i.t1)
-            }).sorted()
-        }
+        // call into the curve's line intersection algorithm
+        let intersections = curve.intersects(line: self)
+        // invert and re-sort the order of the intersections since
+        // intersects was called on the line and not the curve
+        return intersections.map({(i: Intersection) in
+            return Intersection(t1: i.t2, t2: i.t1)
+        }).sorted()
     }
     
     public func intersects(line: LineSegment) -> [Intersection] {
@@ -141,5 +139,15 @@ public struct LineSegment: BezierCurve, Equatable {
         }
         return [Intersection(t1: t1, t2: t2)]
     }
+    
+    public func project(point: BKPoint) -> BKPoint {
+        // optimized implementation for line segments can be directly computed
+        // default project implementation is found in BezierCurve protocol extension
+        let relativePoint    = point - self.p0
+        let delta            = self.p1 - self.p0
+        let t                = relativePoint.dot(delta) / delta.dot(delta)
+        return self.compute(Utils.clamp(t, 0.0, 1.0))
+    }
+
     
 }

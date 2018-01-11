@@ -1,24 +1,25 @@
 # BezierKit
-a library for dealing with bezier curves
+a Swift library for bezier curves, based on [Bezier.js](https://pomax.github.io/bezierjs/).
 
 [![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 
-## Goals for v0.0.4 (upcoming)
+## Goals for v0.1.0 (upcoming)
+1. complete porting functionality from Bezier.js
+2. unit tests for Bezier.js functionality for which we do not have tech demos
+
+## issues to work out (upcoming)
 1. droots and other root functions can explode in degenerate cases, for example a quadratic that is actually linear, or a cubic that is actually quadratic 
-2. quadratic and cubic intersected with lines will fail because: unsupported (the reverse will succeed!)
-3. figure out if we can change intersection to return BezierCurve in protocol but concrete instance int he classes themselves 
- * is it possible?
- * does it prevent performance optimizations?
+2. unit test *all* the things
+3. we do about 2x as many bounding box computations in pairIteration as necessary ... can really slow things down
+4. ...
 
-## Goals for v0.0.5 (upcoming)
-1. unit test *all* the things
+## Goals for v0.0.4 (done and merged to master)
+1. quadratic and cubic intersected with lines will fail because: unsupported (the reverse will succeed!)
 2. drop Utils.makeline in favor of LineSegment where applicable
-3. add ray support
-4. no more unnecessary sorting and de-duping of intersections
-5. profiling of intersections and removal of all overhead
-6. we do about 2x as many bounding box computations in pairIteration as necessary ... can really slow things down
-7. tbd
+3. codecov.io integration for unit testing code coverage
+4. Swift 4 and XCode 9 migration
 
 ## Goals for v0.0.3 (done and merged to master)
 1. fix intersection behavior at t = 0 and t = 1

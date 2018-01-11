@@ -64,8 +64,8 @@ class DemoView: NSView, DraggableDelegate {
     var useQuadratic: Bool = false {
         didSet {
            self.resetDemoState()
-            quadraticRadioButton.state = self.useQuadratic ? NSOnState : NSOffState
-            cubicRadioButton.state = self.useQuadratic ? NSOffState : NSOnState
+            quadraticRadioButton.state = self.useQuadratic ? .on : .off
+            cubicRadioButton.state = self.useQuadratic ? .off : .on
         }
     }
     
@@ -136,7 +136,7 @@ class DemoView: NSView, DraggableDelegate {
     
     override func resetCursorRects() {
         
-        let cursor: NSCursor = NSCursor.pointingHand()
+        let cursor: NSCursor = NSCursor.pointingHand
         
         self.discardCursorRects()
         for d: Draggable in self.draggables {
@@ -146,7 +146,7 @@ class DemoView: NSView, DraggableDelegate {
     
     func resetTrackingAreas() {
         
-        self.mouseTrackingArea = NSTrackingArea(rect: self.bounds, options: [NSTrackingAreaOptions.activeInKeyWindow, NSTrackingAreaOptions.mouseMoved, NSTrackingAreaOptions.mouseEnteredAndExited], owner: self, userInfo: nil)
+        self.mouseTrackingArea = NSTrackingArea(rect: self.bounds, options: [NSTrackingArea.Options.activeInKeyWindow, NSTrackingArea.Options.mouseMoved, NSTrackingArea.Options.mouseEnteredAndExited], owner: self, userInfo: nil)
         
         self.addTrackingArea(self.mouseTrackingArea!)
         
@@ -200,7 +200,7 @@ class DemoView: NSView, DraggableDelegate {
     
     override func draw(_ dirtyRect: NSRect) {
         
-        let context: CGContext = NSGraphicsContext.current()!.cgContext
+        let context: CGContext = NSGraphicsContext.current!.cgContext
         
         context.saveGState()
         context.setFillColor(NSColor.white.cgColor)

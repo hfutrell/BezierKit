@@ -20,7 +20,7 @@ internal class Utils {
     static let quart: BKFloat = BKFloat(Double.pi) / 2.0
     
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
-    static let Tvalues: [BKFloat] = [
+    static let Tvalues: ContiguousArray<BKFloat> = [
         -0.0640568928626056260850430826247450385909,
         0.0640568928626056260850430826247450385909,
         -0.1911188674736163091586398207570696318404,
@@ -48,7 +48,7 @@ internal class Utils {
     ]
     
     // Legendre-Gauss weights with n=24 (w_i values, defined by a function linked to in the Bezier primer article)
-    static let Cvalues: [BKFloat] = [
+    static let Cvalues: ContiguousArray<BKFloat> = [
         0.1279381953467521569740561652246953718517,
         0.1279381953467521569740561652246953718517,
         0.1258374563468282961213753825111836887264,
@@ -169,6 +169,21 @@ internal class Utils {
         return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
     }
     
+    static func clamp(_ x: BKFloat, _ a: BKFloat, _ b: BKFloat) -> BKFloat {
+        // note that if x is NaN all comparisons fail so we return NaN
+        // this is purposeful behavior, should probably have unit test
+        precondition(b >= a)
+        if x < a {
+            return a
+        }
+        else if x > b {
+            return b
+        }
+        else {
+            return x
+        }
+    }
+    
     static func roots(points: [BKPoint], line: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
@@ -186,15 +201,16 @@ internal class Utils {
             let b = p[1].y
             let c = p[2].y
             let d = a - 2*b + c
-            if d != 0 {
+            if abs(d) > epsilon {
                 let m1 = -sqrt(b*b-a*c)
                 let m2 = -a+b
                 let v1: BKFloat = -( m1+m2)/d
                 let v2: BKFloat = -(-m1+m2)/d
                 return [v1, v2].filter(reduce).map(clamp)
             }
-            else if b != c && d == BKFloat(0.0) {
-                return [ BKFloat(2.0*b-c)/2.0*(b-c) ].filter(reduce).map(clamp)
+            else if a != b {
+                // TODO: also fix in droots!
+                return [BKFloat(0.5 * a / (a-b))].filter(reduce).map(clamp)
             }
             else {
                 return []
@@ -206,7 +222,22 @@ internal class Utils {
             let pb = p[1].y
             let pc = p[2].y
             let pd = p[3].y
-            let d = (-pa + 3*pb - 3*pc + pd)
+            let temp1 = -pa
+            let temp2 = 3*pb
+            let temp3 = -3*pc
+            let d = temp1 + temp2 + temp3 + pd
+            if d == 0.0 {
+                // TODO: epsilon testing ... use demos upgrade the quadratic to a cubic!
+                let temp1 = 3*points[0]
+                let temp2 = -6*points[1]
+                let temp3 = 3*points[2]
+                let a = (temp1 + temp2 + temp3)
+                let temp4 = -3*points[0]
+                let temp5 = 3*points[1]
+                let b = (temp4 + temp5)
+                let c = points[0]
+                return roots(points: [c, b / 2.0 + c, a + b + c], line: line)
+            }
             let a = (3*pa - 6*pb + 3*pc) / d
             let b = (-3*pa + 3*pb) / d
             let c = pa / d
@@ -354,20 +385,6 @@ internal class Utils {
         return ( mdist:mdist, mpos:mpos! )
     }
     
-    static func makeline(_ p1: BKPoint,_ p2: BKPoint) -> CubicBezierCurve {
-        let x1 = p1.x
-        let y1 = p1.y
-        let x2 = p2.x
-        let y2 = p2.y
-        let dx = (x2-x1) / 3.0
-        let dy = (y2-y1) / 3.0
-        return CubicBezierCurve(p0: BKPoint(x: x1, y: y1),
-                                p1: BKPoint(x: x1+dx, y: y1+dy),
-                                p2: BKPoint(x: x1+2.0*dx, y: y1+2.0*dy),
-                                p3: BKPoint(x: x2, y: y2)
-        )
-    }
-    
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: BKFloat = 0.5) {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
@@ -452,8 +469,8 @@ internal class Utils {
     static func makeshape(_ forward: BezierCurve,_ back: BezierCurve,_ curveIntersectionThreshold: BKFloat) -> Shape {
         let bpl = back.points.count
         let fpl = forward.points.count
-        let start  = Utils.makeline(back.points[bpl-1], forward.points[0])
-        let end    = Utils.makeline(forward.points[fpl-1], back.points[0])
+        let start  = LineSegment(p0: back.points[bpl-1], p1: forward.points[0])
+        let end    = LineSegment(p0: forward.points[fpl-1], p1: back.points[0])
         let shape  = Shape(
             startcap: Shape.Cap(curve: start),
             endcap: Shape.Cap(curve: end),
@@ -468,7 +485,7 @@ internal class Utils {
         return shape
     }
     
-    static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Arc.Interval) -> Arc {
+    static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Interval) -> Arc {
         let d1 = p2 - p1
         let d2 = p3 - p2
         let d1p = BKPoint(x: d1.x * cos(quart) - d1.y * sin(quart),

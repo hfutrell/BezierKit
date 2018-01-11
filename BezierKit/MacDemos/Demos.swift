@@ -50,9 +50,9 @@ class Demos {
                                     let B = BKPoint(x: 100, y: 50)
                                     let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
                                     let curves: [QuadraticBezierCurve] = tvalues.map({(t: BKFloat) -> QuadraticBezierCurve in
-                                        return QuadraticBezierCurve(p0: BKPoint(x:150, y: 40),
-                                                                    p1: B,
-                                                                    p2: BKPoint(x:35, y:160),
+                                        return QuadraticBezierCurve(start: BKPoint(x:150, y: 40),
+                                                                    end: BKPoint(x:35, y:160),
+                                                                    mid: B,
                                                                     t: t)
                                     })
                                     let offset = BKPoint(x:45,y:30)
@@ -79,7 +79,7 @@ class Demos {
                                     let tvalues: [BKFloat] = [0.2, 0.3, 0.4, 0.5]
                                     let curves: [CubicBezierCurve] = tvalues.map({
                                         (t: CGFloat) -> (CubicBezierCurve) in
-                                        return CubicBezierCurve(fromPointsWithS: p1, B: B, E: p3, t: t)
+                                        return CubicBezierCurve(start: p1, end: p3, mid: B, t: t)
                                         }
                                     )
                                     let offset = BKPoint(x: 0.0, y: 0.0)

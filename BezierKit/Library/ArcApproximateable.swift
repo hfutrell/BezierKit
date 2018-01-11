@@ -61,7 +61,7 @@ extension ArcApproximateable {
                     let np2 = self.compute(m)
                     let np3 = self.compute(e)
                     
-                    arc = Utils.getccenter(np1, np2, np3, Arc.Interval(start: s, end: e))
+                    arc = Utils.getccenter(np1, np2, np3, Interval(start: s, end: e))
                     
                     let errorAmount = error(arc!.origin, np1, s, e)
                     curr_good = errorAmount <= errorThreshold
@@ -89,13 +89,11 @@ extension ArcApproximateable {
                     safety += 1
                 } while !done && safety <= 100
                 
-                if safety >= 100 {
-                    NSLog("arc abstraction somehow failed...")
-                    break
-                }
-                
-                // console.log("[F] arc found", s, prev_e, prev_arc.x, prev_arc.y, prev_arc.s, prev_arc.e)
-                
+//                if safety >= 100 {
+//                    NSLog("arc abstraction somehow failed...")
+//                    break
+//                }
+            
                 prev_arc = prev_arc != nil ? prev_arc : arc
                 result.append(prev_arc!)
                 s = prev_e

@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "BezierKit"
-  s.version      = "0.0.3"
+  s.version      = "0.0.4"
   s.summary      = "Swift port of Bezier.js, a library for performing bezier curve computation."
 
   # This description is used to generate tags and improve search results.
@@ -95,7 +95,7 @@ Pod::Spec.new do |s|
   #
 
   s.source       = { :git => "https://github.com/hfutrell/BezierKit.git", :tag => "v#{s.version}"}
-
+  #s.source	  = { :git => "https://github.com/hfutrell/BezierKit.git", :branch => "#{s.version}-release"}
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #

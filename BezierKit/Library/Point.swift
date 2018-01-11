@@ -6,22 +6,9 @@
 //  Copyright © 2017 Holmes Futrell. All rights reserved.
 //
 
-public protocol Point: VectorSpace, Normed {
-    associatedtype F: RealNumber // as in VectorSpace we have an associated type F. But F conforms to RealNumber, not just Field.
-}
+public protocol Point: VectorSpace, Normed where F: RealNumber {
 
-func min<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> where F: Ordered {
-    // optimized version of min for Point2
-    return Point2<F>(x: p1.x < p2.x ? p1.x : p2.x,
-                     y: p1.y < p2.y ? p1.y : p2.y)
 }
-
-func max<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> where F: Ordered {
-    // optimized version of max for Point2
-    return Point2<F>(x: p1.x > p2.x ? p1.x : p2.x,
-                     y: p1.y > p2.y ? p1.y : p2.y)
-}
-
 
 extension Point {
     // this extension implements Normed protocol for all point types
@@ -34,6 +21,20 @@ extension Point {
     public func normalize() -> Self {
         return self / self.length
     }
+    static func min<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> {
+        // optimized version of min for Point2
+        return Point2<F>(x: p1.x < p2.x ? p1.x : p2.x,
+                         y: p1.y < p2.y ? p1.y : p2.y)
+    }
+    static func max<F>(_ p1: Point2<F>, _ p2: Point2<F>) -> Point2<F> {
+        // optimized version of max for Point2
+        return Point2<F>(x: p1.x > p2.x ? p1.x : p2.x,
+                         y: p1.y > p2.y ? p1.y : p2.y)
+    }
+}
+
+public func distance<F, P>(_ p1: P, _ p2: P) -> F where P: Point, P.F == F {
+    return (p1 - p2).length
 }
 
 public protocol RealNumber: Field, Rootable, Ordered, Equatable {

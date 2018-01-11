@@ -20,17 +20,17 @@ class LineSegmentTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-
-    func testConstructorList() {
-        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0))
+    
+    func testInitializerArray() {
+        let l = LineSegment(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0)])
         XCTAssertEqual(l.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.p1, BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.startingPoint, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.endingPoint, BKPoint(x: 3.0, y: 2.0))
     }
-    
-    func testConstructorArray() {
-        let l = LineSegment(points: [BKPoint(x: 1.0, y: 1.0), BKPoint(x: 3.0, y: 2.0)])
+
+    func testInitializerIndividualPoints() {
+        let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.p0, BKPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(l.p1, BKPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.startingPoint, BKPoint(x: 1.0, y: 1.0))
@@ -41,6 +41,8 @@ class LineSegmentTests: XCTestCase {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 5.0))
         XCTAssert(l.simple)
         XCTAssertEqual(l.order, 1)
+        XCTAssertEqual(l.startingPoint, BKPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(l.endingPoint, BKPoint(x: 2.0, y: 5.0))
     }
     
     func testDerivative() {
@@ -65,7 +67,7 @@ class LineSegmentTests: XCTestCase {
     
     func testBoundingBox() {
         let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
-        XCTAssertEqual(l.boundingBox, BoundingBox.init(min: BKPoint(x: 1.0, y: 3.0), max: BKPoint(x: 3.0, y: 5.0)))
+        XCTAssertEqual(l.boundingBox, BoundingBox(min: BKPoint(x: 1.0, y: 3.0), max: BKPoint(x: 3.0, y: 5.0)))
     }
     
     func testCompute() {
@@ -145,16 +147,6 @@ class LineSegmentTests: XCTestCase {
 //    func testOffsetTimeDistance {
 //
 //    }
-
-    func testProject() {
-        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
-        let p1 = l.project(point: BKPoint(x: 0.0, y: 0.0)) // should project to p0
-        XCTAssertEqual(p1, BKPoint(x: 1.0, y: 2.0))
-        let p2 = l.project(point: BKPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
-        XCTAssertEqual(p2, BKPoint(x: 2.0, y: 3.0))
-        let p3 = l.project(point: BKPoint(x: 6.0, y: 7.0))
-        XCTAssertEqual(p3, BKPoint(x: 5.0, y: 6.0)) // should project to p1
-    }
     
     func testIntersects() {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
@@ -246,9 +238,9 @@ class LineSegmentTests: XCTestCase {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         // q is a quadratic where y(x) = 2 - 2(x-1)^2
         let epsilon: BKFloat = 0.00001
-        let q: QuadraticBezierCurve = QuadraticBezierCurve.init(p0: BKPoint(x: 0.0, y: 0.0),
-                                                                p1: BKPoint(x: 1.0, y: 2.0),
-                                                                p2: BKPoint(x: 2.0, y: 0.0),
+        let q: QuadraticBezierCurve = QuadraticBezierCurve(start: BKPoint(x: 0.0, y: 0.0),
+                                                            end: BKPoint(x: 2.0, y: 0.0),
+                                                            mid: BKPoint(x: 1.0, y: 2.0),
                                                                 t: 0.5)
         let l1: LineSegment = LineSegment(p0: BKPoint(x: -1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 1.0))
         let l2: LineSegment = LineSegment(p0: BKPoint(x: 3.0, y: 1.0), p1: BKPoint(x: -1.0, y: 1.0)) // same line as l1, but reversed
@@ -257,20 +249,20 @@ class LineSegmentTests: XCTestCase {
         let r1: BKFloat = 1.0 - sqrt(1.0 / 2.0)
         let r2: BKFloat = 1.0 + sqrt(1.0 / 2.0)
         XCTAssertEqual(i1.count, 2)
-        XCTAssertEqualWithAccuracy(i1[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[0].t2, r1 / 2.0, accuracy: epsilon)
+        XCTAssertEqual(i1[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqual(i1[0].t2, r1 / 2.0, accuracy: epsilon)
         XCTAssert((l1.compute(i1[0].t1) - q.compute(i1[0].t2)).length < epsilon)
-        XCTAssertEqualWithAccuracy(i1[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[1].t2, r2 / 2.0, accuracy: epsilon)
+        XCTAssertEqual(i1[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqual(i1[1].t2, r2 / 2.0, accuracy: epsilon)
         XCTAssert((l1.compute(i1[1].t1) - q.compute(i1[1].t2)).length < epsilon)
         // do the same thing as above but using l2
         let i2 = l2.intersects(curve: q)
         XCTAssertEqual(i2.count, 2)
-        XCTAssertEqualWithAccuracy(i2[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[0].t2, r2 / 2.0, accuracy: epsilon)
+        XCTAssertEqual(i2[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqual(i2[0].t2, r2 / 2.0, accuracy: epsilon)
         XCTAssert((l2.compute(i2[0].t1) - q.compute(i2[0].t2)).length < epsilon)
-        XCTAssertEqualWithAccuracy(i2[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[1].t2, r1 / 2.0, accuracy: epsilon)
+        XCTAssertEqual(i2[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
+        XCTAssertEqual(i2[1].t2, r1 / 2.0, accuracy: epsilon)
         XCTAssert((l2.compute(i2[1].t1) - q.compute(i2[1].t2)).length < epsilon)
     }
     
@@ -285,24 +277,53 @@ class LineSegmentTests: XCTestCase {
         let i1 = l1.intersects(curve: c)
       
         XCTAssertEqual(i1.count, 3)
-        XCTAssertEqualWithAccuracy(i1[0].t1, 0.25, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[0].t2, 0.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[1].t1, 0.5, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[1].t2, 0.5, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[2].t1, 0.75, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i1[2].t2, 1.0, accuracy: epsilon)
+        XCTAssertEqual(i1[0].t1, 0.25, accuracy: epsilon)
+        XCTAssertEqual(i1[0].t2, 0.0, accuracy: epsilon)
+        XCTAssertEqual(i1[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i1[1].t2, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i1[2].t1, 0.75, accuracy: epsilon)
+        XCTAssertEqual(i1[2].t2, 1.0, accuracy: epsilon)
         // l2 is the same line going in the opposite direction
         // by checking this we ensure the intersections are ordered by the line and not the cubic
         let l2: LineSegment = LineSegment(p0: BKPoint(x: 2.0, y: 0.0), p1: BKPoint(x: -2.0, y: 0.0))
         let i2 = l2.intersects(curve: c)
         XCTAssertEqual(i2.count, 3)
-        XCTAssertEqualWithAccuracy(i2[0].t1, 0.25, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[0].t2, 1.0, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[1].t1, 0.5, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[1].t2, 0.5, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[2].t1, 0.75, accuracy: epsilon)
-        XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
+        XCTAssertEqual(i2[0].t1, 0.25, accuracy: epsilon)
+        XCTAssertEqual(i2[0].t2, 1.0, accuracy: epsilon)
+        XCTAssertEqual(i2[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i2[1].t2, 0.5, accuracy: epsilon)
+        XCTAssertEqual(i2[2].t1, 0.75, accuracy: epsilon)
+        XCTAssertEqual(i2[2].t2, 0.0, accuracy: epsilon)
     }
+        
+    func testIntersectsDegenerateCubic1() {
+        // a special case where the cubic is degenerate (it can actually be described as a quadratic)
+        let epsilon: BKFloat = 0.00001
+        let fiveThirds: BKFloat = 5.0 / 3.0
+        let sevenThirds: BKFloat = 7.0 / 3.0
+        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                                   p1: BKPoint(x: fiveThirds, y: fiveThirds),
+                                                   p2: BKPoint(x: sevenThirds, y: fiveThirds),
+                                                   p3: BKPoint(x: 3.0, y: 1.0))
+        let l = LineSegment(p0: BKPoint(x:1.0, y: 1.1), p1: BKPoint(x: 3.0, y: 1.1))
+        let i = l.intersects(curve: c)
+        XCTAssertEqual(i.count, 2)
+        XCTAssert(BezierKitTests.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
+    }
+    
+    func testIntersectsDegenerateCubic2() {
+        // a special case where the cubic is degenerate (it can actually be described as a line)
+        let epsilon: BKFloat = 0.00001
+        let c: CubicBezierCurve = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                                   p1: BKPoint(x: 2.0, y: 2.0),
+                                                   p2: BKPoint(x: 3.0, y: 3.0),
+                                                   p3: BKPoint(x: 4.0, y: 4.0))
+        let l = LineSegment(p0: BKPoint(x:1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 2.0))
+        let i = l.intersects(curve: c)
+        XCTAssertEqual(i.count, 1)
+        XCTAssert(BezierKitTests.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
+    }
+
     
     /*
  testOuline
@@ -312,4 +333,14 @@ class LineSegmentTests: XCTestCase {
  testOutlinesShapes2
     */
 
+    // MARK: -
+    
+    func testEquatable() {
+        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 3.0, y: 4.0))
+        let l2 = LineSegment(p0: BKPoint(x: 1.0, y: 3.0), p1: BKPoint(x: 3.0, y: 4.0))
+        let l3 = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(l1, l1)
+        XCTAssertNotEqual(l1, l2)
+        XCTAssertNotEqual(l1, l3)
+    }
 }

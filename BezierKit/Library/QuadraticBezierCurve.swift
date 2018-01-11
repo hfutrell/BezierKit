@@ -24,19 +24,18 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.init(points: points)
     }
     
-    // TODO: rename this method, it's very easy to confuse with the regular initializer, especially because t is optional!
-    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, t: BKFloat = 0.5) {
+    public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
-            self.init(p0: p1, p1: p1, p2: p2)
+            self.init(p0: mid, p1: mid, p2: end)
         }
         else if t == 1 {
-            self.init(p0: p0, p1: p1, p2: p1)
+            self.init(p0: start, p1: mid, p2: mid)
         }
         else {
             // real fitting.
-            let abc = Utils.getABC(n:2, S: p0, B: p1, E: p2, t: t)
-            self.init(p0: p0, p1: abc.A, p2: p2)
+            let abc = Utils.getABC(n:2, S: start, B: mid, E: end, t: t)
+            self.init(p0: start, p1: abc.A, p2: end)
         }
     }
 
@@ -51,7 +50,6 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public var endingPoint: BKPoint {
         return p2
     }
-
     
     public var order: Int {
         return 2
@@ -60,7 +58,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public var simple: Bool {
         let n1 = self.normal(0)
         let n2 = self.normal(1)
-        let s = n1.dot(n2)
+        let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
         let angle: BKFloat = BKFloat(abs(acos(Double(s))))
         return angle < (BKFloat.pi / 3.0)
     }
@@ -117,14 +115,14 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let p1: BKPoint = self.p1
         let p2: BKPoint = self.p2
         
-        var mmin: BKPoint = min(p0, p2)
-        var mmax: BKPoint = max(p0, p2)
+        var mmin: BKPoint = BKPoint.min(p0, p2)
+        var mmax: BKPoint = BKPoint.max(p0, p2)
         
         let d0: BKPoint = p1 - p0
         let d1: BKPoint = p2 - p1
         
         for d in 0..<BKPoint.dimensions {
-            Utils.droots(d0[d], d1[d], 0) {(t: BKFloat) in
+            Utils.droots(d0[d], d1[d]) {(t: BKFloat) in
                 if t <= 0.0 || t >= 1.0 {
                     return
                 }
@@ -161,7 +159,11 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let a = mt2
         let b = mt * t*2
         let c = t2
-        return a * self.p0 + b * self.p1 + c * self.p2
+        // making the final sum one line of code makes XCode take forever to compiler! Hence the temporary variables.
+        let temp1 = a * self.p0
+        let temp2 = b * self.p1
+        let temp3 = c * self.p2
+        return temp1 + temp2 + temp3
     }
     
     // -- MARK: Equatable
