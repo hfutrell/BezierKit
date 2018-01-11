@@ -145,14 +145,8 @@ public struct LineSegment: BezierCurve, Equatable {
         // default project implementation is found in BezierCurve protocol extension
         let relativePoint    = point - self.p0
         let delta            = self.p1 - self.p0
-        var t                = relativePoint.dot(delta) / delta.dot(delta)
-        if t < 0.0 {
-            t = 0.0
-        }
-        else if t > 1.0 {
-            t = 1.0
-        }
-        return self.compute(t)
+        let t                = relativePoint.dot(delta) / delta.dot(delta)
+        return self.compute(Utils.clamp(t, 0.0, 1.0))
     }
 
     
