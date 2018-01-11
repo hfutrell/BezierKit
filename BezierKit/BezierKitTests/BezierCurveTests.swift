@@ -48,6 +48,8 @@ class BezierCurveTests: XCTestCase {
                                 p2: BKPoint(x: +3.0, y: +5.0),
                                 p3: BKPoint(x: +6.0, y: +2.0))
         XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, accuracy: epsilon))
+
+        // TODO: add special case for quadratic and cubic that are actually linear -- can fail if normals are parallel
     }
     
     func testOffsetTimeDistance() {
