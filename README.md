@@ -3,6 +3,7 @@ a Swift library for bezier curves, based on [Bezier.js](https://pomax.github.io/
 
 [![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 
 ## Goals for v0.1.0 (upcoming)
 1. complete porting functionality from Bezier.js
