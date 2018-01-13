@@ -433,58 +433,7 @@ internal class Utils {
             Utils.pairiteration(cc1.right, cc2.right, &results, threshold)
         }
     }
-        
-    struct ShapeIntersection {
-        var c1: BezierCurve
-        var c2: BezierCurve
-        //        var s1: Shape
-        //        var s2: Shape
-        var intersection: [Intersection]
-    }
-    
-    static func shapeintersections(_ s1: Shape,_ bbox1: BoundingBox,_ s2: Shape,_ bbox2: BoundingBox,_ curveIntersectionThreshold: BKFloat) -> [ShapeIntersection] {
-        if !bbox1.overlaps(bbox2) {
-            return []
-        }
-        var intersections: [ShapeIntersection] = []
-        let a1: [BezierCurve?] = [s1.startcap.virtual ? nil : s1.startcap.curve, s1.forward, s1.back, s1.endcap.virtual ? nil : s1.endcap.curve]
-        let a2: [BezierCurve?] = [s2.startcap.virtual ? nil : s1.startcap.curve, s2.forward, s2.back, s2.endcap.virtual ? nil : s1.endcap.curve]
-        for l1 in a1 {
-            if l1 == nil {
-                continue
-            }
-            for l2 in a2 {
-                if l2 == nil {
-                    continue
-                }
-                let iss = l1!.intersects(curve: l2!, curveIntersectionThreshold: curveIntersectionThreshold)
-                if iss.count > 0 {
-                    intersections.append(ShapeIntersection(c1: l1!, c2: l2!, /*, s1: s1, s2: s2,*/ intersection: iss))
-                }
-            }
-        }
-        return intersections
-    }
-    
-    static func makeshape(_ forward: BezierCurve,_ back: BezierCurve,_ curveIntersectionThreshold: BKFloat) -> Shape {
-        let bpl = back.points.count
-        let fpl = forward.points.count
-        let start  = LineSegment(p0: back.points[bpl-1], p1: forward.points[0])
-        let end    = LineSegment(p0: forward.points[fpl-1], p1: back.points[0])
-        let shape  = Shape(
-            startcap: Shape.Cap(curve: start),
-            endcap: Shape.Cap(curve: end),
-            forward: forward,
-            back: back
-        )
-        // TODO: intersections method
-        //        var self = utils
-        //        shape.intersections = function(s2) {
-        //        return self.shapeintersections(shape,shape.bbox,s2,s2.bbox, curveIntersectionThreshold)
-        //        }
-        return shape
-    }
-    
+            
     static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Interval) -> Arc {
         let d1 = p2 - p1
         let d2 = p3 - p2

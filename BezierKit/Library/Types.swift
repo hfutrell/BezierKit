@@ -69,31 +69,6 @@ public struct Arc: Equatable {
     }
 }
 
-public struct Shape {
-    struct Cap {
-        var curve: BezierCurve
-        var virtual: Bool
-        init(curve: BezierCurve) {
-            self.curve = curve
-            self.virtual = false
-        }
-    }
-    var startcap: Cap
-    var endcap: Cap
-    var forward: BezierCurve
-    var back: BezierCurve
-    func boundingBox() -> BoundingBox {
-        var result: BoundingBox = BoundingBox()
-        for s: BezierCurve? in [startcap.virtual ? nil : startcap.curve, forward, back, endcap.virtual ? nil : endcap.curve] {
-            if s != nil {
-                let bbox: BoundingBox = s!.boundingBox
-                result = BoundingBox(first: result, second: bbox)
-            }
-        }
-        return result
-    }
-}
-
 public typealias BoundingBox = BBox<BKPoint>
 
 public struct BBox<P>: Equatable where P: Point {

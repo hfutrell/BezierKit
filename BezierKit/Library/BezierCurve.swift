@@ -562,9 +562,7 @@ extension BezierCurve {
         var shapes: [Shape] = []
         let len = outline.count
         for i in 1..<len/2 {
-            var shape = Utils.makeshape(outline[i], outline[len-i], curveIntersectionThreshold)
-            shape.startcap.virtual = (i > 1)
-            shape.endcap.virtual = (i < len/2-1)
+            let shape = Shape(outline[i], outline[len-i], i > 1, i < len/2-1)
             shapes.append(shape)
         }
         return shapes
