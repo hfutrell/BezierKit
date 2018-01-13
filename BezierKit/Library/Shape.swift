@@ -50,16 +50,16 @@ public struct Shape {
 
     private func nonvirtualSegments() -> [BezierCurve] {
         if startcap.virtual && endcap.virtual {
-            return [forward, back];
+            return [forward, back]; // exclude both caps
         }
         else if startcap.virtual == true {
-            return [forward, endcap.curve, back]
+            return [forward, endcap.curve, back] // exclude the start cap
         }
         else if endcap.virtual == true {
-            return [forward, back, startcap.curve,]
+            return [forward, back, startcap.curve,] // exclude the end cap
         }
         else {
-            return [forward, endcap.curve, back, startcap.curve];
+            return [forward, endcap.curve, back, startcap.curve]; // include both caps
         }
     }
     
