@@ -85,6 +85,10 @@ extension BezierCurve {
         return true
     }
     
+    public func reversed() -> Self {
+        return Self(points: self.points.reversed())
+    }
+    
     /*
      Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
      */
@@ -533,8 +537,7 @@ extension BezierCurve {
         
         // reverse the "return" outline
         bcurves = bcurves.map({(s: BezierCurve) in
-            let p = s.points
-            return type(of: s).init(points: p.reversed())
+            return s.reversed()
         }).reversed()
         
         // form the endcaps as lines
@@ -570,6 +573,15 @@ extension BezierCurve {
     
     public static var defaultCurveIntersectionThreshold: BKFloat {
         return 0.5
+    }
+}
+
+func ==(left: BezierCurve, right: BezierCurve) -> Bool {
+    if left.order == right.order {
+        return left.points == right.points
+    }
+    else {
+        return false
     }
 }
 
