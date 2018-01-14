@@ -11,7 +11,7 @@ import Foundation
 public struct ShapeIntersection {
     let curve1: BezierCurve
     let curve2: BezierCurve
-    let intersection: [Intersection]
+    let intersections: [Intersection]
 }
 
 public struct Shape {
@@ -50,20 +50,20 @@ public struct Shape {
 
     private func nonvirtualSegments() -> [BezierCurve] {
         if startcap.virtual && endcap.virtual {
-            return [forward, back]; // exclude both caps
+            return [forward, back] // exclude both caps
         }
         else if startcap.virtual == true {
             return [forward, endcap.curve, back] // exclude the start cap
         }
         else if endcap.virtual == true {
-            return [forward, back, startcap.curve,] // exclude the end cap
+            return [forward, back, startcap.curve] // exclude the end cap
         }
         else {
-            return [forward, endcap.curve, back, startcap.curve]; // include both caps
+            return [forward, endcap.curve, back, startcap.curve] // include both caps
         }
     }
     
-    public func intersects(shape other: Shape,_ curveIntersectionThreshold: BKFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
+    public func intersects(shape other: Shape, _ curveIntersectionThreshold: BKFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
         if self.boundingBox().overlaps(other.boundingBox()) == false {
             return []
         }
@@ -74,7 +74,7 @@ public struct Shape {
             for l2 in a2 {
                 let iss = l1.intersects(curve: l2, curveIntersectionThreshold: curveIntersectionThreshold)
                 if iss.count > 0 {
-                    intersections.append(ShapeIntersection(curve1: l1, curve2: l2, intersection: iss))
+                    intersections.append(ShapeIntersection(curve1: l1, curve2: l2, intersections: iss))
                 }
             }
         }
