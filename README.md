@@ -9,6 +9,8 @@ BezierKit is a Bézier curves library written in Swift based on the popular java
 - [Warning! Prerelease software!](#warning!)
 - [Features](#features)
 - [Installation](#installation)
+- [Usage](#usage)
+- [License](#license)
 
 ## Warning! Prerelease software!
 
@@ -52,3 +54,9 @@ Then, run the following command:
 ```bash
 $ pod install
 ```
+
+## Usage
+
+## License
+
+BezierKit is released under the MIT license. [See LICENSE](https://github.com/hfutrell/BezierKit/blob/master/LICENSE) for details.
