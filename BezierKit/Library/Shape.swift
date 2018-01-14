@@ -49,18 +49,17 @@ public struct Shape {
     }
 
     private func nonvirtualSegments() -> [BezierCurve] {
-        if startcap.virtual && endcap.virtual {
-            return [forward, back] // exclude both caps
+        var segments: [BezierCurve] = []
+        segments.reserveCapacity(4)
+        segments.append(forward)
+        if endcap.virtual == false {
+            segments.append(endcap.curve)
         }
-        else if startcap.virtual == true {
-            return [forward, endcap.curve, back] // exclude the start cap
+        segments.append(back)
+        if startcap.virtual == false {
+            segments.append(startcap.curve)
         }
-        else if endcap.virtual == true {
-            return [forward, back, startcap.curve] // exclude the end cap
-        }
-        else {
-            return [forward, endcap.curve, back, startcap.curve] // include both caps
-        }
+        return segments
     }
     
     public func intersects(shape other: Shape, _ curveIntersectionThreshold: BKFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
