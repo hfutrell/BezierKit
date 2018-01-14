@@ -6,8 +6,13 @@
 
 BezierKit is a Bézier curves library written in Swift based on the popular javascript library [Bezier.js](https://pomax.github.io/bezierjs/).
 
+- [Prerelease](#pre-release)
 - [Features](#features)
 - [Installation](#installation)
+
+## Prerelease 
+
+Please note that BezierKit is currently pre-release software. Its releases follow [semantic versioning](https://semver.org/) which means that until it reaches 1.0 status the API may not be stable or backwards compatible.
 
 ## Features
 - [x] Constructs linear (line segment), quadratic, and cubic Bézier curves
@@ -24,9 +29,9 @@ BezierKit is a Bézier curves library written in Swift based on the popular java
 - [ ] Comprehensive Unit and Integration Test Coverage
 - [ ] Complete Documentation
 
-## Installation
+## Installation with Cocoapods
 
-### CocoaPods
+The recommended way to install BezierKit is via Cocoapods, however you may also find that dropping the contents of `Library` into your project also works.
 
 [CocoaPods](http://cocoapods.org) is a dependency manager for Cocoa projects. You can install it with the following command:
 
