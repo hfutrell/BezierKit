@@ -15,6 +15,8 @@
 		FD4A63FF200AA50B00930E10 /* Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A63FD200AA50B00930E10 /* Shape.swift */; };
 		FD4A6403200ACBD200930E10 /* ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6400200ACB8900930E10 /* ShapeTests.swift */; };
 		FD4A6404200ACBD200930E10 /* ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6400200ACB8900930E10 /* ShapeTests.swift */; };
+		FD4A6408200B11DF00930E10 /* PolyBezierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6405200B11DA00930E10 /* PolyBezierTests.swift */; };
+		FD4A6409200B11DF00930E10 /* PolyBezierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6405200B11DA00930E10 /* PolyBezierTests.swift */; };
 		FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */; };
 		FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */; };
 		FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */; };
@@ -113,6 +115,7 @@
 		FD4A0DC31EAAD01F0031A393 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FD4A63FD200AA50B00930E10 /* Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Shape.swift; path = Library/Shape.swift; sourceTree = SOURCE_ROOT; };
 		FD4A6400200ACB8900930E10 /* ShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeTests.swift; sourceTree = "<group>"; };
+		FD4A6405200B11DA00930E10 /* PolyBezierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolyBezierTests.swift; sourceTree = "<group>"; };
 		FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicBezierCurveTests.swift; sourceTree = "<group>"; };
 		FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
 		FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicBezierCurve.swift; sourceTree = "<group>"; };
@@ -223,6 +226,7 @@
 				FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */,
 				FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */,
 				FD4A6400200ACB8900930E10 /* ShapeTests.swift */,
+				FD4A6405200B11DA00930E10 /* PolyBezierTests.swift */,
 			);
 			path = BezierKitTests;
 			sourceTree = "<group>";
@@ -568,6 +572,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD4A6408200B11DF00930E10 /* PolyBezierTests.swift in Sources */,
 				FD4A6403200ACBD200930E10 /* ShapeTests.swift in Sources */,
 				FDF0664E1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
 				FDEB70A41F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
@@ -582,6 +587,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FD4A6409200B11DF00930E10 /* PolyBezierTests.swift in Sources */,
 				FD4A6404200ACBD200930E10 /* ShapeTests.swift in Sources */,
 				FDF0664F1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
 				FDEB70A51F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
