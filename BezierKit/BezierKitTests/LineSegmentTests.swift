@@ -125,27 +125,9 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(r[0].curve, l)
     }
     
-//    func testScaleDistance() {
-//        // TODO: scale doesn't work with line segments or even higher order curves when they are linear
-//        // this is a bug that exists in Bezier.js
-//        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
-//        let s = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
-//        XCTAssertEqual(s, LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0)))
-//    }
-
-//    TODO: write me ... scale doesn't work for lines
+//    TODO: write me
 //    func testScaleDistanceFunc {
 //        
-//    }
-    
-//    TODO: write me .. offset currently does not work for lines
-//    func testOffsetDistance {
-//
-//    }
-    
-//    TODO: write me ... offset currently does not work for lines
-//    func testOffsetTimeDistance {
-//
 //    }
     
     func testIntersects() {

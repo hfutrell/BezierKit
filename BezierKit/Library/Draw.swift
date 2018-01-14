@@ -269,8 +269,8 @@ public class Draw {
     public static func drawShape(_ context: CGContext, shape: Shape, offset: BKPoint = BKPointZero) {
         let order = shape.forward.points.count - 1
         context.beginPath()
-        context.move(to: (offset + shape.startcap.curve.points[0]).toCGPoint())
-        context.addLine(to: (offset + shape.startcap.curve.points[3]).toCGPoint())
+        context.move(to: (offset + shape.startcap.curve.startingPoint).toCGPoint())
+        context.addLine(to: (offset + shape.startcap.curve.endingPoint).toCGPoint())
         if order == 3 {
             context.addCurve(to: (offset + shape.forward.points[3]).toCGPoint(),
                              control1: (offset + shape.forward.points[1]).toCGPoint(),
@@ -283,7 +283,7 @@ public class Draw {
                                  control: (offset + shape.forward.points[1]).toCGPoint()
             )
         }
-        context.addLine(to: (offset + shape.endcap.curve.points[3]).toCGPoint())
+        context.addLine(to: (offset + shape.endcap.curve.endingPoint).toCGPoint())
         if order == 3 {
             context.addCurve(to: (offset + shape.back.points[3]).toCGPoint(),
                 control1: (offset + shape.back.points[1]).toCGPoint(),

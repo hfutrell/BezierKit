@@ -124,7 +124,7 @@ class Demos {
                                         let p3 = curve.offset(t: 0.95, distance: -5)
                                         Draw.drawLine(context, from: p1, to: p2)
                                         Draw.drawLine(context, from: p2, to: p3)
-                                        let label = String(format: "%3.1fpx", arclength)
+                                        let label = String(format: "%3.1fpt", arclength)
                                         Draw.drawText(context, text: label, offset: BKPoint(x: p2.x+7, y: p2.y-3))
                                     }
                                 }

@@ -9,22 +9,27 @@
 import Foundation
 
 public class PolyBezier {
+    
     public let curves: [BezierCurve]
     
     public init(curves: [BezierCurve]) {
         self.curves = curves
     }
     
-// TODO: flesh out the rest of this class
+    public var length: BKFloat {
+        return self.curves.reduce(BKFloat(0.0)) {
+            $0 + $1.length()
+        }
+    }
     
-//    var length: BKFloat {
-//        return 0.0
-//    }
-//    var boundingBox: BKBoundingBox {
-//        
-//    }
+    public var boundingBox: BoundingBox {
+        return self.curves.reduce(BoundingBox()) {
+            BoundingBox(first: $0, second: $1.boundingBox)
+        }
+    }
+    
     public func offset(distance d: BKFloat) -> PolyBezier {
-        return PolyBezier(curves: self.curves.reduce([],{
+        return PolyBezier(curves: self.curves.reduce([], {
             $0 + $1.offset(distance: d)
         }))
     }
