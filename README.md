@@ -24,6 +24,30 @@ BezierKit is a Bézier curves library based on [Bezier.js](https://pomax.github.
 - [ ] Comprehensive Unit and Integration Test Coverage
 - [ ] Complete Documentation
 
+## Installation
+
+### CocoaPods
+
+[CocoaPods](http://cocoapods.org) is a dependency manager for Cocoa projects. You can install it with the following command:
+
+```bash
+$ gem install cocoapods
+```
+
+To integrate BezierKit into your Xcode project using CocoaPods, add it to your target in your `Podfile`:
+
+```ruby
+target '<Your Target Name>' do
+    pod 'BezierKit', '~> 0.1.1'
+end
+```
+
+Then, run the following command:
+
+```bash
+$ pod install
+```
+
 ## Goals for v0.1.1 (upcoming)
 1. improve readme to include instructions for installation via Cocoapods
 2. improve readme to include basic API usage
