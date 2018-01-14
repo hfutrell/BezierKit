@@ -17,19 +17,19 @@ public class PolyBezier {
     }
     
     public var length: BKFloat {
-        return self.curves.reduce(0.0) {(result: BKFloat, curve: BezierCurve) -> BKFloat in
-            result + curve.length()
+        return self.curves.reduce(BKFloat(0.0)) {
+            $0 + $1.length()
         }
     }
     
     public var boundingBox: BoundingBox {
-        return self.curves.reduce(BoundingBox()) {(result: BoundingBox, curve: BezierCurve) -> BoundingBox in
-            BoundingBox(first: result, second: curve.boundingBox)
+        return self.curves.reduce(BoundingBox()) {
+            BoundingBox(first: $0, second: $1.boundingBox)
         }
     }
     
     public func offset(distance d: BKFloat) -> PolyBezier {
-        return PolyBezier(curves: self.curves.reduce([],{
+        return PolyBezier(curves: self.curves.reduce([], {
             $0 + $1.offset(distance: d)
         }))
     }
