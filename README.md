@@ -5,15 +5,21 @@ a Swift library for bezier curves, based on [Bezier.js](https://pomax.github.io/
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 
-## Goals for v0.1.0 (upcoming)
-1. complete porting functionality from Bezier.js
-2. unit tests for Bezier.js functionality for which we do not have tech demos
+# Goals for v0.1.1 (upcoming)
+1. improve readme to include instructions for installation via Cocoapods
+2. improve readme to include basic API usage
+3. all public API entry points should have unit tests
+4. unit test code coverage should read 95%
 
 ## issues to work out (upcoming)
 1. droots and other root functions can explode in degenerate cases, for example a quadratic that is actually linear, or a cubic that is actually quadratic 
 2. unit test *all* the things
 3. we do about 2x as many bounding box computations in pairIteration as necessary ... can really slow things down
 4. ...
+
+## Goals for v0.1.0 (done and merged to master)
+1. complete porting functionality from Bezier.js
+2. unit tests for Bezier.js functionality for which we do not have tech demos
 
 ## Goals for v0.0.4 (done and merged to master)
 1. quadratic and cubic intersected with lines will fail because: unsupported (the reverse will succeed!)
