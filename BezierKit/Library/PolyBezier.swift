@@ -16,13 +16,13 @@ public class PolyBezier {
         self.curves = curves
     }
     
-    var length: BKFloat {
+    public var length: BKFloat {
         return self.curves.reduce(0.0) {(result: BKFloat, curve: BezierCurve) -> BKFloat in
             result + curve.length()
         }
     }
     
-    var boundingBox: BoundingBox {
+    public var boundingBox: BoundingBox {
         return self.curves.reduce(BoundingBox()) {(result: BoundingBox, curve: BezierCurve) -> BoundingBox in
             BoundingBox(first: result, second: curve.boundingBox)
         }
