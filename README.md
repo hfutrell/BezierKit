@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 
-BezierKit is a Bézier curves library based on [Bezier.js](https://pomax.github.io/bezierjs/) written in Swift.
+BezierKit is a Bézier curves library written in Swift based on the popular javascript library [Bezier.js](https://pomax.github.io/bezierjs/).
 
 - [Features](#features)
 - [Installation](#installation)
