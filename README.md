@@ -1,11 +1,30 @@
 # BezierKit
-a Swift library for bezier curves, based on [Bezier.js](https://pomax.github.io/bezierjs/).
 
 [![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 
-# Goals for v0.1.1 (upcoming)
+BezierKit is a Bézier curves library based on [Bezier.js](https://pomax.github.io/bezierjs/) written in Swift.
+
+- [Features](#features)
+- [Installation](#installation)
+
+## Features
+- [x] Constructs linear (line segment), quadratic, and cubic Bézier curves
+- [x] Draws curves via CoreGraphics
+- [x] Determines positions, derivatives, and normals along curves
+- [x] Lengths of curves via Legendre-Gauss quadrature
+- [x] Intersects curves and computes cubic curve self-intersection to any degree of accuracy
+- [x] Determines bounding boxes, extrema,
+- [ ] and inflection points
+- [x] Locates nearest on-curve location to point
+- [ ] to any degree of accuracy
+- [x] Splits and Subdivides curves into subcurves
+- [x] Offsets and outlines curves
+- [ ] Comprehensive Unit and Integration Test Coverage
+- [ ] Complete Documentation
+
+## Goals for v0.1.1 (upcoming)
 1. improve readme to include instructions for installation via Cocoapods
 2. improve readme to include basic API usage
 3. all public API entry points should have unit tests
