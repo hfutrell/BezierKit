@@ -493,7 +493,7 @@ extension BezierCurve {
         return internalOutline(d1: d1, d2: d1, d3: 0.0, d4: 0.0, graduated: false)
     }
     
-    public func outline(distance d1: BKFloat, d2: BKFloat) -> PolyBezier {
+    public func outline(distanceAlongNormal d1: BKFloat, distanceOppositeNormal d2: BKFloat) -> PolyBezier {
         return internalOutline(d1: d1, d2: d2, d3: 0.0, d4: 0.0, graduated: false)
     }
     
@@ -561,7 +561,7 @@ extension BezierCurve {
     }
     
     public func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
-        var outline = self.outline(distance: d1, d2: d2).curves
+        var outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2).curves
         var shapes: [Shape] = []
         let len = outline.count
         for i in 1..<len/2 {

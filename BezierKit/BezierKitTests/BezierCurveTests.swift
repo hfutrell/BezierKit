@@ -52,19 +52,6 @@ class BezierCurveTests: XCTestCase {
         // TODO: add special case for quadratic and cubic that are actually linear -- can fail if normals are parallel
     }
     
-    func testOffsetTimeDistance() {
-        let epsilon: BKFloat = 1.0e-6
-        let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
-                                     p1: BKPoint(x: 2.0, y: 2.0),
-                                     p2: BKPoint(x: 3.0, y: 1.0))
-        let p0 = q.offset(t: 0.0, distance: sqrt(2))
-        let p1 = q.offset(t: 0.5, distance: 1.5)
-        let p2 = q.offset(t: 1.0, distance: sqrt(2))
-        XCTAssert(distance(p0, BKPoint(x: 0.0, y: 2.0)) < epsilon)
-        XCTAssert(distance(p1, BKPoint(x: 2.0, y: 3.0)) < epsilon)
-        XCTAssert(distance(p2, BKPoint(x: 4.0, y: 2.0)) < epsilon)
-    }
-
     func testOffsetDistance() {
         // line segments (or isLinear) have a separate codepath, so be sure to test those
         let epsilon: BKFloat = 1.0e-6
@@ -96,6 +83,19 @@ class BezierCurveTests: XCTestCase {
         // let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 1.0, y: 2.0), p3: BKPoint(x: 2.0, y: 1.0))
     }
     
+    func testOffsetTimeDistance() {
+        let epsilon: BKFloat = 1.0e-6
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
+                                     p1: BKPoint(x: 2.0, y: 2.0),
+                                     p2: BKPoint(x: 3.0, y: 1.0))
+        let p0 = q.offset(t: 0.0, distance: sqrt(2))
+        let p1 = q.offset(t: 0.5, distance: 1.5)
+        let p2 = q.offset(t: 1.0, distance: sqrt(2))
+        XCTAssert(distance(p0, BKPoint(x: 0.0, y: 2.0)) < epsilon)
+        XCTAssert(distance(p1, BKPoint(x: 2.0, y: 3.0)) < epsilon)
+        XCTAssert(distance(p2, BKPoint(x: 4.0, y: 2.0)) < epsilon)
+    }
+    
     func testProject() {
         // line segments override the project implementation, so test them specifically
         let epsilon: BKFloat = 1.0e-3 // TODO: notice that this epsilon value is actually pretty big? it's because project uses a fixed number of iterations. See the flatness-project branch for a potential better solution.
@@ -118,6 +118,58 @@ class BezierCurveTests: XCTestCase {
         XCTAssert(distance(p7, c.compute(0.831211)) < epsilon)
 
     }
+    
+    static let lineSegmentForOutlining = LineSegment(p0: BKPoint(x: -10, y: -5), p1: BKPoint(x: 20, y: 10))
 
+    func testOutlineDistance() {
+        // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
+        let lineSegment = BezierCurveTests.lineSegmentForOutlining
+        let outline: PolyBezier = lineSegment.outline(distance: 1)
+        XCTAssertEqual(outline.curves.count, 4)
+        
+        let o0 = lineSegment.startingPoint + lineSegment.normal(0)
+        let o1 = lineSegment.endingPoint + lineSegment.normal(1)
+        let o2 = lineSegment.endingPoint - lineSegment.normal(1)
+        let o3 = lineSegment.startingPoint - lineSegment.normal(0)
+
+        XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+    }
+
+    func testOutlineDistanceAlongNormalDistanceOppositeNormal() {
+        //  If two distance values are given, the outline is generated at distance d1 on along the normal, and d2 along the anti-normal.
+        let lineSegment = BezierCurveTests.lineSegmentForOutlining
+        let distanceAlongNormal: BKFloat = 1
+        let distanceOppositeNormal: BKFloat = 2
+        let outline: PolyBezier = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
+        XCTAssertEqual(outline.curves.count, 4)
+        
+        let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(0)
+        let o1 = lineSegment.endingPoint + distanceAlongNormal * lineSegment.normal(1)
+        let o2 = lineSegment.endingPoint - distanceOppositeNormal * lineSegment.normal(1)
+        let o3 = lineSegment.startingPoint - distanceOppositeNormal * lineSegment.normal(0)
+        
+        XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+    }
+    
+    func testOutlineD1D2D3D4() {
+        // Graduated offsetting is achieved by using four distances measures, where d1 is the initial offset along the normal, d2 the initial distance along the anti-normal, d3 the final offset along the normal, and d4 the final offset along the anti-normal.
+        
+        
+        // it should be noted that quadratic curves can only be offset as graduated curve by first raising it to a cubic curve and then running through the offsetting algorithm
+    }
+    
+    func testOutlineShapesD1() {
+        
+    }
+    
+    func testOutlineShapesD1D2() {
+        
+    }
     
 }
