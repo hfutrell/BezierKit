@@ -4,6 +4,7 @@ a Swift library for bezier curves, based on [Bezier.js](https://pomax.github.io/
 [![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
+[![CocoaPods Compatible](https://img.shields.io/cocoapods/v/BezierKit.svg)](https://img.shields.io/cocoapods/v/BezierKit.svg)
 
 # Goals for v0.1.1 (upcoming)
 1. improve readme to include instructions for installation via Cocoapods
