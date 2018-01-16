@@ -112,6 +112,7 @@ public struct Point2<S>: Point where S: RealNumber {
     }
 }
 
+/*
 public struct Point3<S>: Point where S: RealNumber {
     public typealias F = S // specify the type used by VectorSpace protocol
     public var x : S, y: S, z: S
@@ -177,3 +178,5 @@ public struct Point3<S>: Point where S: RealNumber {
     }
 
 }
+*/
+
