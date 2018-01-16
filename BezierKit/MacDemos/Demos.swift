@@ -342,7 +342,7 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
                                 let doc = {(c: BezierCurve) in Draw.drawCurve(context, curve: c) }
-                                let outline = curve.outline(d1: 5, d2: 5, d3: 25, d4: 25)
+                                let outline = curve.outline(distanceAlongNormalStart: 5, distanceOppositeNormalStart: 5, distanceAlongNormalEnd: 25, distanceOppositeNormalEnd: 25)
                                 outline.curves.forEach(doc)
     })
     static let demo19 = Demo(title: "outlineShapes",
