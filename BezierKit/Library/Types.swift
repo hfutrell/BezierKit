@@ -92,9 +92,6 @@ public struct BBox<P>: Equatable where P: Point {
         self.min = BKPoint.min(first.min, second.min)
         self.max = BKPoint.max(first.max, second.max)
     }
-    public var mid: BKPoint {
-        return 0.5 * (min + max)
-    }
     public var size: BKPoint {
         return max - min
     }
