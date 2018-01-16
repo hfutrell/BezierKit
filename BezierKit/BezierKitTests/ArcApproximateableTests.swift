@@ -89,9 +89,9 @@ class ArcApproximateableTests: XCTestCase {
 
         // test compute
         let epsilon: BKFloat = 1.0e-6
-        XCTAssertEqual(arc.compute(0.0), BKPoint(x: 2.5, y: 1.0))
+        XCTAssert(distance(arc.compute(0.0), BKPoint(x: 2.5, y: 1.0)) < epsilon)
         XCTAssert(distance(arc.compute(0.5), BKPoint(x: 1.0, y: 1.0) + 0.75 * sqrt(2) * BKPoint(x: 1.0, y: 1.0)) < epsilon)
-        XCTAssertEqual(arc.compute(1.0), BKPoint(x: 1.0, y: 2.5))
+        XCTAssert(distance(arc.compute(1.0), BKPoint(x: 1.0, y: 2.5)) < epsilon)
     }
     
     func testArcsQuadraticSingleArc() {
