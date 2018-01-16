@@ -62,6 +62,14 @@ class ShapeTests: XCTestCase {
         p1 = shapeIntersections[1].curve1.compute(shapeIntersections[1].intersections[0].t1)
         p2 = shapeIntersections[1].curve2.compute(shapeIntersections[1].intersections[0].t2)
         XCTAssert(distance(p1, p2) < epsilon)
+        
+        // test a non-intersecting case where bounding boxes overlap
+        let s3 = LineSegment(p0: BKPoint(x: -3, y: -3), p1: BKPoint(x: 3, y: 3)).outlineShapes(distance: 1)
+        XCTAssertEqual(s1.intersects(shape: s3[0]), [])
+        // test a non-intersecting case where bounding boxes do not overlap
+        let s4 = LineSegment(p0: BKPoint(x: -6, y: -6), p1: BKPoint(x: -4, y: -4)).outlineShapes(distance: sqrt(2))
+        XCTAssertEqual(s1.intersects(shape: s4[0]), [])
+
     }
     
 }

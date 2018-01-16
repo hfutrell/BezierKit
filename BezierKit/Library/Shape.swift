@@ -8,10 +8,13 @@
 
 import Foundation
 
-public struct ShapeIntersection {
+public struct ShapeIntersection: Equatable {
     let curve1: BezierCurve
     let curve2: BezierCurve
     let intersections: [Intersection]
+    public static func == (left: ShapeIntersection, right: ShapeIntersection) -> Bool {
+        return left.curve1 == left.curve2 && left.intersections == right.intersections
+    }
 }
 
 public struct Shape {
@@ -22,6 +25,7 @@ public struct Shape {
             self.curve = curve
             self.virtual = virtual
         }
+        // TODO: equatable
     }
     
     public static let defaultShapeIntersectionThreshold: BKFloat = 0.5
@@ -79,5 +83,5 @@ public struct Shape {
         }
         return intersections
     }
-    
+    // TODO: equatable
 }
