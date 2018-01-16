@@ -124,16 +124,21 @@ public struct LineSegment: BezierCurve, Equatable {
         // t1 = ed - bf / ad - bc
         // t2 = af - ec / ad - bc
         let det = _a * _d - _b * _c
+        let inv_det = 1.0 / det
+
+        if inv_det.isFinite == false {
+            // lines are effectively parallel. Multiplying by inv_det will yield Inf or NaN, neither of which is valid
+            return []
+        }
         
         let _e = -a1.x + a2.x
         let _f = -a1.y + a2.y
         
-        let inv_det = 1.0 / det
-        let t1 = ( _e * _d - _b * _f ) * inv_det
+        let t1 = ( _e * _d - _b * _f ) * inv_det // if inv_det is inf then this is NaN!
         if t1 > 1.0 || t1 < 0.0  {
             return [] // t1 out of interval [0, 1]
         }
-        let t2 = ( _a * _f - _e * _c ) * inv_det
+        let t2 = ( _a * _f - _e * _c ) * inv_det // if inv_det is inf then this is NaN!
         if t2 > 1.0 || t2 < 0.0 {
             return [] // t2 out of interval [0, 1]
         }

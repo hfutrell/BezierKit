@@ -125,11 +125,6 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(r[0].curve, l)
     }
     
-//    TODO: write me
-//    func testScaleDistanceFunc {
-//        
-//    }
-    
     func testIntersects() {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
         let i = l.intersects()
@@ -212,6 +207,27 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i.count, 1)
         XCTAssertEqual(i[0].t1, 0.5)
         XCTAssertEqual(i[0].t2, 0.5)
+    }
+    
+    func testIntersectsLineNoParallel() {
+        
+        // this is a special case where determinant is zero
+        let l1 = LineSegment(p0: BKPoint(x: -2.0, y: -1.0), p1: BKPoint(x: 2.0, y: 1.0))
+        let l2 = LineSegment(p0: BKPoint(x: -4.0, y: -1.0), p1: BKPoint(x: 4.0, y: 3.0))
+        let i1 = l1.intersects(line: l2)
+        XCTAssertEqual(i1.count, 0)
+        
+        // this is a very, very special case! Not only is the determinant zero, but the *minor* determinants are also zero, so without special care we can get 0*(1/det) = 0*Inf = NaN!
+        let l3 = LineSegment(p0: BKPoint(x: -5.0, y: -5.0), p1: BKPoint(x: 5.0, y: 5.0))
+        let l4 = LineSegment(p0: BKPoint(x: -1.0, y: -1.0), p1: BKPoint(x: 1.0, y: 1.0))
+        let i2 = l3.intersects(line: l4)
+        XCTAssertEqual(i2.count, 0)
+        
+        // very, very nearly parallel lines
+        let l5 = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0))
+        let l6 = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 2.0 + 1.0e-15))
+        let i3 = l5.intersects(line: l6)
+        XCTAssertEqual(i3.count, 0)
     }
     
     // -- MARK: - line-curve intersection tests
@@ -305,15 +321,6 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i.count, 1)
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
-
-    
-    /*
- testOuline
- testOutline2
- testOutline3
- testOutlineShapes
- testOutlinesShapes2
-    */
 
     // MARK: -
     
