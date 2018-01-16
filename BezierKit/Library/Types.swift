@@ -46,29 +46,6 @@ public struct Interval: Equatable {
     }
 }
 
-public struct Arc: Equatable {
-    public var origin: BKPoint
-    public var radius: BKFloat
-    public var start: BKFloat // starting angle (in radians)
-    public var end: BKFloat // ending angle (in radians)
-    public var interval: Interval // represents t-values [0, 1] on curve
-    public init(origin: BKPoint, radius: BKFloat, start: BKFloat, end: BKFloat, interval: Interval = Interval(start: 0.0, end: 1.0)) {
-        self.origin = origin
-        self.radius = radius
-        self.start = start
-        self.end = end
-        self.interval = interval
-    }
-    public static func == (left: Arc, right: Arc) -> Bool {
-        return (left.origin == right.origin && left.radius == right.radius && left.start == right.start && left.end == right.end && left.interval == right.interval)
-    }
-    public func compute(_ t: BKFloat) -> BKPoint {
-        // computes a value on the arc with t in [0, 1]
-        let theta: BKFloat = t * self.end + (1.0 - t) * self.start
-        return self.origin + self.radius * BKPoint(x: cos(theta), y: sin(theta))
-    }
-}
-
 public typealias BoundingBox = BBox<BKPoint>
 
 public struct BBox<P>: Equatable where P: Point {

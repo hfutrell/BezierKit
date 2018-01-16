@@ -59,6 +59,41 @@ class ArcApproximateableTests: XCTestCase {
         return true
     }
     
+    func testArc() {
+        // test the constructor
+        let arc = Arc(origin: BKPoint(x: 1.0, y: 1.0), radius: 1.5, startAngle: 0.0, endAngle: BKFloat.pi / 2.0)
+        XCTAssertEqual(arc.origin, BKPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(arc.radius, 1.5)
+        XCTAssertEqual(arc.startAngle, 0.0)
+        XCTAssertEqual(arc.endAngle, BKFloat.pi / 2.0)
+        XCTAssertEqual(arc.interval, Interval(start: 0.0, end: 1.0))
+        
+        // test equality
+        let arc2 = Arc(origin: BKPoint(x: 1.0, y: 1.0), radius: 1.5, startAngle: 0.0, endAngle: BKFloat.pi / 2.0, interval: Interval(start: 0.0, end: 1.0))
+        XCTAssertEqual(arc, arc2)
+        var arc3 = arc
+        arc3.origin = arc3.origin + BKPoint(x: 1.0, y: 1.0)
+        XCTAssertNotEqual(arc, arc3)
+        var arc4 = arc
+        arc4.radius = 2
+        XCTAssertNotEqual(arc, arc4)
+        var arc5 = arc
+        arc5.startAngle = 0.2
+        XCTAssertNotEqual(arc, arc5)
+        var arc6 = arc
+        arc6.endAngle = 0.8
+        XCTAssertNotEqual(arc, arc6)
+        var arc7 = arc
+        arc7.interval = Interval(start: 0.1, end: 1.0)
+        XCTAssertNotEqual(arc, arc7)
+
+        // test compute
+        let epsilon: BKFloat = 1.0e-6
+        XCTAssertEqual(arc.compute(0.0), BKPoint(x: 2.5, y: 1.0))
+        XCTAssert(distance(arc.compute(0.5), BKPoint(x: 1.0, y: 1.0) + 0.75 * sqrt(2) * BKPoint(x: 1.0, y: 1.0)) < epsilon)
+        XCTAssertEqual(arc.compute(1.0), BKPoint(x: 1.0, y: 2.5))
+    }
+    
     func testArcsQuadraticSingleArc() {
         let epsilon: BKFloat = 0.001
         let r: BKFloat = 100.0
@@ -71,15 +106,15 @@ class ArcApproximateableTests: XCTestCase {
         // with a big enough error threshold we should just get back one arc
         let expectedResult = Arc(origin: BKPoint(x: 0.0, y: 0.0),
             radius: 100.0,
-            start: 0.0,
-            end: BKFloat(Double.pi / 2.0),
+            startAngle: 0.0,
+            endAngle: BKFloat(Double.pi / 2.0),
             interval: Interval(start: 0.0, end: 1.0)
         )
         XCTAssertEqual(result.count, 1)
         XCTAssert((result[0].origin - expectedResult.origin).length < epsilon)
         XCTAssertEqual(result[0].radius, expectedResult.radius, accuracy: epsilon)
-        XCTAssertEqual(result[0].start, expectedResult.start, accuracy: epsilon)
-        XCTAssertEqual(result[0].end, expectedResult.end, accuracy: epsilon)
+        XCTAssertEqual(result[0].startAngle, expectedResult.startAngle, accuracy: epsilon)
+        XCTAssertEqual(result[0].endAngle, expectedResult.endAngle, accuracy: epsilon)
         XCTAssertEqual(result[0].interval, expectedResult.interval)
         // just for good measure test that it passes the good approximation test
         XCTAssert(isGoodApproximation(arcs: result, curve: q, errorThreshold: r))

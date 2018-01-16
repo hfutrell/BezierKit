@@ -229,8 +229,8 @@ public class Draw {
         context.move(to: (arc.origin + o).toCGPoint())
         context.addArc(center: (arc.origin + o).toCGPoint(),
                        radius: arc.radius,
-                       startAngle: arc.start,
-                       endAngle: arc.end,
+                       startAngle: arc.startAngle,
+                       endAngle: arc.endAngle,
                        clockwise: false)
         context.addLine(to: (arc.origin + o).toCGPoint())
         context.drawPath(using: CGPathDrawingMode.fillStroke)

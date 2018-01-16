@@ -463,7 +463,7 @@ internal class Utils {
                 e += tau
             }
         }
-        return Arc(origin: o, radius: r, start: s, end: e, interval: interval)
+        return Arc(origin: o, radius: r, startAngle: s, endAngle: e, interval: interval)
     }
     
     static func hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
