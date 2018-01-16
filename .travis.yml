@@ -12,11 +12,10 @@ env:
   matrix:
     - DESTINATION="OS=9.0,name=iPhone 5"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
     - DESTINATION="OS=11.0,name=iPhone 6"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-    - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="YES"
 
 script:
   - set -o pipefail
-  - pod spec lint
   - xcodebuild -version
   - xcodebuild -showsdks
 
@@ -27,10 +26,10 @@ script:
       xcodebuild -project "$PROJECT" -scheme "$SCHEME" -sdk "$SDK" -destination "$DESTINATION" -configuration Debug ONLY_ACTIVE_ARCH=NO build | xcpretty -c;
     fi
 
-  # Run `pod lib lint` if specified
-#  - if [ $POD_LINT == "YES" ]; then
-#      pod lib lint --private --verbose;
-#    fi
+  # Run `pod spec lint` if specified
+  - if [ $POD_LINT == "YES" ]; then
+        - pod spec lint;
+    fi
 
 after_success:
    - bash <(curl -s https://codecov.io/bash)
