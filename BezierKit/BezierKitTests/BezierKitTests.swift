@@ -34,6 +34,28 @@ class BezierKitTests: XCTestCase {
         return true
     }
     
+    static internal func shape(_ s: Shape,  matchesShape other: Shape, accuracy: BKFloat = 1.0e-6) -> Bool {
+        guard BezierKitTests.curve(s.forward, matchesCurve: other.forward, accuracy: accuracy) else {
+            return false
+        }
+        guard BezierKitTests.curve(s.back, matchesCurve: other.back, accuracy: accuracy) else {
+            return false
+        }
+        guard BezierKitTests.curve(s.startcap.curve, matchesCurve: other.startcap.curve, accuracy: accuracy) else {
+            return false
+        }
+        guard BezierKitTests.curve(s.endcap.curve, matchesCurve: other.endcap.curve, accuracy: accuracy) else {
+            return false
+        }
+        guard s.startcap.virtual == other.startcap.virtual else {
+            return false
+        }
+        guard s.endcap.virtual == other.endcap.virtual else {
+            return false
+        }
+        return true
+    }
+    
     static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval = Interval(start: 0.0, end: 1.0), accuracy: BKFloat = 1.0e-6) -> Bool {
         // checks if c1 over [0, 1] matches c2 over [interval.start, interval.end]
         // useful for checking if splitting a curve over a given interval worked correctly

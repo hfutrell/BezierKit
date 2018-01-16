@@ -497,7 +497,10 @@ extension BezierCurve {
         return internalOutline(d1: d1, d2: d2, d3: 0.0, d4: 0.0, graduated: false)
     }
     
-    public func outline(d1: BKFloat, d2: BKFloat, d3: BKFloat, d4: BKFloat) -> PolyBezier {
+    public func outline(distanceAlongNormalStart d1: BKFloat,
+                        distanceOppositeNormalStart d2: BKFloat,
+                        distanceAlongNormalEnd d3: BKFloat,
+                        distanceOppositeNormalEnd d4: BKFloat) -> PolyBezier {
         return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
     }
     
@@ -557,10 +560,10 @@ extension BezierCurve {
     // MARK: shapes
     
     public func outlineShapes(distance d1: BKFloat, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
-        return self.outlineShapes(distance: d1, d2: d1, curveIntersectionThreshold: curveIntersectionThreshold)
+        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, curveIntersectionThreshold: curveIntersectionThreshold)
     }
     
-    public func outlineShapes(distance d1: BKFloat, d2: BKFloat, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distanceAlongNormal d1: BKFloat, distanceOppositeNormal d2: BKFloat, curveIntersectionThreshold: BKFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
         var outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2).curves
         var shapes: [Shape] = []
         let len = outline.count

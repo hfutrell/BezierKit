@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import BezierKit
+@testable import BezierKit
 
 class BezierCurveTests: XCTestCase {
     
@@ -121,17 +121,22 @@ class BezierCurveTests: XCTestCase {
     
     static let lineSegmentForOutlining = LineSegment(p0: BKPoint(x: -10, y: -5), p1: BKPoint(x: 20, y: 10))
 
+    private func lineOffsets(_ lineSegment: LineSegment, _ d1: BKFloat, _ d2: BKFloat, _ d3: BKFloat, _ d4: BKFloat) -> (BKPoint, BKPoint, BKPoint, BKPoint) {
+        let o0 = lineSegment.startingPoint + d1 * lineSegment.normal(0)
+        let o1 = lineSegment.endingPoint + d3 * lineSegment.normal(1)
+        let o2 = lineSegment.endingPoint - d4 * lineSegment.normal(1)
+        let o3 = lineSegment.startingPoint - d2 * lineSegment.normal(0)
+        return (o0, o1, o2, o3)
+    }
+    
     func testOutlineDistance() {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let outline: PolyBezier = lineSegment.outline(distance: 1)
         XCTAssertEqual(outline.curves.count, 4)
         
-        let o0 = lineSegment.startingPoint + lineSegment.normal(0)
-        let o1 = lineSegment.endingPoint + lineSegment.normal(1)
-        let o2 = lineSegment.endingPoint - lineSegment.normal(1)
-        let o3 = lineSegment.startingPoint - lineSegment.normal(0)
-
+        let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
+        
         XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
         XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
         XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
@@ -157,19 +162,49 @@ class BezierCurveTests: XCTestCase {
         XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
     
-    func testOutlineD1D2D3D4() {
+    func testOutlineQuadArgument() {
         // Graduated offsetting is achieved by using four distances measures, where d1 is the initial offset along the normal, d2 the initial distance along the anti-normal, d3 the final offset along the normal, and d4 the final offset along the anti-normal.
+        let lineSegment = BezierCurveTests.lineSegmentForOutlining
+        let distanceAlongNormal1: BKFloat = 2
+        let distanceOppositeNormal1: BKFloat = 4
+        let distanceAlongNormal2: BKFloat = 1
+        let distanceOppositeNormal2: BKFloat = 2
+
+        let outline: PolyBezier = lineSegment.outline(distanceAlongNormalStart: distanceAlongNormal1,
+                                                      distanceOppositeNormalStart: distanceOppositeNormal1,
+                                                      distanceAlongNormalEnd: distanceAlongNormal2,
+                                                      distanceOppositeNormalEnd: distanceOppositeNormal2)
         
+        XCTAssertEqual(outline.curves.count, 4)
         
+        let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal1, distanceOppositeNormal1, distanceAlongNormal2, distanceOppositeNormal2)
+
+        XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
         // it should be noted that quadratic curves can only be offset as graduated curve by first raising it to a cubic curve and then running through the offsetting algorithm
     }
     
-    func testOutlineShapesD1() {
-        
+    func testOutlineShapesDistance() {
+        let lineSegment = BezierCurveTests.lineSegmentForOutlining
+        let distanceAlongNormal: BKFloat = 1
+        let shapes: [Shape] = lineSegment.outlineShapes(distance: distanceAlongNormal)
+        XCTAssertEqual(shapes.count, 1)
+        let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal, distanceAlongNormal, distanceAlongNormal, distanceAlongNormal)
+        let expectedShape = Shape(LineSegment(p0: o0, p1: o1), LineSegment(p0: o2, p1: o3), false, false) // shape made from lines with real (non-virtual) caps
+        XCTAssertTrue( BezierKitTests.shape(shapes[0], matchesShape: expectedShape) )
     }
     
-    func testOutlineShapesD1D2() {
-        
+    func testOutlineShapesDistanceAlongNormalDistanceOppositeNormal() {
+        let lineSegment = BezierCurveTests.lineSegmentForOutlining
+        let distanceAlongNormal: BKFloat = 1
+        let distanceOppositeNormal: BKFloat = 2
+        let shapes: [Shape] = lineSegment.outlineShapes(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
+        XCTAssertEqual(shapes.count, 1)
+        let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal, distanceOppositeNormal, distanceAlongNormal, distanceOppositeNormal)
+        let expectedShape = Shape(LineSegment(p0: o0, p1: o1), LineSegment(p0: o2, p1: o3), false, false) // shape made from lines with real (non-virtual) caps
+        XCTAssertTrue( BezierKitTests.shape(shapes[0], matchesShape: expectedShape) )
     }
     
 }
