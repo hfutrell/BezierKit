@@ -27,7 +27,7 @@ class BezierCurveTests: XCTestCase {
         let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 6.0))
         let ls = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
         let expectedLine = LineSegment(p0: BKPoint(x: 0.0, y: 3.0), p1: BKPoint(x: 4.0, y: 7.0))
-        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: ls, curve2: expectedLine, accuracy: epsilon))
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: ls, curve2: expectedLine, tolerance: epsilon))
         // quadratic
         let q = QuadraticBezierCurve(p0: BKPoint(x: 1.0, y: 1.0),
                                      p1: BKPoint(x: 2.0, y: 2.0),
@@ -36,7 +36,7 @@ class BezierCurveTests: XCTestCase {
         let expectedQuadratic = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 2.0),
                                                 p1: BKPoint(x: 2.0, y: 4.0),
                                                 p2: BKPoint(x: 4.0, y: 2.0))
-        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: qs, curve2: expectedQuadratic, accuracy: epsilon))
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: qs, curve2: expectedQuadratic, tolerance: epsilon))
         // cubic
         let c = CubicBezierCurve(p0: BKPoint(x: -4.0, y: +0.0),
                                  p1: BKPoint(x: -2.0, y: +2.0),
@@ -47,7 +47,7 @@ class BezierCurveTests: XCTestCase {
                                 p1: BKPoint(x: -3.0, y: +5.0),
                                 p2: BKPoint(x: +3.0, y: +5.0),
                                 p3: BKPoint(x: +6.0, y: +2.0))
-        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, accuracy: epsilon))
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, tolerance: epsilon))
 
         // TODO: add special case for quadratic and cubic that are actually linear -- can fail if normals are parallel
     }
@@ -59,7 +59,7 @@ class BezierCurveTests: XCTestCase {
         let c1Offset = c1.offset(distance: sqrt(2))
         let expectedOffset1 = CubicBezierCurve(lineSegment: LineSegment(p0: BKPoint(x: -1.0, y: 1.0), p1: BKPoint(x: 0.0, y: 2.0)))
         XCTAssertEqual(c1Offset.count, 1)
-        XCTAssert(BezierKitTests.curveControlPointsEqual(curve1: c1Offset[0] as! CubicBezierCurve, curve2: expectedOffset1, accuracy: epsilon))
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: c1Offset[0] as! CubicBezierCurve, curve2: expectedOffset1, tolerance: epsilon))
         // next test a non-simple curve
         let c2 = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 2.0, y: 2.0), p2: BKPoint(x: 3.0, y: 2.0), p3: BKPoint(x: 4.0, y: 1.0))
         let c2Offset = c2.offset(distance: sqrt(2))
@@ -137,10 +137,10 @@ class BezierCurveTests: XCTestCase {
         
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
         
-        XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
 
     func testOutlineDistanceAlongNormalDistanceOppositeNormal() {
@@ -156,10 +156,10 @@ class BezierCurveTests: XCTestCase {
         let o2 = lineSegment.endingPoint - distanceOppositeNormal * lineSegment.normal(1)
         let o3 = lineSegment.startingPoint - distanceOppositeNormal * lineSegment.normal(0)
         
-        XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
     
     func testOutlineFourArguments() {
@@ -179,10 +179,10 @@ class BezierCurveTests: XCTestCase {
         
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal1, distanceOppositeNormal1, distanceAlongNormal2, distanceOppositeNormal2)
 
-        XCTAssert( BezierKitTests.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
         // TODO: it should be noted that quadratic curves can only be offset as graduated curve by first raising it to a cubic curve and then running through the offsetting algorithm
     }
     
@@ -193,7 +193,7 @@ class BezierCurveTests: XCTestCase {
         XCTAssertEqual(shapes.count, 1)
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal, distanceAlongNormal, distanceAlongNormal, distanceAlongNormal)
         let expectedShape = Shape(LineSegment(p0: o0, p1: o1), LineSegment(p0: o2, p1: o3), false, false) // shape made from lines with real (non-virtual) caps
-        XCTAssertTrue( BezierKitTests.shape(shapes[0], matchesShape: expectedShape) )
+        XCTAssertTrue( BezierKitTestHelpers.shape(shapes[0], matchesShape: expectedShape) )
     }
     
     func testOutlineShapesDistanceAlongNormalDistanceOppositeNormal() {
@@ -204,7 +204,37 @@ class BezierCurveTests: XCTestCase {
         XCTAssertEqual(shapes.count, 1)
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal, distanceOppositeNormal, distanceAlongNormal, distanceOppositeNormal)
         let expectedShape = Shape(LineSegment(p0: o0, p1: o1), LineSegment(p0: o2, p1: o3), false, false) // shape made from lines with real (non-virtual) caps
-        XCTAssertTrue( BezierKitTests.shape(shapes[0], matchesShape: expectedShape) )
+        XCTAssertTrue( BezierKitTestHelpers.shape(shapes[0], matchesShape: expectedShape) )
+    }
+    
+    func testCubicCubicIntersectionEndpoints() {
+        // these two cubics intersect only at the endpoints
+        let epsilon: BKFloat = 1.0e-3
+        let cubic1 = CubicBezierCurve(p0: BKPoint(x: 0.0, y: 0.0),
+                                      p1: BKPoint(x: 1.0, y: 1.0),
+                                      p2: BKPoint(x: 2.0, y: 1.0),
+                                      p3: BKPoint(x: 3.0, y: 0.0))
+        let cubic2 = CubicBezierCurve(p0: BKPoint(x: 3.0, y: 0.0),
+                                      p1: BKPoint(x: 2.0, y: -1.0),
+                                      p2: BKPoint(x: 1.0, y: -1.0),
+                                      p3: BKPoint(x: 0.0, y: 0.0))
+        let i = cubic1.intersects(curve: cubic2, curveIntersectionThreshold: epsilon)
+        XCTAssertEqual(i.count, 2, "start and end points should intersect!")
+        XCTAssertEqual(i[0].t1, 0.0)
+        XCTAssertEqual(i[0].t2, 1.0)
+        XCTAssertEqual(i[1].t1, 1.0)
+        XCTAssertEqual(i[1].t2, 0.0)
+    }
+    
+    func testCubicSelfIntersection() {
+        let epsilon: BKFloat = 1.0e-3
+        let curve = CubicBezierCurve(p0: BKPoint(x: 0.0, y: 0.0),
+                                     p1: BKPoint(x: 2.0, y: 1.0),
+                                     p2: BKPoint(x: -1.0, y: 1.0),
+                                     p3: BKPoint(x: 1.0, y: 0.0))
+        let i = curve.intersects(curveIntersectionThreshold: epsilon)
+        XCTAssertEqual(i.count, 1, "wrong number of intersections!")
+        XCTAssert( (curve.compute(i[0].t1) - curve.compute(i[0].t2)).length < epsilon, "wrong or inaccurate intersection!" )
     }
     
 }

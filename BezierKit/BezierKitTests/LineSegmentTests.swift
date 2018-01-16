@@ -290,7 +290,7 @@ class LineSegmentTests: XCTestCase {
         let l = LineSegment(p0: BKPoint(x:1.0, y: 1.1), p1: BKPoint(x: 3.0, y: 1.1))
         let i = l.intersects(curve: c)
         XCTAssertEqual(i.count, 2)
-        XCTAssert(BezierKitTests.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
     
     func testIntersectsDegenerateCubic2() {
@@ -303,7 +303,7 @@ class LineSegmentTests: XCTestCase {
         let l = LineSegment(p0: BKPoint(x:1.0, y: 2.0), p1: BKPoint(x: 4.0, y: 2.0))
         let i = l.intersects(curve: c)
         XCTAssertEqual(i.count, 1)
-        XCTAssert(BezierKitTests.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
     

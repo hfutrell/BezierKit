@@ -139,7 +139,7 @@ class CubicBezierCurveTests: XCTestCase {
         let t1: BKFloat = 1.0 / 3.0
         let t2: BKFloat = 2.0 / 3.0
         let s = c.split(from: t1, to: t2)
-        XCTAssert(BezierKitTests.curve(s, matchesCurve: c, overInterval: Interval(start: t1,end: t2), accuracy: epsilon))
+        XCTAssert(BezierKitTestHelpers.curve(s, matchesCurve: c, overInterval: Interval(start: t1,end: t2), tolerance: epsilon))
     }
 
     func testSplitAt() {
@@ -147,8 +147,8 @@ class CubicBezierCurveTests: XCTestCase {
         let c = CubicBezierCurve(p0: BKPoint(x: 1.0, y: 1.0), p1: BKPoint(x: 3.0, y: 2.0), p2: BKPoint(x: 4.0, y: 2.0), p3: BKPoint(x: 6.0, y: 1.0))
         let t: BKFloat = 0.25
         let (left, right) = c.split(at: t)
-        XCTAssert(BezierKitTests.curve(left, matchesCurve: c, overInterval: Interval(start: 0,end: t), accuracy: epsilon))
-        XCTAssert(BezierKitTests.curve(right, matchesCurve: c, overInterval: Interval(start: t,end: 1), accuracy: epsilon))
+        XCTAssert(BezierKitTestHelpers.curve(left, matchesCurve: c, overInterval: Interval(start: 0,end: t), tolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.curve(right, matchesCurve: c, overInterval: Interval(start: t,end: 1), tolerance: epsilon))
     }
     
     func testBoundingBox() {
@@ -195,7 +195,7 @@ class CubicBezierCurveTests: XCTestCase {
     func testExtrema() {
         let f: [BKFloat] = [1, -1, 0, 0] // f(t) = t^3 - t^2, which has two local minimum at t=0, t=2/3 and an inflection point t=1/3
         let g: [BKFloat] = [3, -2, 0, 0] // g(t) = 3t^3 - 2t^2, which has a local minimum at t=0, t=4/9 and an inflection point at t=2/9
-        let c = BezierKitTests.cubicBezierCurveFromPolynomials(f, g)
+        let c = BezierKitTestHelpers.cubicBezierCurveFromPolynomials(f, g)
         let (xyz, values) = c.extrema()
         XCTAssert(xyz.count == 2) // one array for each dimension
         XCTAssertEqual(xyz[0].count, 3)
@@ -408,13 +408,6 @@ class CubicBezierCurveTests: XCTestCase {
 //        XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
 //    }
 //    
-//    /*
-//     testOuline
-//     testOutline2
-//     testOutline3
-//     testOutlineShapes
-//     testOutlinesShapes2
-//     */
     
     func testCubicIntersectsLine() {
         let epsilon: BKFloat = 0.00001

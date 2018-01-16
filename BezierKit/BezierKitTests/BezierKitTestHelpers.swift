@@ -9,7 +9,7 @@
 import XCTest
 @testable import BezierKit
 
-class BezierKitTests: XCTestCase {
+class BezierKitTestHelpers {
     
     static internal func intersections(_ intersections: [Intersection], betweenCurve c1: BezierCurve, andOtherCurve c2: BezierCurve, areWithinTolerance epsilon: BKFloat) -> Bool {
         for i in intersections {
@@ -22,7 +22,7 @@ class BezierKitTests: XCTestCase {
         return true
     }
     
-    static internal func curveControlPointsEqual(curve1 c1: BezierCurve, curve2 c2: BezierCurve, accuracy epsilon: BKFloat) -> Bool {
+    static internal func curveControlPointsEqual(curve1 c1: BezierCurve, curve2 c2: BezierCurve, tolerance epsilon: BKFloat) -> Bool {
         if c1.order != c2.order {
             return false
         }
@@ -34,17 +34,17 @@ class BezierKitTests: XCTestCase {
         return true
     }
     
-    static internal func shape(_ s: Shape,  matchesShape other: Shape, accuracy: BKFloat = 1.0e-6) -> Bool {
-        guard BezierKitTests.curve(s.forward, matchesCurve: other.forward, accuracy: accuracy) else {
+    static internal func shape(_ s: Shape,  matchesShape other: Shape, tolerance: BKFloat = 1.0e-6) -> Bool {
+        guard BezierKitTestHelpers.curve(s.forward, matchesCurve: other.forward, tolerance: tolerance) else {
             return false
         }
-        guard BezierKitTests.curve(s.back, matchesCurve: other.back, accuracy: accuracy) else {
+        guard BezierKitTestHelpers.curve(s.back, matchesCurve: other.back, tolerance: tolerance) else {
             return false
         }
-        guard BezierKitTests.curve(s.startcap.curve, matchesCurve: other.startcap.curve, accuracy: accuracy) else {
+        guard BezierKitTestHelpers.curve(s.startcap.curve, matchesCurve: other.startcap.curve, tolerance: tolerance) else {
             return false
         }
-        guard BezierKitTests.curve(s.endcap.curve, matchesCurve: other.endcap.curve, accuracy: accuracy) else {
+        guard BezierKitTestHelpers.curve(s.endcap.curve, matchesCurve: other.endcap.curve, tolerance: tolerance) else {
             return false
         }
         guard s.startcap.virtual == other.startcap.virtual else {
@@ -56,14 +56,14 @@ class BezierKitTests: XCTestCase {
         return true
     }
     
-    static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval = Interval(start: 0.0, end: 1.0), accuracy: BKFloat = 1.0e-6) -> Bool {
+    static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval = Interval(start: 0.0, end: 1.0), tolerance: BKFloat = 1.0e-6) -> Bool {
         // checks if c1 over [0, 1] matches c2 over [interval.start, interval.end]
         // useful for checking if splitting a curve over a given interval worked correctly
         let numPointsToCheck = 10
         for i in 0..<numPointsToCheck {
             let t1 = BKFloat(i) / BKFloat(numPointsToCheck-1)
             let t2 = interval.start * (1.0 - t1) + interval.end * t1
-            if (distance(c1.compute(t1), c2.compute(t2)) > accuracy) {
+            if (distance(c1.compute(t1), c2.compute(t2)) > tolerance) {
                 return false
             }
         }
@@ -117,27 +117,5 @@ class BezierKitTests: XCTestCase {
 //        }
 //        return curve
 //    }
-    
-    override func setUp() {
-        super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-    
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-    }
-    
-//    func testExample() {
-//        // This is an example of a functional test case.
-//        // Use XCTAssert and related functions to verify your tests produce the correct results.
-//    }
-//    
-//    func testPerformanceExample() {
-//        // This is an example of a performance test case.
-//        self.measure {
-//            // Put the code you want to measure the time of here.
-//        }
-//    }
-    
+            
 }
