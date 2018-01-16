@@ -162,7 +162,7 @@ class BezierCurveTests: XCTestCase {
         XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
     
-    func testOutlineQuadArgument() {
+    func testOutlineFourArguments() {
         // Graduated offsetting is achieved by using four distances measures, where d1 is the initial offset along the normal, d2 the initial distance along the anti-normal, d3 the final offset along the normal, and d4 the final offset along the anti-normal.
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let distanceAlongNormal1: BKFloat = 2
@@ -183,7 +183,7 @@ class BezierCurveTests: XCTestCase {
         XCTAssert( BezierKitTests.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
         XCTAssert( BezierKitTests.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
         XCTAssert( BezierKitTests.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
-        // it should be noted that quadratic curves can only be offset as graduated curve by first raising it to a cubic curve and then running through the offsetting algorithm
+        // TODO: it should be noted that quadratic curves can only be offset as graduated curve by first raising it to a cubic curve and then running through the offsetting algorithm
     }
     
     func testOutlineShapesDistance() {
