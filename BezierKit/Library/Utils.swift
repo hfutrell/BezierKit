@@ -138,24 +138,6 @@ internal class Utils {
         return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
     }
     
-    //    static func lli(_ v1: BKFloat,_ v2: BKFloat) -> BKPoint? {
-    //        return Utils.lli4(v1,v1.c,v2,v2.c)
-    //    }
-    
-    static func getminmax(list: [BKFloat], value0: BKFloat, value1: BKFloat) -> (min: BKFloat, max: BKFloat) {
-        var min = value0 < value1 ? value0 : value1
-        var max = value0 < value1 ? value1 : value0
-        for t in list {
-            if t < min {
-                min = t
-            }
-            else if t > max {
-                max = t
-            }
-        }
-        return (min: min, max: max)
-    }
-    
     static func approximately(_ a: BKFloat,_ b: BKFloat, precision: BKFloat = epsilon) -> Bool {
         return abs(a-b) <= precision
     }
