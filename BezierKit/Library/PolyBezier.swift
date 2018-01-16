@@ -12,7 +12,7 @@ public class PolyBezier {
     
     public let curves: [BezierCurve]
     
-    public init(curves: [BezierCurve]) {
+    internal init(curves: [BezierCurve]) {
         self.curves = curves
     }
     
