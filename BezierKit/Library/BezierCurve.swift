@@ -46,6 +46,7 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
                                      curve: right)
         return (left: subcurveLeft, right: subcurveRight)
     }
+    // TODO: equatable support
 }
 
 // MARK: -

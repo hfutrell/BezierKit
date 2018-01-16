@@ -33,4 +33,6 @@ public class PolyBezier {
             $0 + $1.offset(distance: d)
         }))
     }
+    
+    // TODO: equatable
 }
