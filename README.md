@@ -3,8 +3,9 @@
 [![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
+[![CocoaPods Compatible](https://img.shields.io/cocoapods/v/BezierKit.svg)](https://img.shields.io/cocoapods/v/BezierKit.svg)
 
-BezierKit is a library for Bézier curves written in Swift and based on the popular javascript library [Bezier.js](https://pomax.github.io/bezierjs/).
+BezierKit is a library for Bézier curves written in Swift and based on the popular JavaScript library [Bezier.js](https://pomax.github.io/bezierjs/).
 
 - [Warning! Prerelease software!](#warning!)
 - [Features](#features)
@@ -31,9 +32,9 @@ Please note that BezierKit is currently pre-release software. Its releases follo
 - [ ] Comprehensive Unit and Integration Test Coverage
 - [ ] Complete Documentation
 
-## Installation with Cocoapods
+## Installation with CocoaPods
 
-The recommended way to install BezierKit is via Cocoapods, however you may also find that dropping the contents of `Library` into your project also works.
+The recommended way to install BezierKit is via CocoaPods, however you may also find that dropping the contents of `Library` into your project also works.
 
 [CocoaPods](http://cocoapods.org) is a dependency manager for Cocoa projects. You can install it with the following command:
 
