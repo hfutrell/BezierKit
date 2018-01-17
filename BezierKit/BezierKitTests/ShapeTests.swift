@@ -13,6 +13,21 @@ class ShapeTests: XCTestCase {
     
     let testQuadCurve = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0), p2: BKPoint(x: 1.0, y:  2.0))
     
+    func testShapeIntersection() {
+        let c1 = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 0.0))
+        let c2 = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 2.0))
+        let c3 = LineSegment(p0: BKPoint(x: 0.0, y: 10.0), p1: BKPoint(x: 1.0, y: 5.0))
+        let si1 = ShapeIntersection(curve1: c1, curve2: c2, intersections: [Intersection(t1: 0.5, t2: 0.5)])
+        let si2 = ShapeIntersection(curve1: c1, curve2: c2, intersections: [Intersection(t1: 0.5, t2: 0.5)])
+        XCTAssertEqual(si1, si2)
+        var si3 = ShapeIntersection(curve1: c3, curve2: c2, intersections: [Intersection(t1: 0.5, t2: 0.5)])
+        XCTAssertNotEqual(si1, si3) // curve 1 doesn't match
+        si3 = ShapeIntersection(curve1: c1, curve2: c3, intersections: [Intersection(t1: 0.5, t2: 0.5)])
+        XCTAssertNotEqual(si1, si3) // curve 2 doesn't match
+        si3 = ShapeIntersection(curve1: c1, curve2: c2, intersections: [])
+        XCTAssertNotEqual(si1, si3) // intersections don't match
+    }
+    
     func testInitializer() {
         let forward = testQuadCurve.offset(distance: 2)[0]
         let back = testQuadCurve.offset(distance: -2)[0]

@@ -13,7 +13,7 @@ public struct ShapeIntersection: Equatable {
     let curve2: BezierCurve
     let intersections: [Intersection]
     public static func == (left: ShapeIntersection, right: ShapeIntersection) -> Bool {
-        return left.curve1 == left.curve2 && left.intersections == right.intersections
+        return left.curve1 == right.curve1 && left.curve2 == right.curve2 && left.intersections == right.intersections
     }
 }
 
