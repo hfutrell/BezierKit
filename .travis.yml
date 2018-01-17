@@ -28,7 +28,7 @@ script:
 
   # Run `pod spec lint` if specified
   - if [ $POD_LINT == "YES" ]; then
-        - pod spec lint;
+      pod spec lint;
     fi
 
 after_success:
