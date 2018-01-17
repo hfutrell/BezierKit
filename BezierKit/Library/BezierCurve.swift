@@ -580,7 +580,7 @@ extension BezierCurve {
     }
 }
 
-public func ==(left: BezierCurve, right: BezierCurve) -> Bool {
+public func == (left: BezierCurve, right: BezierCurve) -> Bool {
     if left.order == right.order {
         return left.points == right.points
     }

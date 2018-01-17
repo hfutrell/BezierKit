@@ -21,6 +21,21 @@ class BezierCurveTests: XCTestCase {
         super.tearDown()
     }
     
+    func testEquality() {
+        // two lines that are equal
+        let l1: BezierCurve = LineSegment(p0: BKPoint(x: 0, y: 1), p1: BKPoint(x: 2, y: 1))
+        let l2: BezierCurve = LineSegment(p0: BKPoint(x: 0, y: 1), p1: BKPoint(x: 2, y: 1))
+        XCTAssert(l1 == l2)
+        
+        // a line that isn't equal
+        let l3: BezierCurve = LineSegment(p0: BKPoint(x: 0, y: 1), p1: BKPoint(x: 2, y: 2))
+        XCTAssertFalse(l1 == l3)
+
+        // a quadratic made from l1, different order, not equal!
+        let q1: BezierCurve = QuadraticBezierCurve(lineSegment: l1 as! LineSegment)
+        XCTAssertFalse(l1 == q1)
+    }
+    
     func testScaleDistance() {
         // line segment
         let epsilon: BKFloat = 1.0e-6
