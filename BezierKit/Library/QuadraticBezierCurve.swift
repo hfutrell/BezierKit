@@ -24,6 +24,10 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.init(points: points)
     }
     
+    public init(lineSegment l: LineSegment) {
+        self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
+    }
+    
     public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
