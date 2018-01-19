@@ -209,9 +209,7 @@ extension BezierCurve {
             else if (1.0 - $0) < step {
                 return false // filter out extreme points very close to 1.0
             }
-            else {
-                return true
-            }
+            return true
         }
         // aritifically add 0.0 and 1.0 to our extreme points
         extrema.insert(0.0, at: 0)
@@ -332,7 +330,6 @@ extension BezierCurve {
                 let o2 = (o != nil) ? o! : points[t+1] - self.normal(BKFloat(t))
                 np[t+1] = Utils.lli4(p, p2, o2, points[t+1])!
             }
-            return Self.init(points: np)
         }
         else {
             let clockwise: Bool = {
@@ -352,8 +349,8 @@ extension BezierCurve {
                 }
                 np[t+1] = p + rc * ov
             }
-            return Self.init(points: np)
         }
+        return Self.init(points: np)
     }
     
     // MARK: -
@@ -465,7 +462,6 @@ extension BezierCurve {
         else {
             fatalError("unsupported")
         }
-        
     }
     
     private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], curveIntersectionThreshold: BKFloat) -> [Intersection] {
@@ -581,12 +577,7 @@ extension BezierCurve {
 }
 
 public func == (left: BezierCurve, right: BezierCurve) -> Bool {
-    if left.order == right.order {
-        return left.points == right.points
-    }
-    else {
-        return false
-    }
+    return left.points == right.points
 }
 
 public protocol BezierCurve {
