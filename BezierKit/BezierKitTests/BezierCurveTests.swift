@@ -198,7 +198,63 @@ class BezierCurveTests: XCTestCase {
         XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
         XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
         XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
-        // TODO: it should be noted that quadratic curves can only be offset as graduated curve by first raising it to a cubic curve and then running through the offsetting algorithm
+    }
+
+    func testOutlineFourArgumentsQuadratic() {
+        // we need this special test for quadratics for two reasons:
+        // 1. scale has a special case for linear
+        // 2. quadratics are upgrade in the outline function (why?)
+        
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 9.0, y: 11.0), p2: BKPoint(x: 20.0, y: 20.0))
+        let outline: PolyBezier = q.outline(distanceAlongNormalStart: sqrt(2), distanceOppositeNormalStart: sqrt(2), distanceAlongNormalEnd: 2 * sqrt(2), distanceOppositeNormalEnd: 2 * sqrt(2))
+        
+        let expectedSegment1 = LineSegment(p0: BKPoint(x: 1, y: -1), p1: BKPoint(x: -1, y: 1))
+        let expectedSegment2 = QuadraticBezierCurve(p0: BKPoint(x: -1, y: 1), p1: BKPoint(x: 7.5, y: 12.5), p2: BKPoint(x: 18, y: 22))
+        let expectedSegment3 = LineSegment(p0: BKPoint(x: 18, y: 22), p1: BKPoint(x: 22, y: 18))
+        let expectedSegment4 = QuadraticBezierCurve(p0: BKPoint(x: 22, y: 18), p1: BKPoint(x: 10.5, y: 9.5), p2: BKPoint(x: 1, y: -1))
+        
+        XCTAssertEqual(outline.curves.count, 4)
+        // hard to compute this outline exactly, so just check the computed value roughly equals our estimate of what it should be
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: expectedSegment1, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4, tolerance: 0.33 ))
+    }
+    
+    func testOutlineQuadraticNormalsParallel() {
+        // this tests a special corner case of outlines where endpoint normals are parallel
+    
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 5.0, y: 0.0), p2: BKPoint(x: 10.0, y: 0.0))
+        let outline: PolyBezier = q.outline(distance: 1)
+        
+        let expectedSegment1 = LineSegment(p0: BKPoint(x: 0, y: -1), p1: BKPoint(x: 0, y: 1))
+        let expectedSegment2 = LineSegment(p0: BKPoint(x: 0, y: 1), p1: BKPoint(x: 10, y: 1))
+        let expectedSegment3 = LineSegment(p0: BKPoint(x: 10, y: 1), p1: BKPoint(x: 10, y: -1))
+        let expectedSegment4 = LineSegment(p0: BKPoint(x: 10, y: -1), p1: BKPoint(x: 0, y: -1))
+        
+        XCTAssertEqual(outline.curves.count, 4)
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: expectedSegment1 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4 ))
+    }
+    
+    func testOutlineFourArgumentsQuadraticNormalsParallel() {
+        // this tests a special corner case of tapered outlines where endpoint normals are parallel
+     
+        let q = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 10.0, y: 0.0), p2: BKPoint(x: 20.0, y: 0.0))
+        let outline: PolyBezier = q.outline(distanceAlongNormalStart: 2, distanceOppositeNormalStart: 2, distanceAlongNormalEnd: 1, distanceOppositeNormalEnd: 1)
+        
+        let expectedSegment1 = LineSegment(p0: BKPoint(x: 0.0, y: -2.0), p1: BKPoint(x: 0.0, y: 2.0))
+        let expectedSegment2 = LineSegment(p0: BKPoint(x: 0.0, y: 2.0), p1: BKPoint(x: 20.0, y: 1.0))
+        let expectedSegment3 = LineSegment(p0: BKPoint(x: 20.0, y: 1.0), p1: BKPoint(x: 20.0, y: -1.0))
+        let expectedSegment4 = LineSegment(p0: BKPoint(x: 20.0, y: -1.0), p1: BKPoint(x: 0.0, y: -2.0))
+
+        XCTAssertEqual(outline.curves.count, 4)
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: expectedSegment1 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4 ))
     }
     
     func testOutlineShapesDistance() {

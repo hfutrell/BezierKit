@@ -342,7 +342,7 @@ extension BezierCurve {
                     break
                 }
                 let p = self.points[t+1]
-                let ov = ((o != nil) ? (p - o!) : (p - self.normal(BKFloat(t)))).normalize()
+                let ov = (o != nil) ? (p - o!).normalize() : -self.normal(BKFloat(t))
                 var rc: BKFloat = distanceFn!(BKFloat(t+1) / BKFloat(self.order))
                 if !clockwise {
                     rc = -rc
