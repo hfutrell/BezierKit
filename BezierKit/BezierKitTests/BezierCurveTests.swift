@@ -255,8 +255,6 @@ class BezierCurveTests: XCTestCase {
         XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2 ))
         XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3 ))
         XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4 ))
-        
-        print("\(outline.curves[3]) vs expected \(expectedSegment4)")
     }
     
     func testOutlineShapesDistance() {
