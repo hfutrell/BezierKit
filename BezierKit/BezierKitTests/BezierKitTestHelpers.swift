@@ -56,7 +56,7 @@ class BezierKitTestHelpers {
         return true
     }
     
-    static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval = Interval(start: 0.0, end: 1.0), tolerance: BKFloat = 1.0e-6) -> Bool {
+    static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval = Interval(start: 0.0, end: 1.0), tolerance: BKFloat = 1.0e-5) -> Bool {
         // checks if c1 over [0, 1] matches c2 over [interval.start, interval.end]
         // useful for checking if splitting a curve over a given interval worked correctly
         let numPointsToCheck = 10

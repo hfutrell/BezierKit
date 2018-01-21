@@ -67,7 +67,7 @@ class LineSegmentTests: XCTestCase {
     
     func testBoundingBox() {
         let l = LineSegment(p0: BKPoint(x: 3.0, y: 5.0), p1: BKPoint(x: 1.0, y: 3.0))
-        XCTAssertEqual(l.boundingBox, BoundingBox(min: BKPoint(x: 1.0, y: 3.0), max: BKPoint(x: 3.0, y: 5.0)))
+        XCTAssertEqual(l.boundingBox, BoundingBox(p1: BKPoint(x: 1.0, y: 3.0), p2: BKPoint(x: 3.0, y: 5.0)))
     }
     
     func testCompute() {

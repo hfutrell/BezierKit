@@ -23,7 +23,7 @@ public class PolyBezier {
     }
     
     public var boundingBox: BoundingBox {
-        return self.curves.reduce(BoundingBox()) {
+        return self.curves.reduce(BoundingBox.empty()) {
             BoundingBox(first: $0, second: $1.boundingBox)
         }
     }
