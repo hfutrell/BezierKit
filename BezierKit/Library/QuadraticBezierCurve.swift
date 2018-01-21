@@ -175,11 +175,4 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public static func == (left: QuadraticBezierCurve, right: QuadraticBezierCurve) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2
     }
-
-    // MARK: quadratic specific methods
-    
-//    public raise() -> CubicBezierCurve {
-//    
-//    }
-
 }
