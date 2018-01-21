@@ -290,13 +290,11 @@ extension BezierCurve {
         
         let order = self.order
         
-        if distanceFn != nil && self.order == 2 {
-            // for quadratics we must raise to cubics prior to scaling
-            // TODO: implement raise() function an enable this
-            //            return self.raise().scale(distance: nil, distanceFunction: distanceFn);
-        }
+//        if distanceFn != nil && self.order == 2 {
+//            // for quadratics we must raise to cubics prior to scaling
+//            //    return self.raise().scale(distance: nil, distanceFunction: distanceFn);
+//        }
         
-        // TODO: add special handling for degenerate (=linear) curves.
         let r1 = (distanceFn != nil) ? distanceFn!(0) : d!
         let r2 = (distanceFn != nil) ? distanceFn!(1) : d!
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
