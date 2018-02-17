@@ -27,7 +27,7 @@ Please note that BezierKit is currently pre-release software. Its releases follo
 - [ ] and inflection points
 - [x] Locates nearest on-curve location to point
 - [ ] to any degree of accuracy
-- [x] Splits and Subdivides curves into subcurves
+- [x] Splits curves into subcurves
 - [x] Offsets and outlines curves
 - [ ] Comprehensive Unit and Integration Test Coverage
 - [ ] Complete Documentation
@@ -96,11 +96,11 @@ for p in points {
 }
 ```
 
-### Subdividing Curves
+### Splitting Curves
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
 
-The `.split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can alternatively be used to split a single curve into a left and right subcurve at a given t-value.
+The `.split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can alternatively be used to produce both a left and right subcurve split across a single t-value.
 
 ```swift
 Draw.setColor(context, color: Draw.lightGrey)
