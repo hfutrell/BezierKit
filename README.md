@@ -58,6 +58,69 @@ $ pod install
 
 ## Usage
 
+### Constructing & Drawing Curves
+
+BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier curves (`QuadraticBezierCurve`) as well as line segments (`LineSegment`) and most API functionality is available across all three of these types.
+
+```swift
+import BezierKit
+
+let curve = CubicBezierCurve(
+    p0: BKPoint(x: 100, y: 25),
+    p1: BKPoint(x: 10, y: 90),
+    p2: BKPoint(x: 110, y: 100),
+    p3: BKPoint(x: 150, y: 195)
+ )
+ 
+ let context: CGContext = ...       // your graphics context here
+ Draw.drawSkeleton(context, curve)  // draws visual representation of curve control points
+ Draw.drawCurve(context, curve)     // draws the curve itself
+```
+
+### Intersecting Curves
+
+The `.intersects(curve:)` method returns an array of `Intersection` objects that contain t-values for every intersection between the curves. Cubic curves can determine self-intersection by calling `.intersects()` without a parameter. We can convert the t-values we receive to geometric points using the `.compute(_:)` method.
+
+```swift
+let intersections: [Intersection] = curve1.intersects(curve2)
+let points: [BKPoint] = intersections.map(curve1.compute($0.t1)) // curve2.compute($0.t2) works as well
+
+Draw.drawCurve(context, curve: curve1)
+Draw.drawCurve(context, curve: curve2)
+for p in points {
+    Draw.drawPoint(context, origin: p)
+}
+```
+
+### Subdividing Curves
+
+The `.split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can alternatively be used to split a single curve into a left and right subcurve at a given t-value.
+
+```swift
+Draw.setColor(context, color: Draw.lightGrey)
+Draw.drawSkeleton(context, curve: curve)
+Draw.drawCurve(context, curve: curve)
+let subcurve = curve.split(from: 0.25, to: 0.75) // or try (leftCurve, rightCurve) = curve.split(at:)
+Draw.setColor(context, color: Draw.red)
+Draw.drawCurve(context, curve: subcurve)
+Draw.drawCircle(context, center: curve.compute(0.25), radius: 3)
+Draw.drawCircle(context, center: curve.compute(0.75), radius: 3)
+```
+
+### Determining Bounding Boxes
+
+```swift
+let boundingBox = curve.boundingBox
+Draw.drawSkeleton(context, curve: curve)
+Draw.drawCurve(context, curve: curve)
+Draw.setColor(context, color: Draw.pinkish)
+Draw.drawBoundingBox(context, boundingBox: curve.boundingBox)
+```
+
+### More
+
+BezierKit is a powerful library with *a lot* of functionality. For the time being the best way to see what it offers is to build the MacDemos target and check out each of the provided demos.
+
 ## License
 
 BezierKit is released under the MIT license. [See LICENSE](https://github.com/hfutrell/BezierKit/blob/master/LICENSE) for details.
