@@ -60,9 +60,9 @@ $ pod install
 
 ### Constructing & Drawing Curves
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-construct.png" width="256" height="256">
-
 BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier curves (`QuadraticBezierCurve`) as well as line segments (`LineSegment`) and most API functionality is available across all three of these types.
+
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-construct.png" width="256" height="256">
 
 ```swift
 import BezierKit
@@ -81,9 +81,9 @@ let curve = CubicBezierCurve(
 
 ### Intersecting Curves
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-intersects.png" width="256" height="256">
-
 The `.intersects(curve:)` method returns an array of `Intersection` objects that contain t-values for every intersection between the curves. Cubic curves can determine self-intersection by calling `.intersects()` without a parameter. We can convert the t-values we receive to geometric points using the `.compute(_:)` method.
+
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-intersects.png" width="256" height="256">
 
 ```swift
 let intersections: [Intersection] = curve1.intersects(curve2)
@@ -98,9 +98,9 @@ for p in points {
 
 ### Splitting Curves
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
-
 The `.split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can alternatively be used to produce both a left and right subcurve split across a single t-value.
+
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
 
 ```swift
 Draw.setColor(context, color: Draw.lightGrey)
