@@ -84,7 +84,6 @@ let curve = CubicBezierCurve(
 The `.intersects(curve:)` method returns an array of `Intersection` objects that contain t-values for every intersection between the curves. Cubic curves can determine self-intersection by calling `.intersects()` without a parameter. We can convert the t-values we receive to geometric points using the `.compute(_:)` method.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-intersects.png" width="256" height="256">
-
 ```swift
 let intersections: [Intersection] = curve1.intersects(curve2)
 let points: [BKPoint] = intersections.map(curve1.compute($0.t1)) // curve2.compute($0.t2) works as well
@@ -101,7 +100,6 @@ for p in points {
 The `.split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can alternatively be used to produce both a left and right subcurve split across a single t-value.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
-
 ```swift
 Draw.setColor(context, color: Draw.lightGrey)
 Draw.drawSkeleton(context, curve: curve)
@@ -116,7 +114,6 @@ Draw.drawCircle(context, center: curve.compute(0.75), radius: 3)
 ### Determining Bounding Boxes
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-bounding-box.png" width="256" height="256">
-
 ```swift
 let boundingBox = curve.boundingBox
 Draw.drawSkeleton(context, curve: curve)
