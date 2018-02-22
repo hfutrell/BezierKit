@@ -100,7 +100,7 @@ for p in points {
 
 ### Splitting Curves
 
-The `split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can be used to produce a left subcurve and right subcurve created by splitting across a single t-value.
+The `split(from:, to:)` method produces a subcurve over a given range of t-values. The `split(at:)` method can be used to produce a left subcurve and right subcurve created by splitting across a single t-value.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
 
