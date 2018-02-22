@@ -60,7 +60,7 @@ $ pod install
 
 ### Constructing & Drawing Curves
 
-BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier curves (`QuadraticBezierCurve`) as well as line segments (`LineSegment`) and most API functionality is available across all three of these types.
+BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier curves (`QuadraticBezierCurve`) as well as line segments (`LineSegment`) each of which adopts the `BezierCurve` protocol that encompasses most API functionality.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-construct.png" width="256" height="256">
 
@@ -81,13 +81,15 @@ let curve = CubicBezierCurve(
 
 ### Intersecting Curves
 
-The `.intersects(curve:)` method returns an array of `Intersection` objects that contain t-values for every intersection between the curves. Cubic curves can determine self-intersection by calling `.intersects()` without a parameter. We can convert the t-values we receive to geometric points using the `.compute(_:)` method.
+The `intersects(curve:)` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `compute(_:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
+
+Cubic curves may self-intersect which can be determined by calling `intersects()` with no curve parameter.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-intersects.png" width="256" height="256">
 
 ```swift
 let intersections: [Intersection] = curve1.intersects(curve2)
-let points: [BKPoint] = intersections.map(curve1.compute($0.t1)) // curve2.compute($0.t2) works as well
+let points: [BKPoint] = intersections.map(curve1.compute($0.t1))
 
 Draw.drawCurve(context, curve: curve1)
 Draw.drawCurve(context, curve: curve2)
@@ -98,7 +100,7 @@ for p in points {
 
 ### Splitting Curves
 
-The `.split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can alternatively be used to produce both a left and right subcurve split across a single t-value.
+The `split(from:, to:)` method produces a subcurve over a given range of t-values. The `.split(at:)` method can be used to produce a left subcurve and right subcurve created by splitting across a single t-value.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
 
