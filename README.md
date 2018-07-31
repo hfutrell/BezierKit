@@ -68,10 +68,10 @@ BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier
 import BezierKit
 
 let curve = CubicBezierCurve(
-    p0: BKPoint(x: 100, y: 25),
-    p1: BKPoint(x: 10, y: 90),
-    p2: BKPoint(x: 110, y: 100),
-    p3: BKPoint(x: 150, y: 195)
+    p0: CGPoint(x: 100, y: 25),
+    p1: CGPoint(x: 10, y: 90),
+    p2: CGPoint(x: 110, y: 100),
+    p3: CGPoint(x: 150, y: 195)
  )
  
  let context: CGContext = ...       // your graphics context here
@@ -89,7 +89,7 @@ Cubic curves may self-intersect which can be determined by calling `intersects()
 
 ```swift
 let intersections: [Intersection] = curve1.intersects(curve2)
-let points: [BKPoint] = intersections.map(curve1.compute($0.t1))
+let points: [CGPoint] = intersections.map { curve1.compute($0.t1) }
 
 Draw.drawCurve(context, curve: curve1)
 Draw.drawCurve(context, curve: curve2)
