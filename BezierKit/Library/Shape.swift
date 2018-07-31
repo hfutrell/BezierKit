@@ -43,7 +43,7 @@ public struct Shape {
         self.back = back
     }
     
-    public func boundingBox() -> BoundingBox {
+    public var boundingBox: BoundingBox {
         var result: BoundingBox = BoundingBox.empty
         for s: BezierCurve in self.nonvirtualSegments() {
             let bbox = s.boundingBox
@@ -67,7 +67,7 @@ public struct Shape {
     }
     
     public func intersects(shape other: Shape, _ curveIntersectionThreshold: CGFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
-        if self.boundingBox().overlaps(other.boundingBox()) == false {
+        if self.boundingBox.overlaps(other.boundingBox) == false {
             return []
         }
         var intersections: [ShapeIntersection] = []
