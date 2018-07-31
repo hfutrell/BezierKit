@@ -61,7 +61,7 @@ public extension CGRect {
         }
         return true
     }
-    public init(p1: CGPoint, p2: CGPoint) {
+    internal init(p1: CGPoint, p2: CGPoint) {
         let origin = p1
         let size = CGSize(width: p2.x - p1.x, height: p2.y - p1.y)
         let standardizedRect = CGRect(origin: origin, size: size).standardized
