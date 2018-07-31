@@ -202,7 +202,7 @@ class LineSegmentTests: XCTestCase {
     func testIntersectsLineAsCurve() {
         // ensure that intersects(curve:) calls into the proper implementation
         let l1: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0))
-        let l2: BezierCurve = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 0.0)) as BezierCurve!
+        let l2: BezierCurve = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 0.0)) as BezierCurve
         let i = l1.intersects(curve: l2)
         XCTAssertEqual(i.count, 1)
         XCTAssertEqual(i[0].t1, 0.5)
