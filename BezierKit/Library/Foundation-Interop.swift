@@ -37,7 +37,7 @@ extension CGFloat: RealNumber {
 }
 
 extension BBox {
-    public var toCGRect: CGRect {
+    public var cgRect: CGRect {
         let s = self.size
         return CGRect(origin: self.min.cgPoint, size: CGSize(width: s.x, height: s.y))
     }
