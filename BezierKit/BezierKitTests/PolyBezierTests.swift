@@ -21,7 +21,7 @@ class PolyBezierTests: XCTestCase {
     
     func testBoundingBox() {
         let p = PolyBezier(curves: [line1, line2])
-        XCTAssertEqual(p.boundingBox, BoundingBox(min: CGPoint(x: 1.0, y: -1.0), max: CGPoint(x: 13.0, y: 5.0))) // just the union of the two bounding boxes
+        XCTAssertEqual(p.boundingBox, CGRect(p1: CGPoint(x: 1.0, y: -1.0), p2: CGPoint(x: 13.0, y: 5.0))) // just the union of the two bounding boxes
     }
     
     func testOffset() {

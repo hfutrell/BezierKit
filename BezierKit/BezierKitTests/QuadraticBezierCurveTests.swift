@@ -65,20 +65,20 @@ class QuadraticBezierCurveTests: XCTestCase {
     func testBoundingBox() {
         // hits codepath where midpoint pushes up y coordinate of bounding box
         let q1 = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 3.0), p2: CGPoint(x: 5.0, y: 1.0))
-        let expectedBoundingBox1 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0),
-                                               p2: CGPoint(x: 5.0, y: 2.0))
+        let expectedBoundingBox1 = CGRect(p1: CGPoint(x: 1.0, y: 1.0),
+                                          p2: CGPoint(x: 5.0, y: 2.0))
         XCTAssertEqual(q1.boundingBox, expectedBoundingBox1)
        
         // hits codepath where midpoint pushes down x coordinate of bounding box
         let q2 = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: -1.0, y: 2.0), p2: CGPoint(x: 1.0, y: 3.0))
-        let expectedBoundingBox2 = BoundingBox(p1: CGPoint(x: 0.0, y: 1.0),
-                                               p2: CGPoint(x: 1.0, y: 3.0))
+        let expectedBoundingBox2 = CGRect(p1: CGPoint(x: 0.0, y: 1.0),
+                                          p2: CGPoint(x: 1.0, y: 3.0))
         XCTAssertEqual(q2.boundingBox, expectedBoundingBox2)
         // this one is designed to hit an unusual codepath: c3 has an extrema that would expand the bounding box,
         // but it falls outside of the range 0<=t<=1, and therefore must be excluded
         let q3 = q1.split(at: 0.25).left
-        let expectedBoundingBox3 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0),
-                                               p2: CGPoint(x: 2.0, y: 1.75))
+        let expectedBoundingBox3 = CGRect(p1: CGPoint(x: 1.0, y: 1.0),
+                                          p2: CGPoint(x: 2.0, y: 1.75))
         XCTAssertEqual(q3.boundingBox, expectedBoundingBox3)
     }
 //

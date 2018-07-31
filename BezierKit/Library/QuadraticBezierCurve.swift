@@ -113,7 +113,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return (left: leftCurve, right: rightCurve)
     }
 
-    public var boundingBox: BoundingBox {
+    public var boundingBox: CGRect {
         
         let p0: CGPoint = self.p0
         let p1: CGPoint = self.p1
@@ -147,7 +147,8 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
                 }
             }
         }
-        return BoundingBox(min: mmin, max: mmax)
+        let difference = mmax - mmin
+        return CGRect(origin: mmin, size: CGSize(width: difference.x, height: difference.y))
     }
 
     public func compute(_ t: CGFloat) -> CGPoint {

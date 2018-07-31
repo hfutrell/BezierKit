@@ -22,9 +22,9 @@ public class PolyBezier {
         }
     }
     
-    public var boundingBox: BoundingBox {
-        return self.curves.reduce(BoundingBox.empty()) {
-            BoundingBox(first: $0, second: $1.boundingBox)
+    public var boundingBox: CGRect {
+        return self.curves.reduce(CGRect.null) {
+            $0.union($1.boundingBox)
         }
     }
     

@@ -259,9 +259,9 @@ public class Draw {
         context.strokePath()
     }
 
-    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : CGPoint = .zero) {
+    public static func drawBoundingBox(_ context: CGContext, boundingBox: CGRect, offset ox : CGPoint = .zero) {
         context.beginPath()
-        context.addRect(boundingBox.cgRect)
+        context.addRect(boundingBox)
         context.closePath()
         context.strokePath()
     }

@@ -43,32 +43,14 @@ public struct Interval: Equatable {
     }
 }
 
-public struct BoundingBox: Equatable {
-    public var min: CGPoint
-    public var max: CGPoint
-    public var cgRect: CGRect {
-        let s = self.size
-        return CGRect(origin: self.min, size: CGSize(width: s.x, height: s.y))
+public extension CGRect {
+    private var min: CGPoint {
+        return CGPoint(x: self.minX, y: self.minY)
     }
-    public static func empty() -> BoundingBox {
-        return BoundingBox(min: .infinity, max: -.infinity)
+    private var max: CGPoint {
+        return CGPoint(x: self.maxX, y: self.maxY)
     }
-    internal init(min: CGPoint, max: CGPoint) {
-        self.min = min
-        self.max = max
-    }
-    public init(p1: CGPoint, p2: CGPoint) {
-        self.min = CGPoint.min(p1, p2)
-        self.max = CGPoint.max(p1, p2)
-    }
-    public init(first: BoundingBox, second: BoundingBox) {
-        self.min = CGPoint.min(first.min, second.min)
-        self.max = CGPoint.max(first.max, second.max)
-    }
-    public var size: CGPoint {
-        return CGPoint.max(max - min, .zero)
-    }
-    public func overlaps(_ other: BoundingBox) -> Bool {
+    public func overlaps(_ other: CGRect) -> Bool {
         let p1 = CGPoint.max(self.min, other.min)
         let p2 = CGPoint.min(self.max, other.max)
         for i in 0..<CGPoint.dimensions {
@@ -79,7 +61,10 @@ public struct BoundingBox: Equatable {
         }
         return true
     }
-    public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
-        return (left.min == right.min && left.max == right.max)
+    public init(p1: CGPoint, p2: CGPoint) {
+        let origin = p1
+        let size = CGSize(width: p2.x - p1.x, height: p2.y - p1.y)
+        let standardizedRect = CGRect(origin: origin, size: size).standardized
+        self.init(origin: standardizedRect.origin, size: standardizedRect.size)
     }
 }
