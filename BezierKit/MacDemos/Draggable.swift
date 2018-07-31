@@ -52,9 +52,3 @@ class Draggable {
     }
     
 }
-
-extension Draggable {
-    var bkLocation: BKPoint {
-        return BKPoint(self.location)
-    }
-}

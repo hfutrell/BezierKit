@@ -11,8 +11,8 @@ import XCTest
 
 class PolyBezierTests: XCTestCase {
     
-    let line1 = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 5.0, y: 5.0))   // length = 5
-    let line2 = LineSegment(p0: BKPoint(x: 5.0, y: 5.0), p1: BKPoint(x: 13.0, y: -1.0)) // length = 10
+    let line1 = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 5.0))   // length = 5
+    let line2 = LineSegment(p0: CGPoint(x: 5.0, y: 5.0), p1: CGPoint(x: 13.0, y: -1.0)) // length = 10
     
     func testLength() {
         let p = PolyBezier(curves: [line1, line2])
@@ -21,12 +21,12 @@ class PolyBezierTests: XCTestCase {
     
     func testBoundingBox() {
         let p = PolyBezier(curves: [line1, line2])
-        XCTAssertEqual(p.boundingBox, BoundingBox(min: BKPoint(x: 1.0, y: -1.0), max: BKPoint(x: 13.0, y: 5.0))) // just the union of the two bounding boxes
+        XCTAssertEqual(p.boundingBox, BoundingBox(min: CGPoint(x: 1.0, y: -1.0), max: CGPoint(x: 13.0, y: 5.0))) // just the union of the two bounding boxes
     }
     
     func testOffset() {
         // construct a PolyBezier from a split cubic
-        let q = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 2.0, y: 1.0), p2: BKPoint(x: 4.0, y: 0.0))
+        let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 2.0, y: 1.0), p2: CGPoint(x: 4.0, y: 0.0))
         let (ql, qr) = q.split(at: 0.5)
         let p = PolyBezier(curves: [ql, qr])
         // test that offset gives us the same result as offsetting the split segments

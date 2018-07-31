@@ -6,7 +6,7 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
 public class PolyBezier {
     
@@ -16,8 +16,8 @@ public class PolyBezier {
         self.curves = curves
     }
     
-    public var length: BKFloat {
-        return self.curves.reduce(BKFloat(0.0)) {
+    public var length: CGFloat {
+        return self.curves.reduce(0.0) {
             $0 + $1.length()
         }
     }
@@ -28,7 +28,7 @@ public class PolyBezier {
         }
     }
     
-    public func offset(distance d: BKFloat) -> PolyBezier {
+    public func offset(distance d: CGFloat) -> PolyBezier {
         return PolyBezier(curves: self.curves.reduce([], {
             $0 + $1.offset(distance: d)
         }))

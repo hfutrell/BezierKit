@@ -6,7 +6,7 @@
 //  Copyright © 2018 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
 public struct ShapeIntersection: Equatable {
     let curve1: BezierCurve
@@ -28,7 +28,7 @@ public struct Shape {
         // TODO: equatable
     }
     
-    public static let defaultShapeIntersectionThreshold: BKFloat = 0.5
+    public static let defaultShapeIntersectionThreshold: CGFloat = 0.5
     public let startcap: Cap
     public let endcap: Cap
     public let forward: BezierCurve
@@ -66,7 +66,7 @@ public struct Shape {
         return segments
     }
     
-    public func intersects(shape other: Shape, _ curveIntersectionThreshold: BKFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
+    public func intersects(shape other: Shape, _ curveIntersectionThreshold: CGFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
         if self.boundingBox().overlaps(other.boundingBox()) == false {
             return []
         }

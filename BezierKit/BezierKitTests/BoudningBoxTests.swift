@@ -11,10 +11,10 @@ import BezierKit
 
 class BoudningBoxTests: XCTestCase {
     
-    let pointNan        = BKPoint(x: BKFloat.nan, y: BKFloat.nan)
-    let zeroBox         = BoundingBox(p1: BKPointZero, p2: BKPointZero)
-    let infiniteBox     = BoundingBox(p1: -BKPointInfinity, p2: BKPointInfinity)
-    let sampleBox       = BoundingBox(p1: BKPoint(x: -1.0, y: -2.0), p2: BKPoint(x: 3.0, y: -1.0))
+    let pointNan        = CGPoint(x: CGFloat.nan, y: CGFloat.nan)
+    let zeroBox         = BoundingBox(p1: .zero, p2: .zero)
+    let infiniteBox     = BoundingBox(p1: -.infinity, p2: .infinity)
+    let sampleBox       = BoundingBox(p1: CGPoint(x: -1.0, y: -2.0), p2: CGPoint(x: 3.0, y: -1.0))
     
     override func setUp() {
         super.setUp()
@@ -29,7 +29,7 @@ class BoudningBoxTests: XCTestCase {
     func testEmpty() {
         let nanBox = BoundingBox(p1: pointNan, p2: pointNan)
         let e = BoundingBox.empty()
-        XCTAssert(e.size == BKPointZero)
+        XCTAssert(e.size == .zero)
         XCTAssertTrue(e == BoundingBox.empty())
         
         XCTAssertFalse(e.overlaps(e))

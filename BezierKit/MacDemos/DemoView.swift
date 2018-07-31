@@ -109,18 +109,18 @@ class DemoView: NSView, DraggableDelegate {
     func draggableQuadraticCurve() -> QuadraticBezierCurve {
         assert(self.useQuadratic)
         assert(self.draggables.count >= 3, "uh oh, did you set the control points in demo?")
-        return QuadraticBezierCurve( p0: self.draggables[0].bkLocation,
-                                     p1: self.draggables[1].bkLocation,
-                                     p2: self.draggables[2].bkLocation)
+        return QuadraticBezierCurve( p0: self.draggables[0].location,
+                                     p1: self.draggables[1].location,
+                                     p2: self.draggables[2].location)
     }
     
     func draggableCubicCurve() -> CubicBezierCurve {
         assert(self.useQuadratic == false)
         assert(self.draggables.count >= 4, "uh oh, did you set the control points in demo?")
-        return CubicBezierCurve( p0: self.draggables[0].bkLocation,
-                                 p1: self.draggables[1].bkLocation,
-                                 p2: self.draggables[2].bkLocation,
-                                 p3: self.draggables[3].bkLocation )
+        return CubicBezierCurve( p0: self.draggables[0].location,
+                                 p1: self.draggables[1].location,
+                                 p2: self.draggables[2].location,
+                                 p3: self.draggables[3].location )
     }
     
     func clearDraggables() {

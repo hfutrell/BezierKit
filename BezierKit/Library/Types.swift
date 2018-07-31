@@ -12,12 +12,9 @@ import Foundation
     import CoreGraphics
 #endif
 
-public typealias BKFloat = CGFloat
-public typealias BKPoint = Point2<CGFloat>
-
 public struct Intersection: Equatable, Comparable {
-    public var t1: BKFloat
-    public var t2: BKFloat
+    public var t1: CGFloat
+    public var t2: CGFloat
     public static func == (lhs: Intersection, rhs: Intersection) -> Bool {
         return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
     }
@@ -35,9 +32,9 @@ public struct Intersection: Equatable, Comparable {
 }
 
 public struct Interval: Equatable {
-    public var start: BKFloat
-    public var end: BKFloat
-    public init(start: BKFloat, end: BKFloat) {
+    public var start: CGFloat
+    public var end: CGFloat
+    public init(start: CGFloat, end: CGFloat) {
         self.start = start
         self.end = end
     }
@@ -46,33 +43,35 @@ public struct Interval: Equatable {
     }
 }
 
-public typealias BoundingBox = BBox<BKPoint>
-
-public struct BBox<P>: Equatable where P: Point {
-    public var min: BKPoint
-    public var max: BKPoint
-    public static func empty() -> BBox<P> {
-        return BBox<P>(min: BKPointInfinity, max: -BKPointInfinity)
+public struct BoundingBox: Equatable {
+    public var min: CGPoint
+    public var max: CGPoint
+    public var cgRect: CGRect {
+        let s = self.size
+        return CGRect(origin: self.min, size: CGSize(width: s.x, height: s.y))
     }
-    internal init(min: BKPoint, max: BKPoint) {
+    public static func empty() -> BoundingBox {
+        return BoundingBox(min: .infinity, max: -.infinity)
+    }
+    internal init(min: CGPoint, max: CGPoint) {
         self.min = min
         self.max = max
     }
-    public init(p1: BKPoint, p2: BKPoint) {
-        self.min = BKPoint.min(p1, p2)
-        self.max = BKPoint.max(p1, p2)
+    public init(p1: CGPoint, p2: CGPoint) {
+        self.min = CGPoint.min(p1, p2)
+        self.max = CGPoint.max(p1, p2)
     }
     public init(first: BoundingBox, second: BoundingBox) {
-        self.min = BKPoint.min(first.min, second.min)
-        self.max = BKPoint.max(first.max, second.max)
+        self.min = CGPoint.min(first.min, second.min)
+        self.max = CGPoint.max(first.max, second.max)
     }
-    public var size: BKPoint {
-        return BKPoint.max(max - min, BKPointZero)
+    public var size: CGPoint {
+        return CGPoint.max(max - min, .zero)
     }
     public func overlaps(_ other: BoundingBox) -> Bool {
-        let p1 = BKPoint.max(self.min, other.min)
-        let p2 = BKPoint.min(self.max, other.max)
-        for i in 0..<P.dimensions {
+        let p1 = CGPoint.max(self.min, other.min)
+        let p2 = CGPoint.min(self.max, other.max)
+        for i in 0..<CGPoint.dimensions {
             let difference = p2[i] - p1[i]
             if difference.isNaN || difference < 0 {
                 return false
@@ -80,11 +79,7 @@ public struct BBox<P>: Equatable where P: Point {
         }
         return true
     }
-    public static func == (left: BBox<P>, right: BBox<P>) -> Bool {
+    public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
         return (left.min == right.min && left.max == right.max)
     }
 }
-
-public let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0)
-public let BKPointInfinity: BKPoint = BKPoint(x: BKFloat.infinity, y: BKFloat.infinity)
-

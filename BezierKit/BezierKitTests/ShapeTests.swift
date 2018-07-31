@@ -11,12 +11,12 @@ import XCTest
 
 class ShapeTests: XCTestCase {
     
-    let testQuadCurve = QuadraticBezierCurve(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0), p2: BKPoint(x: 1.0, y:  2.0))
+    let testQuadCurve = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 1.0, y:  2.0))
     
     func testShapeIntersection() {
-        let c1 = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 0.0))
-        let c2 = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 2.0))
-        let c3 = LineSegment(p0: BKPoint(x: 0.0, y: 10.0), p1: BKPoint(x: 1.0, y: 5.0))
+        let c1 = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 0.0))
+        let c2 = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 2.0))
+        let c3 = LineSegment(p0: CGPoint(x: 0.0, y: 10.0), p1: CGPoint(x: 1.0, y: 5.0))
         let si1 = ShapeIntersection(curve1: c1, curve2: c2, intersections: [Intersection(t1: 0.5, t2: 0.5)])
         let si2 = ShapeIntersection(curve1: c1, curve2: c2, intersections: [Intersection(t1: 0.5, t2: 0.5)])
         XCTAssertEqual(si1, si2)
@@ -48,13 +48,13 @@ class ShapeTests: XCTestCase {
     }
 
     func testIntersects() {
-        let epsilon: BKFloat = 1.0e-4
-        let line1 = LineSegment(p0: BKPoint(x: -1, y: -1), p1: BKPoint(x: 1, y: 1))
+        let epsilon: CGFloat = 1.0e-4
+        let line1 = LineSegment(p0: CGPoint(x: -1, y: -1), p1: CGPoint(x: 1, y: 1))
         let forward1 = line1.offset(distance: sqrt(2))[0]
         let back1 = line1.offset(distance: -sqrt(2))[0].reversed()
         let s1 = Shape(forward1, back1, true, true)
         
-        let line2 = LineSegment(p0: BKPoint(x: 1.0, y: 10.0), p1: BKPoint(x: 1.0, y: -10.0))
+        let line2 = LineSegment(p0: CGPoint(x: 1.0, y: 10.0), p1: CGPoint(x: 1.0, y: -10.0))
         let forward2 = line2.offset(distance: 0.5)[0]
         let back2 = line2.offset(distance: -0.5)[0].reversed()
         let s2 = Shape(forward2, back2, false, false)
@@ -79,10 +79,10 @@ class ShapeTests: XCTestCase {
         XCTAssert(distance(p1, p2) < epsilon)
         
         // test a non-intersecting case where bounding boxes overlap
-        let s3 = LineSegment(p0: BKPoint(x: -3, y: -3), p1: BKPoint(x: 3, y: 3)).outlineShapes(distance: 1)
+        let s3 = LineSegment(p0: CGPoint(x: -3, y: -3), p1: CGPoint(x: 3, y: 3)).outlineShapes(distance: 1)
         XCTAssertEqual(s1.intersects(shape: s3[0]), [])
         // test a non-intersecting case where bounding boxes do not overlap
-        let s4 = LineSegment(p0: BKPoint(x: -6, y: -6), p1: BKPoint(x: -4, y: -4)).outlineShapes(distance: sqrt(2))
+        let s4 = LineSegment(p0: CGPoint(x: -6, y: -6), p1: CGPoint(x: -4, y: -4)).outlineShapes(distance: sqrt(2))
         XCTAssertEqual(s1.intersects(shape: s4[0]), [])
 
     }
