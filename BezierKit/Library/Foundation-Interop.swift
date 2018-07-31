@@ -19,7 +19,7 @@ public extension Point2 where S == CGFloat {
         self.x = p.x
         self.y = p.y
     }
-    func toCGPoint() -> CGPoint {
+    var cgPoint: CGPoint {
         return CGPoint(x: self.x, y: self.y)
     }
 }
@@ -39,6 +39,6 @@ extension CGFloat: RealNumber {
 extension BBox {
     public var toCGRect: CGRect {
         let s = self.size
-        return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
+        return CGRect(origin: self.min.cgPoint, size: CGSize(width: s.x, height: s.y))
     }
 }
