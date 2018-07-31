@@ -44,7 +44,7 @@ class ShapeTests: XCTestCase {
         let forward = testQuadCurve.offset(distance: 2)[0]
         let back = testQuadCurve.offset(distance: -2)[0]
         let s = Shape(forward, back, false, false)
-        XCTAssert(s.boundingBox == forward.boundingBox.union(back.boundingBox))
+        XCTAssert(s.boundingBox() == BoundingBox(first: forward.boundingBox, second: back.boundingBox))
     }
 
     func testIntersects() {

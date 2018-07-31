@@ -63,10 +63,10 @@ public struct LineSegment: BezierCurve, Equatable {
         return (left: left, right: right)
     }
     
-    public var boundingBox: CGRect {
+    public var boundingBox: BoundingBox {
         let p0: CGPoint = self.p0
         let p1: CGPoint = self.p1
-        return CGRect(p1: p0, p2: p1)
+        return BoundingBox(min: CGPoint.min(p0, p1), max: CGPoint.max(p0, p1))
     }
     
     public func compute(_ t: CGFloat) -> CGPoint {

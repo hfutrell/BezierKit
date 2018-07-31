@@ -588,7 +588,7 @@ public protocol BezierCurve {
     func derivative(_ t: CGFloat) -> CGPoint
     func split(from t1: CGFloat, to t2: CGFloat) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
-    var boundingBox: CGRect { get }
+    var boundingBox: BoundingBox { get }
     func compute(_ t: CGFloat) -> CGPoint
     func length() -> CGFloat
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )

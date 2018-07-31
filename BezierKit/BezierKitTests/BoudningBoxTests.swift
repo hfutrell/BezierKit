@@ -12,9 +12,9 @@ import XCTest
 class BoudningBoxTests: XCTestCase {
     
     let pointNan        = CGPoint(x: CGFloat.nan, y: CGFloat.nan)
-    let zeroBox         = CGRect(p1: .zero, p2: .zero)
-    let infiniteBox     = CGRect(p1: -.infinity, p2: .infinity)
-    let sampleBox       = CGRect(p1: CGPoint(x: -1.0, y: -2.0), p2: CGPoint(x: 3.0, y: -1.0))
+    let zeroBox         = BoundingBox(p1: .zero, p2: .zero)
+    let infiniteBox     = BoundingBox(p1: -.infinity, p2: .infinity)
+    let sampleBox       = BoundingBox(p1: CGPoint(x: -1.0, y: -2.0), p2: CGPoint(x: 3.0, y: -1.0))
     
     override func setUp() {
         super.setUp()
@@ -27,15 +27,17 @@ class BoudningBoxTests: XCTestCase {
     }
     
     func testEmpty() {
-        let nanBox = CGRect(p1: pointNan, p2: pointNan)
-        let e = CGRect.null
+        let nanBox = BoundingBox(p1: pointNan, p2: pointNan)
+        let e = BoundingBox.empty
         XCTAssert(e.size == .zero)
-        XCTAssertTrue(e == .null)
+        XCTAssertTrue(e == BoundingBox.empty)
         
         XCTAssertFalse(e.overlaps(e))
         XCTAssertFalse(e.overlaps(zeroBox))
         XCTAssertFalse(e.overlaps(sampleBox))
         XCTAssertFalse(e.overlaps(infiniteBox))
         XCTAssertFalse(e.overlaps(nanBox))
+
     }
+        
 }

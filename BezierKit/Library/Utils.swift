@@ -373,7 +373,7 @@ internal class Utils {
         if c1b.overlaps(c2b) == false {
             return
         }
-        else if ((c1b.size.width + c1b.size.height) < threshold && (c2b.size.width + c2b.size.height) < threshold) {
+        else if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
             
             let a1 = c1.curve.startingPoint
             let b1 = c1.curve.endingPoint - c1.curve.startingPoint
