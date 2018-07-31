@@ -10,6 +10,8 @@
 		FD05111820153EAE000D035E /* BoudningBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoudningBoxTests.swift */; };
 		FD05111920153EAE000D035E /* BoudningBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoudningBoxTests.swift */; };
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FD4024502110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */; };
+		FD4024512110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD4A0E0E1EAC794B0031A393 /* BezierKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; };
 		FD4A0E0F1EAC794B0031A393 /* BezierKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -113,6 +115,7 @@
 		FD26253B1EAC7B9A00C64652 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_iOS.h; sourceTree = "<group>"; };
 		FD26253E1EAC7B9A00C64652 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuadraticBezierCurveTests.swift; sourceTree = "<group>"; };
 		FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_Mac.h; sourceTree = "<group>"; };
 		FD4A0DC31EAAD01F0031A393 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -227,6 +230,7 @@
 				FDF0664D1FFA0C9900123308 /* BezierCurveTests.swift */,
 				FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */,
 				FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */,
+				FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */,
 				FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */,
 				FD4A6400200ACB8900930E10 /* ShapeTests.swift */,
 				FD4A6405200B11DA00930E10 /* PolyBezierTests.swift */,
@@ -583,6 +587,7 @@
 				FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
 				FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
+				FD4024502110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */,
 				FDEB70A11F36568B00539003 /* BezierKitTestHelpers.swift in Sources */,
 				FD05111820153EAE000D035E /* BoudningBoxTests.swift in Sources */,
 			);
@@ -599,6 +604,7 @@
 				FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
 				FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
+				FD4024512110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */,
 				FDEB70A21F36568B00539003 /* BezierKitTestHelpers.swift in Sources */,
 				FD05111920153EAE000D035E /* BoudningBoxTests.swift in Sources */,
 			);

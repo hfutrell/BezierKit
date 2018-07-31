@@ -217,6 +217,8 @@ class CubicBezierCurveTests: XCTestCase {
         // TODO: originally this test used g = [0, 3, -2, 0] but that exposed a flaw in droots because we were passing in a quadratic. We need to fix this in droots
     }
     
+// TODO: we still have some missing unit tests for CubicBezierCurve's API entry points
+    
 //    func testHull() {
 //        let l = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 3.0, y: 4.0))
 //        let h = l.hull(0.5)
@@ -245,7 +247,6 @@ class CubicBezierCurveTests: XCTestCase {
 //        XCTAssertEqual(r[0].curve, l)
 //    }
 //
-//    //    TODO: write me
 //    //    func testScaleDistanceFunc {
 //    //
 //    //    }
@@ -265,85 +266,7 @@ class CubicBezierCurveTests: XCTestCase {
 //        let i = l.intersects()
 //        XCTAssert(i.count == 0) // lines never self-intersect
 //    }
-//    
-//    // -- MARK: - line-line intersection tests
-//    
-//    func testIntersectsLineYesInsideInterval() {
-//        // a normal line-line intersection that happens in the middle of a line
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 2.0), p1: BKPoint(x: 7.0, y: 8.0))
-//        let l2 = LineSegment(p0: BKPoint(x: 1.0, y: 4.0), p1: BKPoint(x: 5.0, y: 0.0))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 1)
-//        XCTAssertEqual(i[0].t1, 1.0 / 6.0)
-//        XCTAssertEqual(i[0].t2, 1.0 / 4.0)
-//    }
-//    
-//    func testIntersectsLineNoOutsideInterval1() {
-//        // two lines that do not intersect because the intersection happens outside the line-segment
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
-//        let l2 = LineSegment(p0: BKPoint(x: 0.0, y: 2.001), p1: BKPoint(x: 2.0, y: 2.001))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 0)
-//    }
-//    
-//    func testIntersectsLineNoOutsideInterval2() {
-//        // two lines that do not intersect because the intersection happens outside the *other* line segment
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
-//        let l2 = LineSegment(p0: BKPoint(x: 2.0, y: 1.0), p1: BKPoint(x: 1.001, y: 1.0))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 0)
-//    }
-//    
-//    func testIntersectsLineYesEdge1() {
-//        // two lines that intersect on the 1st line's edge
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
-//        let l2 = LineSegment(p0: BKPoint(x: 2.0, y: 1.0), p1: BKPoint(x: 1.0, y: 1.0))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 1)
-//        XCTAssertEqual(i[0].t1, 0.5)
-//        XCTAssertEqual(i[0].t2, 1.0)
-//    }
-//    
-//    func testIntersectsLineYesEdge2() {
-//        // two lines that intersect on the 2nd line's edge
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 1.0, y: 2.0))
-//        let l2 = LineSegment(p0: BKPoint(x: 0.0, y: 2.0), p1: BKPoint(x: 2.0, y: 2.0))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 1)
-//        XCTAssertEqual(i[0].t1, 1.0)
-//        XCTAssertEqual(i[0].t2, 0.5)
-//    }
-//    
-//    func testIntersectsLineYesLineStart() {
-//        // two lines that intersect at the start of the first line
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 2.0, y: 1.0))
-//        let l2 = LineSegment(p0: BKPoint(x: -2.0, y: 2.0), p1: BKPoint(x: 1.0, y: 0.0))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 1)
-//        XCTAssertEqual(i[0].t1, 0.0)
-//        XCTAssertEqual(i[0].t2, 1.0)
-//    }
-//    
-//    func testIntersectsLineYesLineEnd() {
-//        // two lines that intersect at the end of the first line
-//        let l1 = LineSegment(p0: BKPoint(x: 1.0, y: 0.0), p1: BKPoint(x: 2.0, y: 1.0))
-//        let l2 = LineSegment(p0: BKPoint(x: 2.0, y: 1.0), p1: BKPoint(x: -2.0, y: 2.0))
-//        let i = l1.intersects(line: l2)
-//        XCTAssertEqual(i.count, 1)
-//        XCTAssertEqual(i[0].t1, 1.0)
-//        XCTAssertEqual(i[0].t2, 0.0)
-//    }
-//    
-//    func testIntersectsLineAsCurve() {
-//        // ensure that intersects(curve:) calls into the proper implementation
-//        let l1: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 1.0))
-//        let l2: BezierCurve = LineSegment(p0: BKPoint(x: 0.0, y: 1.0), p1: BKPoint(x: 1.0, y: 0.0)) as BezierCurve!
-//        let i = l1.intersects(curve: l2)
-//        XCTAssertEqual(i.count, 1)
-//        XCTAssertEqual(i[0].t1, 0.5)
-//        XCTAssertEqual(i[0].t2, 0.5)
-//    }
-//    
+//        
 //    // -- MARK: - line-curve intersection tests
 //    
 //    func testIntersectsQuadratic() {
