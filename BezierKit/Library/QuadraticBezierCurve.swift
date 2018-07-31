@@ -6,25 +6,29 @@
 //  Copyright © 2017 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
 public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     
-    public var p0, p1, p2: BKPoint
+    public var p0, p1, p2: CGPoint
     
-    public init(points: [BKPoint]) {
+    public init(points: [CGPoint]) {
         precondition(points.count == 3)
         self.p0 = points[0]
         self.p1 = points[1]
         self.p2 = points[2]
     }
     
-    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint) {
+    public init(p0: CGPoint, p1: CGPoint, p2: CGPoint) {
         let points = [p0, p1, p2]
         self.init(points: points)
     }
     
-    public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5) {
+    public init(lineSegment l: LineSegment) {
+        self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
+    }
+    
+    public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
             self.init(p0: mid, p1: mid, p2: end)
@@ -39,15 +43,15 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         }
     }
 
-    public var points: [BKPoint] {
+    public var points: [CGPoint] {
         return [p0, p1, p2]
     }
     
-    public var startingPoint: BKPoint {
+    public var startingPoint: CGPoint {
         return p0
     }
     
-    public var endingPoint: BKPoint {
+    public var endingPoint: CGPoint {
         return p2
     }
     
@@ -59,13 +63,13 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let n1 = self.normal(0)
         let n2 = self.normal(1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
-        let angle: BKFloat = BKFloat(abs(acos(Double(s))))
-        return angle < (BKFloat.pi / 3.0)
+        let angle: CGFloat = CGFloat(abs(acos(Double(s))))
+        return angle < (CGFloat.pi / 3.0)
     }
     
-    public func derivative(_ t: BKFloat) -> BKPoint {
-        let mt: BKFloat = 1-t
-        let k: BKFloat = 2
+    public func derivative(_ t: CGFloat) -> CGPoint {
+        let mt: CGFloat = 1-t
+        let k: CGFloat = 2
         let p0 = k * (self.p1 - self.p0)
         let p1 = k * (self.p2 - self.p1)
         let a = mt
@@ -73,7 +77,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return a*p0 + b*p1
     }
 
-    public func split(from t1: BKFloat, to t2: BKFloat) -> QuadraticBezierCurve {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticBezierCurve {
     
         let h0 = self.p0
         let h1 = self.p1
@@ -94,7 +98,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return QuadraticBezierCurve(p0: i0, p1: i3, p2: i5)
     }
 
-    public func split(at t: BKFloat) -> (left: QuadraticBezierCurve, right: QuadraticBezierCurve) {
+    public func split(at t: CGFloat) -> (left: QuadraticBezierCurve, right: QuadraticBezierCurve) {
         // use "de Casteljau" iteration.
         let h0 = self.p0
         let h1 = self.p1
@@ -111,18 +115,18 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
 
     public var boundingBox: BoundingBox {
         
-        let p0: BKPoint = self.p0
-        let p1: BKPoint = self.p1
-        let p2: BKPoint = self.p2
+        let p0: CGPoint = self.p0
+        let p1: CGPoint = self.p1
+        let p2: CGPoint = self.p2
         
-        var mmin: BKPoint = BKPoint.min(p0, p2)
-        var mmax: BKPoint = BKPoint.max(p0, p2)
+        var mmin: CGPoint = CGPoint.min(p0, p2)
+        var mmax: CGPoint = CGPoint.max(p0, p2)
         
-        let d0: BKPoint = p1 - p0
-        let d1: BKPoint = p2 - p1
+        let d0: CGPoint = p1 - p0
+        let d1: CGPoint = p2 - p1
         
-        for d in 0..<BKPoint.dimensions {
-            Utils.droots(d0[d], d1[d]) {(t: BKFloat) in
+        for d in 0..<CGPoint.dimensions {
+            Utils.droots(d0[d], d1[d]) {(t: CGFloat) in
                 if t <= 0.0 || t >= 1.0 {
                     return
                 }
@@ -146,7 +150,7 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return BoundingBox(min: mmin, max: mmax)
     }
 
-    public func compute(_ t: BKFloat) -> BKPoint {
+    public func compute(_ t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         }
@@ -154,8 +158,8 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
             return self.p2
         }
         let mt = 1.0 - t
-        let mt2: BKFloat    = mt*mt
-        let t2: BKFloat     = t*t
+        let mt2: CGFloat    = mt*mt
+        let t2: CGFloat     = t*t
         let a = mt2
         let b = mt * t*2
         let c = t2
@@ -171,11 +175,4 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     public static func == (left: QuadraticBezierCurve, right: QuadraticBezierCurve) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2
     }
-
-    // MARK: quadratic specific methods
-    
-//    public raise() -> CubicBezierCurve {
-//    
-//    }
-
 }

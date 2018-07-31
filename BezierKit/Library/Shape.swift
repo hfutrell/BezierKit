@@ -6,12 +6,15 @@
 //  Copyright © 2018 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
-public struct ShapeIntersection {
+public struct ShapeIntersection: Equatable {
     let curve1: BezierCurve
     let curve2: BezierCurve
     let intersections: [Intersection]
+    public static func == (left: ShapeIntersection, right: ShapeIntersection) -> Bool {
+        return left.curve1 == right.curve1 && left.curve2 == right.curve2 && left.intersections == right.intersections
+    }
 }
 
 public struct Shape {
@@ -22,9 +25,10 @@ public struct Shape {
             self.curve = curve
             self.virtual = virtual
         }
+        // TODO: equatable
     }
     
-    public static let defaultShapeIntersectionThreshold: BKFloat = 0.5
+    public static let defaultShapeIntersectionThreshold: CGFloat = 0.5
     public let startcap: Cap
     public let endcap: Cap
     public let forward: BezierCurve
@@ -39,8 +43,8 @@ public struct Shape {
         self.back = back
     }
     
-    public func boundingBox() -> BoundingBox {
-        var result: BoundingBox = BoundingBox()
+    public var boundingBox: BoundingBox {
+        var result: BoundingBox = BoundingBox.empty
         for s: BezierCurve in self.nonvirtualSegments() {
             let bbox = s.boundingBox
             result = BoundingBox(first: result, second: bbox)
@@ -62,8 +66,8 @@ public struct Shape {
         return segments
     }
     
-    public func intersects(shape other: Shape, _ curveIntersectionThreshold: BKFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
-        if self.boundingBox().overlaps(other.boundingBox()) == false {
+    public func intersects(shape other: Shape, _ curveIntersectionThreshold: CGFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
+        if self.boundingBox.overlaps(other.boundingBox) == false {
             return []
         }
         var intersections: [ShapeIntersection] = []
@@ -79,5 +83,5 @@ public struct Shape {
         }
         return intersections
     }
-    
+    // TODO: equatable
 }

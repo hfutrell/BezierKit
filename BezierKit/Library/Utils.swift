@@ -15,12 +15,12 @@ import CoreGraphics
 internal class Utils {
 
     // float precision significant decimal
-    static let epsilon: BKFloat = 0.000001
-    static let tau: BKFloat = 2.0 * BKFloat(Double.pi)
-    static let quart: BKFloat = BKFloat(Double.pi) / 2.0
+    static let epsilon: CGFloat = 0.000001
+    static let tau: CGFloat = 2.0 * CGFloat.pi
+    static let quart: CGFloat = CGFloat.pi / 2.0
     
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
-    static let Tvalues: ContiguousArray<BKFloat> = [
+    static let Tvalues: ContiguousArray<CGFloat> = [
         -0.0640568928626056260850430826247450385909,
         0.0640568928626056260850430826247450385909,
         -0.1911188674736163091586398207570696318404,
@@ -48,7 +48,7 @@ internal class Utils {
     ]
     
     // Legendre-Gauss weights with n=24 (w_i values, defined by a function linked to in the Bezier primer article)
-    static let Cvalues: ContiguousArray<BKFloat> = [
+    static let Cvalues: ContiguousArray<CGFloat> = [
         0.1279381953467521569740561652246953718517,
         0.1279381953467521569740561652246953718517,
         0.1258374563468282961213753825111836887264,
@@ -75,22 +75,22 @@ internal class Utils {
         0.0123412297999871995468056670700372915759
     ]
     
-    static func getABC(n: Int, S: BKPoint, B: BKPoint, E: BKPoint, t: BKFloat = 0.5) -> (A: BKPoint, B: BKPoint, C: BKPoint) {
+    static func getABC(n: Int, S: CGPoint, B: CGPoint, E: CGPoint, t: CGFloat = 0.5) -> (A: CGPoint, B: CGPoint, C: CGPoint) {
         let u = Utils.projectionRatio(n: n, t: t)
         let um = 1-u
-        let C = BKPoint(
+        let C = CGPoint(
             x: u*S.x + um*E.x,
             y: u*S.y + um*E.y
         )
         let s = Utils.abcRatio(n: n, t: t)
-        let A = BKPoint(
+        let A = CGPoint(
             x: B.x + (B.x-C.x)/s,
             y: B.y + (B.y-C.y)/s
         )
         return ( A:A, B:B, C:C )
     }
     
-    static func abcRatio(n: Int, t: CGFloat = 0.5) -> BKFloat {
+    static func abcRatio(n: Int, t: CGFloat = 0.5) -> CGFloat {
         // see ratio(t) note on http://pomax.github.io/bezierinfo/#abc
         assert(n == 2 || n == 3)
         if ( t == 0 || t == 1) {
@@ -101,7 +101,7 @@ internal class Utils {
         return abs(top/bottom)
     }
     
-    static func projectionRatio(n: Int, t: CGFloat = 0.5) -> BKFloat {
+    static func projectionRatio(n: Int, t: CGFloat = 0.5) -> CGFloat {
         // see u(t) note on http://pomax.github.io/bezierinfo/#abc
         assert(n == 2 || n == 3)
         if (t == 0 || t == 1) {
@@ -112,7 +112,7 @@ internal class Utils {
         return top/bottom
     }
     
-    static func map(_ v: BKFloat,_ ds: BKFloat,_ de: BKFloat,_ ts: BKFloat,_ te: BKFloat) -> BKFloat {
+    static func map(_ v: CGFloat,_ ds: CGFloat,_ de: CGFloat,_ ts: CGFloat,_ te: CGFloat) -> CGFloat {
         let d1 = de-ds
         let d2 = te-ts
         let v2 =  v-ds
@@ -120,17 +120,17 @@ internal class Utils {
         return ts + d2*r        
     }
     
-    static func lli8(_ x1: BKFloat,_ y1: BKFloat,_ x2: BKFloat,_ y2: BKFloat,_ x3: BKFloat,_ y3: BKFloat,_ x4: BKFloat,_ y4: BKFloat) -> BKPoint? {
+    static func lli8(_ x1: CGFloat,_ y1: CGFloat,_ x2: CGFloat,_ y2: CGFloat,_ x3: CGFloat,_ y3: CGFloat,_ x4: CGFloat,_ y4: CGFloat) -> CGPoint? {
         let nx = (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
         let ny = (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)
         let d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
         if d == 0 {
             return nil
         }
-        return BKPoint( x: nx/d, y: ny/d )
+        return CGPoint( x: nx/d, y: ny/d )
     }
     
-    static func lli4(_ p1: BKPoint,_ p2: BKPoint,_ p3: BKPoint,_ p4: BKPoint) -> BKPoint? {
+    static func lli4(_ p1: CGPoint,_ p2: CGPoint,_ p3: CGPoint,_ p4: CGPoint) -> CGPoint? {
         let x1 = p1.x; let y1 = p1.y
         let x2 = p2.x; let y2 = p2.y
         let x3 = p3.x; let y3 = p3.y
@@ -138,40 +138,22 @@ internal class Utils {
         return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
     }
     
-    //    static func lli(_ v1: BKFloat,_ v2: BKFloat) -> BKPoint? {
-    //        return Utils.lli4(v1,v1.c,v2,v2.c)
-    //    }
-    
-    static func getminmax(list: [BKFloat], value0: BKFloat, value1: BKFloat) -> (min: BKFloat, max: BKFloat) {
-        var min = value0 < value1 ? value0 : value1
-        var max = value0 < value1 ? value1 : value0
-        for t in list {
-            if t < min {
-                min = t
-            }
-            else if t > max {
-                max = t
-            }
-        }
-        return (min: min, max: max)
-    }
-    
-    static func approximately(_ a: BKFloat,_ b: BKFloat, precision: BKFloat = epsilon) -> Bool {
+    static func approximately(_ a: CGFloat,_ b: CGFloat, precision: CGFloat = epsilon) -> Bool {
         return abs(a-b) <= precision
     }
     
-    static func between(_ v: BKFloat,_ m: BKFloat,_ M: BKFloat) -> Bool {
+    static func between(_ v: CGFloat,_ m: CGFloat,_ M: CGFloat) -> Bool {
         return (m <= v && v <= M) || Utils.approximately(v, m) || Utils.approximately(v, M)
     }
     
     // cube root function yielding real roots
-    static func crt(_ v: BKFloat) -> BKFloat {
+    static func crt(_ v: CGFloat) -> CGFloat {
         return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
     }
     
-    static func clamp(_ x: BKFloat, _ a: BKFloat, _ b: BKFloat) -> BKFloat {
+    static func clamp(_ x: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
         // note that if x is NaN all comparisons fail so we return NaN
-        // this is purposeful behavior, should probably have unit test
+        // TODO: this is purposeful behavior, should probably have unit test
         precondition(b >= a)
         if x < a {
             return a
@@ -184,13 +166,13 @@ internal class Utils {
         }
     }
     
-    static func roots(points: [BKPoint], line: LineSegment = LineSegment(p0: BKPoint(x: 0.0, y: 0.0), p1: BKPoint(x: 1.0, y: 0.0))) -> [BKFloat] {
+    static func roots(points: [CGPoint], line: LineSegment = LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 0.0))) -> [CGFloat] {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
         
-        let epsilon: BKFloat = 1.0e-6
-        let reduce: (BKFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
-        let clamp: (BKFloat) -> BKFloat = {
+        let epsilon: CGFloat = 1.0e-6
+        let reduce: (CGFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
+        let clamp: (CGFloat) -> CGFloat = {
             if $0 < 0.0 { return 0.0 }
             else if $0 > 1.0 { return 1.0 }
             else { return $0 }
@@ -204,13 +186,13 @@ internal class Utils {
             if abs(d) > epsilon {
                 let m1 = -sqrt(b*b-a*c)
                 let m2 = -a+b
-                let v1: BKFloat = -( m1+m2)/d
-                let v2: BKFloat = -(-m1+m2)/d
+                let v1: CGFloat = -( m1+m2)/d
+                let v2: CGFloat = -(-m1+m2)/d
                 return [v1, v2].filter(reduce).map(clamp)
             }
             else if a != b {
                 // TODO: also fix in droots!
-                return [BKFloat(0.5 * a / (a-b))].filter(reduce).map(clamp)
+                return [CGFloat(0.5 * a / (a-b))].filter(reduce).map(clamp)
             }
             else {
                 return []
@@ -278,10 +260,10 @@ internal class Utils {
         }
     }
     
-    static func droots(_ a: BKFloat, _ b: BKFloat, _ c: BKFloat, callback:((BKFloat)->())) {
+    static func droots(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, callback:((CGFloat)->())) {
         // quadratic roots are easy
         // do something with each root
-        let d: BKFloat = a - 2.0*b + c
+        let d: CGFloat = a - 2.0*b + c
         if d != 0 {
             let m1 = -sqrt(b*b-a*c)
             let m2 = -a+b
@@ -295,7 +277,7 @@ internal class Utils {
         }
     }
     
-    static func droots(_ a: BKFloat, _ b: BKFloat, callback:((BKFloat)->())) {
+    static func droots(_ a: CGFloat, _ b: CGFloat, callback:((CGFloat)->())) {
         // linear roots are super easy
         // do something with the root, if it exists
         if a != b {
@@ -303,9 +285,9 @@ internal class Utils {
         }
     }
     
-    static func droots(_ p: [BKFloat]) -> [BKFloat] {
+    static func droots(_ p: [CGFloat]) -> [CGFloat] {
         // quadratic roots are easy
-        var result: [BKFloat] = []
+        var result: [CGFloat] = []
         if p.count == 3 {
             droots(p[0], p[1], p[2]) {
                 result.append($0)
@@ -323,23 +305,23 @@ internal class Utils {
     }
 
     
-    static func lerp(_ r: BKFloat, _ v1: BKPoint, _ v2: BKPoint) -> BKPoint {
+    static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {
         return v1 + r * (v2 - v1)
     }
     
-    static func dist(_ p1: BKPoint,_ p2: BKPoint) -> BKFloat {
+    static func dist(_ p1: CGPoint,_ p2: CGPoint) -> CGFloat {
         return (p1 - p2).length
     }
     
-    static func arcfn(_ t: BKFloat, _ derivativeFn: (_ t: BKFloat) -> BKPoint) -> BKFloat {
+    static func arcfn(_ t: CGFloat, _ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
         let d = derivativeFn(t)
         return d.length
     }
     
-    static func length(_ derivativeFn: (_ t: BKFloat) -> BKPoint) -> BKFloat {
-        let z: BKFloat = 0.5
+    static func length(_ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
+        let z: CGFloat = 0.5
         let len = Utils.Tvalues.count
-        var sum: BKFloat = 0.0
+        var sum: CGFloat = 0.0
         for i in 0..<len {
             let t = z * Utils.Tvalues[i] + z
             sum += Utils.Cvalues[i] * Utils.arcfn(t, derivativeFn)
@@ -347,7 +329,7 @@ internal class Utils {
         return z * sum
     }
     
-    static func angle(o: BKPoint, v1: BKPoint, v2: BKPoint) -> BKFloat {
+    static func angle(o: CGPoint, v1: CGPoint, v2: CGPoint) -> CGFloat {
         let dx1 = v1.x - o.x
         let dy1 = v1.y - o.y
         let dx2 = v2.x - o.x
@@ -357,12 +339,12 @@ internal class Utils {
         return atan2(cross, dot)
     }
     
-    static func align(_ points: [BKPoint], p1: BKPoint, p2: BKPoint) -> [BKPoint] {
+    static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
         let tx = p1.x
         let ty = p1.y
         let a = -atan2(p2.y-ty, p2.x-tx)
-        let d =  {( v: BKPoint) in
-            return BKPoint(
+        let d =  {( v: CGPoint) in
+            return CGPoint(
                 x: (v.x-tx)*cos(a) - (v.y-ty)*sin(a),
                 y: (v.x-tx)*sin(a) + (v.y-ty)*cos(a)
             )
@@ -370,9 +352,9 @@ internal class Utils {
         return points.map(d)
     }
     
-    static func closest(_ LUT: [BKPoint],_ point: BKPoint) -> (mdist: BKFloat, mpos: Int) {
+    static func closest(_ LUT: [CGPoint],_ point: CGPoint) -> (mdist: CGFloat, mpos: Int) {
         assert(LUT.count > 0)
-        var mdist = BKFloat.infinity
+        var mdist = CGFloat.infinity
         var mpos: Int? = nil
         for i in 0..<LUT.count {
             let p = LUT[i]
@@ -385,7 +367,7 @@ internal class Utils {
         return ( mdist:mdist, mpos:mpos! )
     }
     
-    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: BKFloat = 0.5) {
+    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: CGFloat = 0.5) {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
         if c1b.overlaps(c2b) == false {
@@ -434,12 +416,12 @@ internal class Utils {
         }
     }
             
-    static func getccenter( _ p1: BKPoint, _ p2: BKPoint, _ p3: BKPoint, _ interval: Interval) -> Arc {
+    static func getccenter( _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint, _ interval: Interval) -> Arc {
         let d1 = p2 - p1
         let d2 = p3 - p2
-        let d1p = BKPoint(x: d1.x * cos(quart) - d1.y * sin(quart),
+        let d1p = CGPoint(x: d1.x * cos(quart) - d1.y * sin(quart),
                           y: d1.x * sin(quart) + d1.y * cos(quart))
-        let d2p = BKPoint(x: d2.x * cos(quart) - d2.y * sin(quart),
+        let d2p = CGPoint(x: d2.x * cos(quart) - d2.y * sin(quart),
                           y: d2.x * sin(quart) + d2.y * cos(quart))
         // chord midpoints
         let m1 = 0.5 * (p1 + p2)
@@ -452,7 +434,7 @@ internal class Utils {
         
         assert(oo != nil)
         
-        let o: BKPoint = oo!
+        let o: CGPoint = oo!
         let r = Utils.dist(o, p1)
         // arc start/end values, over mid point:
         var s = atan2(p1.y - o.y, p1.x - o.x)
@@ -481,12 +463,12 @@ internal class Utils {
                 e += tau
             }
         }
-        return Arc(origin: o, radius: r, start: s, end: e, interval: interval)
+        return Arc(origin: o, radius: r, startAngle: s, endAngle: e, interval: interval)
     }
     
-    static func hull(_ p: [BKPoint],_ t: BKFloat) -> [BKPoint] {
+    static func hull(_ p: [CGPoint],_ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count
-        var q: [BKPoint] = p
+        var q: [CGPoint] = p
         q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc
         // we lerp between all points (in-place), until we have 1 point left.
         var start: Int = 0

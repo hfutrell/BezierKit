@@ -12,12 +12,9 @@ import Foundation
     import CoreGraphics
 #endif
 
-public typealias BKFloat = CGFloat
-public typealias BKPoint = Point2<CGFloat>
-
 public struct Intersection: Equatable, Comparable {
-    public var t1: BKFloat
-    public var t2: BKFloat
+    public var t1: CGFloat
+    public var t2: CGFloat
     public static func == (lhs: Intersection, rhs: Intersection) -> Bool {
         return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
     }
@@ -35,9 +32,9 @@ public struct Intersection: Equatable, Comparable {
 }
 
 public struct Interval: Equatable {
-    public var start: BKFloat
-    public var end: BKFloat
-    public init(start: BKFloat, end: BKFloat) {
+    public var start: CGFloat
+    public var end: CGFloat
+    public init(start: CGFloat, end: CGFloat) {
         self.start = start
         self.end = end
     }
@@ -46,78 +43,41 @@ public struct Interval: Equatable {
     }
 }
 
-public struct Arc: Equatable {
-    public var origin: BKPoint
-    public var radius: BKFloat
-    public var start: BKFloat // starting angle (in radians)
-    public var end: BKFloat // ending angle (in radians)
-    public var interval: Interval // represents t-values [0, 1] on curve
-    public init(origin: BKPoint, radius: BKFloat, start: BKFloat, end: BKFloat, interval: Interval = Interval(start: 0.0, end: 1.0)) {
-        self.origin = origin
-        self.radius = radius
-        self.start = start
-        self.end = end
-        self.interval = interval
+public struct BoundingBox: Equatable {
+    public var min: CGPoint
+    public var max: CGPoint
+    public var cgRect: CGRect {
+        let s = self.size
+        return CGRect(origin: self.min, size: CGSize(width: s.x, height: s.y))
     }
-    public static func == (left: Arc, right: Arc) -> Bool {
-        return (left.origin == right.origin && left.radius == right.radius && left.start == right.start && left.end == right.end && left.interval == right.interval)
-    }
-    public func compute(_ t: BKFloat) -> BKPoint {
-        // computes a value on the arc with t in [0, 1]
-        let theta: BKFloat = t * self.end + (1.0 - t) * self.start
-        return self.origin + self.radius * BKPoint(x: cos(theta), y: sin(theta))
-    }
-}
-
-public typealias BoundingBox = BBox<BKPoint>
-
-public struct BBox<P>: Equatable where P: Point {
-    public var min: BKPoint
-    public var max: BKPoint
-    init() {
-        
-        // TODO: I really dislike this function
-        
-        // by setting the min to infinity and the max to -infinity
-        // when we union this (invalid) rect with a valid rect, we'll
-        // get back the valid rect
-        min = BKPointInfinity
-        max = -BKPointInfinity
-    }
-    public init(min: BKPoint, max: BKPoint) {
+    public static let empty: BoundingBox = BoundingBox(min: .infinity, max: -.infinity)
+    internal init(min: CGPoint, max: CGPoint) {
         self.min = min
         self.max = max
     }
+    public init(p1: CGPoint, p2: CGPoint) {
+        self.min = CGPoint.min(p1, p2)
+        self.max = CGPoint.max(p1, p2)
+    }
     public init(first: BoundingBox, second: BoundingBox) {
-        self.min = BKPoint.min(first.min, second.min)
-        self.max = BKPoint.max(first.max, second.max)
+        self.min = CGPoint.min(first.min, second.min)
+        self.max = CGPoint.max(first.max, second.max)
     }
-    public var mid: BKPoint {
-        return 0.5 * (min + max)
-    }
-    public var size: BKPoint {
-        return max - min
+    public var size: CGPoint {
+        return CGPoint.max(max - min, .zero)
     }
     public func overlaps(_ other: BoundingBox) -> Bool {
-        for i in 0..<P.dimensions {
-            if self.min[i] > other.max[i] {
-                return false
-            }
-            if self.max[i] < other.min[i] {
+        let p1 = CGPoint.max(self.min, other.min)
+        let p2 = CGPoint.min(self.max, other.max)
+        for i in 0..<CGPoint.dimensions {
+            let difference = p2[i] - p1[i]
+            if difference.isNaN || difference < 0 {
                 return false
             }
         }
         return true
     }
-    public var toCGRect: CGRect {
-        let s = self.size
-        return CGRect(origin: self.min.toCGPoint(), size: CGSize(width: s.x, height: s.y))
-    }
-    public static func == (left: BBox<P>, right: BBox<P>) -> Bool {
+    public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
         return (left.min == right.min && left.max == right.max)
     }
 }
-
-public let BKPointZero: BKPoint = BKPoint(x: 0.0, y: 0.0)
-public let BKPointInfinity: BKPoint = BKPoint(x: BKFloat.infinity, y: BKFloat.infinity)
-
