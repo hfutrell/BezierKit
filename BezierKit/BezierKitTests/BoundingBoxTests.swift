@@ -9,7 +9,7 @@
 import XCTest
 @testable import BezierKit
 
-class BoudningBoxTests: XCTestCase {
+class BoundingBoxTests: XCTestCase {
     
     let pointNan        = CGPoint(x: CGFloat.nan, y: CGFloat.nan)
     let zeroBox         = BoundingBox(p1: .zero, p2: .zero)
