@@ -36,7 +36,9 @@ public class Path {
             let points: UnsafeMutablePointer<CGPoint> = element.pointee.points
             switch element.pointee.type {
             case .moveToPoint:
-                // TODO: what happens if a path calls moveToPoint without calling closeSubpath?
+                if context.currentSubpath.isEmpty == false {
+                    context.components.append(PolyBezier(curves: context.currentSubpath))
+                }
                 context.currentPoint = points[0]
                 context.subpathStartPoint = points[0]
                 context.currentSubpath = []
