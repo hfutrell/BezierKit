@@ -455,7 +455,14 @@ extension BezierCurve {
             return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], threshold: threshold)
         }
         else if let l = curve as? LineSegment {
-            return self.intersects(line: l)
+            if let m = self as? LineSegment {
+                // TODO: clean up this logic, the problem is that `intersects` is statically dispatched
+                // otherwise we'll end up calling into the curve-line intersection method and it'll crash (awful)
+                return m.intersects(line: l)
+            }
+            else {
+                return self.intersects(line: l)
+            }
         }
         else {
             fatalError("unsupported")
