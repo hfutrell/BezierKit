@@ -16,7 +16,7 @@ class PolyBezierTests: XCTestCase {
     
     func testLength() {
         let p = PolyBezier(curves: [line1, line2])
-        XCTAssertEqual(p.perimeter, 15.0) // sum of two lengths
+        XCTAssertEqual(p.length, 15.0) // sum of two lengths
     }
     
     func testBoundingBox() {

@@ -38,7 +38,7 @@ public class PolyBezier {
         self.curves = curves
     }
     
-    public var perimeter: CGFloat {
+    public var length: CGFloat {
         return self.curves.reduce(0.0) {
             $0 + $1.length()
         }
