@@ -44,16 +44,31 @@ public class PolyBezier {
         }
     }
     
-    public var boundingBox: BoundingBox {
+    public lazy var boundingBox: BoundingBox = {
         return self.curves.reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
         }
-    }
+    }()
     
     public func offset(distance d: CGFloat) -> PolyBezier {
         return PolyBezier(curves: self.curves.reduce([], {
             $0 + $1.offset(distance: d)
         }))
+    }
+    
+    public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
+        // TODO: optimize!
+        guard self.boundingBox.overlaps(other.boundingBox) else {
+            return []
+        }
+        var intersections: [CGPoint] = []
+        for c1 in self.curves {
+            for c2 in other.curves {
+                // TODO: we could wind up with redundant intersections at t=0 or t=1
+                intersections += c1.intersects(curve: c2).map { c1.compute($0.t1) }
+            }
+        }
+        return intersections
     }
     
     // TODO: equatable

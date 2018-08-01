@@ -25,8 +25,27 @@ public class Path {
         return mutablePath.copy()!
     }()
     
+    lazy var boundingBox: BoundingBox = {
+        return self.subpaths.reduce(BoundingBox.empty) {
+            BoundingBox(first: $0, second: $1.boundingBox)
+        }
+    }()
+    
     let subpaths: [PolyBezier]
-
+    
+    func intersects(other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
+        guard self.boundingBox.overlaps(other.boundingBox) else {
+            return []
+        }
+        var intersections: [CGPoint] = []
+        for s1 in self.subpaths {
+            for s2 in other.subpaths {
+                intersections += s1.intersects(s2, threshold: threshold)
+            }
+        }
+        return intersections
+    }
+    
     init(_ path: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {

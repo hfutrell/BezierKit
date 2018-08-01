@@ -289,7 +289,7 @@ class BezierCurveTests: XCTestCase {
                                       p1: CGPoint(x: 2.0, y: -1.0),
                                       p2: CGPoint(x: 1.0, y: -1.0),
                                       p3: CGPoint(x: 0.0, y: 0.0))
-        let i = cubic1.intersects(curve: cubic2, curveIntersectionThreshold: epsilon)
+        let i = cubic1.intersects(curve: cubic2, threshold: epsilon)
         XCTAssertEqual(i.count, 2, "start and end points should intersect!")
         XCTAssertEqual(i[0].t1, 0.0)
         XCTAssertEqual(i[0].t2, 1.0)
@@ -303,7 +303,7 @@ class BezierCurveTests: XCTestCase {
                                      p1: CGPoint(x: 2.0, y: 1.0),
                                      p2: CGPoint(x: -1.0, y: 1.0),
                                      p3: CGPoint(x: 1.0, y: 0.0))
-        let i = curve.intersects(curveIntersectionThreshold: epsilon)
+        let i = curve.intersects(threshold: epsilon)
         XCTAssertEqual(i.count, 1, "wrong number of intersections!")
         XCTAssert( (curve.compute(i[0].t1) - curve.compute(i[0].t2)).length < epsilon, "wrong or inaccurate intersection!" )
     }
