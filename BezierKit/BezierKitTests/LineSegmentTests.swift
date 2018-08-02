@@ -203,10 +203,15 @@ class LineSegmentTests: XCTestCase {
         // ensure that intersects(curve:) calls into the proper implementation
         let l1: LineSegment = LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0))
         let l2: BezierCurve = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 0.0)) as BezierCurve
-        let i = l1.intersects(curve: l2)
-        XCTAssertEqual(i.count, 1)
-        XCTAssertEqual(i[0].t1, 0.5)
-        XCTAssertEqual(i[0].t2, 0.5)
+        let i1 = l1.intersects(curve: l2)
+        XCTAssertEqual(i1.count, 1)
+        XCTAssertEqual(i1[0].t1, 0.5)
+        XCTAssertEqual(i1[0].t2, 0.5)
+        
+        let i2 = l2.intersects(curve: l1)
+        XCTAssertEqual(i2.count, 1)
+        XCTAssertEqual(i2[0].t1, 0.5)
+        XCTAssertEqual(i2[0].t2, 0.5)
     }
     
     func testIntersectsLineNoParallel() {

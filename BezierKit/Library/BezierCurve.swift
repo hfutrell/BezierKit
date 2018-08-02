@@ -425,7 +425,7 @@ extension BezierCurve {
         }).filter({$0.t2 >= 0.0 && $0.t2 <= 1.0}).sorted()
     }
     
-    public func intersects(curveIntersectionThreshold: CGFloat = Self.defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
         let reduced = self.reduce()
         // "simple" curves cannot intersect with their direct
         // neighbour, so for each segment X we check whether
@@ -436,38 +436,45 @@ extension BezierCurve {
             for i in 0..<len {
                 let left = [reduced[i]]
                 let right = Array(reduced.suffix(from: i+2))
-                let result = Self.internalCurvesIntersect(c1: left, c2: right, curveIntersectionThreshold: curveIntersectionThreshold)
+                let result = Self.internalCurvesIntersect(c1: left, c2: right, threshold: threshold)
                 results += result
             }
         }
         return results
     }
     
-    public func intersects(curve: BezierCurve, curveIntersectionThreshold: CGFloat = Self.defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(curve: BezierCurve, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
 //        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
         
         let s = Subcurve<Self>(curve: self)
         
         if let c = curve as? CubicBezierCurve {
-            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: c)], curveIntersectionThreshold: curveIntersectionThreshold)
+            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: c)], threshold: threshold)
         }
         else if let q = curve as? QuadraticBezierCurve {
-            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], curveIntersectionThreshold: curveIntersectionThreshold)
+            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], threshold: threshold)
         }
         else if let l = curve as? LineSegment {
-            return self.intersects(line: l)
+            if let m = self as? LineSegment {
+                // TODO: clean up this logic, the problem is that `intersects` is statically dispatched
+                // otherwise we'll end up calling into the curve-line intersection method and it'll crash (awful)
+                return m.intersects(line: l)
+            }
+            else {
+                return self.intersects(line: l)
+            }
         }
         else {
             fatalError("unsupported")
         }
     }
     
-    private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], curveIntersectionThreshold: CGFloat) -> [Intersection] {
+    private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], threshold: CGFloat) -> [Intersection] {
 
         var intersections: [Intersection] = []
         for l in c1 {
             for r in c2 {
-                Utils.pairiteration(l, r, &intersections, curveIntersectionThreshold)
+                Utils.pairiteration(l, r, &intersections, threshold)
             }
         }
         // TODO: you should probably have a unit test that ensures de-duping actually works
@@ -554,11 +561,11 @@ extension BezierCurve {
     
     // MARK: shapes
     
-    public func outlineShapes(distance d1: CGFloat, curveIntersectionThreshold: CGFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
-        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, curveIntersectionThreshold: curveIntersectionThreshold)
+    public func outlineShapes(distance d1: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
+        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, threshold: threshold)
     }
     
-    public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, curveIntersectionThreshold: CGFloat = Self.defaultCurveIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
         var outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2).curves
         var shapes: [Shape] = []
         let len = outline.count
@@ -569,10 +576,9 @@ extension BezierCurve {
         return shapes
     }
     
-    public static var defaultCurveIntersectionThreshold: CGFloat {
-        return 0.5
-    }
 }
+
+public let defaultIntersectionThreshold = CGFloat(0.5)
 
 public func == (left: BezierCurve, right: BezierCurve) -> Bool {
     return left.points == right.points
@@ -593,5 +599,5 @@ public protocol BezierCurve {
     func length() -> CGFloat
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
-    func intersects(curve: BezierCurve, curveIntersectionThreshold: CGFloat) -> [Intersection]
+    func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
 }

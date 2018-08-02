@@ -404,5 +404,40 @@ class Demos {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22]
+    static let demo23 = Demo(title: "unclosed path",
+                             quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
+                             cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+                                
+                                let mutablePath = CGMutablePath()
+                                
+                                mutablePath.move(to: CGPoint(x: 75, y: 75))
+                                mutablePath.addLine(to: CGPoint(x: 75, y: 175))
+                                mutablePath.addLine(to: CGPoint(x: 175, y: 175))
+                                mutablePath.addLine(to: CGPoint(x: 175, y: 75))
+//                                mutablePath.closeSubpath()
+                                
+//                                mutablePath.move(to: CGPoint(x: 275, y: 75))
+//                                mutablePath.addLine(to: CGPoint(x: 275, y: 175))
+//                                mutablePath.addLine(to: CGPoint(x: 375, y: 175))
+//                                mutablePath.addLine(to: CGPoint(x: 375, y: 75))
+//                                mutablePath.closeSubpath()
+                                
+                                
+                                context.setFillColor(Draw.transparentBlue)
+                                context.setStrokeColor(Draw.red)
+                                
+                                context.addPath(mutablePath)
+                                context.fillPath()
+                                
+                                context.addPath(mutablePath)
+                                context.strokePath()
+                                
+                                let contains1 = mutablePath.contains(CGPoint(x: 100, y: 100))
+                                let contains2 = mutablePath.contains(CGPoint(x: 300, y: 100))
+
+
+    })
+
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23]
 }

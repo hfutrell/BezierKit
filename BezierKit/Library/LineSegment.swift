@@ -95,7 +95,7 @@ public struct LineSegment: BezierCurve, Equatable {
         return (xyz: xyz, [0.0, 1.0])
     }
         
-    public func intersects(curve: BezierCurve, curveIntersectionThreshold: CGFloat = LineSegment.defaultCurveIntersectionThreshold) -> [Intersection] {
+    public func intersects(curve: BezierCurve, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
         if let l = curve as? LineSegment {
             // use fast line / line intersection algorithm
             return self.intersects(line: l)
