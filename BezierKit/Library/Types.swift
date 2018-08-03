@@ -78,6 +78,19 @@ public struct BoundingBox: Equatable {
         return true
     }
     public func distance(from point: CGPoint) -> CGFloat {
+        var distanceSquared: CGFloat = 0.0
+        for i in 0..<CGPoint.dimensions {
+            let value = point[i]
+            if value < min[i] {
+                let temp = (min[i] - value)
+                distanceSquared += temp * temp
+            }
+            else if value > max[i] {
+                let temp = (value - max[i])
+                distanceSquared += temp * temp
+            }
+        }
+        return sqrt(distanceSquared)
     }
     public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
         return (left.min == right.min && left.max == right.max)
