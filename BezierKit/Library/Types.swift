@@ -77,6 +77,8 @@ public struct BoundingBox: Equatable {
         }
         return true
     }
+    public func distance(from point: CGPoint) -> CGFloat {
+    }
     public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
         return (left.min == right.min && left.max == right.max)
     }

@@ -33,6 +33,10 @@ public class Path {
     
     public let subpaths: [PolyBezier]
     
+    public func distanceFromBoundary(of point: CGPoint) {
+        
+    }
+    
     public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         guard self.boundingBox.overlaps(path.boundingBox) else {
             return []
