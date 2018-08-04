@@ -63,14 +63,9 @@ public class PolyBezier {
         else if self.boundingBox.upperBoundOfDistance(to: p) <= d {
             return true
         }
-        for curve in self.curves {
-            if curve.boundingBox.lowerBoundOfDistance(to: p) <= d {
-                if distance(p, curve.project(point: p)) <= d {
-                    return true
-                }
-            }
-        }
-        return false
+        return self.curves.contains(where: {
+            $0.boundingBox.lowerBoundOfDistance(to: p) <= d && distance(p, $0.project(point: p)) <= d
+        })
     }
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
