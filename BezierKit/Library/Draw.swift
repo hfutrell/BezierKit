@@ -27,7 +27,7 @@ public class Draw {
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
      */
-    private static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
+    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
         
         // Check for saturation. If there isn't any just return the luminance value for each, which results in gray.
         if s == 0.0 {
@@ -55,30 +55,25 @@ public class Draw {
         temp[2] = h - 1.0 / 3.0
         
         for i in 0..<3 {
-        
             // Adjust the range
             if temp[i] < 0.0 {
                 temp[i] += 1.0
             }
-            if temp[i] > 1.0 {
+            else if temp[i] > 1.0 {
                 temp[i] -= 1.0
             }
             
             if (6.0 * temp[i]) < 1.0 {
                 temp[i] = temp1 + (temp2 - temp1) * 6.0 * temp[i]
             }
+            else if (2.0 * temp[i]) < 1.0 {
+                temp[i] = temp2
+            }
+            else if (3.0 * temp[i]) < 2.0 {
+                temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
+            }
             else {
-                if (2.0 * temp[i]) < 1.0 {
-                    temp[i] = temp2
-                }
-                else {
-                    if (3.0 * temp[i]) < 2.0 {
-                        temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
-                    }
-                    else {
-                        temp[i] = temp1
-                    }
-                }
+                temp[i] = temp1
             }
         }
         // Assign temporary values to R, G, B
