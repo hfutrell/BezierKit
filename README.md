@@ -9,7 +9,7 @@ BezierKit is a library for Bezier curves written in Swift and based on the popul
 
 - [Warning! Prerelease software!](#warning!)
 - [Features](#features)
-- [Installation](#installation)
+- [Installation](#Installation with CocoaPods)
 - [Usage](#usage)
 - [License](#license)
 
@@ -62,7 +62,7 @@ $ pod install
 
 BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier curves (`QuadraticBezierCurve`) as well as line segments (`LineSegment`) each of which adopts the `BezierCurve` protocol that encompasses most API functionality.
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-construct.png" width="256" height="256">
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-construct.png" width="256" height="256">
 
 ```swift
 import BezierKit
@@ -85,7 +85,7 @@ The `intersects(curve:)` method determines each intersection between `self` and 
 
 Cubic curves may self-intersect which can be determined by calling `intersects()` with no curve parameter.
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-intersects.png" width="256" height="256">
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-intersects.png" width="256" height="256">
 
 ```swift
 let intersections: [Intersection] = curve1.intersects(curve2)
@@ -102,7 +102,7 @@ for p in points {
 
 The `split(from:, to:)` method produces a subcurve over a given range of t-values. The `split(at:)` method can be used to produce a left subcurve and right subcurve created by splitting across a single t-value.
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-split.png" width="256" height="256">
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-split.png" width="256" height="256">
 
 ```swift
 Draw.setColor(context, color: Draw.lightGrey)
@@ -117,7 +117,7 @@ Draw.drawCircle(context, center: curve.compute(0.75), radius: 3)
 
 ### Determining Bounding Boxes
 
-<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/0.1.1-release/images/usage-bounding-box.png" width="256" height="256">
+<img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-bounding-box.png" width="256" height="256">
 
 ```swift
 let boundingBox = curve.boundingBox
