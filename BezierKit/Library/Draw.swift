@@ -228,7 +228,7 @@ public class Draw {
                        endAngle: arc.endAngle,
                        clockwise: false)
         context.addLine(to: arc.origin + o)
-        context.drawPath(using: CGPathDrawingMode.fillStroke)
+        context.drawPath(using: .fillStroke)
     }
     
     public static func drawHull(_ context: CGContext, hull: [CGPoint], offset : CGPoint = .zero) {
@@ -291,7 +291,7 @@ public class Draw {
             )
         }
         context.closePath()
-        context.drawPath(using: CGPathDrawingMode.fillStroke)
+        context.drawPath(using: .fillStroke)
     
     }
     
