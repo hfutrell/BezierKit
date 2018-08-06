@@ -39,5 +39,26 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertFalse(e.overlaps(nanBox))
 
     }
+    
+    func testLowerAndUpperBounds() {
+        let box = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
         
+        let p1 = CGPoint(x: 2.0, y: 4.0)
+        let p2 = CGPoint(x: 2.5, y: 3.5)
+        let p3 = CGPoint(x: 1.0, y: 4.0)
+        let p4 = CGPoint(x: 3.0, y: 7.0)
+        let p5 = CGPoint(x: -1.0, y: -1.0)
+        
+        XCTAssertEqual(box.lowerBoundOfDistance(to: p1), 0.0)    // on the boundary
+        XCTAssertEqual(box.lowerBoundOfDistance(to: p2), 0.0)    // fully inside
+        XCTAssertEqual(box.lowerBoundOfDistance(to: p3), 1.0)    // outside (straight horizontally)
+        XCTAssertEqual(box.lowerBoundOfDistance(to: p4), 2.0)    // outside (straight vertically)
+        XCTAssertEqual(box.lowerBoundOfDistance(to: p5), 5.0)  // outside (nearest bottom left corner)
+        
+        XCTAssertEqual(box.upperBoundOfDistance(to: p1), sqrt(2.0))
+        XCTAssertEqual(box.upperBoundOfDistance(to: p2), sqrt(2.5))
+        XCTAssertEqual(box.upperBoundOfDistance(to: p3), sqrt(5))
+        XCTAssertEqual(box.upperBoundOfDistance(to: p4), sqrt(17.0))
+        XCTAssertEqual(box.upperBoundOfDistance(to: p5), sqrt(52.0))
+    }
 }

@@ -33,6 +33,12 @@ public class Path {
     
     public let subpaths: [PolyBezier]
     
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
+        return self.subpaths.contains(where: {
+            $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
+        })
+    }
+    
     public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         guard self.boundingBox.overlaps(path.boundingBox) else {
             return []

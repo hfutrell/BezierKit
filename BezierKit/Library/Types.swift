@@ -77,6 +77,21 @@ public struct BoundingBox: Equatable {
         }
         return true
     }
+    internal func lowerBoundOfDistance(to point: CGPoint) -> CGFloat {
+        let distanceSquared = (0..<CGPoint.dimensions).reduce(CGFloat(0.0)) {
+            let temp = point[$1] - Utils.clamp(point[$1], self.min[$1], self.max[$1])
+            return $0 + temp * temp
+        }
+        return sqrt(distanceSquared)
+    }
+    internal func upperBoundOfDistance(to point: CGPoint) -> CGFloat {
+        let distanceSquared = (0..<CGPoint.dimensions).reduce(CGFloat(0.0)) {
+            let diff1 = point[$1] - self.min[$1]
+            let diff2 = point[$1] - self.max[$1]
+            return $0 + CGFloat.maximum(diff1 * diff1, diff2 * diff2)
+        }
+        return sqrt(distanceSquared)
+    }
     public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
         return (left.min == right.min && left.max == right.max)
     }
