@@ -22,22 +22,31 @@ class DrawTest: XCTestCase {
     }
     
     func testHSLToRGB() {
+        
+        let epsilon: CGFloat = 1.0e-6
+        
         var r: CGFloat = 0.0
         var g: CGFloat = 0.0
         var b: CGFloat = 0.0
         
         Draw.HSLToRGB(h: 0.0, s: 1.0, l: 0.5, outR: &r, outG: &g, outB: &b) // pure red
-        XCTAssertEqual([r, g, b], [1.0, 0.0, 0.0])
-        
+        XCTAssertEqual(r, 1.0, accuracy: epsilon)
+        XCTAssertEqual(g, 0.0, accuracy: epsilon)
+        XCTAssertEqual(b, 0.0, accuracy: epsilon)
+
         Draw.HSLToRGB(h: 240.0 / 360.0, s: 1.0, l: 0.25, outR: &r, outG: &g, outB: &b) // dark blue
-        XCTAssertEqual([r, g, b], [0.0, 0.0, CGFloat(0.5)])
+        XCTAssertEqual(r, 0.0, accuracy: epsilon)
+        XCTAssertEqual(g, 0.0, accuracy: epsilon)
+        XCTAssertEqual(b, 0.5, accuracy: epsilon)
 
         Draw.HSLToRGB(h: 300.0 / 360.0, s: 1.0, l: 0.5, outR: &r, outG: &g, outB: &b) // magenta
-        XCTAssertEqual(r, 1.0, accuracy: 1.0e-6)
-        XCTAssertEqual(g, 0.0, accuracy: 1.0e-6)
-        XCTAssertEqual(b, 1.0, accuracy: 1.0e-6)
+        XCTAssertEqual(r, 1.0, accuracy: epsilon)
+        XCTAssertEqual(g, 0.0, accuracy: epsilon)
+        XCTAssertEqual(b, 1.0, accuracy: epsilon)
         
         Draw.HSLToRGB(h: 0.5, s: 0.0, l: 0.75, outR: &r, outG: &g, outB: &b) // light gray
-        XCTAssertEqual([r, g, b], [0.75, 0.75, 0.75])
+        XCTAssertEqual(r, 0.75, accuracy: epsilon)
+        XCTAssertEqual(g, 0.75, accuracy: epsilon)
+        XCTAssertEqual(b, 0.75, accuracy: epsilon)
     }
 }
