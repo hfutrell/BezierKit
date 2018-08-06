@@ -133,7 +133,7 @@ public class Draw {
     
     // MARK: - drawing various geometry
     
-    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint(x:0.0, y: 0.0)) {
+    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint.zero) {
         context.beginPath()
         if let quadraticCurve = curve as? QuadraticBezierCurve {
             context.move(to: quadraticCurve.p0 + offset)
