@@ -9,7 +9,7 @@ BezierKit is a library for Bezier curves written in Swift and based on the popul
 
 - [Warning! Prerelease software!](#warning!)
 - [Features](#features)
-- [Installation](#installation)
+- [Installation](#installation-with-cocoapods)
 - [Usage](#usage)
 - [License](#license)
 
