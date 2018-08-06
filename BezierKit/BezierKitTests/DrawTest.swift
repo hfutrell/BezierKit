@@ -22,19 +22,15 @@ class DrawTest: XCTestCase {
     }
     
     func testHSLToRGB() {
-        
-        let one: CGFloat = CGFloat(1.0)
-        let zero: CGFloat = CGFloat(0.0)
-        
-        var r = zero
-        var g = zero
-        var b = zero
+        var r: CGFloat = 0.0
+        var g: CGFloat = 0.0
+        var b: CGFloat = 0.0
         
         Draw.HSLToRGB(h: 0.0, s: 1.0, l: 0.5, outR: &r, outG: &g, outB: &b) // pure red
-        XCTAssertEqual([r, g, b], [one, zero, zero])
+        XCTAssertEqual([r, g, b], [1.0, 0.0, 0.0])
         
         Draw.HSLToRGB(h: 240.0 / 360.0, s: 1.0, l: 0.25, outR: &r, outG: &g, outB: &b) // dark blue
-        XCTAssertEqual([r, g, b], [zero, zero, CGFloat(0.5)])
+        XCTAssertEqual([r, g, b], [0.0, 0.0, CGFloat(0.5)])
 
         Draw.HSLToRGB(h: 300.0 / 360.0, s: 1.0, l: 0.5, outR: &r, outG: &g, outB: &b) // magenta
         XCTAssertEqual(r, 1.0, accuracy: 1.0e-6)
