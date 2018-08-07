@@ -35,9 +35,9 @@ public func distance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
 private let badSubscriptError = "bad subscript (out of bounds)"
 
 public extension CGPoint {
-    static public let infinity: CGPoint = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)
+    static internal let infinity: CGPoint = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)
     
-    static public var dimensions: Int {
+    static internal var dimensions: Int {
         return 2
     }
     public func dot(_ other: CGPoint) -> CGFloat {
