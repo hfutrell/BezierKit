@@ -55,6 +55,8 @@
 		FDC7D707211288BD00A9EEF0 /* PathTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC7D705211288BD00A9EEF0 /* PathTest.swift */; };
 		FDC8595A2118EC5600AF7642 /* DrawTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859592118EC5600AF7642 /* DrawTest.swift */; };
 		FDC8595B2118EC5600AF7642 /* DrawTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859592118EC5600AF7642 /* DrawTest.swift */; };
+		FDC859632119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */; };
+		FDC859642119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */; };
 		FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 		FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 		FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
@@ -147,6 +149,7 @@
 		FDC7D7012111323A00A9EEF0 /* Path.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
 		FDC7D705211288BD00A9EEF0 /* PathTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathTest.swift; sourceTree = "<group>"; };
 		FDC859592118EC5600AF7642 /* DrawTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawTest.swift; sourceTree = "<group>"; };
+		FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingVolumeHierarchy.swift; sourceTree = "<group>"; };
 		FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegmentTests.swift; sourceTree = "<group>"; };
 		FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArcApproximateable.swift; sourceTree = "<group>"; };
@@ -274,6 +277,7 @@
 				FDB6B4001EAFD6DF00001C61 /* Utils.swift */,
 				FD4A63FD200AA50B00930E10 /* Shape.swift */,
 				FDC7D7012111323A00A9EEF0 /* Path.swift */,
+				FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -540,6 +544,7 @@
 			files = (
 				FDB6B4111EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
 				FDC7D7042111323A00A9EEF0 /* Path.swift in Sources */,
+				FDC859642119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */,
 				FD4A63FF200AA50B00930E10 /* Shape.swift in Sources */,
 				FDB6B40D1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
 				FDB6B40F1EAFD6DF00001C61 /* PolyBezier.swift in Sources */,
@@ -559,6 +564,7 @@
 			files = (
 				FDB6B4101EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
 				FDC7D7032111323A00A9EEF0 /* Path.swift in Sources */,
+				FDC859632119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */,
 				FD4A63FE200AA50B00930E10 /* Shape.swift in Sources */,
 				FDB6B40C1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
 				FDB6B40E1EAFD6DF00001C61 /* PolyBezier.swift in Sources */,
