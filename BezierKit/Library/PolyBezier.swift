@@ -12,6 +12,8 @@ public class PolyBezier {
     
     public let curves: [BezierCurve]
     
+    private let bvh: BoundingVolumeHierarchy
+    
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         guard curves.count > 0 else {
@@ -36,6 +38,7 @@ public class PolyBezier {
     
     internal init(curves: [BezierCurve]) {
         self.curves = curves
+        self.bvh = BoundingVolumeHierarchy(objects: curves)
     }
     
     public var length: CGFloat {
@@ -69,16 +72,11 @@ public class PolyBezier {
     }
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
-        // TODO: optimize!
-        guard self.boundingBox.overlaps(other.boundingBox) else {
-            return []
-        }
         var intersections: [CGPoint] = []
-        for c1 in self.curves {
-            for c2 in other.curves {
-                // TODO: we could wind up with redundant intersections at t=0 or t=1
-                intersections += c1.intersects(curve: c2).map { c1.compute($0.t1) }
-            }
+        self.bvh.intersects(boundingVolumeHierarchy: other.bvh) { o1, o2 in
+            let c1 = o1 as! BezierCurve
+            let c2 = o2 as! BezierCurve
+            intersections += c1.intersects(curve: c2).map { c1.compute($0.t1) }
         }
         return intersections
     }
