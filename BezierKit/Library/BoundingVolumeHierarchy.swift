@@ -27,26 +27,52 @@ private class BVHConstructionContext {
             for j in i+1..<objects.count {
                 table[i][j] = BoundingBox(first: table[i][j-1], second: objects[j].boundingBox)
             }
-            table[i][0] = BoundingBox(first: table[i][objects.count-1], second: objects[0].boundingBox)
-            if 1 < i {
+            if i > 0 {
+                table[i][0] = BoundingBox(first: table[i][objects.count-1], second: objects[0].boundingBox)
+            }
+            if i > 1 {
                 for j in 1..<i {
                     table[i][j] = BoundingBox(first: table[i][j-1], second: objects[j].boundingBox)
                 }
             }
                 
         }
+        
+        // check the results
+        
+//        for i in 0..<objects.count {
+//            for j in 0..<objects.count {
+//                var expected = BoundingBox.empty
+//
+//                for ip in 0..<objects.count {
+//                    if (ip >= i && ip <= j) || (j < i && (ip <= j || ip >= i) ) {
+//                        expected = BoundingBox(first: expected, second: objects[ip].boundingBox)
+//                    }
+//                }
+//                assert(expected == table[i][j])
+//
+//            }
+//        }
+        
         boundingBoxes = table
     }
 }
 
-private class BVHNode {
+public class BVHNode {
     let boundingBox: BoundingBox
     let nodeType: NodeType
     enum NodeType {
         case leaf(object: BoundingBoxProtocol)
         case `internal`(left: BVHNode, right: BVHNode)
     }
-    init(objects: ArraySlice<BoundingBoxProtocol>, context: BVHConstructionContext) {
+    public func visit(callback: (BVHNode, Int) -> Void, currentDepth depth: Int) {
+        callback(self, depth)
+        if case let .`internal`(left: left, right: right) = self.nodeType {
+            left.visit(callback: callback, currentDepth: depth+1)
+            right.visit(callback: callback, currentDepth: depth+1)
+        }
+    }
+    fileprivate init(objects: ArraySlice<BoundingBoxProtocol>, context: BVHConstructionContext) {
       
         assert(objects.isEmpty == false, "unexpectedly empty array slice!")
         
@@ -118,6 +144,10 @@ public class BoundingVolumeHierarchy {
     
     public func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
         self.root.intersects(node: other.root, callback: callback)
+    }
+    
+    public func visit(callback: (BVHNode, Int) -> Void) {
+        self.root.visit(callback: callback, currentDepth: 0)
     }
     
 }
