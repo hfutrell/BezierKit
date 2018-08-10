@@ -9,74 +9,73 @@
 import Foundation
 
 private class BVHNode<A> where A: BoundingBoxProtocol {
-    let boundingBox: BoundingBox
-    let nodeType: NodeType
-    enum NodeType {
-        case leaf(object: A)
-        case `internal`(children: [BVHNode<A>])
-    }
-    init(object: A, boundingBox: BoundingBox) {
-        self.nodeType = .leaf(object: object)
-        self.boundingBox = boundingBox
-    }
-    init(children: [BVHNode<A>], boundingBox: BoundingBox) {
-        self.nodeType = .internal(children: children)
-        self.boundingBox = boundingBox
+    var boundingBox: BoundingBox = BoundingBox.empty
+    var children: [BVHNode<A>] = []
+    
+    var object: A? = nil
+    
+    var cost: CGFloat {
+        if children.count == 0 {
+            return 5.0 // cost of intersecting a primitive
+        }
+        else {
+            let totalArea = self.boundingBox.area
+            // constant cost of bounding rect intersection over each child plus the cost of each child times the probability it gets intersected
+            return 1.0 * CGFloat(children.count) + children.reduce(CGFloat(0.0)) { $0 + $1.area * $1.cost } / totalArea
+        }
     }
     
-//    init(objects: [A], boundingBox: BoundingBox) {
-//        
-//        var children: [BVHNode<A>]
-//        
-//        var child: [A] = []
-//        
-//        func areaHeuristicSatisfied() -> Bool {
-//            
-//        }
-//        
-//        if areaHeuristicSatisfied(child + object) {
-//            child.append(object)
-//        }
-//        else {
-//            children.append(child)
-//            child = [object]
-//        }
-//        if child.empty == false {
-//            children.append(child)
-//        }
-//        
-//        func mapping(objects: [A]) {
-//            if objects.count == 1 {
-//                return BVHNode(object: objects[0], boundingBox: objects[0].boundingBox)
-//            }
-//            else {
-//                return
-//            }
-//        }
-//        
-//        self.nodeType = .internal(children: [])
-//        self.boundingBox = boundingBox
-//
-//    }
+    var area: CGFloat {
+        return self.boundingBox.area
+    }
+    
+    private func costOfAddingInternalNode(child c: BVHNode) -> CGFloat {
+        let areaWithC = BoundingBox(first: self.boundingBox, second: c.boundingBox).area
+        return 1.0 + (c.area/areaWithC) * c.cost + self.existingInternalNodeCosts * ((1.0 / areaWithC) - (1.0 / self.area))
+    }
+    
+    private func costOfPassingToChildren(child c: BVHNode, bestChildIndex: inout Int) -> CGFloat {
+        var bestCost: CGFloat? = nil
+        for i in 0..<children.count {
+            let change = // ???
+            if bestCost == nil || change < bestCost! {
+                bestCost = change
+                bestChildIndex = i
+            }
+        }
+        return bestCost!
+    }
+    
+    internal func insert(node: BVHNode) {
+        let nodeBoundingBox = node.boundingBox
+        guard children.count > 0 else {
+            self.children.append(node)
+            self.boundingBox = BoundingBox(first: self.boundingBox, second: nodeBoundingBox)
+            return
+        }
+        let cost1 = self.costOfAddingInternalNode(child: node)
+        var bestChildIndex = 0
+        let cost2 = self.costOfPassingToChildren(child: node, bestChildIndex: &bestChildIndex)
+        if cost1 < cost2 {
+            self.children.append(node)
+        }
+        else {
+            self.children[bestChildIndex].insert(node: node)
+        }
+        self.boundingBox = BoundingBox(first: self.boundingBox, second: nodeBoundingBox)
+    }
     
 }
 
 public class BoundingVolumeHierarchy<A> where A: BoundingBoxProtocol {
-    private let root: BVHNode<A>
+    
+    private let root: BVHNode<A> = BVHNode<A>()
     
     public init(objects: [A]) {
-        
-        
-        
+        objects.forEach {
+            let node = BVHNode<A>()
+            node.object = $0
+            root.insert(node: node)
+        }
     }
 }
-
-//class BVHNode {
-//    let boundingBox: BoundingBox
-//    let     init(children: [BVHNode]) {
-//        self.node = .list(children: children)
-//    }
-//    init(object: BezierCurve, box) {
-//        self.node = .leaf(object: object)
-//    }
-//}

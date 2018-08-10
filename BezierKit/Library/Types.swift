@@ -66,6 +66,13 @@ public struct BoundingBox: Equatable {
     public var size: CGPoint {
         return CGPoint.max(max - min, .zero)
     }
+    internal var area: CGFloat {
+        let size = self.size
+        guard size.x.isFinite, size.y.isFinite else {
+            return 0.0
+        }
+        return size.x * size.y
+    }
     public func overlaps(_ other: BoundingBox) -> Bool {
         let p1 = CGPoint.max(self.min, other.min)
         let p2 = CGPoint.min(self.max, other.max)
