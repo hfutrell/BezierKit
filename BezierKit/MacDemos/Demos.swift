@@ -8,6 +8,7 @@
 
 import Foundation
 import BezierKit
+import CoreText
 
 typealias DemoDrawFunction = (_ context: CGContext, _ demoState: DemoState) -> Void
 
@@ -390,7 +391,7 @@ class Demos {
                                 }
     })
     static let demo22 = Demo(title: ".intersects(curve)",
-                             quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
+                             quadraticControlPoints: [CGPoint(x: 0, y: 0),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
                              cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
@@ -404,40 +405,80 @@ class Demos {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
-    static let demo23 = Demo(title: "unclosed path",
-                             quadraticControlPoints: [CGPoint(x: 48, y: 84),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
-                             cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
+    static let demo23 = Demo(title: "CGPath interoperability",
+                             quadraticControlPoints: [],
+                             cubicControlPoints: [],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
+
+                                var flip = CGAffineTransform.init(scaleX: 1, y: -1)
+                                let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
+                                let height = CTFontGetXHeight(font)
+                                var translate = CGAffineTransform.init(translationX: 0, y: -height + 15)
                                 
-                                let mutablePath = CGMutablePath()
+                                var unichar1: UniChar = ("B" as NSString).character(at: 0)
+                                var glyph1: CGGlyph = 0
+                                CTFontGetGlyphsForCharacters(font, &unichar1, &glyph1, 1)
                                 
-                                mutablePath.move(to: CGPoint(x: 75, y: 75))
-                                mutablePath.addLine(to: CGPoint(x: 75, y: 175))
-                                mutablePath.addLine(to: CGPoint(x: 175, y: 175))
-                                mutablePath.addLine(to: CGPoint(x: 175, y: 75))
-//                                mutablePath.closeSubpath()
+                                var unichar2: UniChar = ("x" as NSString).character(at: 0)
+                                var glyph2: CGGlyph = 0
+                                CTFontGetGlyphsForCharacters(font, &unichar2, &glyph2, 1)
                                 
-//                                mutablePath.move(to: CGPoint(x: 275, y: 75))
-//                                mutablePath.addLine(to: CGPoint(x: 275, y: 175))
-//                                mutablePath.addLine(to: CGPoint(x: 375, y: 175))
-//                                mutablePath.addLine(to: CGPoint(x: 375, y: 75))
-//                                mutablePath.closeSubpath()
+                                assert(glyph1 != 0 && glyph2 != 0, "couldn't get glyphs")
+                                
+                                let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
+                                let path1 = Path(cgPath1.copy(using: &translate)!)
                                 
                                 
-                                context.setFillColor(Draw.transparentBlue)
-                                context.setStrokeColor(Draw.red)
                                 
-                                context.addPath(mutablePath)
-                                context.fillPath()
+                                for s in path1.subpaths[1..<2] {
+                                    Draw.drawPolyBezier(context, polyBezier: s)
+                                }
                                 
-                                context.addPath(mutablePath)
+//                                context.addPath(path1.cgPath)
+                                Draw.setColor(context, color: Draw.red)
                                 context.strokePath()
                                 
-                                let contains1 = mutablePath.contains(CGPoint(x: 100, y: 100))
-                                let contains2 = mutablePath.contains(CGPoint(x: 300, y: 100))
+                                if let mouse = demoState.lastInputLocation {
+                                    var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
+                                    let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
+                                    let path2 = Path(cgPath2)
+                                    
+                                    context.addPath(path2.cgPath)
+                                    Draw.setColor(context, color: Draw.black)
+                                    context.strokePath()
+                                    
+                                    for intersection in path1.intersects(path: path2) {
+                                        Draw.drawPoint(context, origin: intersection)
+                                    }
+                                }
+    })
+    static let demo24 = Demo(title: "BVH",
+                             quadraticControlPoints: [],
+                             cubicControlPoints: [],
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+                       
+                                let numPoints = 1000
+                                
+                                let radiansPerPoint = 2.0 * CGFloat.pi / CGFloat(numPoints)
+                                
+                                let startingAngle: CGFloat = 0
+                                let mutablePath = CGMutablePath()
+                                let radius: CGFloat = 200.0
+                                mutablePath.move(to: radius * CGPoint(x: cos(startingAngle), y: sin(startingAngle)) )
+                                for i in 1..<numPoints {
+                                    let angle = CGFloat(i) * radiansPerPoint + startingAngle
+                                    mutablePath.addLine(to: radius * CGPoint(x: cos(angle), y: sin(angle) ))
+                                }
+                                mutablePath.closeSubpath()
+                                
+                                let path = Path(mutablePath)
+                                for s in path.subpaths {
+                                    Draw.drawPolyBezier(context, polyBezier: s, offset: CGPoint(x: 100.0, y: 100.0))
+                                }
 
-
+                                
+                                
     })
 
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23]
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23, demo24]
 }

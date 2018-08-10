@@ -12,7 +12,7 @@ public class PolyBezier {
     
     public let curves: [BezierCurve]
     
-    private let bvh: BoundingVolumeHierarchy
+    public let bvh: BoundingVolumeHierarchy
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()

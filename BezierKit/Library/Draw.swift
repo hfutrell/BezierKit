@@ -254,9 +254,9 @@ public class Draw {
         context.strokePath()
     }
 
-    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : CGPoint = .zero) {
+    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset: CGPoint = .zero) {
         context.beginPath()
-        context.addRect(boundingBox.cgRect)
+        context.addRect(boundingBox.cgRect.offsetBy(dx: offset.x, dy: offset.y))
         context.closePath()
         context.strokePath()
     }
@@ -293,6 +293,33 @@ public class Draw {
         context.closePath()
         context.drawPath(using: .fillStroke)
     
+    }
+    
+    public static func drawPolyBezier(_ context: CGContext, polyBezier: PolyBezier, offset: CGPoint = .zero) {
+     
+        polyBezier.bvh.visit { node, depth in
+            
+//            if case .leaf(_) = node.nodeType {
+//                return
+//            }
+            
+            setColor(context, color: randomColors[depth])
+            context.setLineWidth(1.0)
+            context.setLineWidth(5.0 / CGFloat(depth+1))
+            context.setAlpha(1.0 / CGFloat(depth+1))
+
+            drawBoundingBox(context, boundingBox: node.boundingBox, offset: offset)
+        }
+        context.setLineWidth(1.0)
+        polyBezier.curves.forEach {
+            setColor(context, color: Draw.black)
+            drawCurve(context, curve: $0, offset: offset)
+        }
+//        polyBezier.curves.forEach {
+//            setColor(context, color: Draw.lightGrey)
+//            drawSkeleton(context, curve: $0)
+//        }
+
     }
     
     

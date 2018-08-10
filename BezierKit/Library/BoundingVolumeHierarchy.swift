@@ -9,33 +9,45 @@
 import Foundation
 
 private class BVHConstructionContext {
-    let boundingBoxes: [[BoundingBox]]
+    
+    private let table: UnsafeMutablePointer<CGFloat>
+    private let tableRowLength: Int
+    
+    func boundingBoxArea(_ i: Int,_ j: Int) -> CGFloat {
+        return table[i * tableRowLength + j]
+    }
+    
     init(objects: [BoundingBoxProtocol]) {
         
         // table[i][j] stores the bounding box of objects i...j, for j<i it is the union of i..<count union 0..<=j
         
-        guard objects.count > 0 else {
-            boundingBoxes = [[]]
-            return
-        }
+        assert(objects.count > 0)
         
-        let emptyTableRow = [BoundingBox](repeating: BoundingBox.empty, count: objects.count)
+        let objectBoundingBoxes = objects.map { $0.boundingBox }
         
-        var table: [[BoundingBox]] = [[BoundingBox]](repeating: emptyTableRow, count: objects.count)
+        tableRowLength = objects.count
+        table = UnsafeMutablePointer<CGFloat>.allocate(capacity: tableRowLength * tableRowLength)
         for i in 0..<objects.count {
-            table[i][i] = objects[i].boundingBox
+            
+            let row: UnsafeMutablePointer<CGFloat> = table + i * objects.count
+            
+            var prev = objectBoundingBoxes[i]
+            row[i] = prev.area
+            
             for j in i+1..<objects.count {
-                table[i][j] = BoundingBox(first: table[i][j-1], second: objects[j].boundingBox)
+                prev.union(objectBoundingBoxes[j])
+                row[j] = prev.area
             }
             if i > 0 {
-                table[i][0] = BoundingBox(first: table[i][objects.count-1], second: objects[0].boundingBox)
+                prev.union(objectBoundingBoxes[0])
+                row[0] = prev.area
             }
             if i > 1 {
                 for j in 1..<i {
-                    table[i][j] = BoundingBox(first: table[i][j-1], second: objects[j].boundingBox)
+                    prev.union(objectBoundingBoxes[j])
+                    row[j] = prev.area
                 }
             }
-                
         }
         
         // check the results
@@ -54,8 +66,12 @@ private class BVHConstructionContext {
 //            }
 //        }
         
-        boundingBoxes = table
     }
+    
+    deinit {
+        table.deallocate()
+    }
+    
 }
 
 public class BVHNode {
@@ -76,21 +92,20 @@ public class BVHNode {
       
         assert(objects.isEmpty == false, "unexpectedly empty array slice!")
         
-        self.boundingBox = context.boundingBoxes[objects.startIndex][objects.endIndex-1]
-        
         if objects.count == 1 {
             self.nodeType = .leaf(object: objects.first!)
+            self.boundingBox = objects.first!.boundingBox
             return
         }
         
         // determine where to split the node between left and right
         
         var split = objects.startIndex+1
-        var minArea = context.boundingBoxes[objects.startIndex][split-1].area + context.boundingBoxes[split][objects.endIndex-1].area
+        var minArea = context.boundingBoxArea(objects.startIndex, split-1) + context.boundingBoxArea(split,objects.endIndex-1)
         
         if objects.count > 2 {
             for j in objects.startIndex+2..<objects.endIndex {
-                let area = context.boundingBoxes[objects.startIndex][j-1].area + context.boundingBoxes[j][objects.endIndex-1].area
+                let area = context.boundingBoxArea(objects.startIndex, j-1) + context.boundingBoxArea(j,objects.endIndex-1)
                 if area < minArea {
                     split = j
                     minArea = area
@@ -102,6 +117,7 @@ public class BVHNode {
         
         let left = BVHNode(objects: objects[objects.startIndex..<split], context: context)
         let right = BVHNode(objects: objects[split..<objects.endIndex], context: context)
+        self.boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
         self.nodeType = .internal(left: left, right: right)
     }
     public func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
@@ -138,8 +154,41 @@ public class BoundingVolumeHierarchy {
     private let root: BVHNode
     
     public init(objects: [BoundingBoxProtocol]) {
+        
         let context = BVHConstructionContext(objects: objects)
-        self.root = BVHNode(objects: objects[0..<objects.count], context: context)
+        
+        // first we need to get the objects in an optimal order
+        
+        var minArea: CGFloat = context.boundingBoxArea(0,0) + context.boundingBoxArea(1, objects.count-1)
+        var bestIndex = (0, 0)
+        
+        for i in 0..<objects.count {
+            for j in i..<objects.count {
+                var area = context.boundingBoxArea(i, j)
+                if ( i+1 < objects.count ) {
+                    area += context.boundingBoxArea(i+1, objects.count-1)
+                }
+                if ( j < i) {
+                    area += context.boundingBoxArea(0, j)
+                }
+                if area < minArea {
+                    minArea = area
+                    bestIndex = (i,j)
+                }
+            }
+        }
+        
+        var reordered: [BoundingBoxProtocol] = []
+        if bestIndex.1 < bestIndex.0 {
+            reordered = [BoundingBoxProtocol](objects[0...bestIndex.1]) + [BoundingBoxProtocol](objects[bestIndex.0..<objects.count])
+        }
+        else {
+            reordered = [BoundingBoxProtocol](objects[bestIndex.0...bestIndex.1]) + [BoundingBoxProtocol](objects[(bestIndex.1+1)..<objects.count]) + [BoundingBoxProtocol](objects[0..<bestIndex.0])
+        }
+        let context2 = BVHConstructionContext(objects: [BoundingBoxProtocol](reordered))
+
+        
+        self.root = BVHNode(objects: reordered[0..<reordered.count], context: context2)
     }
     
     public func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {

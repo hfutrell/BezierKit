@@ -55,6 +55,14 @@ public struct BoundingBox: Equatable {
         self.min = min
         self.max = max
     }
+    public mutating func union(_ other: BoundingBox) {
+        self.min = CGPoint.min(self.min, other.min)
+        self.max = CGPoint.max(self.max, other.max)
+    }
+    public func inset(_ insetAmount: CGFloat) -> BoundingBox {
+        let inset = CGPoint(x: insetAmount, y: insetAmount)
+        return BoundingBox(p1: self.min + inset, p2: self.max - inset)
+    }
     public init(p1: CGPoint, p2: CGPoint) {
         self.min = CGPoint.min(p1, p2)
         self.max = CGPoint.max(p1, p2)
@@ -67,10 +75,8 @@ public struct BoundingBox: Equatable {
         return CGPoint.max(max - min, .zero)
     }
     internal var area: CGFloat {
+        // TODO: unit test for EMPTY
         let size = self.size
-        guard size.x.isFinite, size.y.isFinite else {
-            return 0.0
-        }
         return size.x * size.y
     }
     public func overlaps(_ other: BoundingBox) -> Bool {
