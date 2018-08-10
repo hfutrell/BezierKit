@@ -8,74 +8,83 @@
 
 import Foundation
 
-private class BVHNode<A> where A: BoundingBoxProtocol {
-    var boundingBox: BoundingBox = BoundingBox.empty
-    var children: [BVHNode<A>] = []
-    
-    var object: A? = nil
-    
-    var cost: CGFloat {
-        if children.count == 0 {
-            return 5.0 // cost of intersecting a primitive
-        }
-        else {
-            let totalArea = self.boundingBox.area
-            // constant cost of bounding rect intersection over each child plus the cost of each child times the probability it gets intersected
-            return 1.0 * CGFloat(children.count) + children.reduce(CGFloat(0.0)) { $0 + $1.area * $1.cost } / totalArea
-        }
-    }
-    
-    var area: CGFloat {
-        return self.boundingBox.area
-    }
-    
-    private func costOfAddingInternalNode(child c: BVHNode) -> CGFloat {
-        let areaWithC = BoundingBox(first: self.boundingBox, second: c.boundingBox).area
-        return 1.0 + (c.area/areaWithC) * c.cost + self.existingInternalNodeCosts * ((1.0 / areaWithC) - (1.0 / self.area))
-    }
-    
-    private func costOfPassingToChildren(child c: BVHNode, bestChildIndex: inout Int) -> CGFloat {
-        var bestCost: CGFloat? = nil
-        for i in 0..<children.count {
-            let change = // ???
-            if bestCost == nil || change < bestCost! {
-                bestCost = change
-                bestChildIndex = i
-            }
-        }
-        return bestCost!
-    }
-    
-    internal func insert(node: BVHNode) {
-        let nodeBoundingBox = node.boundingBox
-        guard children.count > 0 else {
-            self.children.append(node)
-            self.boundingBox = BoundingBox(first: self.boundingBox, second: nodeBoundingBox)
+private class BVHConstructionContext<A> where A: BoundingBoxProtocol {
+    let boundingBoxes: [[BoundingBox]]
+    init(objects: [A]) {
+        
+        // table[i][j] stores the bounding box of objects i...j, for j<i it is the union of i..<count union 0..<=j
+        
+        guard objects.count > 0 else {
+            boundingBoxes = [[]]
             return
         }
-        let cost1 = self.costOfAddingInternalNode(child: node)
-        var bestChildIndex = 0
-        let cost2 = self.costOfPassingToChildren(child: node, bestChildIndex: &bestChildIndex)
-        if cost1 < cost2 {
-            self.children.append(node)
+        
+        var table: [[BoundingBox]] = []
+        for i in 0..<objects.count {
+            table[i] = []
+            table[i][i] = objects[i].boundingBox
+            for j in i+1..<objects.count {
+                table[i][j] = BoundingBox(first: table[i][j-1], second: objects[j].boundingBox)
+            }
+            table[i][0] = BoundingBox(first: table[i][objects.count-1], second: objects[0].boundingBox)
+            for j in 1..<i {
+                table[i][j] = BoundingBox(first: table[i][j-1], second: objects[j].boundingBox)
+            }
         }
-        else {
-            self.children[bestChildIndex].insert(node: node)
-        }
-        self.boundingBox = BoundingBox(first: self.boundingBox, second: nodeBoundingBox)
+        boundingBoxes = table
     }
-    
+}
+
+private class BVHNode<A> where A: BoundingBoxProtocol {
+    let boundingBox: BoundingBox
+    let nodeType: NodeType
+    enum NodeType {
+        case leaf(object: A)
+        case `internal`(left: BVHNode<A>, right: BVHNode<A>)
+    }
+    init(object: A, boundingBox: BoundingBox) {
+        self.nodeType = .leaf(object: object)
+        self.boundingBox = boundingBox
+    }
+    init(left: BVHNode<A>, right: BVHNode<A>, boundingBox: BoundingBox) {
+        self.nodeType = .internal(left: left, right: right)
+        self.boundingBox = boundingBox
+    }
+    init(objects: ArraySlice<A>, context: BVHConstructionContext<A>) {
+      
+        assert(objects.isEmpty == false, "unexpectedly empty array slice!")
+        
+        self.boundingBox = context.boundingBoxes[objects.startIndex][objects.endIndex-1]
+        
+        if objects.count == 1 {
+            self.nodeType = .leaf(object: objects.first!)
+            return
+        }
+        
+        var split = objects.startIndex+1
+        var minArea = context.boundingBoxes[objects.startIndex][split-1].area + context.boundingBoxes[split][objects.endIndex-1].area
+        
+        if objects.count > 2 {
+            for j in objects.startIndex+2..<objects.endIndex {
+                let area = context.boundingBoxes[objects.startIndex][j-1].area + context.boundingBoxes[j][objects.endIndex-1].area
+                if area < minArea {
+                    split = j
+                    minArea = area
+                }
+            }
+        }
+        
+        let left = BVHNode<A>(objects: objects[objects.startIndex..<split], context: context)
+        let right = BVHNode<A>(objects: objects[split..<objects.endIndex], context: context)
+        self.nodeType = .internal(left: left, right: right)
+    }
 }
 
 public class BoundingVolumeHierarchy<A> where A: BoundingBoxProtocol {
-    
-    private let root: BVHNode<A> = BVHNode<A>()
+    private let root: BVHNode<A>
     
     public init(objects: [A]) {
-        objects.forEach {
-            let node = BVHNode<A>()
-            node.object = $0
-            root.insert(node: node)
-        }
+        let context = BVHConstructionContext(objects: objects)
+        self.root = BVHNode<A>(objects: objects[0..<objects.count], context: context)
     }
 }
