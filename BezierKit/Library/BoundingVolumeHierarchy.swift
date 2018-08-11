@@ -79,13 +79,14 @@ public class BVHNode {
     let nodeType: NodeType
     enum NodeType {
         case leaf(object: BoundingBoxProtocol)
-        case `internal`(left: BVHNode, right: BVHNode)
+        case `internal`(list: [BVHNode])
     }
     public func visit(callback: (BVHNode, Int) -> Void, currentDepth depth: Int) {
         callback(self, depth)
-        if case let .`internal`(left: left, right: right) = self.nodeType {
-            left.visit(callback: callback, currentDepth: depth+1)
-            right.visit(callback: callback, currentDepth: depth+1)
+        if case let .`internal`(list: list) = self.nodeType {
+            list.forEach {
+                $0.visit(callback: callback, currentDepth: depth+1)
+            }
         }
     }
     fileprivate init(objects: ArraySlice<BoundingBoxProtocol>, context: BVHConstructionContext) {
@@ -117,8 +118,22 @@ public class BVHNode {
         
         let left = BVHNode(objects: objects[objects.startIndex..<split], context: context)
         let right = BVHNode(objects: objects[split..<objects.endIndex], context: context)
-        self.boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
-        self.nodeType = .internal(left: left, right: right)
+        
+        let boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
+        
+        self.boundingBox = boundingBox
+    
+        
+        let list: [BVHNode] = [left, right].reduce([BVHNode]()) { nextResult, node in
+            if case let .`internal`(nodeChildren) = node.nodeType {
+                if ( (1.0 - node.boundingBox.area / boundingBox.area) * CGFloat(nodeChildren.count)) < 1.0 { // surface area heuristic to determine flattening
+                    return nextResult + nodeChildren
+                }
+            }
+            return nextResult + [node]
+        }
+        self.nodeType = .internal(list: list)
+
     }
     public func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
         
@@ -130,21 +145,24 @@ public class BVHNode {
             if case let .leaf(object2) = other.nodeType {
                 callback(object1, object2)
             }
-            else if case let .internal(left2, right2) = other.nodeType {
-                self.intersects(node: left2,    callback: callback)
-                self.intersects(node: right2,   callback: callback)
+            else if case let .internal(list: list2) = other.nodeType {
+                list2.forEach {
+                    self.intersects(node: $0, callback: callback)
+                }
             }
         }
-        else if case let .`internal`(left1, right1) = self.nodeType {
+        else if case let .`internal`(list: list1) = self.nodeType {
             if case .leaf(_) = other.nodeType {
-                left1.intersects(node:  other, callback: callback)
-                right1.intersects(node: other, callback: callback)
+                list1.forEach {
+                    $0.intersects(node: other, callback: callback)
+                }
             }
-            else if case let .`internal`(left2, right2) = other.nodeType {
-                left1.intersects(node:   left2,  callback: callback)
-                left1.intersects(node:   right2, callback: callback)
-                right1.intersects(node:  left2,  callback: callback)
-                right1.intersects(node:  right2, callback: callback)
+            else if case let .`internal`(list: list2) = other.nodeType {
+                list1.forEach { node1 in
+                    list2.forEach { node2 in
+                        node1.intersects(node: node2, callback: callback)
+                    }
+                }
             }
         }
     }
@@ -189,6 +207,24 @@ public class BoundingVolumeHierarchy {
 
         
         self.root = BVHNode(objects: reordered[0..<reordered.count], context: context2)
+        
+//        var maxChildren = 0
+//        var maxDepth = 0
+//        self.visit { node, depth in
+//            guard case let .`internal`(nodeChildren) = node.nodeType else {
+//                return
+//            }
+//            if nodeChildren.count > maxChildren { // surface area heuristic to determine flattening
+//                maxChildren = nodeChildren.count
+//            }
+//            if depth > maxDepth {
+//                maxDepth = depth
+//            }
+//        }
+//
+//        print("max children = \(maxChildren)")
+//        print("max depth = \(maxDepth)")
+
     }
     
     public func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
