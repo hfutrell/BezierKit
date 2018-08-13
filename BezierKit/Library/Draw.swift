@@ -303,6 +303,7 @@ public class Draw {
                 context.setLineWidth(5.0 / CGFloat(depth+1))
                 context.setAlpha(1.0 / CGFloat(depth+1))
                 drawBoundingBox(context, boundingBox: node.boundingBox, offset: offset)
+                return true // always visit children
             }
         }
         context.setLineWidth(1.0)

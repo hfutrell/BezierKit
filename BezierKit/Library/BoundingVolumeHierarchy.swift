@@ -81,8 +81,10 @@ internal class BVHNode {
         case leaf(object: BoundingBoxProtocol)
         case `internal`(list: [BVHNode])
     }
-    func visit(callback: (BVHNode, Int) -> Void, currentDepth depth: Int) {
-        callback(self, depth)
+    func visit(callback: (BVHNode, Int) -> Bool, currentDepth depth: Int) {
+        guard callback(self, depth) == true else {
+            return
+        }
         if case let .`internal`(list: list) = self.nodeType {
             list.forEach {
                 $0.visit(callback: callback, currentDepth: depth+1)
@@ -225,11 +227,15 @@ internal class BoundingVolumeHierarchy {
 
     }
     
+    var boundingBox: BoundingBox {
+        return self.root.boundingBox
+    }
+    
     func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
         self.root.intersects(node: other.root, callback: callback)
     }
     
-    func visit(callback: (BVHNode, Int) -> Void) {
+    func visit(callback: (BVHNode, Int) -> Bool) {
         self.root.visit(callback: callback, currentDepth: 0)
     }
     
