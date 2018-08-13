@@ -12,6 +12,8 @@ public class PolyBezier {
     
     public let curves: [BezierCurve]
     
+    internal lazy var bvh: BoundingVolumeHierarchy = BoundingVolumeHierarchy(objects: curves)
+    
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         guard curves.count > 0 else {
@@ -39,46 +41,43 @@ public class PolyBezier {
     }
     
     public var length: CGFloat {
-        return self.curves.reduce(0.0) {
-            $0 + $1.length()
-        }
+        return self.curves.reduce(0.0) { $0 + $1.length() }
     }
     
-    public lazy var boundingBox: BoundingBox = {
-        return self.curves.reduce(BoundingBox.empty) {
-            BoundingBox(first: $0, second: $1.boundingBox)
-        }
-    }()
+    public var boundingBox: BoundingBox {
+        return self.bvh.boundingBox
+    }
     
     public func offset(distance d: CGFloat) -> PolyBezier {
-        return PolyBezier(curves: self.curves.reduce([], {
+        return PolyBezier(curves: self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
-        }))
-    }
-    
-    internal func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
-        if self.boundingBox.lowerBoundOfDistance(to: p) > d {
-            return false
-        }
-        else if self.boundingBox.upperBoundOfDistance(to: p) <= d {
-            return true
-        }
-        return self.curves.contains(where: {
-            $0.boundingBox.lowerBoundOfDistance(to: p) <= d && distance(p, $0.project(point: p)) <= d
         })
     }
     
-    public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
-        // TODO: optimize!
-        guard self.boundingBox.overlaps(other.boundingBox) else {
-            return []
-        }
-        var intersections: [CGPoint] = []
-        for c1 in self.curves {
-            for c2 in other.curves {
-                // TODO: we could wind up with redundant intersections at t=0 or t=1
-                intersections += c1.intersects(curve: c2).map { c1.compute($0.t1) }
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
+        var found = false
+        self.bvh.visit { node, _ in
+            let boundingBox = node.boundingBox
+            if boundingBox.upperBoundOfDistance(to: p) <= d {
+                found = true
             }
+            else if case let .leaf(object) = node.nodeType {
+                let curve = object as! BezierCurve
+                if distance(p, curve.project(point: p)) < d {
+                    found = true
+                }
+            }
+            return !found && node.boundingBox.lowerBoundOfDistance(to: p) <= d
+        }
+        return found
+    }
+    
+    public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
+        var intersections: [CGPoint] = []
+        self.bvh.intersects(boundingVolumeHierarchy: other.bvh) { o1, o2 in
+            let c1 = o1 as! BezierCurve
+            let c2 = o2 as! BezierCurve
+            intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }
         }
         return intersections
     }

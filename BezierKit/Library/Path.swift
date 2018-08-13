@@ -15,6 +15,12 @@ public class Path {
         var subpathStartPoint: CGPoint? = nil
         var currentSubpath: [BezierCurve] = []
         var components: [PolyBezier] = []
+        func finishUp() {
+            if currentSubpath.isEmpty == false {
+                components.append(PolyBezier(curves: currentSubpath))
+                currentSubpath = []
+            }
+        }
     }
     
     public lazy var cgPath: CGPath = {
@@ -34,9 +40,9 @@ public class Path {
     public let subpaths: [PolyBezier]
     
     public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
-        return self.subpaths.contains(where: {
+        return self.subpaths.contains {
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
-        })
+        }
     }
     
     public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
@@ -91,6 +97,8 @@ public class Path {
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
         path.apply(info: rawContextPointer, function: applierFunction)
+        context.finishUp()
+        
         subpaths = context.components
     }
 }

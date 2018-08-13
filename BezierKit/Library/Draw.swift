@@ -27,7 +27,7 @@ public class Draw {
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
      */
-    private static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
+    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
         
         // Check for saturation. If there isn't any just return the luminance value for each, which results in gray.
         if s == 0.0 {
@@ -55,30 +55,25 @@ public class Draw {
         temp[2] = h - 1.0 / 3.0
         
         for i in 0..<3 {
-        
             // Adjust the range
             if temp[i] < 0.0 {
                 temp[i] += 1.0
             }
-            if temp[i] > 1.0 {
+            else if temp[i] > 1.0 {
                 temp[i] -= 1.0
             }
             
             if (6.0 * temp[i]) < 1.0 {
                 temp[i] = temp1 + (temp2 - temp1) * 6.0 * temp[i]
             }
+            else if (2.0 * temp[i]) < 1.0 {
+                temp[i] = temp2
+            }
+            else if (3.0 * temp[i]) < 2.0 {
+                temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
+            }
             else {
-                if (2.0 * temp[i]) < 1.0 {
-                    temp[i] = temp2
-                }
-                else {
-                    if (3.0 * temp[i]) < 2.0 {
-                        temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
-                    }
-                    else {
-                        temp[i] = temp1
-                    }
-                }
+                temp[i] = temp1
             }
         }
         // Assign temporary values to R, G, B
@@ -138,7 +133,7 @@ public class Draw {
     
     // MARK: - drawing various geometry
     
-    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint(x:0.0, y: 0.0)) {
+    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint.zero) {
         context.beginPath()
         if let quadraticCurve = curve as? QuadraticBezierCurve {
             context.move(to: quadraticCurve.p0 + offset)
@@ -233,7 +228,7 @@ public class Draw {
                        endAngle: arc.endAngle,
                        clockwise: false)
         context.addLine(to: arc.origin + o)
-        context.drawPath(using: CGPathDrawingMode.fillStroke)
+        context.drawPath(using: .fillStroke)
     }
     
     public static func drawHull(_ context: CGContext, hull: [CGPoint], offset : CGPoint = .zero) {
@@ -259,9 +254,9 @@ public class Draw {
         context.strokePath()
     }
 
-    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : CGPoint = .zero) {
+    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset: CGPoint = .zero) {
         context.beginPath()
-        context.addRect(boundingBox.cgRect)
+        context.addRect(boundingBox.cgRect.offsetBy(dx: offset.x, dy: offset.y))
         context.closePath()
         context.strokePath()
     }
@@ -296,8 +291,26 @@ public class Draw {
             )
         }
         context.closePath()
-        context.drawPath(using: CGPathDrawingMode.fillStroke)
+        context.drawPath(using: .fillStroke)
     
+    }
+    
+    public static func drawPolyBezier(_ context: CGContext, polyBezier: PolyBezier, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
+        if includeBoundingVolumeHierarchy {
+            polyBezier.bvh.visit { node, depth in
+                setColor(context, color: randomColors[depth])
+                context.setLineWidth(1.0)
+                context.setLineWidth(5.0 / CGFloat(depth+1))
+                context.setAlpha(1.0 / CGFloat(depth+1))
+                drawBoundingBox(context, boundingBox: node.boundingBox, offset: offset)
+                return true // always visit children
+            }
+        }
+        context.setLineWidth(1.0)
+        setColor(context, color: Draw.black)
+        polyBezier.curves.forEach {
+            drawCurve(context, curve: $0, offset: offset)
+        }
     }
     
     

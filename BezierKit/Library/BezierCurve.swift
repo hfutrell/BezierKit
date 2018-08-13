@@ -584,7 +584,11 @@ public func == (left: BezierCurve, right: BezierCurve) -> Bool {
     return left.points == right.points
 }
 
-public protocol BezierCurve {
+public protocol BoundingBoxProtocol {
+    var boundingBox: BoundingBox { get }
+}
+
+public protocol BezierCurve: BoundingBoxProtocol {
     var simple: Bool { get }
     var points: [CGPoint] { get }
     var startingPoint: CGPoint { get }
@@ -594,7 +598,6 @@ public protocol BezierCurve {
     func derivative(_ t: CGFloat) -> CGPoint
     func split(from t1: CGFloat, to t2: CGFloat) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
-    var boundingBox: BoundingBox { get }
     func compute(_ t: CGFloat) -> CGPoint
     func length() -> CGFloat
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
