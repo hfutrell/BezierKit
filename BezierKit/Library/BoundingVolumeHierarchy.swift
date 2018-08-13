@@ -6,7 +6,7 @@
 //  Copyright © 2018 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
 private class BVHConstructionContext {
     
