@@ -183,11 +183,11 @@ public class BoundingVolumeHierarchy {
         for i in 0..<objects.count {
             for j in i..<objects.count {
                 var area = context.boundingBoxArea(i, j)
-                if ( i+1 < objects.count ) {
-                    area += context.boundingBoxArea(i+1, objects.count-1)
+                if ( i > 0) {
+                    area += context.boundingBoxArea(0, i)
                 }
-                if ( j < i) {
-                    area += context.boundingBoxArea(0, j)
+                if ( j+1 < objects.count ) {
+                    area += context.boundingBoxArea(j+1, objects.count-1)
                 }
                 if area < minArea {
                     minArea = area
@@ -204,10 +204,8 @@ public class BoundingVolumeHierarchy {
             reordered = [BoundingBoxProtocol](objects[bestIndex.0...bestIndex.1]) + [BoundingBoxProtocol](objects[(bestIndex.1+1)..<objects.count]) + [BoundingBoxProtocol](objects[0..<bestIndex.0])
         }
         let context2 = BVHConstructionContext(objects: [BoundingBoxProtocol](reordered))
-
-        
         self.root = BVHNode(objects: reordered[0..<reordered.count], context: context2)
-        
+
 //        var maxChildren = 0
 //        var maxDepth = 0
 //        self.visit { node, depth in
