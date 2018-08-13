@@ -457,17 +457,20 @@ class Demos {
                              cubicControlPoints: [],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                        
+                                func location(_ angle: CGFloat) -> CGPoint {
+                                    return 200.0 * CGPoint(x: cos(angle), y: sin(angle))
+                                }
+                                
                                 let numPoints = 1000
                                 
                                 let radiansPerPoint = 2.0 * CGFloat.pi / CGFloat(numPoints)
                                 
                                 let startingAngle: CGFloat = 0
                                 let mutablePath = CGMutablePath()
-                                let radius: CGFloat = 200.0
-                                mutablePath.move(to: radius * CGPoint(x: cos(startingAngle), y: sin(startingAngle)) )
+                                mutablePath.move(to: location(0.0) )
                                 for i in 1..<numPoints {
                                     let angle = CGFloat(i) * radiansPerPoint + startingAngle
-                                    mutablePath.addLine(to: radius * CGPoint(x: cos(angle), y: sin(angle) ))
+                                    mutablePath.addLine(to: location(angle))
                                 }
                                 mutablePath.closeSubpath()
                                 

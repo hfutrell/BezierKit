@@ -94,7 +94,7 @@ class PathTests: XCTestCase {
     }
     
     func testInitCGPathMultipleSubpaths() {
-        // test of 4 line segments where each segment is started with a moveTo
+        // test of 2 line segments where each segment is started with a moveTo
         // this tests multiple subpaths and starting new paths with moveTo instead of closePath
         let cgPath4 = CGMutablePath()
         let p1 = CGPoint(x: 1.0, y: 2.0)

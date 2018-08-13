@@ -9,7 +9,7 @@
 import XCTest
 @testable import BezierKit
 
-class DrawTest: XCTestCase {
+class DrawTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
