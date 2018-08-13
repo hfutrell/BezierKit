@@ -66,7 +66,7 @@ public struct Shape {
         return segments
     }
     
-    public func intersects(shape other: Shape, _ threshold: CGFloat = Shape.defaultShapeIntersectionThreshold) -> [ShapeIntersection] {
+    public func intersects(shape other: Shape, _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [ShapeIntersection] {
         if self.boundingBox.overlaps(other.boundingBox) == false {
             return []
         }

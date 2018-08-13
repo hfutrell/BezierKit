@@ -74,14 +74,14 @@ private class BVHConstructionContext {
     
 }
 
-public class BVHNode {
+internal class BVHNode {
     let boundingBox: BoundingBox
     let nodeType: NodeType
     enum NodeType {
         case leaf(object: BoundingBoxProtocol)
         case `internal`(list: [BVHNode])
     }
-    public func visit(callback: (BVHNode, Int) -> Void, currentDepth depth: Int) {
+    func visit(callback: (BVHNode, Int) -> Void, currentDepth depth: Int) {
         callback(self, depth)
         if case let .`internal`(list: list) = self.nodeType {
             list.forEach {
@@ -135,7 +135,7 @@ public class BVHNode {
         self.nodeType = .internal(list: list)
 
     }
-    public func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
+    func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
         
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return // nothing to do
@@ -168,10 +168,10 @@ public class BVHNode {
     }
 }
 
-public class BoundingVolumeHierarchy {
+internal class BoundingVolumeHierarchy {
     private let root: BVHNode
     
-    public init(objects: [BoundingBoxProtocol]) {
+    init(objects: [BoundingBoxProtocol]) {
         
         let context = BVHConstructionContext(objects: objects)
         
@@ -225,11 +225,11 @@ public class BoundingVolumeHierarchy {
 
     }
     
-    public func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
+    func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
         self.root.intersects(node: other.root, callback: callback)
     }
     
-    public func visit(callback: (BVHNode, Int) -> Void) {
+    func visit(callback: (BVHNode, Int) -> Void) {
         self.root.visit(callback: callback, currentDepth: 0)
     }
     

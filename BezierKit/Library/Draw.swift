@@ -295,31 +295,21 @@ public class Draw {
     
     }
     
-    public static func drawPolyBezier(_ context: CGContext, polyBezier: PolyBezier, offset: CGPoint = .zero) {
-     
-        polyBezier.bvh.visit { node, depth in
-            
-//            if case .leaf(_) = node.nodeType {
-//                return
-//            }
-            
-            setColor(context, color: randomColors[depth])
-            context.setLineWidth(1.0)
-            context.setLineWidth(5.0 / CGFloat(depth+1))
-            context.setAlpha(1.0 / CGFloat(depth+1))
-
-            drawBoundingBox(context, boundingBox: node.boundingBox, offset: offset)
+    public static func drawPolyBezier(_ context: CGContext, polyBezier: PolyBezier, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
+        if includeBoundingVolumeHierarchy {
+            polyBezier.bvh.visit { node, depth in
+                setColor(context, color: randomColors[depth])
+                context.setLineWidth(1.0)
+                context.setLineWidth(5.0 / CGFloat(depth+1))
+                context.setAlpha(1.0 / CGFloat(depth+1))
+                drawBoundingBox(context, boundingBox: node.boundingBox, offset: offset)
+            }
         }
         context.setLineWidth(1.0)
+        setColor(context, color: Draw.black)
         polyBezier.curves.forEach {
-            setColor(context, color: Draw.black)
             drawCurve(context, curve: $0, offset: offset)
         }
-//        polyBezier.curves.forEach {
-//            setColor(context, color: Draw.lightGrey)
-//            drawSkeleton(context, curve: $0)
-//        }
-
     }
     
     

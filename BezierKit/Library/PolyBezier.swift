@@ -12,7 +12,7 @@ public class PolyBezier {
     
     public let curves: [BezierCurve]
     
-    public let bvh: BoundingVolumeHierarchy
+    internal lazy var bvh: BoundingVolumeHierarchy = BoundingVolumeHierarchy(objects: curves)
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
@@ -38,7 +38,6 @@ public class PolyBezier {
     
     internal init(curves: [BezierCurve]) {
         self.curves = curves
-        self.bvh = BoundingVolumeHierarchy(objects: curves)
     }
     
     public var length: CGFloat {
@@ -66,9 +65,9 @@ public class PolyBezier {
         else if self.boundingBox.upperBoundOfDistance(to: p) <= d {
             return true
         }
-        return self.curves.contains(where: {
+        return self.curves.contains {
             $0.boundingBox.lowerBoundOfDistance(to: p) <= d && distance(p, $0.project(point: p)) <= d
-        })
+        }
     }
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
@@ -76,7 +75,7 @@ public class PolyBezier {
         self.bvh.intersects(boundingVolumeHierarchy: other.bvh) { o1, o2 in
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
-            intersections += c1.intersects(curve: c2).map { c1.compute($0.t1) }
+            intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }
         }
         return intersections
     }
