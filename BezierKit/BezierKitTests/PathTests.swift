@@ -9,7 +9,7 @@
 import XCTest
 import BezierKit
 
-class PathTest: XCTestCase {
+class PathTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
@@ -21,49 +21,79 @@ class PathTest: XCTestCase {
         super.tearDown()
     }
     
-    func testInitializationWithCGPath() {
+    func testInitCGPathEmpty() {
+        // trivial test of an empty path
+        let path = Path(CGMutablePath())
+        XCTAssert(path.subpaths.isEmpty)
+    }
+    
+    func testInitCGPathRect() {
         
-        let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: 1, height: 2))
-       
         // simple test of a rectangle (note that this CGPath uses a moveTo())
+        let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: 1, height: 2))
         let cgPath1 = CGPath(rect: rect, transform: nil)
         let path1 = Path(cgPath1)
         
+        let p1 = CGPoint(x: 0.0, y: 0.0)
+        let p2 = CGPoint(x: 1.0, y: 0.0)
+        let p3 = CGPoint(x: 1.0, y: 2.0)
+        let p4 = CGPoint(x: 0.0, y: 2.0)
+        
         XCTAssertEqual(path1.subpaths.count, 1)
-        XCTAssertEqual(path1.subpaths[0].curves[0] as! LineSegment, LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 1, y: 0)))
-        XCTAssertEqual(path1.subpaths[0].curves[1] as! LineSegment, LineSegment(p0: CGPoint(x: 1, y: 0), p1: CGPoint(x: 1, y: 2)))
-        XCTAssertEqual(path1.subpaths[0].curves[2] as! LineSegment, LineSegment(p0: CGPoint(x: 1, y: 2), p1: CGPoint(x: 0, y: 2)))
-        XCTAssertEqual(path1.subpaths[0].curves[3] as! LineSegment, LineSegment(p0: CGPoint(x: 0, y: 2), p1: CGPoint(x: 0, y: 0)))
-
+        XCTAssertEqual(path1.subpaths[0].curves[0] as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path1.subpaths[0].curves[1] as! LineSegment, LineSegment(p0: p2, p1: p3))
+        XCTAssertEqual(path1.subpaths[0].curves[2] as! LineSegment, LineSegment(p0: p3, p1: p4))
+        XCTAssertEqual(path1.subpaths[0].curves[3] as! LineSegment, LineSegment(p0: p4, p1: p1))
+    }
+    
+    func testInitCGPathEllipse() {
         // test of a ellipse (4 cubic curves)
+        let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: 1, height: 2))
         let cgPath2 = CGPath(ellipseIn: rect, transform: nil)
         let path2 = Path(cgPath2)
 
+        let p1 = CGPoint(x: 1.0, y: 1.0)
+        let p2 = CGPoint(x: 0.5, y: 2.0)
+        let p3 = CGPoint(x: 0.0, y: 1.0)
+        let p4 = CGPoint(x: 0.5, y: 0.0)
+        
         XCTAssertEqual(path2.subpaths.count, 1)
-        XCTAssertEqual(path2.subpaths[0].curves[0].startingPoint, CGPoint(x: 1.0, y: 1.0))
-        XCTAssertEqual(path2.subpaths[0].curves[1].startingPoint, CGPoint(x: 0.5, y: 2.0))
-        XCTAssertEqual(path2.subpaths[0].curves[2].startingPoint, CGPoint(x: 0.0, y: 1.0))
-        XCTAssertEqual(path2.subpaths[0].curves[3].startingPoint, CGPoint(x: 0.5, y: 0.0))
-        XCTAssertEqual(path2.subpaths[0].curves[0].endingPoint, CGPoint(x: 0.5, y: 2.0))
-        XCTAssertEqual(path2.subpaths[0].curves[1].endingPoint, CGPoint(x: 0.0, y: 1.0))
-        XCTAssertEqual(path2.subpaths[0].curves[2].endingPoint, CGPoint(x: 0.5, y: 0.0))
-        XCTAssertEqual(path2.subpaths[0].curves[3].endingPoint, CGPoint(x: 1.0, y: 1.0))
-
+        XCTAssertEqual(path2.subpaths[0].curves.count, 4)
+        XCTAssertEqual(path2.subpaths[0].curves[0].startingPoint, p1)
+        XCTAssertEqual(path2.subpaths[0].curves[1].startingPoint, p2)
+        XCTAssertEqual(path2.subpaths[0].curves[2].startingPoint, p3)
+        XCTAssertEqual(path2.subpaths[0].curves[3].startingPoint, p4)
+        XCTAssertEqual(path2.subpaths[0].curves[0].endingPoint, p2)
+        XCTAssertEqual(path2.subpaths[0].curves[1].endingPoint, p3)
+        XCTAssertEqual(path2.subpaths[0].curves[2].endingPoint, p4)
+        XCTAssertEqual(path2.subpaths[0].curves[3].endingPoint, p1)
+    }
+        
+    func testInitCGPathQuads() {
         // test of a rect with some quad curves
         let cgPath3 = CGMutablePath()
         
-        cgPath3.move(to: CGPoint(x: 0.0, y: 1.0))
-        cgPath3.addLine(to: CGPoint(x: 2.0, y: 1.0))
-        cgPath3.addQuadCurve(to: CGPoint(x: 2.0, y: 0.0), control: CGPoint(x: 3.0, y: 0.5))
-        cgPath3.addLine(to: CGPoint(x: 0.0, y: 0.0))
-        cgPath3.addQuadCurve(to: CGPoint(x: 0.0, y: 1.0), control: CGPoint(x: -1.0, y: 0.5))
+        let p1 = CGPoint(x: 0.0, y: 1.0)
+        let p2 = CGPoint(x: 2.0, y: 1.0)
+        let p3 = CGPoint(x: 3.0, y: 0.5)
+        let p4 = CGPoint(x: 2.0, y: 0.0)
+        let p5 = CGPoint(x: 0.0, y: 0.0)
+        let p6 = CGPoint(x: -1.0, y: 0.5)
+        
+        cgPath3.move(to: p1)
+        cgPath3.addLine(to: p2)
+        cgPath3.addQuadCurve(to: p4, control: p3)
+        cgPath3.addLine(to: p5)
+        cgPath3.addQuadCurve(to: p1, control: p6)
         cgPath3.closeSubpath()
         
         let path3 = Path(cgPath3)
-        XCTAssertEqual(path3.subpaths[0].curves[1] as! QuadraticBezierCurve, QuadraticBezierCurve(p0: CGPoint(x: 2.0, y: 1.0),
-                                                                                                  p1: CGPoint(x: 3.0, y: 0.5),
-                                                                                                  p2: CGPoint(x: 2.0, y: 0.0)))
-
+        XCTAssertEqual(path3.subpaths.count, 1)
+        XCTAssertEqual(path3.subpaths[0].curves.count, 4)
+        XCTAssertEqual(path3.subpaths[0].curves[1] as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
+    }
+    
+    func testInitCGPathMultipleSubpaths() {
         // test of 4 line segments where each segment is started with a moveTo
         // this tests multiple subpaths and starting new paths with moveTo instead of closePath
         let cgPath4 = CGMutablePath()
@@ -76,18 +106,13 @@ class PathTest: XCTestCase {
         cgPath4.addLine(to: p2)
         cgPath4.move(to: p3)
         cgPath4.addLine(to: p4)
-
+        
         let path4 = Path(cgPath4)
         XCTAssertEqual(path4.subpaths.count, 2)
         XCTAssertEqual(path4.subpaths[0].curves.count, 1)
         XCTAssertEqual(path4.subpaths[1].curves.count, 1)
         XCTAssertEqual(path4.subpaths[0].curves[0] as! LineSegment, LineSegment(p0: p1, p1: p2))
         XCTAssertEqual(path4.subpaths[1].curves[0] as! LineSegment, LineSegment(p0: p3, p1: p4))
-        
-        // trivial test of an empty path
-        let path5 = Path(CGMutablePath())
-        XCTAssertEqual(path5.subpaths.count, 0)
-        
     }
     
     func testIntersects() {

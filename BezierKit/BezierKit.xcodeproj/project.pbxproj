@@ -54,8 +54,8 @@
 		FDC7D7042111323A00A9EEF0 /* Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC7D7012111323A00A9EEF0 /* Path.swift */; };
 		FDC7D706211288BD00A9EEF0 /* PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC7D705211288BD00A9EEF0 /* PathTests.swift */; };
 		FDC7D707211288BD00A9EEF0 /* PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC7D705211288BD00A9EEF0 /* PathTests.swift */; };
-		FDC8595A2118EC5600AF7642 /* DrawTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859592118EC5600AF7642 /* DrawTest.swift */; };
-		FDC8595B2118EC5600AF7642 /* DrawTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859592118EC5600AF7642 /* DrawTest.swift */; };
+		FDC8595A2118EC5600AF7642 /* DrawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859592118EC5600AF7642 /* DrawTests.swift */; };
+		FDC8595B2118EC5600AF7642 /* DrawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859592118EC5600AF7642 /* DrawTests.swift */; };
 		FDC859642119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */; };
 		FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 		FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
@@ -148,7 +148,7 @@
 		FDB9D7431EB28D1900413F0E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FDC7D7012111323A00A9EEF0 /* Path.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
 		FDC7D705211288BD00A9EEF0 /* PathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathTests.swift; sourceTree = "<group>"; };
-		FDC859592118EC5600AF7642 /* DrawTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawTest.swift; sourceTree = "<group>"; };
+		FDC859592118EC5600AF7642 /* DrawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawTests.swift; sourceTree = "<group>"; };
 		FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingVolumeHierarchy.swift; sourceTree = "<group>"; };
 		FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegmentTests.swift; sourceTree = "<group>"; };
@@ -239,7 +239,7 @@
 				FD4A6405200B11DA00930E10 /* PolyBezierTests.swift */,
 				FD05111720153EAE000D035E /* BoundingBoxTests.swift */,
 				FDC7D705211288BD00A9EEF0 /* PathTests.swift */,
-				FDC859592118EC5600AF7642 /* DrawTest.swift */,
+				FDC859592118EC5600AF7642 /* DrawTests.swift */,
 			);
 			path = BezierKitTests;
 			sourceTree = "<group>";
@@ -593,7 +593,7 @@
 				FDEB70A11F36568B00539003 /* BezierKitTestHelpers.swift in Sources */,
 				FD05111820153EAE000D035E /* BoundingBoxTests.swift in Sources */,
 				FDC7D706211288BD00A9EEF0 /* PathTests.swift in Sources */,
-				FDC8595A2118EC5600AF7642 /* DrawTest.swift in Sources */,
+				FDC8595A2118EC5600AF7642 /* DrawTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -612,7 +612,7 @@
 				FDEB70A21F36568B00539003 /* BezierKitTestHelpers.swift in Sources */,
 				FD05111920153EAE000D035E /* BoundingBoxTests.swift in Sources */,
 				FDC7D707211288BD00A9EEF0 /* PathTests.swift in Sources */,
-				FDC8595B2118EC5600AF7642 /* DrawTest.swift in Sources */,
+				FDC8595B2118EC5600AF7642 /* DrawTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
