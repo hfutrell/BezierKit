@@ -44,12 +44,9 @@ public struct Shape {
     }
     
     public var boundingBox: BoundingBox {
-        var result: BoundingBox = BoundingBox.empty
-        for s: BezierCurve in self.nonvirtualSegments() {
-            let bbox = s.boundingBox
-            result = BoundingBox(first: result, second: bbox)
+        return self.nonvirtualSegments().reduce(BoundingBox.empty) {
+            BoundingBox(first: $0, second: $1.boundingBox)
         }
-        return result
     }
 
     private func nonvirtualSegments() -> [BezierCurve] {
