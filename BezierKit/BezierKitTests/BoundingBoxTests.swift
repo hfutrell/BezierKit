@@ -61,4 +61,54 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertEqual(box.upperBoundOfDistance(to: p4), sqrt(17.0))
         XCTAssertEqual(box.upperBoundOfDistance(to: p5), sqrt(52.0))
     }
+    
+    func testArea() {
+        let box = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(box.area, 2.0)
+        let emptyBox = BoundingBox.empty
+        XCTAssertEqual(emptyBox.area, 0.0)
+    }
+    
+    func testOverlaps() {
+        let box1 = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
+        let box2 = BoundingBox(p1: CGPoint(x: 2.5, y: 6.0), p2: CGPoint(x: 3.0, y: 8.0))
+        let box3 = BoundingBox(p1: CGPoint(x: 2.5, y: 4.0), p2: CGPoint(x: 3.0, y: 8.0))
+        XCTAssertFalse(box1.overlaps(box2))
+        XCTAssertTrue(box1.overlaps(box3))
+        XCTAssertFalse(box1.overlaps(BoundingBox.empty))
+    }
+    
+    func testUnionEmpty1() {
+        var empty1 = BoundingBox.empty
+        let empty2 = BoundingBox.empty
+        XCTAssertEqual(empty1.union(empty2), BoundingBox.empty)
+    }
+    
+    func testUnionEmpty2() {
+        var empty = BoundingBox.empty
+        let box = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(empty.union(box), box)
+    }
+    
+    func testUnion() {
+        var box1 = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
+        let box2 = BoundingBox(p1: CGPoint(x: 2.5, y: 6.0), p2: CGPoint(x: 3.0, y: 8.0))
+        XCTAssertEqual(box1.union(box2), BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 8.0)))
+    }
+    
+    func testCGRect() {
+        // test a standard box
+        let box1 = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(box1.cgRect, CGRect(origin: CGPoint(x: 2.0, y: 3.0), size: CGSize(width: 1.0, height: 2.0)))
+        // test the empty box
+        XCTAssertEqual(BoundingBox.empty.cgRect, CGRect.null)
+    }
+
+    func testInitFirstSecond() {
+        let box1 = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
+        let box2 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 2.0, y: 2.0))
+        let result = BoundingBox(first: box1, second: box2)
+        XCTAssertEqual(result, BoundingBox(p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 3.0, y: 5.0)))
+    }
+    
 }

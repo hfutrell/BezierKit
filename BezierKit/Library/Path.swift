@@ -7,8 +7,9 @@
 //
 
 import CoreGraphics
+import Foundation
 
-public class Path {
+@objc(BezierKitPath) public class Path: NSObject {
     
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint? = nil
@@ -58,7 +59,7 @@ public class Path {
         return intersections
     }
     
-    public init(_ path: CGPath) {
+    @objc(initWithCGPath:) public init(_ path: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
