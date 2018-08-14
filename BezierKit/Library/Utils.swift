@@ -141,14 +141,6 @@ internal class Utils {
         return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
     }
     
-    static func approximately(_ a: CGFloat,_ b: CGFloat, precision: CGFloat = epsilon) -> Bool {
-        return abs(a-b) <= precision
-    }
-    
-    static func between(_ v: CGFloat,_ m: CGFloat,_ M: CGFloat) -> Bool {
-        return (m <= v && v <= M) || Utils.approximately(v, m) || Utils.approximately(v, M)
-    }
-    
     // cube root function yielding real roots
     static func crt(_ v: CGFloat) -> CGFloat {
         return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
