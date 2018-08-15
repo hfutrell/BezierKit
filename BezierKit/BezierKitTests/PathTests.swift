@@ -23,7 +23,7 @@ class PathTests: XCTestCase {
     
     func testInitCGPathEmpty() {
         // trivial test of an empty path
-        let path = Path(CGMutablePath())
+        let path = Path(cgPath: CGMutablePath())
         XCTAssert(path.subpaths.isEmpty)
     }
     
@@ -32,7 +32,7 @@ class PathTests: XCTestCase {
         // simple test of a rectangle (note that this CGPath uses a moveTo())
         let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: 1, height: 2))
         let cgPath1 = CGPath(rect: rect, transform: nil)
-        let path1 = Path(cgPath1)
+        let path1 = Path(cgPath: cgPath1)
         
         let p1 = CGPoint(x: 0.0, y: 0.0)
         let p2 = CGPoint(x: 1.0, y: 0.0)
@@ -50,7 +50,7 @@ class PathTests: XCTestCase {
         // test of a ellipse (4 cubic curves)
         let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: 1, height: 2))
         let cgPath2 = CGPath(ellipseIn: rect, transform: nil)
-        let path2 = Path(cgPath2)
+        let path2 = Path(cgPath: cgPath2)
 
         let p1 = CGPoint(x: 1.0, y: 1.0)
         let p2 = CGPoint(x: 0.5, y: 2.0)
@@ -87,7 +87,7 @@ class PathTests: XCTestCase {
         cgPath3.addQuadCurve(to: p1, control: p6)
         cgPath3.closeSubpath()
         
-        let path3 = Path(cgPath3)
+        let path3 = Path(cgPath: cgPath3)
         XCTAssertEqual(path3.subpaths.count, 1)
         XCTAssertEqual(path3.subpaths[0].curves.count, 4)
         XCTAssertEqual(path3.subpaths[0].curves[1] as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
@@ -107,7 +107,7 @@ class PathTests: XCTestCase {
         cgPath4.move(to: p3)
         cgPath4.addLine(to: p4)
         
-        let path4 = Path(cgPath4)
+        let path4 = Path(cgPath: cgPath4)
         XCTAssertEqual(path4.subpaths.count, 2)
         XCTAssertEqual(path4.subpaths[0].curves.count, 1)
         XCTAssertEqual(path4.subpaths[1].curves.count, 1)
@@ -121,12 +121,12 @@ class PathTests: XCTestCase {
         let circleCGPath = CGMutablePath()
         circleCGPath.addEllipse(in: CGRect(origin: CGPoint(x: 2.0, y: 3.0), size: CGSize(width: 2.0, height: 2.0)))
         
-        let circlePath = Path(circleCGPath) // a circle centered at (3, 4) with radius 2
+        let circlePath = Path(cgPath: circleCGPath) // a circle centered at (3, 4) with radius 2
         
         let rectangleCGPath = CGMutablePath()
         rectangleCGPath.addRect(CGRect(origin: CGPoint(x: 3.0, y: 4.0), size: CGSize(width: 2.0, height: 2.0)))
         
-        let rectanglePath = Path(rectangleCGPath)
+        let rectanglePath = Path(cgPath: rectangleCGPath)
         
         let intersections = rectanglePath.intersects(path: circlePath)
         
@@ -139,7 +139,7 @@ class PathTests: XCTestCase {
         let circleCGPath = CGMutablePath()
         circleCGPath.addEllipse(in: CGRect(origin: CGPoint(x: -1.0, y: -1.0), size: CGSize(width: 2.0, height: 2.0)))
 
-        let circlePath = Path(circleCGPath) // a circle centered at origin with radius 1
+        let circlePath = Path(cgPath: circleCGPath) // a circle centered at origin with radius 1
         
         let d = CGFloat(0.1)
         let p1 = CGPoint(x: -3.0, y: 0.0)
@@ -155,4 +155,34 @@ class PathTests: XCTestCase {
         
     }
     
+    func testEquatable() {
+        let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let path1 = Path(cgPath: CGPath(rect: rect, transform: nil))
+        let path2 = Path(cgPath: CGPath(ellipseIn: rect, transform: nil))
+        let path3 = Path(cgPath: CGPath(rect: rect, transform: nil))
+        XCTAssertNotEqual(path1, path2)
+        XCTAssertEqual(path1, path3)
+    }
+    
+    func testIsEqual() {
+        let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let path1 = Path(cgPath: CGPath(rect: rect, transform: nil))
+        let path2 = Path(cgPath: CGPath(ellipseIn: rect, transform: nil))
+        let path3 = Path(cgPath: CGPath(rect: rect, transform: nil))
+        
+        let string = "hello" as NSString
+        
+        XCTAssertFalse(path1.isEqual(nil))
+        XCTAssertFalse(path1.isEqual(string))
+        XCTAssertFalse(path1.isEqual(path2))
+        XCTAssertTrue(path1.isEqual(path3))
+    }
+    
+    func testEncodeDecode() {
+        let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let path = Path(cgPath: CGPath(rect: rect, transform: nil))
+        let data = NSKeyedArchiver.archivedData(withRootObject: path)
+        let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
+        XCTAssertEqual(decodedPath, path)
+    }
 }

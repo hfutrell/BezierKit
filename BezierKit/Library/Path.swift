@@ -9,7 +9,7 @@
 import CoreGraphics
 import Foundation
 
-@objc(BezierKitPath) public class Path: NSObject {
+@objc(BezierKitPath) public class Path: NSObject, NSCoding {
     
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint? = nil
@@ -59,7 +59,7 @@ import Foundation
         return intersections
     }
     
-    @objc(initWithCGPath:) public init(_ path: CGPath) {
+    @objc(initWithCGPath:) public init(cgPath: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
@@ -97,9 +97,33 @@ import Foundation
             }
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
-        path.apply(info: rawContextPointer, function: applierFunction)
+        cgPath.apply(info: rawContextPointer, function: applierFunction)
         context.finishUp()
         
         subpaths = context.components
+    }
+    
+    // MARK: - NSCoding
+    // (cannot be put in extension because init?(coder:) is a designated initializer)
+    
+    public func encode(with aCoder: NSCoder) {
+        aCoder.encode(self.subpaths)
+    }
+    required public init?(coder aDecoder: NSCoder) {
+        guard let array = aDecoder.decodeObject() as? Array<PolyBezier> else { return nil }
+        self.subpaths = array
+    }
+
+    // MARK: - Equatable and isEqual override
+    
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let otherPath = object as? Path else {
+            return false
+        }
+        return self == otherPath
+    }
+    
+    public static func == (lhs: Path, rhs: Path) -> Bool {
+        return lhs.subpaths == rhs.subpaths
     }
 }

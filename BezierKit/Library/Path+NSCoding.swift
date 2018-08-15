@@ -9,13 +9,4 @@
 import Foundation
 
 @objc extension Path: NSCoding {
-    public func encode(with aCoder: NSCoder) {
-        aCoder.encode(self.subpaths)
-    }
-    public init?(coder aDecoder: NSCoder) {
-        guard self.init(coder: coder) else {
-            return nil
-        }
-        subpaths = aDecoder.decodeObject() as! [PolyBezier]
-    }
 }

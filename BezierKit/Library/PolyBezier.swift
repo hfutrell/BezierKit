@@ -7,8 +7,9 @@
 //
 
 import CoreGraphics
+import Foundation
 
-public class PolyBezier {
+public class PolyBezier: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
@@ -82,5 +83,38 @@ public class PolyBezier {
         return intersections
     }
     
-    // TODO: equatable
+    // MARK: - NSCoding
+    // (cannot be put in extension because init?(coder:) is a designated initializer)
+    
+    public func encode(with aCoder: NSCoder) {
+        let values: [[NSValue]] = self.curves.map { (curve: BezierCurve) -> [NSValue] in
+            return curve.points.map { return NSValue(cgPoint: $0) }
+        }
+        aCoder.encode(values)
+    }
+    required public init?(coder aDecoder: NSCoder) {
+        guard let curveData = aDecoder.decodeObject() as? [[NSValue]] else { return nil }
+        self.curves = curveData.map { values in
+            createCurve(from: values.map { $0.cgPointValue })!
+        }
+    }
+    
+    // MARK: - Equatable and isEqual override
+    
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let otherPolyBezier = object as? PolyBezier else { return false }
+        return self == otherPolyBezier
+    }
+    
+    public static func == (lhs: PolyBezier, rhs: PolyBezier) -> Bool {
+        if lhs.curves.count != rhs.curves.count {
+            return false
+        }
+        for i in 0..<lhs.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
+            guard lhs.curves[i] == rhs.curves[i] else {
+                return false
+            }
+        }
+        return true
+    }
 }
