@@ -89,27 +89,28 @@ internal class BVHNode {
             let left    = BVHNode(slice: slice[startIndex..<splitIndex])
             let right   = BVHNode(slice: slice[splitIndex..<endIndex])
             let boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
-            // check the surface-area heuristic to see if we actually get a better result by putting
-            // the descendents of left and right as child nodes of self
-            func descendents(_ node: BVHNode) -> [BVHNode] {
-                switch node.nodeType {
-                case .leaf(_):
-                    return [node]
-                case let .internal(list):
-                    return list
+            self.boundingBox = boundingBox
+            if slice.count > 2 {
+                // check the surface-area heuristic to see if we actually get a better result by putting
+                // the descendents of left and right as child nodes of self
+                func descendents(_ node: BVHNode) -> [BVHNode] {
+                    switch node.nodeType {
+                    case .leaf(_):
+                        return [node]
+                    case let .internal(list):
+                        return list
+                    }
+                }
+                let leftDescendents     = descendents(left)
+                let rightDescendents    = descendents(right)
+                let costLeft            = CGFloat(leftDescendents.count) * ( 1.0 - left.boundingBox.area / boundingBox.area )
+                let costRight           = CGFloat(rightDescendents.count) * ( 1.0 - right.boundingBox.area / boundingBox.area )
+                if 2 > costLeft + costRight {
+                    self.nodeType = .internal(list: leftDescendents + rightDescendents)
+                    return
                 }
             }
-            let leftDescendents     = descendents(left)
-            let rightDescendents    = descendents(right)
-            let costLeft            = CGFloat(leftDescendents.count) * ( 1.0 - left.boundingBox.area / boundingBox.area )
-            let costRight           = CGFloat(rightDescendents.count) * ( 1.0 - right.boundingBox.area / boundingBox.area )
-            if 2 > costLeft + costRight {
-                self.nodeType = .internal(list: leftDescendents + rightDescendents)
-            }
-            else {
-                self.nodeType = .internal(list: [left, right])
-            }
-            self.boundingBox = boundingBox
+            self.nodeType = .internal(list: [left, right])
         }
     }
 }
