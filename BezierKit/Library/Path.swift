@@ -7,8 +7,9 @@
 //
 
 import CoreGraphics
+import Foundation
 
-public class Path {
+@objc(BezierKitPath) public class Path: NSObject, NSCoding {
     
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint? = nil
@@ -23,7 +24,7 @@ public class Path {
         }
     }
     
-    public lazy var cgPath: CGPath = {
+    @objc public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         for subpath in self.subpaths {
             mutablePath.addPath(subpath.cgPath)
@@ -58,7 +59,7 @@ public class Path {
         return intersections
     }
     
-    public init(_ path: CGPath) {
+    @objc(initWithCGPath:) public init(cgPath: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
@@ -96,9 +97,36 @@ public class Path {
             }
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
-        path.apply(info: rawContextPointer, function: applierFunction)
+        cgPath.apply(info: rawContextPointer, function: applierFunction)
         context.finishUp()
         
         subpaths = context.components
+    }
+    
+    // MARK: - NSCoding
+    // (cannot be put in extension because init?(coder:) is a designated initializer)
+    
+    public func encode(with aCoder: NSCoder) {
+        aCoder.encode(self.subpaths)
+    }
+    
+    required public init?(coder aDecoder: NSCoder) {
+        guard let array = aDecoder.decodeObject() as? Array<PolyBezier> else {
+            return nil
+        }
+        self.subpaths = array
+    }
+
+    // MARK: - Equatable and isEqual override
+    
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let otherPath = object as? Path else {
+            return false
+        }
+        return self == otherPath
+    }
+    
+    public static func == (lhs: Path, rhs: Path) -> Bool {
+        return lhs.subpaths == rhs.subpaths
     }
 }

@@ -37,5 +37,70 @@ class PolyBezierTests: XCTestCase {
         }
     }
     
+    private let p1 = CGPoint(x: 0.0, y: 1.0)
+    private let p2 = CGPoint(x: 2.0, y: 1.0)
+    private let p3 = CGPoint(x: 2.5, y: 0.5)
+    private let p4 = CGPoint(x: 2.0, y: 0.0)
+    private let p5 = CGPoint(x: 0.0, y: 0.0)
+    private let p6 = CGPoint(x: -0.5, y: 0.25)
+    private let p7 = CGPoint(x: -0.5, y: 0.75)
+    private let p8 = CGPoint(x: 0.0, y: 1.0)
+    
+    func testEquatable() {
+    
+        let l1 = LineSegment(p0: p1, p1: p2)
+        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let l2 = LineSegment(p0: p4, p1: p5)
+        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        
+        let polyBezier1 = PolyBezier(curves: [l1, q1, l2, c1])
+        let polyBezier2 = PolyBezier(curves: [l1, q1, l2])
+        let polyBezier3 = PolyBezier(curves: [l1, q1, l2, c1])
+        
+        var altC1 = c1
+        altC1.p2.x = -0.25
+        let polyBezier4 = PolyBezier(curves: [l1, q1, l2, altC1])
+
+        XCTAssertNotEqual(polyBezier1, polyBezier2) // polyBezier2 is missing 4th path element, so not equal
+        XCTAssertEqual(polyBezier1, polyBezier3)    // same path elements means equal
+        XCTAssertNotEqual(polyBezier1, polyBezier4) // polyBezier4 has an element with a modified path
+    }
+    
+    func testIsEqual() {
+        
+        let l1 = LineSegment(p0: p1, p1: p2)
+        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let l2 = LineSegment(p0: p4, p1: p5)
+        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        
+        let polyBezier1 = PolyBezier(curves: [l1, q1, l2, c1])
+        let polyBezier2 = PolyBezier(curves: [l1, q1, l2, c1])
+        var altC1 = c1
+        altC1.p2.x = -0.25
+        let polyBezier3 = PolyBezier(curves: [l1, q1, l2, altC1])
+
+        let string = "hello!" as NSString
+        
+        XCTAssertFalse(polyBezier1.isEqual(string))
+        XCTAssertFalse(polyBezier1.isEqual(nil))
+        XCTAssertTrue(polyBezier1.isEqual(polyBezier1))
+        XCTAssertTrue(polyBezier1.isEqual(polyBezier2))
+        XCTAssertFalse(polyBezier1.isEqual(polyBezier3))
+    }
+    
+    func testNSCoder() {
+        
+        let l1 = LineSegment(p0: p1, p1: p2)
+        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let l2 = LineSegment(p0: p4, p1: p5)
+        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let polyBezier = PolyBezier(curves: [l1, q1, l2, c1])
+
+        let data = NSKeyedArchiver.archivedData(withRootObject: polyBezier)
+        let decodedPolyBezier = NSKeyedUnarchiver.unarchiveObject(with: data) as! PolyBezier
+        XCTAssertEqual(polyBezier, decodedPolyBezier )
+        
+    }
+    
 }
 

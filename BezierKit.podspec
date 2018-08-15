@@ -5,8 +5,8 @@
 
 Pod::Spec.new do |s|
   s.name         = "BezierKit"
-  s.version      = "0.1.4"
-  s.summary      = "BezierKit is a library for Bézier curves written in Swift and based on the popular JavaScript library Bezier.js"
+  s.version      = "0.1.6"
+  s.summary      = "comprehensive Bezier curve library written in Swift based on the popular Bezier.js library"
   s.homepage     = "https://github.com/hfutrell/BezierKit"
   s.license      = "MIT"
   s.author       = { "Holmes Futrell" => "holmesfutrell@gmail.com" }

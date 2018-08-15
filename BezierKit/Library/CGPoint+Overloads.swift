@@ -45,25 +45,21 @@ public extension CGPoint {
     }
     public subscript(index: Int) -> CGFloat {
         get {
+            assert(index == 0 || index == 1)
             if index == 0 {
                 return self.x
             }
-            else if index == 1 {
-                return self.y
-            }
             else {
-                fatalError(badSubscriptError)
+                return self.y
             }
         }
         set(newValue) {
+            assert(index == 0 || index == 1)
             if index == 0 {
                 self.x = newValue
             }
-            else if index == 1 {
-                self.y = newValue
-            }
             else {
-                fatalError(badSubscriptError)
+                self.y = newValue
             }
         }
     }

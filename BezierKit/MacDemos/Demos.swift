@@ -426,7 +426,7 @@ class Demos {
                                 assert(glyph1 != 0 && glyph2 != 0, "couldn't get glyphs")
                                 
                                 let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
-                                let path1 = Path(cgPath1.copy(using: &translate)!)
+                                let path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
                                 
                                 
                                 
@@ -441,7 +441,7 @@ class Demos {
                                 if let mouse = demoState.lastInputLocation {
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
-                                    let path2 = Path(cgPath2)
+                                    let path2 = Path(cgPath: cgPath2)
                                     
                                     context.addPath(path2.cgPath)
                                     Draw.setColor(context, color: Draw.black)
@@ -474,9 +474,9 @@ class Demos {
                                 }
                                 mutablePath.closeSubpath()
                                 
-                                let path = Path(mutablePath)
+                                let path = Path(cgPath: mutablePath)
                                 for s in path.subpaths {
-                                    Draw.drawPolyBezier(context, polyBezier: s, offset: CGPoint(x: 100.0, y: 100.0))
+                                    Draw.drawPolyBezier(context, polyBezier: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
                                 }
 
                                 

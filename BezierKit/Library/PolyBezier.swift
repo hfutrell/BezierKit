@@ -7,12 +7,25 @@
 //
 
 import CoreGraphics
+import Foundation
 
-public class PolyBezier {
+#if os(macOS)
+private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSValue.cgPointValue available
+    var cgPointValue: CGPoint {
+        let pointValue: NSPoint = self.pointValue
+        return CGPoint(x: pointValue.x, y: pointValue.y)
+    }
+    convenience init(cgPoint: CGPoint) {
+        self.init(point: NSPoint(x: cgPoint.x, y: cgPoint.y))
+    }
+}
+#endif
+
+public class PolyBezier: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
-    internal lazy var bvh: BoundingVolumeHierarchy = BoundingVolumeHierarchy(objects: curves)
+    internal lazy var bvh: BVHNode = BVHNode(objects: curves)
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
@@ -74,7 +87,7 @@ public class PolyBezier {
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         var intersections: [CGPoint] = []
-        self.bvh.intersects(boundingVolumeHierarchy: other.bvh) { o1, o2 in
+        self.bvh.intersects(node: other.bvh) { o1, o2 in
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }
@@ -82,5 +95,41 @@ public class PolyBezier {
         return intersections
     }
     
-    // TODO: equatable
+    // MARK: - NSCoding
+    // (cannot be put in extension because init?(coder:) is a designated initializer)
+    
+    public func encode(with aCoder: NSCoder) {
+        let values: [[NSValue]] = self.curves.map { (curve: BezierCurve) -> [NSValue] in
+            return curve.points.map { return NSValue(cgPoint: $0) }
+        }
+        aCoder.encode(values)
+    }
+    
+    required public init?(coder aDecoder: NSCoder) {
+        guard let curveData = aDecoder.decodeObject() as? [[NSValue]] else {
+            return nil
+        }
+        self.curves = curveData.map { values in
+            createCurve(from: values.map { $0.cgPointValue })!
+        }
+    }
+    
+    // MARK: - Equatable and isEqual override
+    
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let otherPolyBezier = object as? PolyBezier else { return false }
+        return self == otherPolyBezier
+    }
+    
+    public static func == (lhs: PolyBezier, rhs: PolyBezier) -> Bool {
+        if lhs.curves.count != rhs.curves.count {
+            return false
+        }
+        for i in 0..<lhs.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
+            guard lhs.curves[i] == rhs.curves[i] else {
+                return false
+            }
+        }
+        return true
+    }
 }

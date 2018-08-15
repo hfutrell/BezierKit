@@ -115,12 +115,14 @@ internal class Utils {
     static func map(_ v: CGFloat,_ ds: CGFloat,_ de: CGFloat,_ ts: CGFloat,_ te: CGFloat) -> CGFloat {
         let d1 = de-ds
         let d2 = te-ts
-        let v2 =  v-ds
+        let v2 = v-ds
         let r = v2/d1
         return ts + d2*r        
     }
     
-    static func lli8(_ x1: CGFloat,_ y1: CGFloat,_ x2: CGFloat,_ y2: CGFloat,_ x3: CGFloat,_ y3: CGFloat,_ x4: CGFloat,_ y4: CGFloat) -> CGPoint? {
+    static func lli8(_ x1: CGFloat,_ y1: CGFloat,_ x2: CGFloat,_ y2: CGFloat,_ x3:
+        // TODO: implement line primitive (distinct from line segment) to rid of this function
+        CGFloat,_ y3: CGFloat,_ x4: CGFloat,_ y4: CGFloat) -> CGPoint? {
         let nx = (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
         let ny = (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)
         let d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
@@ -129,21 +131,14 @@ internal class Utils {
         }
         return CGPoint( x: nx/d, y: ny/d )
     }
-    
+        
     static func lli4(_ p1: CGPoint,_ p2: CGPoint,_ p3: CGPoint,_ p4: CGPoint) -> CGPoint? {
+        // TODO: implement line primitive (distinct from line segment) to rid of this function
         let x1 = p1.x; let y1 = p1.y
         let x2 = p2.x; let y2 = p2.y
         let x3 = p3.x; let y3 = p3.y
         let x4 = p4.x; let y4 = p4.y
         return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
-    }
-    
-    static func approximately(_ a: CGFloat,_ b: CGFloat, precision: CGFloat = epsilon) -> Bool {
-        return abs(a-b) <= precision
-    }
-    
-    static func between(_ v: CGFloat,_ m: CGFloat,_ M: CGFloat) -> Bool {
-        return (m <= v && v <= M) || Utils.approximately(v, m) || Utils.approximately(v, M)
     }
     
     // cube root function yielding real roots
@@ -166,7 +161,7 @@ internal class Utils {
         }
     }
     
-    static func roots(points: [CGPoint], line: LineSegment = LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 0.0))) -> [CGFloat] {
+    static func roots(points: [CGPoint], line: LineSegment) -> [CGFloat] {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
         
@@ -260,7 +255,7 @@ internal class Utils {
         }
     }
     
-    static func droots(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, callback:((CGFloat)->())) {
+    static func droots(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, callback:(CGFloat) -> Void) {
         // quadratic roots are easy
         // do something with each root
         let d: CGFloat = a - 2.0*b + c
@@ -277,7 +272,7 @@ internal class Utils {
         }
     }
     
-    static func droots(_ a: CGFloat, _ b: CGFloat, callback:((CGFloat)->())) {
+    static func droots(_ a: CGFloat, _ b: CGFloat, callback: (CGFloat) -> Void) {
         // linear roots are super easy
         // do something with the root, if it exists
         if a != b {
@@ -374,35 +369,13 @@ internal class Utils {
             return
         }
         else if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
-            
-            let a1 = c1.curve.startingPoint
-            let b1 = c1.curve.endingPoint - c1.curve.startingPoint
-            let a2 = c2.curve.startingPoint
-            let b2 = c2.curve.endingPoint - c2.curve.startingPoint
-            
-            let _a = b1.x
-            let _b = -b2.x
-            let _c = b1.y
-            let _d = -b2.y
-            
-            // by Cramer's rule we have
-            // t1 = ed - bf / ad - bc
-            // t2 = af - ec / ad - bc
-            let det = _a * _d - _b * _c
-            
-            let _e = -a1.x + a2.x
-            let _f = -a1.y + a2.y
-            
-            let inv_det = 1.0 / det
-            let t1 = ( _e * _d - _b * _f ) * inv_det
-            if t1 > 1.0 || t1 < 0.0  {
-                return // t1 out of interval [0, 1]
+            let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
+            let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
+            guard let intersection = l1.intersects(line: l2).first else {
+                return
             }
-            let t2 = ( _a * _f - _e * _c ) * inv_det
-            if t2 > 1.0 || t2 < 0.0 {
-                return // t2 out of interval [0, 1]
-            }
-            // segments intersect at t1, t2
+            let t1 = intersection.t1
+            let t2 = intersection.t2
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
                                         t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
         }
@@ -466,7 +439,7 @@ internal class Utils {
         return Arc(origin: o, radius: r, startAngle: s, endAngle: e, interval: interval)
     }
     
-    static func hull(_ p: [CGPoint],_ t: CGFloat) -> [CGPoint] {
+    static func hull(_ p: [CGPoint], _ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count
         var q: [CGPoint] = p
         q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc

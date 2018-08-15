@@ -8,136 +8,26 @@
 
 import CoreGraphics
 
-private class BVHConstructionContext {
-    
-    private let table: UnsafeMutablePointer<CGFloat>
-    private let tableRowLength: Int
-    
-    func boundingBoxArea(_ i: Int,_ j: Int) -> CGFloat {
-        return table[i * tableRowLength + j]
-    }
-    
-    init(objects: [BoundingBoxProtocol]) {
-        
-        // table[i][j] stores the bounding box of objects i...j, for j<i it is the union of i..<count union 0..<=j
-        
-        assert(objects.count > 0)
-        
-        let objectBoundingBoxes = objects.map { $0.boundingBox }
-        
-        tableRowLength = objects.count
-        table = UnsafeMutablePointer<CGFloat>.allocate(capacity: tableRowLength * tableRowLength)
-        for i in 0..<objects.count {
-            
-            let row: UnsafeMutablePointer<CGFloat> = table + i * objects.count
-            
-            var prev = objectBoundingBoxes[i]
-            row[i] = prev.area
-            
-            for j in i+1..<objects.count {
-                prev.union(objectBoundingBoxes[j])
-                row[j] = prev.area
-            }
-            if i > 0 {
-                prev.union(objectBoundingBoxes[0])
-                row[0] = prev.area
-            }
-            if i > 1 {
-                for j in 1..<i {
-                    prev.union(objectBoundingBoxes[j])
-                    row[j] = prev.area
-                }
-            }
-        }
-        
-        // check the results
-        
-//        for i in 0..<objects.count {
-//            for j in 0..<objects.count {
-//                var expected = BoundingBox.empty
-//
-//                for ip in 0..<objects.count {
-//                    if (ip >= i && ip <= j) || (j < i && (ip <= j || ip >= i) ) {
-//                        expected = BoundingBox(first: expected, second: objects[ip].boundingBox)
-//                    }
-//                }
-//                assert(expected == table[i][j])
-//
-//            }
-//        }
-        
-    }
-    
-    deinit {
-        table.deallocate()
-    }
-    
-}
-
 internal class BVHNode {
-    let boundingBox: BoundingBox
-    let nodeType: NodeType
-    enum NodeType {
+    
+    internal let boundingBox: BoundingBox
+    
+    internal let nodeType: NodeType
+    
+    internal enum NodeType {
         case leaf(object: BoundingBoxProtocol)
         case `internal`(list: [BVHNode])
     }
-    func visit(callback: (BVHNode, Int) -> Bool, currentDepth depth: Int) {
-        guard callback(self, depth) == true else {
-            return
-        }
-        if case let .`internal`(list: list) = self.nodeType {
-            list.forEach {
-                $0.visit(callback: callback, currentDepth: depth+1)
-            }
-        }
-    }
-    fileprivate init(objects: ArraySlice<BoundingBoxProtocol>, context: BVHConstructionContext) {
-      
-        assert(objects.isEmpty == false, "unexpectedly empty array slice!")
-        
-        if objects.count == 1 {
-            self.nodeType = .leaf(object: objects.first!)
-            self.boundingBox = objects.first!.boundingBox
-            return
-        }
-        
-        // determine where to split the node between left and right
-        
-        var split = objects.startIndex+1
-        var minArea = context.boundingBoxArea(objects.startIndex, split-1) + context.boundingBoxArea(split,objects.endIndex-1)
-        
-        if objects.count > 2 {
-            for j in objects.startIndex+2..<objects.endIndex {
-                let area = context.boundingBoxArea(objects.startIndex, j-1) + context.boundingBoxArea(j,objects.endIndex-1)
-                if area < minArea {
-                    split = j
-                    minArea = area
-                }
-            }
-        }
-        
-        // now that we've found the optimal split, recurse to compute children
-        
-        let left = BVHNode(objects: objects[objects.startIndex..<split], context: context)
-        let right = BVHNode(objects: objects[split..<objects.endIndex], context: context)
-        
-        let boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
-        
-        self.boundingBox = boundingBox
     
-        
-        let list: [BVHNode] = [left, right].reduce([BVHNode]()) { nextResult, node in
-            if case let .`internal`(nodeChildren) = node.nodeType {
-                if ( (1.0 - node.boundingBox.area / boundingBox.area) * CGFloat(nodeChildren.count)) < 1.0 { // surface area heuristic to determine flattening
-                    return nextResult + nodeChildren
-                }
-            }
-            return nextResult + [node]
-        }
-        self.nodeType = .internal(list: list)
-
+    convenience internal init(objects: [BoundingBoxProtocol]) {
+        self.init(slice: ArraySlice<BoundingBoxProtocol>(objects))
     }
-    func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
+    
+    internal func visit(callback: (BVHNode, Int) -> Bool) {
+        self.visit(callback: callback, currentDepth: 0)
+    }
+    
+    internal func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
         
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return // nothing to do
@@ -168,75 +58,60 @@ internal class BVHNode {
             }
         }
     }
-}
-
-internal class BoundingVolumeHierarchy {
-    private let root: BVHNode
     
-    init(objects: [BoundingBoxProtocol]) {
-        
-        let context = BVHConstructionContext(objects: objects)
-        
-        // first we need to get the objects in an optimal order
-        
-        var minArea: CGFloat = context.boundingBoxArea(0,0) + context.boundingBoxArea(1, objects.count-1)
-        var bestIndex = (0, 0)
-        
-        for i in 0..<objects.count {
-            for j in i..<objects.count {
-                var area = context.boundingBoxArea(i, j)
-                if ( i > 0) {
-                    area += context.boundingBoxArea(0, i)
-                }
-                if ( j+1 < objects.count ) {
-                    area += context.boundingBoxArea(j+1, objects.count-1)
-                }
-                if area < minArea {
-                    minArea = area
-                    bestIndex = (i,j)
-                }
+    // MARK: - private
+    
+    private func visit(callback: (BVHNode, Int) -> Bool, currentDepth depth: Int) {
+        guard callback(self, depth) == true else {
+            return
+        }
+        if case let .`internal`(list: list) = self.nodeType {
+            list.forEach {
+                $0.visit(callback: callback, currentDepth: depth+1)
             }
         }
-        
-        var reordered: [BoundingBoxProtocol] = []
-        if bestIndex.1 < bestIndex.0 {
-            reordered = [BoundingBoxProtocol](objects[0...bestIndex.1]) + [BoundingBoxProtocol](objects[bestIndex.0..<objects.count])
+    }
+    
+    private init(slice: ArraySlice<BoundingBoxProtocol>) {
+        if slice.isEmpty {
+            self.nodeType = .internal(list: [])
+            self.boundingBox = BoundingBox.empty
+        }
+        else if slice.count == 1 {
+            let object = slice.first!
+            self.nodeType = .leaf(object: object)
+            self.boundingBox = object.boundingBox
         }
         else {
-            reordered = [BoundingBoxProtocol](objects[bestIndex.0...bestIndex.1]) + [BoundingBoxProtocol](objects[(bestIndex.1+1)..<objects.count]) + [BoundingBoxProtocol](objects[0..<bestIndex.0])
+            let startIndex = slice.startIndex
+            let splitIndex = ( slice.startIndex + slice.endIndex ) / 2
+            let endIndex   = slice.endIndex
+            let left    = BVHNode(slice: slice[startIndex..<splitIndex])
+            let right   = BVHNode(slice: slice[splitIndex..<endIndex])
+            let boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
+            self.boundingBox = boundingBox
+            if slice.count > 2 {
+                // an optimization when at least one of left or right is not a leaf node
+                // check the surface-area heuristic to see if we actually get a better result by putting
+                // the descendents of left and right as child nodes of self
+                func descendents(_ node: BVHNode) -> [BVHNode] {
+                    switch node.nodeType {
+                    case .leaf(_):
+                        return [node]
+                    case let .internal(list):
+                        return list
+                    }
+                }
+                let leftDescendents     = descendents(left)
+                let rightDescendents    = descendents(right)
+                let costLeft            = CGFloat(leftDescendents.count) * ( 1.0 - left.boundingBox.area / boundingBox.area )
+                let costRight           = CGFloat(rightDescendents.count) * ( 1.0 - right.boundingBox.area / boundingBox.area )
+                if 2 > costLeft + costRight {
+                    self.nodeType = .internal(list: leftDescendents + rightDescendents)
+                    return
+                }
+            }
+            self.nodeType = .internal(list: [left, right])
         }
-        let context2 = BVHConstructionContext(objects: [BoundingBoxProtocol](reordered))
-        self.root = BVHNode(objects: reordered[0..<reordered.count], context: context2)
-
-//        var maxChildren = 0
-//        var maxDepth = 0
-//        self.visit { node, depth in
-//            guard case let .`internal`(nodeChildren) = node.nodeType else {
-//                return
-//            }
-//            if nodeChildren.count > maxChildren { // surface area heuristic to determine flattening
-//                maxChildren = nodeChildren.count
-//            }
-//            if depth > maxDepth {
-//                maxDepth = depth
-//            }
-//        }
-//
-//        print("max children = \(maxChildren)")
-//        print("max depth = \(maxDepth)")
-
     }
-    
-    var boundingBox: BoundingBox {
-        return self.root.boundingBox
-    }
-    
-    func intersects(boundingVolumeHierarchy other: BoundingVolumeHierarchy, callback: (BoundingBoxProtocol, BoundingBoxProtocol) -> Void) {
-        self.root.intersects(node: other.root, callback: callback)
-    }
-    
-    func visit(callback: (BVHNode, Int) -> Bool) {
-        self.root.visit(callback: callback, currentDepth: 0)
-    }
-    
 }
