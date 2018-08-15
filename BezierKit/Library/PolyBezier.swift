@@ -9,11 +9,14 @@
 import CoreGraphics
 import Foundation
 
-#if os(OSX)
+#if os(macOS)
 private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSValue.cgPointValue available
-    private var cgPointValue: CGPoint {
+    var cgPointValue: CGPoint {
         let pointValue: NSPoint = self.pointValue
         return CGPoint(x: pointValue.x, y: pointValue.y)
+    }
+    convenience init(cgPoint: CGPoint) {
+        self.init(point: NSPoint(x: cgPoint.x, y: cgPoint.y))
     }
 }
 #endif
