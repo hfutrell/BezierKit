@@ -106,7 +106,9 @@ public class PolyBezier: NSObject, NSCoding {
     }
     
     required public init?(coder aDecoder: NSCoder) {
-        guard let curveData = aDecoder.decodeObject() as? [[NSValue]] else { return nil }
+        guard let curveData = aDecoder.decodeObject() as? [[NSValue]] else {
+            return nil
+        }
         self.curves = curveData.map { values in
             createCurve(from: values.map { $0.cgPointValue })!
         }

@@ -109,8 +109,11 @@ import Foundation
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.subpaths)
     }
+    
     required public init?(coder aDecoder: NSCoder) {
-        guard let array = aDecoder.decodeObject() as? Array<PolyBezier> else { return nil }
+        guard let array = aDecoder.decodeObject() as? Array<PolyBezier> else {
+            return nil
+        }
         self.subpaths = array
     }
 
