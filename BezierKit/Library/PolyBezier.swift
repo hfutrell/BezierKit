@@ -25,7 +25,7 @@ public class PolyBezier: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
-    internal lazy var bvh: BoundingVolumeHierarchy = BoundingVolumeHierarchy(objects: curves)
+    internal lazy var bvh: BVHNode = BVHNode(objects: curves)
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
@@ -87,7 +87,7 @@ public class PolyBezier: NSObject, NSCoding {
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         var intersections: [CGPoint] = []
-        self.bvh.intersects(boundingVolumeHierarchy: other.bvh) { o1, o2 in
+        self.bvh.intersects(node: other.bvh) { o1, o2 in
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }
