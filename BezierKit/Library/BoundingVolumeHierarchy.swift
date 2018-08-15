@@ -91,6 +91,7 @@ internal class BVHNode {
             let boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
             self.boundingBox = boundingBox
             if slice.count > 2 {
+                // an optimization when at least one of left or right is not a leaf node
                 // check the surface-area heuristic to see if we actually get a better result by putting
                 // the descendents of left and right as child nodes of self
                 func descendents(_ node: BVHNode) -> [BVHNode] {
