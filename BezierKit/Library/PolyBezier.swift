@@ -9,6 +9,15 @@
 import CoreGraphics
 import Foundation
 
+#if os(OSX)
+private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSValue.cgPointValue available
+    private var cgPointValue: CGPoint {
+        let pointValue: NSPoint = self.pointValue
+        return CGPoint(x: pointValue.x, y: pointValue.y)
+    }
+}
+#endif
+
 public class PolyBezier: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
@@ -92,6 +101,7 @@ public class PolyBezier: NSObject, NSCoding {
         }
         aCoder.encode(values)
     }
+    
     required public init?(coder aDecoder: NSCoder) {
         guard let curveData = aDecoder.decodeObject() as? [[NSValue]] else { return nil }
         self.curves = curveData.map { values in
