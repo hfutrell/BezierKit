@@ -42,8 +42,10 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     }
     
     public init(p0: CGPoint, p1: CGPoint, p2: CGPoint, p3: CGPoint) {
-        let points = [p0, p1, p2, p3]
-        self.init(points: points)
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
     }
     
     public init(lineSegment l: LineSegment) {

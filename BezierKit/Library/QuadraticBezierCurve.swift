@@ -20,8 +20,9 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     }
     
     public init(p0: CGPoint, p1: CGPoint, p2: CGPoint) {
-        let points = [p0, p1, p2]
-        self.init(points: points)
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
     }
     
     public init(lineSegment l: LineSegment) {
