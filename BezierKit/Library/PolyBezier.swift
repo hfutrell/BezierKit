@@ -114,6 +114,8 @@ public final class PolyBezier: NSObject, NSCoding {
         }
     }
     
+    // MARK: -
+    
     override public func isEqual(_ object: Any?) -> Bool {
         // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
         guard let otherPolyBezier = object as? PolyBezier else {

@@ -121,6 +121,8 @@ import Foundation
         self.subpaths = array
     }
     
+    // MARK: -
+    
     override public func isEqual(_ object: Any?) -> Bool {
         // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
         guard let otherPath = object as? Path else {
