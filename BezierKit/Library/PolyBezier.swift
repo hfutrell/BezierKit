@@ -114,19 +114,16 @@ public final class PolyBezier: NSObject, NSCoding {
         }
     }
     
-    // MARK: - Equatable and isEqual override
-    
     override public func isEqual(_ object: Any?) -> Bool {
-        guard let otherPolyBezier = object as? PolyBezier else { return false }
-        return self == otherPolyBezier
-    }
-    
-    public static func == (lhs: PolyBezier, rhs: PolyBezier) -> Bool {
-        if lhs.curves.count != rhs.curves.count {
+        // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
+        guard let otherPolyBezier = object as? PolyBezier else {
             return false
         }
-        for i in 0..<lhs.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
-            guard lhs.curves[i] == rhs.curves[i] else {
+        guard self.curves.count == otherPolyBezier.curves.count else {
+            return false
+        }
+        for i in 0..<self.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
+            guard self.curves[i] == otherPolyBezier.curves[i] else {
                 return false
             }
         }
