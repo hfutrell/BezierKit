@@ -139,7 +139,8 @@ extension PolyBezier: Transformable {
         return PolyBezier(curves: self.curves.map { $0.copy(using: t)} )
     }
 }
- extension PolyBezier: Reversible {
+
+extension PolyBezier: Reversible {
     public func reversed() -> PolyBezier {
         return PolyBezier(curves: self.curves.reversed().map({$0.reversed()}))
     }

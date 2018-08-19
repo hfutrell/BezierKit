@@ -26,8 +26,8 @@ import Foundation
     
     @objc public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
-        for subpath in self.subpaths {
-            mutablePath.addPath(subpath.cgPath)
+        self.subpaths.forEach {
+            mutablePath.addPath($0.cgPath)
         }
         return mutablePath.copy()!
     }()
