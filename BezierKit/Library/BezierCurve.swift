@@ -85,11 +85,7 @@ extension BezierCurve {
         }
         return true
     }
-    
-    public func reversed() -> Self {
-        return Self(points: self.points.reversed())
-    }
-    
+        
     /*
      Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
      */
@@ -603,7 +599,15 @@ public protocol BoundingBoxProtocol {
     var boundingBox: BoundingBox { get }
 }
 
-public protocol BezierCurve: BoundingBoxProtocol {
+public protocol Transformable {
+    func copy(using: CGAffineTransform) -> Self
+}
+
+public protocol Reversible {
+    func reversed() -> Self
+}
+
+public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var simple: Bool { get }
     var points: [CGPoint] { get }
     var startingPoint: CGPoint { get }

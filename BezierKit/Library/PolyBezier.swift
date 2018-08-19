@@ -21,7 +21,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 }
 #endif
 
-public class PolyBezier: NSObject, NSCoding {
+public final class PolyBezier: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
@@ -131,5 +131,16 @@ public class PolyBezier: NSObject, NSCoding {
             }
         }
         return true
+    }
+}
+
+extension PolyBezier: Transformable {
+    public func copy(using t: CGAffineTransform) -> PolyBezier {
+        return PolyBezier(curves: self.curves.map { $0.copy(using: t)} )
+    }
+}
+ extension PolyBezier: Reversible {
+    public func reversed() -> PolyBezier {
+        return PolyBezier(curves: self.curves.reversed().map({$0.reversed()}))
     }
 }

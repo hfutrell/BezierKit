@@ -46,7 +46,7 @@ import Foundation
         }
     }
     
-    public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
+    @objc(intersectsPath:threshold:) public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         guard self.boundingBox.overlaps(path.boundingBox) else {
             return []
         }
@@ -59,7 +59,11 @@ import Foundation
         return intersections
     }
     
-    @objc(initWithCGPath:) public init(cgPath: CGPath) {
+    required public init(subpaths: [PolyBezier]) {
+        self.subpaths = subpaths
+    }
+    
+    @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
@@ -100,7 +104,7 @@ import Foundation
         cgPath.apply(info: rawContextPointer, function: applierFunction)
         context.finishUp()
         
-        subpaths = context.components
+        self.init(subpaths: context.components)
     }
     
     // MARK: - NSCoding
@@ -128,5 +132,17 @@ import Foundation
     
     public static func == (lhs: Path, rhs: Path) -> Bool {
         return lhs.subpaths == rhs.subpaths
+    }
+}
+
+@objc extension Path: Transformable {
+    @objc(copyUsingTransform:) public func copy(using t: CGAffineTransform) -> Self {
+        return type(of: self).init(subpaths: self.subpaths.map { $0.copy(using: t)})
+    }
+}
+
+@objc extension Path: Reversible {
+    public func reversed() -> Self {
+        return type(of: self).init(subpaths: self.subpaths.map { $0.reversed() })
     }
 }

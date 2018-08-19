@@ -20,8 +20,9 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     }
     
     public init(p0: CGPoint, p1: CGPoint, p2: CGPoint) {
-        let points = [p0, p1, p2]
-        self.init(points: points)
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
     }
     
     public init(lineSegment l: LineSegment) {
@@ -174,5 +175,17 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     
     public static func == (left: QuadraticBezierCurve, right: QuadraticBezierCurve) -> Bool {
         return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2
+    }
+    
+    // MARK: - Transformable
+    
+    public func copy(using t: CGAffineTransform) -> QuadraticBezierCurve {
+        return QuadraticBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t))
+    }
+    
+    // MARK: - Reversible
+    
+    public func reversed() -> QuadraticBezierCurve {
+        return QuadraticBezierCurve(p0: self.p2, p1: self.p1, p2: self.p0)
     }
 }

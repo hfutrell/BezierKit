@@ -153,6 +153,16 @@ public struct LineSegment: BezierCurve, Equatable {
         let t                = relativePoint.dot(delta) / delta.dot(delta)
         return self.compute(Utils.clamp(t, 0.0, 1.0))
     }
-
     
+    // MARK: - Transformable
+    
+    public func copy(using t: CGAffineTransform) -> LineSegment {
+        return LineSegment(p0: self.p0.applying(t), p1: self.p1.applying(t))
+    }
+    
+    // MARK: - Reversible
+    
+    public func reversed() -> LineSegment {
+        return LineSegment(p0: self.p1, p1: self.p0)
+    }
 }
