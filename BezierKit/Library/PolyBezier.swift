@@ -74,7 +74,7 @@ public final class PolyBezier: NSObject, NSCoding {
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
             }
-            else if case let .leaf(object) = node.nodeType {
+            else if case let .leaf(object, _) = node.nodeType {
                 let curve = object as! BezierCurve
                 if distance(p, curve.project(point: p)) < d {
                     found = true
@@ -87,7 +87,7 @@ public final class PolyBezier: NSObject, NSCoding {
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         var intersections: [CGPoint] = []
-        self.bvh.intersects(node: other.bvh) { o1, o2 in
+        self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }

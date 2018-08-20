@@ -185,4 +185,64 @@ class PathTests: XCTestCase {
         let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
         XCTAssertEqual(decodedPath, path)
     }
+    
+    func testContainsSimple1() {
+        let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let path = Path(cgPath: CGPath(rect: rect, transform: nil))
+        XCTAssertFalse(path.contains(CGPoint(x: -2, y: 0))) // the first point is outside the rectangle on the left
+        XCTAssertTrue(path.contains(CGPoint(x: 0, y: 0)))  // the second point falls inside the rectangle
+        XCTAssertFalse(path.contains(CGPoint(x: 3, y: 0))) // the third point falls outside the rectangle on the right
+    }
+    
+    func testContainsSimple2() {
+        let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let path = Path(cgPath: CGPath(ellipseIn: rect, transform: nil))
+        XCTAssertFalse(path.contains(CGPoint(x: 5, y: 5)))       // the first point is way outside the circle
+        XCTAssertFalse(path.contains(CGPoint(x: -0.8, y: -0.8))) // the second point is outside the circle, but within the bounding rect
+        XCTAssertTrue(path.contains(CGPoint(x: 0.3, y: 0.3)))    // the third point falls inside the circle
+        
+        // the 4th point falls inside the and is a tricky case when using the evenOdd fill mode because it aligns with two path elements exactly at y = 0
+        XCTAssertTrue(path.contains(CGPoint(x: 0.5, y: 0.0), using: .evenOdd))
+        XCTAssertTrue(path.contains(CGPoint(x: 0.5, y: 0.0), using: .winding))
+        
+        // the 5th point falls outside the circle, but drawing a horizontal line has a glancing blow with it
+        XCTAssertFalse(path.contains(CGPoint(x: 0.1, y: 1.0), using: .evenOdd))
+        XCTAssertFalse(path.contains(CGPoint(x: 0.1, y: -1.0), using: .winding))
+    }
+
+    func testContainsStar() {
+        let starPoints = stride(from: 0.0, to: 2.0 * Double.pi, by: 0.4 * Double.pi).map { CGPoint(x: cos($0), y: sin($0)) }
+        let cgPath = CGMutablePath()
+        
+        cgPath.move(to: starPoints[0])
+        cgPath.addLine(to: starPoints[3])
+        cgPath.addLine(to: starPoints[1])
+        cgPath.addLine(to: starPoints[4])
+        cgPath.addLine(to: starPoints[2])
+        cgPath.closeSubpath()
+
+        let path = Path(cgPath: cgPath)
+        
+        // check a point outside of the star
+        let outsidePoint = CGPoint(x: 0.5, y: -0.5)
+        XCTAssertFalse(path.contains(outsidePoint, using: .evenOdd))
+        XCTAssertFalse(path.contains(outsidePoint, using: .winding))
+        
+        // using the winding rule, the center of the star is in the path, but with even-odd it's not
+        XCTAssertTrue(path.contains(CGPoint.zero, using: .winding))
+        XCTAssertFalse(path.contains(CGPoint.zero, using: .evenOdd))
+
+        // check a point inside one of the star's arms
+        let armPoint = CGPoint(x: 0.9, y: 0.0)
+        XCTAssertTrue(path.contains(armPoint, using: .winding))
+        XCTAssertTrue(path.contains(armPoint, using: .evenOdd))
+
+        // check the edge case of the star's corners
+        for i in 0..<5 {
+            let point = starPoints[i] + CGPoint(x: 0.1, y: 0.0)
+            XCTAssertFalse(path.contains(point, using: .evenOdd), "point \(i)")
+            XCTAssertFalse(path.contains(point, using: .winding), "point \(i)")
+        }
+    }
+    
 }

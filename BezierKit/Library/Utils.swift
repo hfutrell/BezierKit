@@ -131,7 +131,11 @@ internal class Utils {
         }
         return CGPoint( x: nx/d, y: ny/d )
     }
-        
+    
+    static func approximately(_ a: CGFloat,_ b: CGFloat, precision: CGFloat = epsilon) -> Bool {
+        return abs(a-b) <= precision
+    }
+    
     static func lli4(_ p1: CGPoint,_ p2: CGPoint,_ p3: CGPoint,_ p4: CGPoint) -> CGPoint? {
         // TODO: implement line primitive (distinct from line segment) to rid of this function
         let x1 = p1.x; let y1 = p1.y
@@ -165,12 +169,16 @@ internal class Utils {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
         
-        let epsilon: CGFloat = 1.0e-6
+        let epsilon: CGFloat = 1.0e-7
         let reduce: (CGFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
         let clamp: (CGFloat) -> CGFloat = {
-            if $0 < 0.0 { return 0.0 }
-            else if $0 > 1.0 { return 1.0 }
-            else { return $0 }
+            if Utils.approximately($0, 0.0, precision: epsilon) {
+                return 0.0
+            }
+            if Utils.approximately($0, 1.0, precision: epsilon) {
+                return 1.0
+            }
+            return $0
         }
         
         if order == 2 {

@@ -412,6 +412,9 @@ extension BezierCurve {
     }
     
     public func intersects(line: LineSegment) -> [Intersection] {
+        if let l = self as? LineSegment {
+            return l.intersects(line: line)
+        }
         let lineDirection = (line.p1 - line.p0).normalize()
         let lineLength = (line.p1 - line.p0).length
         return Utils.roots(points: self.points, line: line).map({(t: CGFloat) -> Intersection in
