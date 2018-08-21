@@ -26,8 +26,8 @@ import Foundation
     
     @objc public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
-        for subpath in self.subpaths {
-            mutablePath.addPath(subpath.cgPath)
+        self.subpaths.forEach {
+            mutablePath.addPath($0.cgPath)
         }
         return mutablePath.copy()!
     }()
@@ -46,7 +46,7 @@ import Foundation
         }
     }
     
-    public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
+    @objc(intersectsPath:threshold:) public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         guard self.boundingBox.overlaps(path.boundingBox) else {
             return []
         }
@@ -59,7 +59,11 @@ import Foundation
         return intersections
     }
     
-    @objc(initWithCGPath:) public init(cgPath: CGPath) {
+    required public init(subpaths: [PolyBezier]) {
+        self.subpaths = subpaths
+    }
+    
+    @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
@@ -100,7 +104,7 @@ import Foundation
         cgPath.apply(info: rawContextPointer, function: applierFunction)
         context.finishUp()
         
-        subpaths = context.components
+        self.init(subpaths: context.components)
     }
     
     // MARK: - NSCoding
@@ -116,17 +120,106 @@ import Foundation
         }
         self.subpaths = array
     }
-
-    // MARK: - Equatable and isEqual override
+    
+    // MARK: -
     
     override public func isEqual(_ object: Any?) -> Bool {
+        // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
         guard let otherPath = object as? Path else {
             return false
         }
-        return self == otherPath
+        return self.subpaths == otherPath.subpaths
     }
     
-    public static func == (lhs: Path, rhs: Path) -> Bool {
-        return lhs.subpaths == rhs.subpaths
+    // MARK: -
+    
+    public func point(at location: IndexedPathLocation) -> CGPoint {
+        return self.element(at: location).compute(location.t)
+    }
+    
+    private func element(at location: IndexedPathLocation) -> BezierCurve {
+        return self.subpaths[location.componentIndex].curves[location.elementIndex]
+    }
+    
+    internal func intersects(line: LineSegment) -> [IndexedPathLocation] {
+        let lineBoundingBox = line.boundingBox
+        var results: [IndexedPathLocation] = []
+        for i in 0..<subpaths.count {
+            let subpath: PolyBezier = self.subpaths[i]
+            subpath.bvh.visit { (node: BVHNode, depth: Int) in
+                if case let .leaf(object, elementIndex) = node.nodeType {
+                    let curve = object as! BezierCurve
+                    results += curve.intersects(line: line).map {
+                        return IndexedPathLocation(componentIndex: i, elementIndex: elementIndex, t: $0.t1)
+                    }
+                }
+                // TODO: better line box intersection
+                return node.boundingBox.overlaps(lineBoundingBox)
+            }
+        }
+        return results
+    }
+    
+    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+        // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
+        let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
+        let delta = line.p1 - line.p0
+        let intersections = self.intersects(line: line)
+        var windingCount = 0
+        intersections.forEach {
+            let element = self.element(at: $0)
+            let t = $0.t
+            let dotProduct = delta.dot(element.normal($0.t))
+            if dotProduct < 0 {
+                if t != 0 {
+                    windingCount -= 1
+                }
+            }
+            else if dotProduct > 0 {
+                if t != 1 {
+                    windingCount += 1
+                }
+            }
+        }
+        switch rule {
+            case .winding:
+                return windingCount != 0
+            case .evenOdd:
+                return abs(windingCount) % 2 == 1
+        }
+    }
+}
+
+@objc public enum PathFillRule: NSInteger {
+    case winding=0, evenOdd
+};
+
+@objc extension Path: Transformable {
+    @objc(copyUsingTransform:) public func copy(using t: CGAffineTransform) -> Self {
+        return type(of: self).init(subpaths: self.subpaths.map { $0.copy(using: t)})
+    }
+}
+
+@objc extension Path: Reversible {
+    public func reversed() -> Self {
+        return type(of: self).init(subpaths: self.subpaths.map { $0.reversed() })
+    }
+}
+
+//@objc(BezierKitPathIntersection) public class PathIntersection: NSObject {
+//    let indices: [IndexedPathLocation]
+//    init(indices: [IndexedPathLocation]) {
+//        self.indices = indices
+//    }
+//}
+
+@objc(BezierKitPathIndex) public class IndexedPathLocation: NSObject {
+    fileprivate let componentIndex: Int
+    fileprivate let elementIndex: Int
+    fileprivate let t: CGFloat
+    init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
+        self.componentIndex = componentIndex
+        self.elementIndex = elementIndex
+        self.t = t
     }
 }

@@ -15,9 +15,6 @@ import Foundation
 public struct Intersection: Equatable, Comparable {
     public var t1: CGFloat
     public var t2: CGFloat
-    public static func == (lhs: Intersection, rhs: Intersection) -> Bool {
-        return lhs.t1 == rhs.t1 && lhs.t2 == rhs.t2
-    }
     public static func < (lhs: Intersection, rhs: Intersection ) -> Bool {
         if lhs.t1 < rhs.t1 {
             return true
@@ -37,9 +34,6 @@ public struct Interval: Equatable {
     public init(start: CGFloat, end: CGFloat) {
         self.start = start
         self.end = end
-    }
-    public static func == (left: Interval, right: Interval) -> Bool {
-        return (left.start == right.start && left.end == right.end)
     }
 }
 
@@ -100,8 +94,5 @@ public struct BoundingBox: Equatable {
             return $0 + CGFloat.maximum(diff1 * diff1, diff2 * diff2)
         }
         return sqrt(distanceSquared)
-    }
-    public static func == (left: BoundingBox, right: BoundingBox) -> Bool {
-        return (left.min == right.min && left.max == right.max)
     }
 }

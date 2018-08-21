@@ -11,7 +11,7 @@ import CoreGraphics
 /**
  Cubic Bézier Curve
  */
-public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
+public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
  
     public var p0, p1, p2, p3: CGPoint
     
@@ -237,11 +237,16 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let temp4 = d * self.p3
         return temp1 + temp2 + temp3 + temp4
     }
-    
-    // MARK: - Equatable
-    
-    public static func == (left: CubicBezierCurve, right: CubicBezierCurve) -> Bool {
-        return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2 && left.p3 == right.p3
+}
+
+extension CubicBezierCurve: Transformable {
+    public func copy(using t: CGAffineTransform) -> CubicBezierCurve {
+        return CubicBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t), p3: self.p3.applying(t))
     }
+}
     
+extension CubicBezierCurve: Reversible {
+    public func reversed() -> CubicBezierCurve {
+        return CubicBezierCurve(p0: self.p3, p1: self.p2, p2: self.p1, p3: self.p0)
+    }
 }

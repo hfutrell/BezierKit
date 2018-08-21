@@ -8,7 +8,7 @@
 
 import CoreGraphics
 
-public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
+public struct QuadraticBezierCurve: BezierCurve, ArcApproximateable, Equatable {
     
     public var p0, p1, p2: CGPoint
     
@@ -170,10 +170,16 @@ public struct QuadraticBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let temp3 = c * self.p2
         return temp1 + temp2 + temp3
     }
-    
-    // -- MARK: Equatable
-    
-    public static func == (left: QuadraticBezierCurve, right: QuadraticBezierCurve) -> Bool {
-        return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2
+}
+
+extension QuadraticBezierCurve: Transformable {
+    public func copy(using t: CGAffineTransform) -> QuadraticBezierCurve {
+        return QuadraticBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t))
+    }
+}
+
+extension QuadraticBezierCurve: Reversible {
+    public func reversed() -> QuadraticBezierCurve {
+        return QuadraticBezierCurve(p0: self.p2, p1: self.p1, p2: self.p0)
     }
 }

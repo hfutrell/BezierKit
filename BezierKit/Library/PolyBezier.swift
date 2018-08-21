@@ -21,7 +21,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 }
 #endif
 
-public class PolyBezier: NSObject, NSCoding {
+public final class PolyBezier: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
@@ -74,7 +74,7 @@ public class PolyBezier: NSObject, NSCoding {
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
             }
-            else if case let .leaf(object) = node.nodeType {
+            else if case let .leaf(object, _) = node.nodeType {
                 let curve = object as! BezierCurve
                 if distance(p, curve.project(point: p)) < d {
                     found = true
@@ -87,7 +87,7 @@ public class PolyBezier: NSObject, NSCoding {
     
     public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         var intersections: [CGPoint] = []
-        self.bvh.intersects(node: other.bvh) { o1, o2 in
+        self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }
@@ -114,22 +114,33 @@ public class PolyBezier: NSObject, NSCoding {
         }
     }
     
-    // MARK: - Equatable and isEqual override
+    // MARK: -
     
     override public func isEqual(_ object: Any?) -> Bool {
-        guard let otherPolyBezier = object as? PolyBezier else { return false }
-        return self == otherPolyBezier
-    }
-    
-    public static func == (lhs: PolyBezier, rhs: PolyBezier) -> Bool {
-        if lhs.curves.count != rhs.curves.count {
+        // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
+        guard let otherPolyBezier = object as? PolyBezier else {
             return false
         }
-        for i in 0..<lhs.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
-            guard lhs.curves[i] == rhs.curves[i] else {
+        guard self.curves.count == otherPolyBezier.curves.count else {
+            return false
+        }
+        for i in 0..<self.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
+            guard self.curves[i] == otherPolyBezier.curves[i] else {
                 return false
             }
         }
         return true
+    }
+}
+
+extension PolyBezier: Transformable {
+    public func copy(using t: CGAffineTransform) -> PolyBezier {
+        return PolyBezier(curves: self.curves.map { $0.copy(using: t)} )
+    }
+}
+
+extension PolyBezier: Reversible {
+    public func reversed() -> PolyBezier {
+        return PolyBezier(curves: self.curves.reversed().map({$0.reversed()}))
     }
 }

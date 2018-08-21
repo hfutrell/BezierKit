@@ -85,11 +85,7 @@ extension BezierCurve {
         }
         return true
     }
-    
-    public func reversed() -> Self {
-        return Self(points: self.points.reversed())
-    }
-    
+        
     /*
      Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
      */
@@ -416,6 +412,9 @@ extension BezierCurve {
     }
     
     public func intersects(line: LineSegment) -> [Intersection] {
+        if let l = self as? LineSegment {
+            return l.intersects(line: line)
+        }
         let lineDirection = (line.p1 - line.p0).normalize()
         let lineLength = (line.p1 - line.p0).length
         return Utils.roots(points: self.points, line: line).map({(t: CGFloat) -> Intersection in
@@ -603,7 +602,15 @@ public protocol BoundingBoxProtocol {
     var boundingBox: BoundingBox { get }
 }
 
-public protocol BezierCurve: BoundingBoxProtocol {
+public protocol Transformable {
+    func copy(using: CGAffineTransform) -> Self
+}
+
+public protocol Reversible {
+    func reversed() -> Self
+}
+
+public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var simple: Bool { get }
     var points: [CGPoint] { get }
     var startingPoint: CGPoint { get }

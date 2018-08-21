@@ -25,9 +25,6 @@ public struct Arc: Equatable {
         self.endAngle = endAngle
         self.interval = interval
     }
-    public static func == (left: Arc, right: Arc) -> Bool {
-        return (left.origin == right.origin && left.radius == right.radius && left.startAngle == right.startAngle && left.endAngle == right.endAngle && left.interval == right.interval)
-    }
     public func compute(_ t: CGFloat) -> CGPoint {
         // computes a value on the arc with t in [0, 1]
         let theta: CGFloat = t * self.endAngle + (1.0 - t) * self.startAngle
