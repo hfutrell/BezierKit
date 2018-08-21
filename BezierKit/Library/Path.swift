@@ -169,7 +169,8 @@ import Foundation
         intersections.forEach {
             let element = self.element(at: $0)
             let t = $0.t
-            let dotProduct = delta.dot(element.normal($0.t))
+            assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
+            let dotProduct = delta.dot(element.normal(t))
             if dotProduct < 0 {
                 if t != 0 {
                     windingCount -= 1
@@ -188,6 +189,11 @@ import Foundation
                 return abs(windingCount) % 2 == 1
         }
     }
+    
+//    @objc public func simplify(using rule: PathFillRule = .winding) -> Path {
+//        // TODO: lol, it's a stub! you need to actually write this
+//        return self
+//    }
 }
 
 @objc public enum PathFillRule: NSInteger {

@@ -186,6 +186,8 @@ class PathTests: XCTestCase {
         XCTAssertEqual(decodedPath, path)
     }
     
+    // MARK: contains
+    
     func testContainsSimple1() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path = Path(cgPath: CGPath(rect: rect, transform: nil))
@@ -244,5 +246,21 @@ class PathTests: XCTestCase {
             XCTAssertFalse(path.contains(point, using: .winding), "point \(i)")
         }
     }
+    
+    func testContainsCircleWithHole() {
+        let rect1 = CGRect(origin: CGPoint(x: -3, y: -3), size: CGSize(width: 6, height: 6))
+        let circlePath = Path(cgPath: CGPath(ellipseIn: rect1, transform: nil))
+        let rect2 = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let reversedCirclePath = Path(cgPath: CGPath(ellipseIn: rect2, transform: nil)).reversed()
+        let circleWithHole = Path(subpaths: circlePath.subpaths + reversedCirclePath.subpaths)
+        XCTAssertFalse(circleWithHole.contains(CGPoint(x: 0.0, y: 0.0), using: .evenOdd))
+        XCTAssertFalse(circleWithHole.contains(CGPoint(x: 0.0, y: 0.0), using: .winding))
+        XCTAssertTrue(circleWithHole.contains(CGPoint(x: 2.0, y: 0.0), using: .evenOdd))
+        XCTAssertTrue(circleWithHole.contains(CGPoint(x: 2.0, y: 0.0), using: .winding))
+        XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .evenOdd))
+        XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
+    }
+    
+    // MARK: simplify(using:)
     
 }
