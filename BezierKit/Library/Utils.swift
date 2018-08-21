@@ -15,9 +15,9 @@ import CoreGraphics
 internal class Utils {
 
     // float precision significant decimal
-    static let epsilon: CGFloat = 0.000001
-    static let tau: CGFloat = 2.0 * CGFloat.pi
-    static let quart: CGFloat = CGFloat.pi / 2.0
+    static let epsilon: Double = 0.000001
+    static let tau: Double = 2.0 * Double.pi
+    static let quart: Double = Double.pi / 2.0
     
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     static let Tvalues: ContiguousArray<CGFloat> = [
@@ -132,7 +132,7 @@ internal class Utils {
         return CGPoint( x: nx/d, y: ny/d )
     }
     
-    static func approximately(_ a: CGFloat,_ b: CGFloat, precision: CGFloat = epsilon) -> Bool {
+    static private func approximately(_ a: Double,_ b: Double, precision: Double) -> Bool {
         return abs(a-b) <= precision
     }
     
@@ -146,7 +146,7 @@ internal class Utils {
     }
     
     // cube root function yielding real roots
-    static func crt(_ v: CGFloat) -> CGFloat {
+    static private func crt(_ v: Double) -> Double {
         return (v < 0) ? -pow(-v,1.0/3.0) : pow(v,1.0/3.0)
     }
     
@@ -169,33 +169,37 @@ internal class Utils {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
         
-        let epsilon: CGFloat = 1.0e-7
-        let reduce: (CGFloat) -> Bool = { (-epsilon) <= $0 && $0 <= (1 + epsilon) }
-        let clamp: (CGFloat) -> CGFloat = {
-            if Utils.approximately($0, 0.0, precision: epsilon) {
-                return 0.0
+        let clamp: (Double) -> CGFloat? = {
+            if $0 < -epsilon {
+                return nil
             }
-            if Utils.approximately($0, 1.0, precision: epsilon) {
-                return 1.0
+            else if $0 > 1.0 + epsilon {
+                return nil
             }
-            return $0
+            else if Utils.approximately($0, 0.0, precision: epsilon) {
+                return CGFloat(0.0)
+            }
+            else if Utils.approximately($0, 1.0, precision: epsilon) {
+                return CGFloat(1.0)
+            }
+            return CGFloat($0)
         }
         
         if order == 2 {
-            let a = p[0].y
-            let b = p[1].y
-            let c = p[2].y
+            let a = Double(p[0].y)
+            let b = Double(p[1].y)
+            let c = Double(p[2].y)
             let d = a - 2*b + c
             if abs(d) > epsilon {
                 let m1 = -sqrt(b*b-a*c)
                 let m2 = -a+b
-                let v1: CGFloat = -( m1+m2)/d
-                let v2: CGFloat = -(-m1+m2)/d
-                return [v1, v2].filter(reduce).map(clamp)
+                let v1: Double = -( m1+m2)/d
+                let v2: Double = -(-m1+m2)/d
+                return [v1, v2].compactMap(clamp)
             }
             else if a != b {
                 // TODO: also fix in droots!
-                return [CGFloat(0.5 * a / (a-b))].filter(reduce).map(clamp)
+                return [Double(0.5) * a / (a-b)].compactMap(clamp)
             }
             else {
                 return []
@@ -203,10 +207,10 @@ internal class Utils {
         }
         else if order == 3 {
             // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
-            let pa = p[0].y
-            let pb = p[1].y
-            let pc = p[2].y
-            let pd = p[3].y
+            let pa = Double(p[0].y)
+            let pb = Double(p[1].y)
+            let pc = Double(p[2].y)
+            let pd = Double(p[3].y)
             let temp1 = -pa
             let temp2 = 3*pb
             let temp3 = -3*pc
@@ -243,19 +247,19 @@ internal class Utils {
                 let x1 = t1 * cos(phi/3) - a/3
                 let x2 = t1 * cos((phi+tau)/3) - a/3
                 let x3 = t1 * cos((phi+2*tau)/3) - a/3
-                return [x1, x2, x3].filter(reduce).map(clamp)
+                return [x1, x2, x3].compactMap(clamp)
             }
             else if discriminant == 0 {
                 let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
                 let x1 = 2*u1-a/3
                 let x2 = -u1 - a/3
-                return [x1,x2].filter(reduce).map(clamp)
+                return [x1,x2].compactMap(clamp)
             }
             else {
                 let sd = sqrt(discriminant)
                 let u1 = crt(-q2+sd)
                 let v1 = crt(q2+sd)
-                return [u1-v1-a/3].filter(reduce).map(clamp)
+                return [u1-v1-a/3].compactMap(clamp)
             }
         }
         else {
@@ -400,10 +404,10 @@ internal class Utils {
     static func getccenter( _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint, _ interval: Interval) -> Arc {
         let d1 = p2 - p1
         let d2 = p3 - p2
-        let d1p = CGPoint(x: d1.x * cos(quart) - d1.y * sin(quart),
-                          y: d1.x * sin(quart) + d1.y * cos(quart))
-        let d2p = CGPoint(x: d2.x * cos(quart) - d2.y * sin(quart),
-                          y: d2.x * sin(quart) + d2.y * cos(quart))
+        let d1p = CGPoint(x: d1.x * cos(CGFloat(quart)) - d1.y * sin(CGFloat(quart)),
+                          y: d1.x * sin(CGFloat(quart)) + d1.y * cos(CGFloat(quart)))
+        let d2p = CGPoint(x: d2.x * cos(CGFloat(quart)) - d2.y * sin(CGFloat(quart)),
+                          y: d2.x * sin(CGFloat(quart)) + d2.y * cos(CGFloat(quart)))
         // chord midpoints
         let m1 = 0.5 * (p1 + p2)
         let m2 = 0.5 * (p2 + p3)
@@ -427,7 +431,7 @@ internal class Utils {
             // if m<s<e, arc(e, s + tau)
             // if s<e<m, arc(e, s + tau)
             if s>m || m>e {
-                s += tau
+                s += CGFloat(tau)
             }
             if s>e {
                 swap(&s, &e)
@@ -441,7 +445,7 @@ internal class Utils {
                 swap(&s, &e)
             }
             else {
-                e += tau
+                e += CGFloat(tau)
             }
         }
         return Arc(origin: o, radius: r, startAngle: s, endAngle: e, interval: interval)
