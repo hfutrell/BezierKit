@@ -166,3 +166,42 @@ public struct IndexedPathComponentLocation {
 public struct PathComponentIntersection {
     let indexedComponentLocation1, indexedComponentLocation2: IndexedPathComponentLocation
 }
+
+class PathElementTransition {
+    enum TransitionType {
+        case line
+        case quadCurve(control: CGPoint)
+        case curve(control1: CGPoint, control2: CGPoint)
+    }
+    let vertex: Vertex
+    let transitionType: TransitionType
+    init(vertex: Vertex, transitionType: TransitionType) {
+        self.vertex = vertex
+        self.transitionType = transitionType
+    }
+}
+
+class Vertex {
+    enum VertextType {
+        case regular // ie, not a crossing
+        case crossing(entryExit: Bool, neighbor: UnsafePointer<Vertex>, alpha: CGFloat)
+    }
+    let location: CGPoint
+    let vertexType: VertextType
+    // pointers must be set after initialization
+    var next: PathElementTransition! = nil
+    weak var previous: PathElementTransition! = nil
+    init(location: CGPoint, vertexType: VertextType) {
+        self.location = location
+        self.vertexType = vertexType
+    }
+}
+
+public class AugmentedGraph {
+    init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
+        
+        
+        
+        
+    }
+}
