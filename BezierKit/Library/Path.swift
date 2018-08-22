@@ -190,10 +190,27 @@ import Foundation
         }
     }
     
-//    @objc public func simplify(using rule: PathFillRule = .winding) -> Path {
-//        // TODO: lol, it's a stub! you need to actually write this
-//        return self
-//    }
+    @objc public func simplifyToEvenOdd() -> Path {
+        
+        for element in self.pathElements {
+            
+            let intersection = self.intersect(element)
+            
+            // let's pretend for a second that these intersections are de-duped so it's just a set of t-values
+            
+            
+            
+        }
+        
+        // ok, let's pretend now we have a sorted list of path locations that represent intersections
+        // ok, why does 1 location have an array of others? because the same t-value might intersect multiple curves
+        [ location1 : [other1, other2, other3]]
+        
+        // ok, next we proceed around the locations and start doing splits and isertions and things
+        
+        // TODO: lol, it's a stub! you need to actually write this
+        return self
+    }
 }
 
 @objc public enum PathFillRule: NSInteger {
