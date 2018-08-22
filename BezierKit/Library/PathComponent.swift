@@ -85,12 +85,18 @@ public final class PathComponent: NSObject, NSCoding {
         return found
     }
     
-    public func intersects(_ other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
-        var intersections: [CGPoint] = []
+    public func intersects(_ other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
+        var intersections: [PathComponentIntersection] = []
         self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
-            intersections += c1.intersects(curve: c2, threshold: threshold).map { c1.compute($0.t1) }
+            let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
+            let pathComponentIntersections = elementIntersections.map { (i: Intersection) -> PathComponentIntersection in
+                let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
+                let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
+                return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
+            }
+            intersections += pathComponentIntersections
         }
         return intersections
     }
@@ -134,6 +140,9 @@ public final class PathComponent: NSObject, NSCoding {
     
     // MARK: -
     
+    public func point(at location: IndexedPathComponentLocation) -> CGPoint {
+        return self.curves[location.elementIndex].compute(location.t)
+    }
     
 }
 
@@ -147,4 +156,13 @@ extension PathComponent: Reversible {
     public func reversed() -> PathComponent {
         return PathComponent(curves: self.curves.reversed().map({$0.reversed()}))
     }
+}
+
+public struct IndexedPathComponentLocation {
+    let elementIndex: Int
+    let t: CGFloat
+}
+
+public struct PathComponentIntersection {
+    let indexedComponentLocation1, indexedComponentLocation2: IndexedPathComponentLocation
 }
