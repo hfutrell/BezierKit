@@ -172,12 +172,20 @@ class PathElementTransition {
         case line
         case quadCurve(control: CGPoint)
         case curve(control1: CGPoint, control2: CGPoint)
+        func reversed() -> TransitionType {
+            switch self {
+                case let .curve(control1: c1, control2: c2):
+                    return .curve(control1: c2, control2: c1)
+                default:
+                    return self
+            }
+        }
     }
     let vertex: Vertex
-    let transitionType: TransitionType
-    init(vertex: Vertex, transitionType: TransitionType) {
+    let transition: TransitionType
+    init(vertex: Vertex, transition: TransitionType) {
         self.vertex = vertex
-        self.transitionType = transitionType
+        self.transition = transition
     }
 }
 
@@ -197,10 +205,39 @@ class Vertex {
     }
 }
 
+extension PathComponent {
+    func linkedListRepresentation() -> Vertex {
+        let firstPoint = self.curves.first!.startingPoint
+        let firstVertex = Vertex(location: firstPoint, vertexType: .regular)
+        var currentVertex = firstVertex
+        for i in 0..<self.curves.count {
+            let curve = self.curves[i]
+            let nextVertex = (i == self.curves.count-1) ? firstVertex : Vertex(location: curve.endingPoint, vertexType: .regular)
+            switch curve {
+            case is LineSegment:
+                currentVertex.next = PathElementTransition(vertex: nextVertex, transition: .line)
+            case let quadCurve as QuadraticBezierCurve:
+                currentVertex.next = PathElementTransition(vertex: nextVertex, transition: .quadCurve(control: quadCurve.p1))
+            case let cubicCurve as CubicBezierCurve:
+                currentVertex.next = PathElementTransition(vertex: nextVertex, transition: .curve(control1: cubicCurve.p1, control2: cubicCurve.p2))
+            default:
+                fatalError("CGPath does not support curve type (\(type(of: curve))")
+            }
+            currentVertex = nextVertex
+        }
+        // for each vertex create the `previous` transition
+        currentVertex = firstVertex
+        repeat {
+            let backwardsTransition = PathElementTransition(vertex: currentVertex, transition: currentVertex.next.transition.reversed())
+            currentVertex.next.vertex.previous = backwardsTransition
+            currentVertex = currentVertex.next.vertex
+        } while currentVertex !== firstVertex /* !== because we care about pointer equality here */
+        return firstVertex
+    }
+}
+
 public class AugmentedGraph {
     init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
-        
-        
         
         
     }
