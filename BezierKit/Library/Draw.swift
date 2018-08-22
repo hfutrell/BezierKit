@@ -295,9 +295,9 @@ public class Draw {
     
     }
     
-    public static func drawPolyBezier(_ context: CGContext, polyBezier: PolyBezier, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
+    public static func drawPathComponent(_ context: CGContext, pathComponent: PathComponent, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
         if includeBoundingVolumeHierarchy {
-            polyBezier.bvh.visit { node, depth in
+            pathComponent.bvh.visit { node, depth in
                 setColor(context, color: randomColors[depth])
                 context.setLineWidth(1.0)
                 context.setLineWidth(5.0 / CGFloat(depth+1))
@@ -308,7 +308,7 @@ public class Draw {
         }
         context.setLineWidth(1.0)
         setColor(context, color: Draw.black)
-        polyBezier.curves.forEach {
+        pathComponent.curves.forEach {
             drawCurve(context, curve: $0, offset: offset)
         }
     }

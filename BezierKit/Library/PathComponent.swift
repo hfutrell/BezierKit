@@ -1,5 +1,5 @@
 //
-//  PolyBezier.swift
+//  PathComponent.swift
 //  BezierKit
 //
 //  Created by Holmes Futrell on 11/23/16.
@@ -21,7 +21,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 }
 #endif
 
-public final class PolyBezier: NSObject, NSCoding {
+public final class PathComponent: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
@@ -61,8 +61,8 @@ public final class PolyBezier: NSObject, NSCoding {
         return self.bvh.boundingBox
     }
     
-    public func offset(distance d: CGFloat) -> PolyBezier {
-        return PolyBezier(curves: self.curves.reduce([]) {
+    public func offset(distance d: CGFloat) -> PathComponent {
+        return PathComponent(curves: self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
         })
     }
@@ -85,7 +85,7 @@ public final class PolyBezier: NSObject, NSCoding {
         return found
     }
     
-    public func intersects(_ other: PolyBezier, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
+    public func intersects(_ other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
         var intersections: [CGPoint] = []
         self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
             let c1 = o1 as! BezierCurve
@@ -118,29 +118,33 @@ public final class PolyBezier: NSObject, NSCoding {
     
     override public func isEqual(_ object: Any?) -> Bool {
         // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
-        guard let otherPolyBezier = object as? PolyBezier else {
+        guard let otherPathComponent = object as? PathComponent else {
             return false
         }
-        guard self.curves.count == otherPolyBezier.curves.count else {
+        guard self.curves.count == otherPathComponent.curves.count else {
             return false
         }
         for i in 0..<self.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
-            guard self.curves[i] == otherPolyBezier.curves[i] else {
+            guard self.curves[i] == otherPathComponent.curves[i] else {
                 return false
             }
         }
         return true
     }
+    
+    // MARK: -
+    
+    
 }
 
-extension PolyBezier: Transformable {
-    public func copy(using t: CGAffineTransform) -> PolyBezier {
-        return PolyBezier(curves: self.curves.map { $0.copy(using: t)} )
+extension PathComponent: Transformable {
+    public func copy(using t: CGAffineTransform) -> PathComponent {
+        return PathComponent(curves: self.curves.map { $0.copy(using: t)} )
     }
 }
 
-extension PolyBezier: Reversible {
-    public func reversed() -> PolyBezier {
-        return PolyBezier(curves: self.curves.reversed().map({$0.reversed()}))
+extension PathComponent: Reversible {
+    public func reversed() -> PathComponent {
+        return PathComponent(curves: self.curves.reversed().map({$0.reversed()}))
     }
 }

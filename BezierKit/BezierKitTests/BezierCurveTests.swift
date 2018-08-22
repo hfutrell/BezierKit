@@ -147,7 +147,7 @@ class BezierCurveTests: XCTestCase {
     func testOutlineDistance() {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
-        let outline: PolyBezier = lineSegment.outline(distance: 1)
+        let outline: PathComponent = lineSegment.outline(distance: 1)
         XCTAssertEqual(outline.curves.count, 4)
         
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
@@ -163,7 +163,7 @@ class BezierCurveTests: XCTestCase {
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let distanceAlongNormal: CGFloat = 1
         let distanceOppositeNormal: CGFloat = 2
-        let outline: PolyBezier = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
+        let outline: PathComponent = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
         XCTAssertEqual(outline.curves.count, 4)
         
         let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(0)
@@ -185,7 +185,7 @@ class BezierCurveTests: XCTestCase {
         let distanceAlongNormal2: CGFloat = 1
         let distanceOppositeNormal2: CGFloat = 2
 
-        let outline: PolyBezier = lineSegment.outline(distanceAlongNormalStart: distanceAlongNormal1,
+        let outline: PathComponent = lineSegment.outline(distanceAlongNormalStart: distanceAlongNormal1,
                                                       distanceOppositeNormalStart: distanceOppositeNormal1,
                                                       distanceAlongNormalEnd: distanceAlongNormal2,
                                                       distanceOppositeNormalEnd: distanceOppositeNormal2)
@@ -206,7 +206,7 @@ class BezierCurveTests: XCTestCase {
         // 2. quadratics are upgrade in the outline function (why?)
         
         let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 9.0, y: 11.0), p2: CGPoint(x: 20.0, y: 20.0))
-        let outline: PolyBezier = q.outline(distanceAlongNormalStart: sqrt(2), distanceOppositeNormalStart: sqrt(2), distanceAlongNormalEnd: 2 * sqrt(2), distanceOppositeNormalEnd: 2 * sqrt(2))
+        let outline: PathComponent = q.outline(distanceAlongNormalStart: sqrt(2), distanceOppositeNormalStart: sqrt(2), distanceAlongNormalEnd: 2 * sqrt(2), distanceOppositeNormalEnd: 2 * sqrt(2))
         
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 1, y: -1), p1: CGPoint(x: -1, y: 1))
         let expectedSegment2 = QuadraticBezierCurve(p0: CGPoint(x: -1, y: 1), p1: CGPoint(x: 7.5, y: 12.5), p2: CGPoint(x: 18, y: 22))
@@ -225,7 +225,7 @@ class BezierCurveTests: XCTestCase {
         // this tests a special corner case of outlines where endpoint normals are parallel
     
         let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 5.0, y: 0.0), p2: CGPoint(x: 10.0, y: 0.0))
-        let outline: PolyBezier = q.outline(distance: 1)
+        let outline: PathComponent = q.outline(distance: 1)
         
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 0, y: -1), p1: CGPoint(x: 0, y: 1))
         let expectedSegment2 = LineSegment(p0: CGPoint(x: 0, y: 1), p1: CGPoint(x: 10, y: 1))
@@ -243,7 +243,7 @@ class BezierCurveTests: XCTestCase {
         // this tests a special corner case of tapered outlines where endpoint normals are parallel
      
         let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 10.0, y: 0.0), p2: CGPoint(x: 20.0, y: 0.0))
-        let outline: PolyBezier = q.outline(distanceAlongNormalStart: 2, distanceOppositeNormalStart: 2, distanceAlongNormalEnd: 1, distanceOppositeNormalEnd: 1)
+        let outline: PathComponent = q.outline(distanceAlongNormalStart: 2, distanceOppositeNormalStart: 2, distanceAlongNormalEnd: 1, distanceOppositeNormalEnd: 1)
         
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 0.0, y: -2.0), p1: CGPoint(x: 0.0, y: 2.0))
         let expectedSegment2 = LineSegment(p0: CGPoint(x: 0.0, y: 2.0), p1: CGPoint(x: 20.0, y: 1.0))

@@ -15,10 +15,10 @@ import Foundation
         var currentPoint: CGPoint? = nil
         var subpathStartPoint: CGPoint? = nil
         var currentSubpath: [BezierCurve] = []
-        var components: [PolyBezier] = []
+        var components: [PathComponent] = []
         func finishUp() {
             if currentSubpath.isEmpty == false {
-                components.append(PolyBezier(curves: currentSubpath))
+                components.append(PathComponent(curves: currentSubpath))
                 currentSubpath = []
             }
         }
@@ -38,7 +38,7 @@ import Foundation
         }
     }()
     
-    public let subpaths: [PolyBezier]
+    public let subpaths: [PathComponent]
     
     public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
         return self.subpaths.contains {
@@ -59,7 +59,7 @@ import Foundation
         return intersections
     }
     
-    required public init(subpaths: [PolyBezier]) {
+    required public init(subpaths: [PathComponent]) {
         self.subpaths = subpaths
     }
     
@@ -73,7 +73,7 @@ import Foundation
             switch element.pointee.type {
             case .moveToPoint:
                 if context.currentSubpath.isEmpty == false {
-                    context.components.append(PolyBezier(curves: context.currentSubpath))
+                    context.components.append(PathComponent(curves: context.currentSubpath))
                 }
                 context.currentPoint = points[0]
                 context.subpathStartPoint = points[0]
@@ -95,7 +95,7 @@ import Foundation
                     let line = LineSegment(p0: context.currentPoint!, p1: context.subpathStartPoint!)
                     context.currentSubpath.append(line)
                 }
-                context.components.append(PolyBezier(curves: context.currentSubpath))
+                context.components.append(PathComponent(curves: context.currentSubpath))
                 context.currentPoint = context.subpathStartPoint!
                 context.currentSubpath = []
             }
@@ -115,7 +115,7 @@ import Foundation
     }
     
     required public init?(coder aDecoder: NSCoder) {
-        guard let array = aDecoder.decodeObject() as? Array<PolyBezier> else {
+        guard let array = aDecoder.decodeObject() as? Array<PathComponent> else {
             return nil
         }
         self.subpaths = array
@@ -145,7 +145,7 @@ import Foundation
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathLocation] = []
         for i in 0..<subpaths.count {
-            let subpath: PolyBezier = self.subpaths[i]
+            let subpath: PathComponent = self.subpaths[i]
             subpath.bvh.visit { (node: BVHNode, depth: Int) in
                 if case let .leaf(object, elementIndex) = node.nodeType {
                     let curve = object as! BezierCurve

@@ -431,7 +431,7 @@ class Demos {
                                 
                                 
                                 for s in path1.subpaths[1..<2] {
-                                    Draw.drawPolyBezier(context, polyBezier: s)
+                                    Draw.drawPathComponent(context, pathComponent: s)
                                 }
                                 
 //                                context.addPath(path1.cgPath)
@@ -476,7 +476,7 @@ class Demos {
                                 
                                 let path = Path(cgPath: mutablePath)
                                 for s in path.subpaths {
-                                    Draw.drawPolyBezier(context, polyBezier: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
+                                    Draw.drawPathComponent(context, pathComponent: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
                                 }
 
                                 

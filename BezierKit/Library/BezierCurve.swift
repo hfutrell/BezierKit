@@ -490,22 +490,22 @@ extension BezierCurve {
     
     // MARK: - outlines
     
-    public func outline(distance d1: CGFloat) -> PolyBezier {
+    public func outline(distance d1: CGFloat) -> PathComponent {
         return internalOutline(d1: d1, d2: d1, d3: 0.0, d4: 0.0, graduated: false)
     }
     
-    public func outline(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat) -> PolyBezier {
+    public func outline(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat) -> PathComponent {
         return internalOutline(d1: d1, d2: d2, d3: 0.0, d4: 0.0, graduated: false)
     }
     
     public func outline(distanceAlongNormalStart d1: CGFloat,
                         distanceOppositeNormalStart d2: CGFloat,
                         distanceAlongNormalEnd d3: CGFloat,
-                        distanceOppositeNormalEnd d4: CGFloat) -> PolyBezier {
+                        distanceOppositeNormalEnd d4: CGFloat) -> PathComponent {
         return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
     }
     
-    private func internalOutline(d1: CGFloat, d2: CGFloat, d3: CGFloat, d4: CGFloat, graduated: Bool) -> PolyBezier {
+    private func internalOutline(d1: CGFloat, d2: CGFloat, d3: CGFloat, d4: CGFloat, graduated: Bool) -> PathComponent {
         
         let reduced = self.reduce()
         let len = reduced.count
@@ -554,7 +554,7 @@ extension BezierCurve {
         let segments = [ls] + fcurves + [le] + bcurves
         //        let slen = segments.count
         
-        return PolyBezier(curves: segments)
+        return PathComponent(curves: segments)
         
     }
     
