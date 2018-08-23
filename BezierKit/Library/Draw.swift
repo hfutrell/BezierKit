@@ -89,7 +89,9 @@ public class Draw {
     public static let pinkish = Draw.Color(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
     public static let transparentBlue = Draw.Color(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.3)
     public static let transparentBlack = Draw.Color(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.2)
-    
+    public static let blue = Draw.Color(red: 0.0, green: 0.0, blue: 255.0, alpha: 1.0)
+    public static let green = Draw.Color(red: 0.0, green: 255.0, blue: 0.0, alpha: 1.0)
+
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
         var temp: [CGColor] = []

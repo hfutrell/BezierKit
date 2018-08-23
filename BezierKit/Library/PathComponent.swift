@@ -140,8 +140,58 @@ public final class PathComponent: NSObject, NSCoding {
     
     // MARK: -
     
+    internal func intersects(line: LineSegment) -> [IndexedPathComponentLocation] {
+        let lineBoundingBox = line.boundingBox
+        var results: [IndexedPathComponentLocation] = []
+        self.bvh.visit { (node: BVHNode, depth: Int) in
+            if case let .leaf(object, elementIndex) = node.nodeType {
+                let curve = object as! BezierCurve
+                results += curve.intersects(line: line).map {
+                    return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
+                }
+            }
+            // TODO: better line box intersection
+            return node.boundingBox.overlaps(lineBoundingBox)
+        }
+        return results
+    }
+
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         return self.curves[location.elementIndex].compute(location.t)
+    }
+    
+    internal func windingCount(at point: CGPoint) -> Int {
+        // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
+        let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
+        let delta = line.p1 - line.p0
+        let intersections = self.intersects(line: line)
+        var windingCount = 0
+        intersections.forEach {
+            let element = self.element(at: $0)
+            let t = $0.t
+            assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
+            let dotProduct = delta.dot(element.normal(t))
+            if dotProduct < 0 {
+                if t != 0 {
+                    windingCount -= 1
+                }
+            }
+            else if dotProduct > 0 {
+                if t != 1 {
+                    windingCount += 1
+                }
+            }
+        }
+        return windingCount
+    }
+    
+    private func element(at location: IndexedPathComponentLocation) -> BezierCurve {
+        return self.curves[location.elementIndex]
+    }
+    
+    public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+        let windingCount = self.windingCount(at: point)
+        return windingCountImpliesContainment(windingCount, using: rule)
     }
     
 }
@@ -190,11 +240,12 @@ public class Vertex {
     public let isIntersection: Bool
     // pointers must be set after initialization
     
-    struct IntersectionInfo {
-        var entryExit: Bool = false
-        var neighbor: Vertex? = nil
+    public struct IntersectionInfo {
+        public var isEntry: Bool = false
+        public var isExit: Bool = false
+        public var neighbor: Vertex? = nil
     }
-    var intersectionInfo: IntersectionInfo = IntersectionInfo()
+    public var intersectionInfo: IntersectionInfo = IntersectionInfo()
     
     internal struct SplitInfo {
         var t: CGFloat
@@ -219,6 +270,25 @@ public class Vertex {
     init(location: CGPoint, isIntersection: Bool) {
         self.location = location
         self.isIntersection = isIntersection
+    }
+    
+    internal func emitTo(_ end: CGPoint, using transition: VertexTransition) -> BezierCurve {
+        switch transition {
+        case .line:
+            return LineSegment(p0: self.location, p1: end)
+        case .quadCurve(let c):
+            return QuadraticBezierCurve(p0: self.location, p1: c, p2: end)
+        case .curve(let c1, let c2):
+            return CubicBezierCurve(p0: self.location, p1: c1, p2: c2, p3: end)
+        }
+    }
+    
+    public func emitNext() -> BezierCurve {
+        return self.emitTo(next.location, using: nextTransition)
+    }
+    
+    public func emitPrevious() -> BezierCurve {
+        return self.emitTo(previous.location, using: previousTransition)
     }
 }
 
@@ -328,6 +398,22 @@ public class AugmentedGraph {
 
     public init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
     
+        func markEntryExit(_ v: Vertex, _ component: PathComponent) {
+            var current = v
+            repeat {
+                if current.isIntersection {
+                    let previous = current.emitPrevious()
+                    let next = current.emitNext()
+                    let wasInside = component.contains(previous.compute(0.5))
+                    let willBeInside = component.contains(next.compute(0.5))
+                    current.intersectionInfo.isEntry = !wasInside && willBeInside
+                    current.intersectionInfo.isExit = wasInside && !willBeInside
+                }
+                current = current.next
+            }
+            while current !== v
+        }
+        
         func intersectionVertexForComponent(_ component: PathComponent, at l: IndexedPathComponentLocation) -> Vertex {
             let v = Vertex(location: component.point(at: l), isIntersection: true)
             return v
@@ -344,5 +430,8 @@ public class AugmentedGraph {
             self.insertIntersectionVertex(vertex1, inList: &list1, for: component1, at: $0.indexedComponentLocation1)
             self.insertIntersectionVertex(vertex2, inList: &list2, for: component2, at: $0.indexedComponentLocation2)
         }
+        // mark each intersection as either entry or exit
+        markEntryExit(self.v1, component2)
+        markEntryExit(self.v2, component1)
     }
 }

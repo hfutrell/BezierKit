@@ -9,6 +9,15 @@
 import CoreGraphics
 import Foundation
 
+internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillRule) -> Bool {
+    switch rule {
+    case .winding:
+        return count != 0
+    case .evenOdd:
+        return abs(count) % 2 == 1
+    }
+}
+
 @objc(BezierKitPath) public class Path: NSObject, NSCoding {
     
     private class PathApplierFunctionContext {
@@ -141,54 +150,12 @@ import Foundation
     private func element(at location: IndexedPathLocation) -> BezierCurve {
         return self.subpaths[location.componentIndex].curves[location.elementIndex]
     }
-    
-    internal func intersects(line: LineSegment) -> [IndexedPathLocation] {
-        let lineBoundingBox = line.boundingBox
-        var results: [IndexedPathLocation] = []
-        for i in 0..<subpaths.count {
-            let subpath: PathComponent = self.subpaths[i]
-            subpath.bvh.visit { (node: BVHNode, depth: Int) in
-                if case let .leaf(object, elementIndex) = node.nodeType {
-                    let curve = object as! BezierCurve
-                    results += curve.intersects(line: line).map {
-                        return IndexedPathLocation(componentIndex: i, elementIndex: elementIndex, t: $0.t1)
-                    }
-                }
-                // TODO: better line box intersection
-                return node.boundingBox.overlaps(lineBoundingBox)
-            }
-        }
-        return results
-    }
-    
+        
     @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
-        // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
-        let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
-        let delta = line.p1 - line.p0
-        let intersections = self.intersects(line: line)
-        var windingCount = 0
-        intersections.forEach {
-            let element = self.element(at: $0)
-            let t = $0.t
-            assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
-            let dotProduct = delta.dot(element.normal(t))
-            if dotProduct < 0 {
-                if t != 0 {
-                    windingCount -= 1
-                }
-            }
-            else if dotProduct > 0 {
-                if t != 1 {
-                    windingCount += 1
-                }
-            }
+        let windingCount = self.subpaths.reduce(0) {
+            $0 + $1.windingCount(at: point)
         }
-        switch rule {
-            case .winding:
-                return windingCount != 0
-            case .evenOdd:
-                return abs(windingCount) % 2 == 1
-        }
+        return windingCountImpliesContainment(windingCount, using: rule)
     }
     
 //    @objc public func simplifyToEvenOdd() -> Path {
