@@ -386,14 +386,11 @@ public class AugmentedGraph {
             }
             var end = start.next!
             while (end.splitInfo != nil) && end.splitInfo!.t < location.t {
-                print("found t = \(end.splitInfo!.t)")
                 assert(end !== list[location.elementIndex+1])
                 end = end.next
             }
-            print("bleh")
             insertIntersectionVertex(v, between: start, and: end, at: location.t, for: component.curves[location.elementIndex])
         }
-        
     }
 
     public init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
@@ -418,8 +415,6 @@ public class AugmentedGraph {
             let v = Vertex(location: component.point(at: l), isIntersection: true)
             return v
         }
-
-        print("intersection count = \(intersections.count)")
 
         self.list1 = component1.linkedListRepresentation()
         self.list2 = component2.linkedListRepresentation()
