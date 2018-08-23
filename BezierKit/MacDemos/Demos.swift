@@ -428,28 +428,35 @@ class Demos {
                                 let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
                                 let path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
                                 
-                                
-                                
-                                for s in path1.subpaths[1..<2] {
-                                    Draw.drawPathComponent(context, pathComponent: s)
-                                }
-                                
-//                                context.addPath(path1.cgPath)
-                                Draw.setColor(context, color: Draw.red)
-                                context.strokePath()
-                                
                                 if let mouse = demoState.lastInputLocation {
+                                    
+                                    
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
                                     let path2 = Path(cgPath: cgPath2)
                                     
-                                    context.addPath(path2.cgPath)
-                                    Draw.setColor(context, color: Draw.black)
-                                    context.strokePath()
                                     
-                                    for intersection in path1.intersects(path: path2) {
-                                        Draw.drawPoint(context, origin: intersection)
-                                    }
+//                                    for intersection in path1.intersects(path: path2) {
+//                                        Draw.drawPoint(context, origin: intersection)
+//                                    }
+                                    
+                                    let pc1: PathComponent = path1.subpaths[1]
+                                    let pc2: PathComponent = path2.subpaths[0]
+                                    
+                                    Draw.drawPathComponent(context, pathComponent: pc2)
+                                    Draw.drawPathComponent(context, pathComponent: pc1)
+
+                                    
+                                    let augmentedGraph = AugmentedGraph(component1: pc1, component2: pc2, intersections: pc1.intersects(pc2))
+                                    
+                                    var first: Vertex = augmentedGraph.v1
+                                    var v = first
+                                    repeat {
+                                        Draw.setColor(context, color: v.isIntersection ? Draw.red : Draw.black)
+                                        Draw.drawPoint(context, origin: v.location)
+                                        v = v.next
+                                    } while v !== first
+                                    
                                 }
     })
     static let demo24 = Demo(title: "BVH",
