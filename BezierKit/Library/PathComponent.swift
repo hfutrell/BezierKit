@@ -185,14 +185,17 @@ enum VertexTransition {
     }
 }
 
-class Vertex {
-    enum VertextType {
-        case regular // ie, not a crossing
-        case crossing(entryExit: Bool, neighbor: UnsafePointer<Vertex>, alpha: CGFloat)
-    }
+internal class Vertex {
     let location: CGPoint
-    let vertexType: VertextType
+    let isIntersection: Bool
     // pointers must be set after initialization
+    
+    struct IntersectionInfo {
+        var entryExit: Bool = false
+        var neighbor: Vertex? = nil
+        var t: CGFloat = 0.0 // called alpha in the paper
+    }
+    var intersectionInfo: IntersectionInfo = IntersectionInfo()
     
     private(set) var next: Vertex! = nil
     private(set) weak var previous: Vertex! = nil
@@ -209,9 +212,9 @@ class Vertex {
         self.previousTransition = transition
     }
 
-    init(location: CGPoint, vertexType: VertextType) {
+    init(location: CGPoint, isIntersection: Bool) {
         self.location = location
-        self.vertexType = vertexType
+        self.isIntersection = isIntersection
     }
 }
 
@@ -220,13 +223,14 @@ extension PathComponent {
         guard self.curves.count > 0 else {
             return []
         }
+        assert(self.curves.first!.startingPoint == self.curves.last!.endingPoint, "this method assumes component is closed!")
         var elements: [Vertex] = [] // elements[i] is the first vertex of curves[i]
         let firstPoint: CGPoint = self.curves.first!.startingPoint
-        let firstVertex = Vertex(location: firstPoint, vertexType: .regular)
+        let firstVertex = Vertex(location: firstPoint, isIntersection: false)
         elements.append(firstVertex)
         var lastVertex = firstVertex
         for i in 1..<self.curves.count {
-            let v = Vertex(location: self.curves[i].startingPoint, vertexType: .regular)
+            let v = Vertex(location: self.curves[i].startingPoint, isIntersection: false)
             elements[i] = v
             let curveForTransition = self.curves[i-1]
             // set the forwards reference for starting vertex of curve i-1
@@ -241,32 +245,92 @@ extension PathComponent {
         lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: lastCurve))
         // connect the backward reference of the first vertex to the last vertex
         firstVertex.setPreviousVertex(lastVertex, transition: VertexTransition(curve: lastCurve.reversed()))
-   
         // return list of vertexes that point to the start of each element
         return elements
     }
 }
 
-public class AugmentedGraph {
-    
-    func insertIntersection(inList list: [Vertex], at location: IndexedPathComponentLocation) -> Vertex {
-        
-    }
-    
-    func connectNeighbors(_ vertex1: Vertex, _ vertex2: Vertex) {
+internal class AugmentedGraph {
 
+    func connectNeighbors(_ vertex1: Vertex, _ vertex2: Vertex) {
+        vertex1.intersectionInfo.neighbor = vertex2
+        vertex2.intersectionInfo.neighbor = vertex1
+    }
+
+    private var list1: [Vertex]
+    private var list2: [Vertex]
+    
+    internal var v1: Vertex {
+        return list1.first!
+    }
+    internal var v2: Vertex {
+        return list2.first!
     }
     
-    private let list1: [Vertex]
-    private let list2: [Vertex]
+    private func intersectionVertexForComponent(_ component: PathComponent, at l: IndexedPathComponentLocation) -> Vertex {
+        let v = Vertex(location: component.point(at: l), isIntersection: true)
+        v.intersectionInfo.t = l.t
+        return v
+    }
     
-    init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
+    private func insertIntersectionVertex(_ v: Vertex, between start: Vertex, and end: Vertex, for element: BezierCurve) {
+        assert(start !== end)
+        assert(v.isIntersection)
+        let t0 = start.isIntersection ? start.intersectionInfo.t : 0.0
+        let t1 = end.isIntersection ? end.intersectionInfo.t : 1.0
+        let t = v.intersectionInfo.t
+        // locate the element for the vertex transitions
+        let element1 = element.split(from: t0, to: t)
+        let element2 = element.split(from: t, to: t1)
+        // insert the vertex into the linked list
+        v.setPreviousVertex(start, transition: VertexTransition(curve: element1.reversed()))
+        v.setNextVertex(end, transition: VertexTransition(curve: element2))
+        start.setNextVertex(v, transition: VertexTransition(curve: element1))
+        end.setPreviousVertex(v, transition: VertexTransition(curve: element2.reversed()))
+    }
+    
+    private func insertIntersectionVertex(_ v: Vertex, replacingVertexAtStartOfElementIndex elementIndex: Int, inList list: inout [Vertex]) {
+        assert(v.isIntersection)
+        let r = list[elementIndex]
+        // insert v in the list
+        v.setPreviousVertex(r.previous, transition: r.previousTransition)
+        v.setNextVertex(r.next, transition: r.nextTransition)
+        v.previous.setNextVertex(v, transition: v.previous.nextTransition)
+        v.next.setPreviousVertex(v, transition: v.next.previousTransition)
+        // replace the list pointer with v
+        list[elementIndex] = v
+    }
+    
+    private func insertIntersectionVertex(_ v: Vertex, inList list: inout [Vertex], for component: PathComponent, at location: IndexedPathComponentLocation) {
+        if location.t == 0 {
+            // this vertex needs to replace the start vertex of the element
+            self.insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: location.elementIndex, inList: &list)
+        }
+        else if location.t == 1 {
+            // this vertex needs to replace the end vertex of the element
+            self.insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: location.elementIndex+1, inList: &list)
+        }
+        else {
+            let start = list[location.elementIndex]
+            var end = start.next!
+            while end.isIntersection && end.intersectionInfo.t < location.t {
+                end = end.next
+            }
+            // find the last vertex representing t < location.t
+            // this is either the start of the element, or an intersection
+            self.insertIntersectionVertex(v, between: start, and: end, for: component.curves[location.elementIndex])
+        }
+    }
+
+    internal init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
         self.list1 = component1.linkedListRepresentation()
         self.list2 = component1.linkedListRepresentation()
         intersections.forEach {
-            let vertex1 = insertIntersection(inList: list1, at: $0.indexedComponentLocation1)
-            let vertex2 = insertIntersection(inList: list2, at: $0.indexedComponentLocation1)
+            let vertex1 = intersectionVertexForComponent(component1, at: $0.indexedComponentLocation1)
+            let vertex2 = intersectionVertexForComponent(component2, at: $0.indexedComponentLocation2)
             connectNeighbors(vertex1, vertex2) // sets the vertex crossing neighbor pointer
+            self.insertIntersectionVertex(vertex1, inList: &list1, for: component1, at: $0.indexedComponentLocation1)
+            self.insertIntersectionVertex(vertex2, inList: &list2, for: component2, at: $0.indexedComponentLocation2)
         }
     }
 }
