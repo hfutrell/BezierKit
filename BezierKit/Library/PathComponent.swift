@@ -206,11 +206,13 @@ class Vertex {
 }
 
 extension PathComponent {
-    func linkedListRepresentation() -> Vertex {
-        let firstPoint = self.curves.first!.startingPoint
+    func linkedListRepresentation() -> [Vertex] {
+        var elements: [Vertex] = [] // elements[i] is the first vertex of curves[i]
+        let firstPoint: CGPoint = self.curves.first!.startingPoint
         let firstVertex = Vertex(location: firstPoint, vertexType: .regular)
         var currentVertex = firstVertex
         for i in 0..<self.curves.count {
+            elements.append(currentVertex)
             let curve = self.curves[i]
             let nextVertex = (i == self.curves.count-1) ? firstVertex : Vertex(location: curve.endingPoint, vertexType: .regular)
             switch curve {
@@ -221,7 +223,7 @@ extension PathComponent {
             case let cubicCurve as CubicBezierCurve:
                 currentVertex.next = PathElementTransition(vertex: nextVertex, transition: .curve(control1: cubicCurve.p1, control2: cubicCurve.p2))
             default:
-                fatalError("CGPath does not support curve type (\(type(of: curve))")
+                fatalError("Vertex does not support curve type (\(type(of: curve))")
             }
             currentVertex = nextVertex
         }
@@ -232,13 +234,22 @@ extension PathComponent {
             currentVertex.next.vertex.previous = backwardsTransition
             currentVertex = currentVertex.next.vertex
         } while currentVertex !== firstVertex /* !== because we care about pointer equality here */
-        return firstVertex
+        return elements
     }
 }
 
 public class AugmentedGraph {
+    
+    private let list1: Vertex
+    private let list2: Vertex
+    
     init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
-        
-        
+        self.list1 = component1.linkedListRepresentation()
+        self.list2 = component1.linkedListRepresentation()
+        intersections.forEach {
+            let vertex1 = insertIntersection(inList: list1, at: $0.indexedComponentLocation1, otherPath: component2)
+            let vertex2 = insertIntersection(inList: list2, at: $0.indexedComponentLocation1, otherPath: component1)
+            connectNeighbors(vertex1, vertex2) // sets the vertex crossing neighbor pointer
+        }
     }
 }
