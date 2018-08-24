@@ -247,6 +247,10 @@ public class Vertex {
     }
     public var intersectionInfo: IntersectionInfo = IntersectionInfo()
     
+    public var isCrossing: Bool {
+        return self.isIntersection && (self.intersectionInfo.isEntry || self.intersectionInfo.isExit)
+    }
+    
     internal struct SplitInfo {
         var t: CGFloat
     }
@@ -289,6 +293,18 @@ public class Vertex {
     
     public func emitPrevious() -> BezierCurve {
         return self.emitTo(previous.location, using: previousTransition)
+    }
+}
+
+extension Vertex: Equatable {
+    public static func == (left: Vertex, right: Vertex) -> Bool {
+        return left === right
+    }
+}
+
+extension Vertex: Hashable {
+    public var hashValue: Int {
+        return ObjectIdentifier(self).hashValue
     }
 }
 
@@ -429,4 +445,62 @@ public class AugmentedGraph {
         markEntryExit(self.v1, component2)
         markEntryExit(self.v2, component1)
     }
+    
+    public func subtract() -> Path {
+        
+        var unvisitedCrossings: Set<Vertex> = Set<Vertex>()
+        
+        var current = self.v1
+        repeat {
+            if current.isCrossing {
+                unvisitedCrossings.insert(current)
+            }
+            current = current.next
+        } while current !== self.v1
+        
+        // TODO: add all the crossings to the unvisited crossings set
+        
+        var pathComponents: [PathComponent] = [PathComponent]()
+        while unvisitedCrossings.count > 0 {
+          
+            var v = unvisitedCrossings.first!
+            let start = v
+            unvisitedCrossings.remove(v)
+            
+            var curves: [BezierCurve] = [BezierCurve]()
+            var isOnFirstCurve = true
+            var movingForwards = !v.intersectionInfo.isEntry // don't move into the eraser!
+
+            repeat {
+                
+                repeat {
+                    if movingForwards {
+                        curves.append(v.emitNext())
+                        v = v.next
+                    }
+                    else {
+                        curves.append(v.emitPrevious())
+                        v = v.previous
+                    }
+                } while v.isCrossing == false
+                
+                v = v.intersectionInfo.neighbor!
+                
+                isOnFirstCurve = !isOnFirstCurve
+                if isOnFirstCurve {
+                    unvisitedCrossings.remove(v)
+                }
+                    
+                // decide on a (possibly) new direction
+                movingForwards = isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
+                
+                
+            } while v !== start
+        
+            pathComponents.append(PathComponent(curves: curves))
+        }
+        return Path(subpaths: pathComponents)
+        
+    }
+    
 }

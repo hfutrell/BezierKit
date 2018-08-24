@@ -443,27 +443,33 @@ class Demos {
                                     let pc1: PathComponent = path1.subpaths[1]
                                     let pc2: PathComponent = path2.subpaths[0]
                                     
-                                    Draw.drawPathComponent(context, pathComponent: pc2)
-                                    Draw.drawPathComponent(context, pathComponent: pc1)
+                                   // Draw.drawPathComponent(context, pathComponent: pc2)
+                                   // Draw.drawPathComponent(context, pathComponent: pc1)
 
                                     
                                     let augmentedGraph = AugmentedGraph(component1: pc1, component2: pc2, intersections: pc1.intersects(pc2))
                                     
-                                    var first: Vertex = augmentedGraph.v1
-                                    var v = first
-                                    repeat {
-                                        Draw.setColor(context, color: v.isIntersection ? Draw.blue : Draw.black)
-                                        if v.isIntersection {
-                                            if v.intersectionInfo.isEntry {
-                                                Draw.setColor(context, color: Draw.green)
-                                            }
-                                            if v.intersectionInfo.isExit {
-                                                Draw.setColor(context, color:Draw.red)
-                                            }
-                                        }
-                                        Draw.drawPoint(context, origin: v.location)
-                                        v = v.next
-                                    } while v !== first
+//                                    var first: Vertex = augmentedGraph.v1
+//                                    var v = first
+//                                    repeat {
+//                                        Draw.setColor(context, color: v.isIntersection ? Draw.blue : Draw.black)
+//                                        if v.isIntersection {
+//                                            if v.intersectionInfo.isEntry {
+//                                                Draw.setColor(context, color: Draw.green)
+//                                            }
+//                                            if v.intersectionInfo.isExit {
+//                                                Draw.setColor(context, color:Draw.red)
+//                                            }
+//                                        }
+//                                        Draw.drawPoint(context, origin: v.location)
+//                                        v = v.next
+//                                    } while v !== first
+                                    
+                                    let subtracted = augmentedGraph.subtract()
+                                    subtracted.subpaths.forEach {
+                                        Draw.drawPathComponent(context, pathComponent: $0)
+
+                                    }
                                     
                                 }
     })
