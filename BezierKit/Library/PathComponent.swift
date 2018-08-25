@@ -500,6 +500,7 @@ public class AugmentedGraph {
                 
             } while v !== start
         
+            // TODO: non-deterministic behavior from usage of Set when choosing starting vertex
             pathComponents.append(PathComponent(curves: curves))
         }
         return Path(subpaths: pathComponents)
