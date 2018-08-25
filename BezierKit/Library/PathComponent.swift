@@ -484,6 +484,10 @@ public class AugmentedGraph {
                     }
                 } while v.isCrossing == false
                 
+                if isOnFirstCurve {
+                    unvisitedCrossings.remove(v)
+                }
+                
                 v = v.intersectionInfo.neighbor!
                 
                 isOnFirstCurve = !isOnFirstCurve
@@ -493,7 +497,6 @@ public class AugmentedGraph {
                     
                 // decide on a (possibly) new direction
                 movingForwards = isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
-                
                 
             } while v !== start
         
