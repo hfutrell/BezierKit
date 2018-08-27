@@ -377,6 +377,10 @@ public class AugmentedGraph {
             let t0: CGFloat = (start.splitInfo != nil) ? start.splitInfo!.t : 0.0
             let t1: CGFloat = (end.splitInfo != nil) ? end.splitInfo!.t : 1.0
             // locate the element for the vertex transitions
+            /*
+                TODO: this code assumes t0 < t < t1, which could definitely be false if there are multiple intersections against the same element at the same point
+                in the least we need a unit test for that case
+             */
             let element1 = element.split(from: t0, to: t)
             let element2 = element.split(from: t, to: t1)
             // insert the vertex into the linked list
@@ -397,7 +401,7 @@ public class AugmentedGraph {
         }
         else {
             var start = list[location.elementIndex]
-            while ((start.next.splitInfo != nil) && start.next.splitInfo!.t < location.t) {
+            while (start.next.splitInfo != nil) && start.next.splitInfo!.t < location.t {
                 start = start.next
             }
             var end = start.next!
