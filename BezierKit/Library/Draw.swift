@@ -89,7 +89,9 @@ public class Draw {
     public static let pinkish = Draw.Color(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
     public static let transparentBlue = Draw.Color(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.3)
     public static let transparentBlack = Draw.Color(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.2)
-    
+    public static let blue = Draw.Color(red: 0.0, green: 0.0, blue: 255.0, alpha: 1.0)
+    public static let green = Draw.Color(red: 0.0, green: 255.0, blue: 0.0, alpha: 1.0)
+
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
         var temp: [CGColor] = []
@@ -295,9 +297,9 @@ public class Draw {
     
     }
     
-    public static func drawPolyBezier(_ context: CGContext, polyBezier: PolyBezier, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
+    public static func drawPathComponent(_ context: CGContext, pathComponent: PathComponent, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
         if includeBoundingVolumeHierarchy {
-            polyBezier.bvh.visit { node, depth in
+            pathComponent.bvh.visit { node, depth in
                 setColor(context, color: randomColors[depth])
                 context.setLineWidth(1.0)
                 context.setLineWidth(5.0 / CGFloat(depth+1))
@@ -308,7 +310,7 @@ public class Draw {
         }
         context.setLineWidth(1.0)
         setColor(context, color: Draw.black)
-        polyBezier.curves.forEach {
+        pathComponent.curves.forEach {
             drawCurve(context, curve: $0, offset: offset)
         }
     }

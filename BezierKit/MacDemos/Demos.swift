@@ -426,30 +426,42 @@ class Demos {
                                 assert(glyph1 != 0 && glyph2 != 0, "couldn't get glyphs")
                                 
                                 let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
-                                let path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
-                                
-                                
-                                
-                                for s in path1.subpaths[1..<2] {
-                                    Draw.drawPolyBezier(context, polyBezier: s)
-                                }
-                                
-//                                context.addPath(path1.cgPath)
-                                Draw.setColor(context, color: Draw.red)
-                                context.strokePath()
+                                var path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
+                                path1 = Path(subpaths: [path1.subpaths[1]])
                                 
                                 if let mouse = demoState.lastInputLocation {
+                                    
+                                    
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
                                     let path2 = Path(cgPath: cgPath2)
                                     
-                                    context.addPath(path2.cgPath)
-                                    Draw.setColor(context, color: Draw.black)
-                                    context.strokePath()
                                     
-                                    for intersection in path1.intersects(path: path2) {
-                                        Draw.drawPoint(context, origin: intersection)
+//                                    for intersection in path1.intersects(path: path2) {
+//                                        Draw.drawPoint(context, origin: intersection)
+//                                    }
+                                    
+//                                    var first: Vertex = augmentedGraph.v1
+//                                    var v = first
+//                                    repeat {
+//                                        Draw.setColor(context, color: v.isIntersection ? Draw.blue : Draw.black)
+//                                        if v.isIntersection {
+//                                            if v.intersectionInfo.isEntry {
+//                                                Draw.setColor(context, color: Draw.green)
+//                                            }
+//                                            if v.intersectionInfo.isExit {
+//                                                Draw.setColor(context, color:Draw.red)
+//                                            }
+//                                        }
+//                                        Draw.drawPoint(context, origin: v.location)
+//                                        v = v.next
+//                                    } while v !== first
+                                    
+                                    let subtracted = path1.intersecting(path2)
+                                    subtracted.subpaths.forEach {
+                                        Draw.drawPathComponent(context, pathComponent: $0)
                                     }
+                                    
                                 }
     })
     static let demo24 = Demo(title: "BVH",
@@ -476,7 +488,7 @@ class Demos {
                                 
                                 let path = Path(cgPath: mutablePath)
                                 for s in path.subpaths {
-                                    Draw.drawPolyBezier(context, polyBezier: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
+                                    Draw.drawPathComponent(context, pathComponent: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
                                 }
 
                                 

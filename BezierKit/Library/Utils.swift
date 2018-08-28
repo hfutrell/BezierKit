@@ -311,6 +311,11 @@ internal class Utils {
         return result
     }
 
+    static func mod(_ a: Int, _ n: Int) -> Int {
+        precondition(n > 0, "modulus must be positive")
+        let r = a % n
+        return r >= 0 ? r : r + n
+    }
     
     static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {
         return v1 + r * (v2 - v1)
