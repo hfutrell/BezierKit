@@ -426,7 +426,8 @@ class Demos {
                                 assert(glyph1 != 0 && glyph2 != 0, "couldn't get glyphs")
                                 
                                 let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
-                                let path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
+                                var path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
+                                path1 = Path(subpaths: [path1.subpaths[1]])
                                 
                                 if let mouse = demoState.lastInputLocation {
                                     
@@ -439,15 +440,6 @@ class Demos {
 //                                    for intersection in path1.intersects(path: path2) {
 //                                        Draw.drawPoint(context, origin: intersection)
 //                                    }
-                                    
-                                    let pc1: PathComponent = path1.subpaths[1]
-                                    let pc2: PathComponent = path2.subpaths[0]
-                                    
-                                   // Draw.drawPathComponent(context, pathComponent: pc2)
-                                   // Draw.drawPathComponent(context, pathComponent: pc1)
-
-                                    
-                                    let augmentedGraph = AugmentedGraph(component1: pc1, component2: pc2, intersections: pc1.intersects(pc2))
                                     
 //                                    var first: Vertex = augmentedGraph.v1
 //                                    var v = first
@@ -465,10 +457,9 @@ class Demos {
 //                                        v = v.next
 //                                    } while v !== first
                                     
-                                    let subtracted = augmentedGraph.subtract()
+                                    let subtracted = path1.intersecting(path2)
                                     subtracted.subpaths.forEach {
                                         Draw.drawPathComponent(context, pathComponent: $0)
-
                                     }
                                     
                                 }

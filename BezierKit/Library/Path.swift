@@ -9,12 +9,16 @@
 import CoreGraphics
 import Foundation
 
+@objc(BezierKitPathFillRule) public enum PathFillRule: NSInteger {
+    case winding=0, evenOdd
+}
+
 internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillRule) -> Bool {
     switch rule {
     case .winding:
         return count != 0
     case .evenOdd:
-        return abs(count) % 2 == 1
+        return count % 2 != 0
     }
 }
 
@@ -67,6 +71,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             }
         }
         return intersections
+    }
+    
+    @objc public convenience override init() {
+        self.init(subpaths: [])
     }
     
     required public init(subpaths: [PathComponent]) {
@@ -141,16 +149,16 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.subpaths == otherPath.subpaths
     }
     
-    // MARK: -
+    // MARK: - vector boolean operations
     
-    public func point(at location: IndexedPathLocation) -> CGPoint {
-        return self.element(at: location).compute(location.t)
-    }
+//    public func point(at location: IndexedPathLocation) -> CGPoint {
+//        return self.element(at: location).compute(location.t)
+//    }
     
     private func element(at location: IndexedPathLocation) -> BezierCurve {
         return self.subpaths[location.componentIndex].curves[location.elementIndex]
     }
-        
+    
     @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let windingCount = self.subpaths.reduce(0) {
             $0 + $1.windingCount(at: point)
@@ -158,32 +166,65 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCountImpliesContainment(windingCount, using: rule)
     }
     
-//    @objc public func simplifyToEvenOdd() -> Path {
-//        
-//        for element in self.pathElements {
-//            
-//            let intersection = self.intersect(element)
-//            
-//            // let's pretend for a second that these intersections are de-duped so it's just a set of t-values
-//            
-//            
-//            
-//        }
-//        
-//        // ok, let's pretend now we have a sorted list of path locations that represent intersections
-//        // ok, why does 1 location have an array of others? because the same t-value might intersect multiple curves
-//        [ location1 : [other1, other2, other3]]
-//        
-//        // ok, next we proceed around the locations and start doing splits and isertions and things
-//        
-//        // TODO: lol, it's a stub! you need to actually write this
-//        return self
-//    }
+    @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
+        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
+        assert(other.subpaths.count <= 1, "todo: support multi-component paths")
+        guard self.subpaths.count != 0 else {
+            return Path()
+        }
+        guard other.subpaths.count != 0 else {
+            return self
+        }
+        let component1 = self.subpaths[0]
+        let component2 = other.subpaths[0]
+        let intersections = component1.intersects(component2)
+        let augmentedGraph = AugmentedGraph(component1: component1, component2: component2, intersections: intersections)
+        return augmentedGraph.booleanOperation(.difference)
+    }
+    
+    @objc(unionedWithPath:) public func `union`(_ other: Path) -> Path {
+        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
+        assert(other.subpaths.count <= 1, "todo: support multi-component paths")
+        guard self.subpaths.count != 0 else {
+            return other
+        }
+        guard other.subpaths.count != 0 else {
+            return self
+        }
+        let component1 = self.subpaths[0]
+        let component2 = other.subpaths[0]
+        let intersections = component1.intersects(component2)
+        let augmentedGraph = AugmentedGraph(component1: component1, component2: component2, intersections: intersections)
+        return augmentedGraph.booleanOperation(.union)
+    }
+    
+    @objc(intersectedWithPath:) public func intersecting(_ other: Path) -> Path {
+        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
+        assert(other.subpaths.count <= 1, "todo: support multi-component paths")
+        guard self.subpaths.count != 0 else {
+            return Path()
+        }
+        guard other.subpaths.count != 0 else {
+            return Path()
+        }
+        let component1 = self.subpaths[0]
+        let component2 = other.subpaths[0]
+        let intersections = component1.intersects(component2)
+        let augmentedGraph = AugmentedGraph(component1: component1, component2: component2, intersections: intersections)
+        return augmentedGraph.booleanOperation(.intersection)
+    }
+    
+    @objc public func crossingsRemoved() -> Path {
+        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
+        guard self.subpaths.count > 0 else {
+            return Path()
+        }
+        let component = self.subpaths[0]
+        let intersections = component.intersects()
+        let augmentedGraph = AugmentedGraph(component1: component, component2: component, intersections: intersections)
+        return augmentedGraph.booleanOperation(.union)
+    }
 }
-
-@objc public enum PathFillRule: NSInteger {
-    case winding=0, evenOdd
-};
 
 @objc extension Path: Transformable {
     @objc(copyUsingTransform:) public func copy(using t: CGAffineTransform) -> Self {
@@ -197,14 +238,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-//@objc(BezierKitPathIntersection) public class PathIntersection: NSObject {
-//    let indices: [IndexedPathLocation]
-//    init(indices: [IndexedPathLocation]) {
-//        self.indices = indices
-//    }
-//}
-
-@objc(BezierKitPathIndex) public class IndexedPathLocation: NSObject {
+@objc(BezierKitPathPosition) public class IndexedPathLocation: NSObject {
     fileprivate let componentIndex: Int
     fileprivate let elementIndex: Int
     fileprivate let t: CGFloat
