@@ -106,7 +106,7 @@ internal class AugmentedGraph {
         }
         else if location.t == 1 {
             // this vertex needs to replace the end vertex of the element
-            insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: location.elementIndex+1, inList: &list)
+            insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: Utils.mod(location.elementIndex+1, list.count), inList: &list)
         }
         else {
             var start = list[location.elementIndex]
