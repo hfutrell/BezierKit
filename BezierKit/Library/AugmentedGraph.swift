@@ -53,16 +53,16 @@ internal class AugmentedGraph {
         vertex2.intersectionInfo.neighbor = vertex1
     }
     
-    private var list1: [Vertex]
-    private var list2: [Vertex]
+    internal var list1: [Vertex]
+    internal var list2: [Vertex]
     
     private let component1: PathComponent
     private let component2: PathComponent
     
-    internal var v1: Vertex {
+    private var v1: Vertex {
         return list1.first!
     }
-    internal var v2: Vertex {
+    private var v2: Vertex {
         return list2.first!
     }
     
