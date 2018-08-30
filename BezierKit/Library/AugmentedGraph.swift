@@ -26,7 +26,7 @@ internal extension PathComponent {
             // set the forwards reference for starting vertex of curve i-1
             lastVertex.setNextVertex(v, transition: VertexTransition(curve: curveForTransition))
             // set the backwards reference for starting vertex of curve i
-            v.setPreviousVertex(lastVertex, transition: VertexTransition(curve: curveForTransition.reversed()))
+            v.setPreviousVertex(lastVertex)
             // point previous at v for the next iteration
             lastVertex = v
         }
@@ -34,7 +34,7 @@ internal extension PathComponent {
         let lastCurve = self.curves.last!
         lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: lastCurve))
         // connect the backward reference of the first vertex to the last vertex
-        firstVertex.setPreviousVertex(lastVertex, transition: VertexTransition(curve: lastCurve.reversed()))
+        firstVertex.setPreviousVertex(lastVertex)
         // return list of vertexes that point to the start of each element
         return elements
     }
@@ -72,10 +72,10 @@ internal class AugmentedGraph {
             assert(v.isIntersection)
             let r = list[elementIndex]
             // insert v in the list
-            v.setPreviousVertex(r.previous, transition: r.previousTransition)
+            v.setPreviousVertex(r.previous)
             v.setNextVertex(r.next, transition: r.nextTransition)
             v.previous.setNextVertex(v, transition: v.previous.nextTransition)
-            v.next.setPreviousVertex(v, transition: v.next.previousTransition)
+            v.next.setPreviousVertex(v)
             // replace the list pointer with v
             list[elementIndex] = v
         }
@@ -93,10 +93,10 @@ internal class AugmentedGraph {
             let element1 = element.split(from: t0, to: t)
             let element2 = element.split(from: t, to: t1)
             // insert the vertex into the linked list
-            v.setPreviousVertex(start, transition: VertexTransition(curve: element1.reversed()))
+            v.setPreviousVertex(start)
             v.setNextVertex(end, transition: VertexTransition(curve: element2))
             start.setNextVertex(v, transition: VertexTransition(curve: element1))
-            end.setPreviousVertex(v, transition: VertexTransition(curve: element2.reversed()))
+            end.setPreviousVertex(v)
         }
         
         assert(v.isIntersection)
@@ -295,16 +295,14 @@ internal class Vertex {
     public private(set) var next: Vertex! = nil
     public private(set) weak var previous: Vertex! = nil
     public private(set) var nextTransition: VertexTransition! = nil
-    public private(set) var previousTransition: VertexTransition! = nil
     
     public func setNextVertex(_ vertex: Vertex, transition: VertexTransition) {
         self.next = vertex
         self.nextTransition = transition
     }
     
-    public func setPreviousVertex(_ vertex: Vertex, transition: VertexTransition) {
+    public func setPreviousVertex(_ vertex: Vertex) {
         self.previous = vertex
-        self.previousTransition = transition
     }
     
     init(location: CGPoint, isIntersection: Bool) {
@@ -328,7 +326,7 @@ internal class Vertex {
     }
     
     public func emitPrevious() -> BezierCurve {
-        return self.emitTo(previous.location, using: previousTransition)
+        return self.previous.emitNext().reversed()
     }
 }
 
