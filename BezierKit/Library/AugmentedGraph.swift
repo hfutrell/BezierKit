@@ -8,7 +8,7 @@
 
 import CoreGraphics
 
-internal extension PathComponent {
+internal extension Path {
     func linkedListRepresentation() -> [Vertex] {
         guard self.curves.count > 0 else {
             return []
@@ -56,8 +56,8 @@ internal class AugmentedGraph {
     internal var list1: [Vertex]
     internal var list2: [Vertex]
     
-    private let component1: PathComponent
-    private let component2: PathComponent
+    private let path1: Path
+    private let path2: Path
     
     private var v1: Vertex {
         return list1.first!
@@ -66,7 +66,7 @@ internal class AugmentedGraph {
         return list2.first!
     }
     
-    private func insertIntersectionVertex(_ v: Vertex, inList list: inout [Vertex], for component: PathComponent, at location: IndexedPathComponentLocation) {
+    private func insertIntersectionVertex(_ v: Vertex, inList list: inout [Vertex], for path: Path, at location: IndexedPathLocation) {
         
         func insertIntersectionVertex(_ v: Vertex, replacingVertexAtStartOfElementIndex elementIndex: Int, inList list: inout [Vertex]) {
             assert(v.isIntersection)
@@ -118,20 +118,20 @@ internal class AugmentedGraph {
                 assert(end !== list[location.elementIndex+1])
                 end = end.next
             }
-            insertIntersectionVertex(v, between: start, and: end, at: location.t, for: component.curves[location.elementIndex])
+            insertIntersectionVertex(v, between: start, and: end, at: location.t, for: path.element(at: location))
         }
     }
     
-    internal init(component1: PathComponent, component2: PathComponent, intersections: [PathComponentIntersection]) {
+    internal init(path1: Path, path2: Path, intersections: [PathIntersection]) {
         
-        func markEntryExit(_ v: Vertex, _ component: PathComponent) {
+        func markEntryExit(_ v: Vertex, _ path: Path) {
             var current = v
             repeat {
                 if current.isIntersection {
                     let previous = current.emitPrevious()
                     let next = current.emitNext()
-                    let wasInside = component.contains(previous.compute(0.5))
-                    let willBeInside = component.contains(next.compute(0.5))
+                    let wasInside = path.contains(previous.compute(0.5))
+                    let willBeInside = path.contains(next.compute(0.5))
                     current.intersectionInfo.isEntry = !wasInside && willBeInside
                     current.intersectionInfo.isExit = wasInside && !willBeInside
                 }
@@ -140,25 +140,25 @@ internal class AugmentedGraph {
             while current !== v
         }
         
-        func intersectionVertexForComponent(_ component: PathComponent, at l: IndexedPathComponentLocation) -> Vertex {
-            let v = Vertex(location: component.point(at: l), isIntersection: true)
+        func intersectionVertexForPath(_ path: Path, at l: IndexedPathLocation) -> Vertex {
+            let v = Vertex(location: path.point(at: l), isIntersection: true)
             return v
         }
         
-        self.component1 = component1
-        self.component2 = component2
-        self.list1 = component1.linkedListRepresentation()
-        self.list2 = component2.linkedListRepresentation()
+        self.path1 = path1
+        self.path2 = path2
+        self.list1 = path1.linkedListRepresentation()
+        self.list2 = path2.linkedListRepresentation()
         intersections.forEach {
-            let vertex1 = intersectionVertexForComponent(component1, at: $0.indexedComponentLocation1)
-            let vertex2 = intersectionVertexForComponent(component2, at: $0.indexedComponentLocation2)
+            let vertex1 = intersectionVertexForPath(path1, at: $0.indexedPathLocation1)
+            let vertex2 = intersectionVertexForPath(path2, at: $0.indexedPathLocation2)
             connectNeighbors(vertex1, vertex2) // sets the vertex crossing neighbor pointer
-            self.insertIntersectionVertex(vertex1, inList: &list1, for: component1, at: $0.indexedComponentLocation1)
-            self.insertIntersectionVertex(vertex2, inList: &list2, for: component2, at: $0.indexedComponentLocation2)
+            self.insertIntersectionVertex(vertex1, inList: &list1, for: path1, at: $0.indexedPathLocation1)
+            self.insertIntersectionVertex(vertex2, inList: &list2, for: path2, at: $0.indexedPathLocation2)
         }
         // mark each intersection as either entry or exit
-        markEntryExit(self.v1, component2)
-        markEntryExit(self.v2, component1)
+        markEntryExit(self.v1, path2)
+        markEntryExit(self.v2, path1)
     }
     
     internal func booleanOperation(_ operationType: BooleanPathOperation) -> Path {
@@ -183,28 +183,6 @@ internal class AugmentedGraph {
             }
             current = current.next
         } while current !== self.v1
-        
-        if unvisitedCrossings.count == 0 {
-            // handle components that do not cross
-            switch operationType {
-            case .union:
-                return Path(subpaths: [component1, component2].filter { $0.curves.count > 0 })
-            case .intersection:
-                if component1.contains(component2.curves[0].startingPoint, using: .evenOdd) {
-                    return Path(subpaths: [component2])
-                }
-                else if component2.contains(component1.curves[0].startingPoint, using: .evenOdd) {
-                    return Path(subpaths: [component1])
-                }
-                else {
-                    return Path()
-                }
-            case .difference:
-                return Path(subpaths: [component1])
-            }
-        }
-        
-        // TODO: add all the crossings to the unvisited crossings set
         
         var pathComponents: [PathComponent] = [PathComponent]()
         while unvisitedCrossings.count > 0 {

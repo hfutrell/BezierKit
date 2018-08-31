@@ -59,15 +59,18 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
-    @objc(intersectsPath:threshold:) public func intersects(path: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [CGPoint] {
-        guard self.boundingBox.overlaps(path.boundingBox) else {
+    public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
+        guard self.boundingBox.overlaps(other.boundingBox) else {
             return []
         }
-        var intersections: [CGPoint] = []
-        for s1 in self.subpaths {
-            for s2 in path.subpaths {
-                let componentIntersections: [PathComponentIntersection] = s1.intersects(s2, threshold: threshold)
-                intersections += componentIntersections.map { s1.point(at: $0.indexedComponentLocation1) }
+        var intersections: [PathIntersection] = []
+        for i in 0..<self.subpaths.count {
+            for j in 0..<other.subpaths.count {
+                let s1 = self.subpaths[i]
+                let s2 = other.subpaths[j]
+                let componentIntersections: [PathComponentIntersection] = s1.intersects(component: s2, threshold: threshold)
+                intersections += componentIntersections.map { PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: i, elementIndex: $0.indexedComponentLocation1.elementIndex, t: $0.indexedComponentLocation1.t),
+                                                                               indexedPathLocation2: IndexedPathLocation(componentIndex: j, elementIndex: $0.indexedComponentLocation2.elementIndex, t: $0.indexedComponentLocation2.t)) }
             }
         }
         return intersections
@@ -151,11 +154,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     
     // MARK: - vector boolean operations
     
-//    public func point(at location: IndexedPathLocation) -> CGPoint {
-//        return self.element(at: location).compute(location.t)
-//    }
+    public func point(at location: IndexedPathLocation) -> CGPoint {
+        return self.element(at: location).compute(location.t)
+    }
     
-    private func element(at location: IndexedPathLocation) -> BezierCurve {
+    internal func element(at location: IndexedPathLocation) -> BezierCurve {
         return self.subpaths[location.componentIndex].curves[location.elementIndex]
     }
     
@@ -167,50 +170,38 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
-        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
-        assert(other.subpaths.count <= 1, "todo: support multi-component paths")
         guard self.subpaths.count != 0 else {
             return Path()
         }
         guard other.subpaths.count != 0 else {
             return self
         }
-        let component1 = self.subpaths[0]
-        let component2 = other.subpaths[0]
-        let intersections = component1.intersects(component2)
-        let augmentedGraph = AugmentedGraph(component1: component1, component2: component2, intersections: intersections)
+        let intersections = self.intersects(path: other)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(.difference)
     }
     
     @objc(unionedWithPath:) public func `union`(_ other: Path) -> Path {
-        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
-        assert(other.subpaths.count <= 1, "todo: support multi-component paths")
         guard self.subpaths.count != 0 else {
             return other
         }
         guard other.subpaths.count != 0 else {
             return self
         }
-        let component1 = self.subpaths[0]
-        let component2 = other.subpaths[0]
-        let intersections = component1.intersects(component2)
-        let augmentedGraph = AugmentedGraph(component1: component1, component2: component2, intersections: intersections)
+        let intersections = self.intersects(path: other)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(.union)
     }
     
     @objc(intersectedWithPath:) public func intersecting(_ other: Path) -> Path {
-        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
-        assert(other.subpaths.count <= 1, "todo: support multi-component paths")
         guard self.subpaths.count != 0 else {
             return Path()
         }
         guard other.subpaths.count != 0 else {
             return Path()
         }
-        let component1 = self.subpaths[0]
-        let component2 = other.subpaths[0]
-        let intersections = component1.intersects(component2)
-        let augmentedGraph = AugmentedGraph(component1: component1, component2: component2, intersections: intersections)
+        let intersections = self.intersects(path: other)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(.intersection)
     }
     
@@ -220,8 +211,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             return Path()
         }
         let component = self.subpaths[0]
-        let intersections = component.intersects()
-        let augmentedGraph = AugmentedGraph(component1: component, component2: component, intersections: intersections)
+        let intersections = component.intersects().map {
+            PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: $0.indexedComponentLocation1.elementIndex, t: $0.indexedComponentLocation1.t),
+                             indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: $0.indexedComponentLocation2.elementIndex, t: $0.indexedComponentLocation1.t))
+        }
+        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
         return augmentedGraph.booleanOperation(.union)
     }
 }
@@ -239,12 +233,16 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 }
 
 @objc(BezierKitPathPosition) public class IndexedPathLocation: NSObject {
-    fileprivate let componentIndex: Int
-    fileprivate let elementIndex: Int
-    fileprivate let t: CGFloat
+    internal let componentIndex: Int
+    internal let elementIndex: Int
+    internal let t: CGFloat
     init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
         self.componentIndex = componentIndex
         self.elementIndex = elementIndex
         self.t = t
     }
+}
+
+public struct PathIntersection {
+    let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
 }
