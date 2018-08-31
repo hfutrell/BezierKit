@@ -235,48 +235,27 @@ internal class AugmentedGraph {
                 unvisitedCrossings.insert($0)
             }
         }
-        while unvisitedCrossings.count > 0 {
-            
-            var v = unvisitedCrossings.first!
-            let start = v
-            unvisitedCrossings.remove(v)
-            
-            var curves: [BezierCurve] = [BezierCurve]()
+        while let start = unvisitedCrossings.first {
+            var curves: [BezierCurve] = []
             var isOnFirstCurve = true
-            var movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: true)
-            
+            var v = start
             repeat {
-                
+                let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
+                unvisitedCrossings.remove(v)
                 repeat {
-                    if movingForwards {
-                        curves.append(v.emitNext())
-                        v = v.next
-                    }
-                    else {
-                        curves.append(v.emitPrevious())
-                        v = v.previous
-                    }
+                    curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
+                    v = movingForwards ? v.next : v.previous
                 } while v.isCrossing == false
-                
-                if isOnFirstCurve {
-                    unvisitedCrossings.remove(v)
-                }
-                
                 v = v.intersectionInfo.neighbor!
-                
-                isOnFirstCurve = !isOnFirstCurve
-                if isOnFirstCurve {
-                    unvisitedCrossings.remove(v)
+                if !v.isCrossing {
+                    print("consistency error detected -- bailing out. Set a breakpoint here to debug.")
+                    v = v.intersectionInfo.neighbor! // jump back to avoid infinite loop
                 }
-                
-                // decide on a (possibly) new direction
-                movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
-
+                isOnFirstCurve = !isOnFirstCurve
             } while v !== start
-            
-            // TODO: non-deterministic behavior from usage of Set when choosing starting vertex
             pathComponents.append(PathComponent(curves: curves))
         }
+        // TODO: non-deterministic behavior from usage of Set when choosing starting vertex
         return Path(subpaths: pathComponents)
     }
 }
