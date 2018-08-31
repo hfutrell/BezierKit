@@ -427,7 +427,6 @@ class Demos {
                                 
                                 let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
                                 var path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
-                                path1 = Path(subpaths: [path1.subpaths[1]])
                                 
                                 if let mouse = demoState.lastInputLocation {
                                     

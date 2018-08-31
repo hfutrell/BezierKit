@@ -169,40 +169,22 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCountImpliesContainment(windingCount, using: rule)
     }
     
-    @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
-        guard self.subpaths.count != 0 else {
-            return Path()
-        }
-        guard other.subpaths.count != 0 else {
-            return self
-        }
+    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path) -> Path {
         let intersections = self.intersects(path: other)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
-        return augmentedGraph.booleanOperation(.difference)
+        return augmentedGraph.booleanOperation(operation)
+    }
+    
+    @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
+        return self.performBooleanOperation(.difference, withPath: other)
     }
     
     @objc(unionedWithPath:) public func `union`(_ other: Path) -> Path {
-        guard self.subpaths.count != 0 else {
-            return other
-        }
-        guard other.subpaths.count != 0 else {
-            return self
-        }
-        let intersections = self.intersects(path: other)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
-        return augmentedGraph.booleanOperation(.union)
+        return self.performBooleanOperation(.union, withPath: other)
     }
     
     @objc(intersectedWithPath:) public func intersecting(_ other: Path) -> Path {
-        guard self.subpaths.count != 0 else {
-            return Path()
-        }
-        guard other.subpaths.count != 0 else {
-            return Path()
-        }
-        let intersections = self.intersects(path: other)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
-        return augmentedGraph.booleanOperation(.intersection)
+        return self.performBooleanOperation(.intersection, withPath: other)
     }
     
     @objc public func crossingsRemoved() -> Path {
