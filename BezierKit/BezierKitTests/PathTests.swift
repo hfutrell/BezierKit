@@ -128,7 +128,7 @@ class PathTests: XCTestCase {
         
         let rectanglePath = Path(cgPath: rectangleCGPath)
         
-        let intersections = rectanglePath.intersects(path: circlePath)
+        let intersections = rectanglePath.intersects(path: circlePath).map { rectanglePath.point(at: $0.indexedPathLocation1 ) }
         
         XCTAssert(intersections.contains(CGPoint(x: 4.0, y: 4.0)))
         XCTAssert(intersections.contains(CGPoint(x: 3.0, y: 5.0)))

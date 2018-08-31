@@ -144,6 +144,10 @@ internal class PathLinkedListRepresentation {
         self.forEachVertexStartingFrom(lists[index].first!, callback)
     }
     
+    internal func startingVertex(forComponentIndex componentIndex: Int, elementIndex: Int) -> Vertex {
+        return self.lists[componentIndex][elementIndex]
+    }
+    
     func forEachVertex(_ callback: (Vertex) -> Void) {
         lists.forEach {
             self.forEachVertexStartingFrom($0.first!, callback)

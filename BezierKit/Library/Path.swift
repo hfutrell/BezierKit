@@ -226,5 +226,5 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 }
 
 public struct PathIntersection {
-    let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
+    public let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
 }
