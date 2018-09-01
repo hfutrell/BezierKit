@@ -240,6 +240,10 @@ internal class AugmentedGraph {
             var isOnFirstCurve = true
             var v = start
             repeat {
+                if isOnFirstCurve && unvisitedCrossings.contains(v) == false {
+                    print("already visited this crossing! bailing out to avoid infinite loop! Needs debugging.")
+                    break
+                }
                 let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
                 unvisitedCrossings.remove(v)
                 repeat {
@@ -248,7 +252,7 @@ internal class AugmentedGraph {
                 } while v.isCrossing == false
                 v = v.intersectionInfo.neighbor!
                 if !v.isCrossing {
-                    print("consistency error detected -- bailing out. Set a breakpoint here to debug.")
+                    print("consistency error detected -- bailing out. Needs debugging.")
                     v = v.intersectionInfo.neighbor! // jump back to avoid infinite loop
                 }
                 isOnFirstCurve = !isOnFirstCurve
