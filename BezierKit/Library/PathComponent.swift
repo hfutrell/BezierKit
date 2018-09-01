@@ -85,7 +85,7 @@ public final class PathComponent: NSObject, NSCoding {
         return found
     }
     
-    public func intersects(_ other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
+    public func intersects(component other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         precondition(other !== self, "use intersects(threshold:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
         self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
