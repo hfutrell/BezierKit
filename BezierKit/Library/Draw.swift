@@ -308,14 +308,12 @@ public class Draw {
                 return true // always visit children
             }
         }
-        Draw.setRandomFill(context, alpha: 0.2)
-        context.addPath(pathComponent.cgPath)
-        context.drawPath(using: .fillStroke)
+        context.setLineWidth(1.0)
+        setColor(context, color: Draw.black)
+        pathComponent.curves.forEach {
+            drawCurve(context, curve: $0, offset: offset)
+        }
     }
     
-    public static func drawPath(_ context: CGContext, _ path: Path, offset: CGPoint = .zero) {
-        Draw.setRandomFill(context, alpha: 0.2)
-        context.addPath(path.cgPath)
-        context.drawPath(using: .fillStroke)
-    }
+    
 }

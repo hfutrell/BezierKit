@@ -410,8 +410,6 @@ class Demos {
                              cubicControlPoints: [],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
 
-                                Draw.reset(context)
-                                
                                 var flip = CGAffineTransform.init(scaleX: 1, y: -1)
                                 let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
                                 let height = CTFontGetXHeight(font)
@@ -437,8 +435,7 @@ class Demos {
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
                                     let path2 = Path(cgPath: cgPath2)
                                     
-//                                    Draw.drawPath(context, path2)
-
+                                    
 //                                    for intersection in path1.intersects(path: path2) {
 //                                        Draw.drawPoint(context, origin: intersection)
 //                                    }
@@ -460,7 +457,10 @@ class Demos {
 //                                    } while v !== first
                                     
                                     let subtracted = path1.intersecting(path2)
-                                    Draw.drawPath(context, subtracted)
+                                    subtracted.subpaths.forEach {
+                                        Draw.drawPathComponent(context, pathComponent: $0)
+                                    }
+                                    
                                 }
     })
     static let demo24 = Demo(title: "BVH",
