@@ -379,4 +379,15 @@ class PathTests: XCTestCase {
             componentsEqualAsideFromElementOrdering(intersected.subpaths[0], expectedResult.subpaths[0])
         )
     }
+    
+    func testSubtractWindingDirection() {
+        // this is a specific test of `subtracting` to ensure that when a component creates a "hole"
+        // the order of the hole is reversed so that it is not contained in the shape when using .winding fill rule
+        let circle   = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
+        let hole     = Path(cgPath: CGPath(ellipseIn: CGRect(x: 1, y: 1, width: 1, height: 1), transform: nil))
+        let donut    = circle.subtracting(hole)
+        XCTAssertTrue(donut.contains(CGPoint(x: 0.5, y: 0.5), using: .winding))  // inside the donut (but not the hole)
+        XCTAssertFalse(donut.contains(CGPoint(x: 1.5, y: 1.5), using: .winding)) // center of donut hole
+    }
+    
 }

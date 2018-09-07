@@ -176,7 +176,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
-        return self.performBooleanOperation(.difference, withPath: other)
+        return self.performBooleanOperation(.difference, withPath: other.reversed())
     }
     
     @objc(unionedWithPath:) public func `union`(_ other: Path) -> Path {
