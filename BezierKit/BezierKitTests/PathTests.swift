@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import BezierKit
+@testable import BezierKit
 
 class PathTests: XCTestCase {
     
@@ -186,7 +186,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(decodedPath, path)
     }
     
-    // MARK: contains
+    // MARK: - contains
     
     func testContainsSimple1() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
@@ -261,6 +261,122 @@ class PathTests: XCTestCase {
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
     }
     
-    // MARK: simplify(using:)
+    // MARK: - vector boolean operations
     
+    private func componentsEqualAsideFromElementOrdering(_ component1: PathComponent, _ component2: PathComponent) -> Bool {
+        let curves1 = component1.curves
+        let curves2 = component2.curves
+        guard curves1.count == curves2.count else {
+            return false
+        }
+        if curves1.isEmpty {
+            return true
+        }
+        guard let offset = curves2.index(where: { $0 == curves1.first! }) else {
+            return false
+        }
+        let count = curves1.count
+        for i in 0..<count {
+            guard curves1[i] == curves2[(i+offset) % count] else {
+                return false
+            }
+        }
+        return true
+    }
+    
+    // points on the first square
+    let p0 = CGPoint(x: 0.0, y: 0.0)
+    let p1 = CGPoint(x: 1.0, y: 0.0) // intersection 1
+    let p2 = CGPoint(x: 2.0, y: 0.0)
+    let p3 = CGPoint(x: 2.0, y: 1.0) // intersection 2
+    let p4 = CGPoint(x: 2.0, y: 2.0)
+    let p5 = CGPoint(x: 0.0, y: 2.0)
+    
+    // points on the second square
+    let p6 = CGPoint(x: 1.0, y: -1.0)
+    let p7 = CGPoint(x: 3.0, y: -1.0)
+    let p8 = CGPoint(x: 3.0, y: 1.0)
+    let p9 = CGPoint(x: 1.0, y: 1.0)
+    
+    private func createSquare1() -> Path {
+        return Path(subpaths: [PathComponent(curves:
+            [
+                LineSegment(p0: p0, p1: p2),
+                LineSegment(p0: p2, p1: p4),
+                LineSegment(p0: p4, p1: p5),
+                LineSegment(p0: p5, p1: p0)
+            ]
+        )])
+    }
+    
+    private func createSquare2() -> Path {
+        return Path(subpaths: [PathComponent(curves:
+        [
+            LineSegment(p0: p6, p1: p7),
+            LineSegment(p0: p7, p1: p8),
+            LineSegment(p0: p8, p1: p9),
+            LineSegment(p0: p9, p1: p6)
+        ]
+    )])
+    }
+    
+    func testSubtracting() {
+        let expectedResult = Path(subpaths: [PathComponent(curves:
+            [
+                LineSegment(p0: p1, p1: p9),
+                LineSegment(p0: p9, p1: p3),
+                LineSegment(p0: p3, p1: p4),
+                LineSegment(p0: p4, p1: p5),
+                LineSegment(p0: p5, p1: p0),
+                LineSegment(p0: p0, p1: p1)
+            ]
+        )])
+        let square1 = createSquare1()
+        let square2 = createSquare2()
+        let subtracted = square1.subtracting(square2)
+        XCTAssertEqual(subtracted.subpaths.count, 1)
+        XCTAssert(
+            componentsEqualAsideFromElementOrdering(subtracted.subpaths[0], expectedResult.subpaths[0])
+        )
+    }
+    
+    func testUnion() {
+        let expectedResult = Path(subpaths: [PathComponent(curves:
+            [
+                LineSegment(p0: p0, p1: p1),
+                LineSegment(p0: p1, p1: p6),
+                LineSegment(p0: p6, p1: p7),
+                LineSegment(p0: p7, p1: p8),
+                LineSegment(p0: p8, p1: p3),
+                LineSegment(p0: p3, p1: p4),
+                LineSegment(p0: p4, p1: p5),
+                LineSegment(p0: p5, p1: p0)
+            ]
+        )])
+        let square1 = createSquare1()
+        let square2 = createSquare2()
+        let unioned = square1.union(square2)
+        XCTAssertEqual(unioned.subpaths.count, 1)
+        XCTAssert(
+            componentsEqualAsideFromElementOrdering(unioned.subpaths[0], expectedResult.subpaths[0])
+        )
+    }
+    
+    func testIntersecting() {
+        let expectedResult = Path(subpaths: [PathComponent(curves:
+            [
+                LineSegment(p0: p1, p1: p2),
+                LineSegment(p0: p2, p1: p3),
+                LineSegment(p0: p3, p1: p9),
+                LineSegment(p0: p9, p1: p1)
+            ]
+        )])
+        let square1 = createSquare1()
+        let square2 = createSquare2()
+        let intersected = square1.intersecting(square2)
+        XCTAssertEqual(intersected.subpaths.count, 1)
+        XCTAssert(
+            componentsEqualAsideFromElementOrdering(intersected.subpaths[0], expectedResult.subpaths[0])
+        )
+    }
 }
