@@ -179,8 +179,13 @@ public final class PathComponent: NSObject, NSCoding {
         self.bvh.visit { (node: BVHNode, depth: Int) in
             if case let .leaf(object, elementIndex) = node.nodeType {
                 let curve = object as! BezierCurve
-                results += curve.intersects(line: line).map {
-                    return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
+                results += curve.intersects(line: line).compactMap {
+                    if $0.t2 == 0 || $0.t2 == 1.0 { // hmm: we need this for `contains` but it's probably not good elsewhere
+                        return nil
+                    }
+                    else {
+                        return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
+                    }
                 }
             }
             // TODO: better line box intersection

@@ -193,9 +193,12 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             return Path()
         }
         let component = self.subpaths[0]
-        let intersections = component.intersects().map {
-            PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: $0.indexedComponentLocation1.elementIndex, t: $0.indexedComponentLocation1.t),
-                             indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: $0.indexedComponentLocation2.elementIndex, t: $0.indexedComponentLocation1.t))
+        let intersections = component.intersects().compactMap { (i: PathComponentIntersection) -> PathIntersection? in
+            guard i.indexedComponentLocation1.elementIndex <= i.indexedComponentLocation2.elementIndex else {
+                return nil
+            }
+            return PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation1.elementIndex, t: i.indexedComponentLocation1.t),
+                                    indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation2.elementIndex, t: i.indexedComponentLocation2.t))
         }
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
         return augmentedGraph.booleanOperation(.union)

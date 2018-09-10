@@ -390,4 +390,34 @@ class PathTests: XCTestCase {
         XCTAssertFalse(donut.contains(CGPoint(x: 1.5, y: 1.5), using: .winding)) // center of donut hole
     }
     
+    func testCrossingsRemoved() {
+        let points: [CGPoint] = [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 3, y: 0),
+            CGPoint(x: 3, y: 3),
+            CGPoint(x: 1, y: 1),
+            CGPoint(x: 2, y: 1),
+            CGPoint(x: 0, y: 3),
+        ]
+        let cgPath = CGMutablePath()
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        let intersection = CGPoint(x: 1.5, y: 1.5)
+        
+        let expectedResultCGPath = CGMutablePath()
+        expectedResultCGPath.addLines(between: [points[0], points[1], points[2], intersection, points[5]])
+        expectedResultCGPath.closeSubpath()
+        let expectedResult = Path(cgPath: expectedResultCGPath)
+        
+        
+        XCTAssertTrue(path.contains(CGPoint(x: 1.5, y: 1.25), using: .winding))
+        XCTAssertFalse(path.contains(CGPoint(x: 1.5, y: 1.25), using: .evenOdd))
+
+        let result = path.crossingsRemoved()
+        XCTAssertEqual(result.subpaths.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
+        
+    }
+    
 }
