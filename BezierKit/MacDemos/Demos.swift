@@ -432,6 +432,7 @@ class Demos {
                                 
                                 if let mouse = demoState.lastInputLocation {
                                     
+                                    //let m2 = CGPoint(x: -21.19140625, y: 131.38671875)
                                     
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
