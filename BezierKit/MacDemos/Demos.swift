@@ -410,6 +410,8 @@ class Demos {
                              cubicControlPoints: [],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
 
+                                Draw.reset(context)
+                                
                                 var flip = CGAffineTransform.init(scaleX: 1, y: -1)
                                 let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
                                 let height = CTFontGetXHeight(font)
@@ -430,12 +432,14 @@ class Demos {
                                 
                                 if let mouse = demoState.lastInputLocation {
                                     
+                                    //let m2 = CGPoint(x: -21.19140625, y: 131.38671875)
                                     
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
                                     let path2 = Path(cgPath: cgPath2)
                                     
-                                    
+//                                    Draw.drawPath(context, path2)
+
 //                                    for intersection in path1.intersects(path: path2) {
 //                                        Draw.drawPoint(context, origin: intersection)
 //                                    }
@@ -457,10 +461,7 @@ class Demos {
 //                                    } while v !== first
                                     
                                     let subtracted = path1.intersecting(path2)
-                                    subtracted.subpaths.forEach {
-                                        Draw.drawPathComponent(context, pathComponent: $0)
-                                    }
-                                    
+                                    Draw.drawPath(context, subtracted)
                                 }
     })
     static let demo24 = Demo(title: "BVH",

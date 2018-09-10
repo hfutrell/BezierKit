@@ -147,6 +147,21 @@ class AugmentedGraphTests: XCTestCase {
         XCTAssertTrue(intersectionsAreMutuallyLinked(intersection1Path1, intersection1Path2))
     }
     
+    func testBetween() {
+        let v1 = CGPoint(x: 2, y: -1)
+        let v2 = CGPoint(x: 1, y: 3)
+        
+        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2)    )
+        XCTAssertTrue( between(CGPoint(x: 1, y: 2), v1, v2)    )
+        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2)    )
+       
+        XCTAssertFalse( between(CGPoint(x: -1, y: 1), v1, v2)    )
+        XCTAssertFalse( between(CGPoint(x: 1, y: 5), v1, v2)    )
+        XCTAssertFalse( between(CGPoint(x: 1, y: -1), v1, v2)    )
+
+        
+    }
+    
 //    func testMultipleIntersectionsSameElement() {
 //        
 //    }

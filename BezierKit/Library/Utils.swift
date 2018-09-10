@@ -132,7 +132,7 @@ internal class Utils {
         return CGPoint( x: nx/d, y: ny/d )
     }
     
-    static private func approximately(_ a: Double,_ b: Double, precision: Double) -> Bool {
+    static func approximately(_ a: Double,_ b: Double, precision: Double) -> Bool {
         return abs(a-b) <= precision
     }
     
