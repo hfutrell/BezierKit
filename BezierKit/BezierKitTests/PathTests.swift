@@ -410,7 +410,6 @@ class PathTests: XCTestCase {
         expectedResultCGPath.closeSubpath()
         let expectedResult = Path(cgPath: expectedResultCGPath)
         
-        
         XCTAssertTrue(path.contains(CGPoint(x: 1.5, y: 1.25), using: .winding))
         XCTAssertFalse(path.contains(CGPoint(x: 1.5, y: 1.25), using: .evenOdd))
 
@@ -418,6 +417,14 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result.subpaths.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
         
+    }
+    
+    func testCrossingsRemovedNoCrossings() {
+        // a test which ensures that if a path has no crossings then crossingsRemoved does not modify it
+        let square = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0), transform: nil))
+        let result = square.crossingsRemoved()
+        XCTAssertEqual(result.subpaths.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], square.subpaths[0]))
     }
     
 }

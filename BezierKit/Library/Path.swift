@@ -200,6 +200,9 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             return PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation1.elementIndex, t: i.indexedComponentLocation1.t),
                                     indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation2.elementIndex, t: i.indexedComponentLocation2.t))
         }
+        if intersections.count == 0 {
+            return self
+        }
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
         return augmentedGraph.booleanOperation(.union)
     }
