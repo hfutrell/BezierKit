@@ -218,6 +218,9 @@ internal class AugmentedGraph {
     func connectNeighbors(_ vertex1: Vertex, _ vertex2: Vertex) {
         vertex1.intersectionInfo.neighbor = vertex2
         vertex2.intersectionInfo.neighbor = vertex1
+        let location = 0.5 * (vertex1.location + vertex2.location)
+        vertex1.location = location
+        vertex2.location = location
     }
     
     internal var list1: PathLinkedListRepresentation
@@ -312,13 +315,23 @@ internal class AugmentedGraph {
                 
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 v = v.intersectionInfo.neighbor!
+                isOnFirstCurve = !isOnFirstCurve
+                
+                if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
+                    print("already visited this crossing! bailing out to avoid infinite loop! Needs debugging.")
+                    if let last = curves.last?.endingPoint, let first = curves.first?.startingPoint, last != first {
+                        curves.append(LineSegment(p0: last, p1: first)) // close the component before we bail out
+                    }
+                    break
+                }
+                
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 
                 if !v.isCrossing {
                     print("consistency error detected -- bailing out. Needs debugging.")
                     v = v.intersectionInfo.neighbor! // jump back to avoid infinite loop
+                    isOnFirstCurve = !isOnFirstCurve
                 }
-                isOnFirstCurve = !isOnFirstCurve
             } while v !== start
             pathComponents.append(PathComponent(curves: curves))
         }
@@ -346,7 +359,7 @@ internal enum VertexTransition {
 }
 
 internal class Vertex {
-    public let location: CGPoint
+    public var location: CGPoint
     public let isIntersection: Bool
     // pointers must be set after initialization
     

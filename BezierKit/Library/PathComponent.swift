@@ -49,7 +49,7 @@ public final class PathComponent: NSObject, NSCoding {
         return mutablePath.copy()!
     }()
     
-    internal init(curves: [BezierCurve]) {
+    public init(curves: [BezierCurve]) {
         self.curves = curves
     }
     
