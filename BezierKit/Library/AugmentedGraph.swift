@@ -97,7 +97,7 @@ internal class PathLinkedListRepresentation {
         }
         self.lists[location.componentIndex] = list
     }
-
+    
     private func createListFor(component: PathComponent) -> [Vertex] {
         guard component.curves.count > 0 else {
             return []
@@ -134,10 +134,11 @@ internal class PathLinkedListRepresentation {
     }
     
     fileprivate func markEntryExit(_ path: Path, _ nonCrossingComponents: inout [PathComponent]) {
+        let fillRule = PathFillRule.winding
         for i in 0..<lists.count {
             var hasCrossing: Bool = false
             
-            var windingCount: Int? = nil
+            var windingCount: Int = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
             
             self.forEachVertexInComponent(atIndex: i) { v in
                 guard v.isIntersection else {
@@ -146,34 +147,30 @@ internal class PathLinkedListRepresentation {
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
                 
-                if windingCount == nil {
-                    windingCount = path.contains(previous.compute(0.5), using: .evenOdd) ? 1 : 0
-                }
-                
                 let n1 = v.intersectionInfo.neighbor!.emitPrevious().derivative(0)
                 let n2 = v.intersectionInfo.neighbor!.emitNext().derivative(0)
-
+                
                 let v1 = previous.derivative(0)
                 let v2 = next.derivative(0)
                 
                 let side1 = between(v1, n1, n2)
                 let side2 = between(v2, n1, n2)
-
+                
                 let cross = (side1 != side2)
                 
                 if cross {
-                    let prior = windingCount!
+                    let wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
                     let c = CGPoint.cross(v2, n2)
                     if c < 0 {
-                        windingCount! += 1
+                        windingCount -= 1
                     }
                     else if c > 0 {
-                        windingCount! -= 1
+                        windingCount += 1
                     }
-                    v.intersectionInfo.isEntry = (prior % 2 == 0) && (windingCount! % 2 != 0)
-                    v.intersectionInfo.isExit = (prior % 2 != 0) && (windingCount! % 2 == 0)
+                    let isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                    v.intersectionInfo.isEntry = wasInside == false && isInside == true
+                    v.intersectionInfo.isExit = wasInside == true && isInside == false
                 }
-                
                 if v.intersectionInfo.isEntry || v.intersectionInfo.isExit {
                     hasCrossing = true
                 }
@@ -259,12 +256,12 @@ internal class AugmentedGraph {
     
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
         switch operation {
-            case .union:
-                return v.intersectionInfo.isExit
-            case .difference:
-                return isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
-            case .intersection:
-                return v.intersectionInfo.isEntry
+        case .union:
+            return v.intersectionInfo.isExit
+        case .difference:
+            return isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
+        case .intersection:
+            return v.intersectionInfo.isEntry
         }
     }
     
@@ -275,15 +272,15 @@ internal class AugmentedGraph {
         }
         var pathComponents: [PathComponent] = []
         switch operation {
-            case .union:
-                pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
-                pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
-            case .difference:
-                pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
-                pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
-            case .intersection:
-                pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
-                pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
+        case .union:
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
+        case .difference:
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
+        case .intersection:
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
         }
         // handle components that have crossings
         var unvisitedCrossings: [Vertex] = []

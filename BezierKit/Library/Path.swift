@@ -59,7 +59,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
-    public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
+    @objc(intersectsWithPath:threshold:) public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return []
         }
@@ -162,11 +162,16 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.subpaths[location.componentIndex].curves[location.elementIndex]
     }
     
-    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+    internal func windingCount(_ point: CGPoint) -> Int {
         let windingCount = self.subpaths.reduce(0) {
             $0 + $1.windingCount(at: point)
         }
-        return windingCountImpliesContainment(windingCount, using: rule)
+        return windingCount
+    }
+    
+    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+        let count = self.windingCount(point)
+        return windingCountImpliesContainment(count, using: rule)
     }
     
     private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path) -> Path {
@@ -231,6 +236,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-public struct PathIntersection {
+@objc(BezierKitPathIntersection) public class PathIntersection: NSObject {
     public let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
+    init(indexedPathLocation1: IndexedPathLocation, indexedPathLocation2: IndexedPathLocation) {
+        self.indexedPathLocation1 = indexedPathLocation1
+        self.indexedPathLocation2 = indexedPathLocation2
+    }
 }
