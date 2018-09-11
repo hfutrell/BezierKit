@@ -279,7 +279,7 @@ internal class AugmentedGraph {
                 pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
                 pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
             case .difference:
-                pathComponents += nonCrossingComponents1
+                pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
                 pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
             case .intersection:
                 pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }

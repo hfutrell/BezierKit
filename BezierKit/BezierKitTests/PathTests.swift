@@ -390,6 +390,13 @@ class PathTests: XCTestCase {
         XCTAssertFalse(donut.contains(CGPoint(x: 1.5, y: 1.5), using: .winding)) // center of donut hole
     }
     
+    func testSubtractingEntirelyErased() {
+        // this is a specific test of `subtracting` to ensure that if a path component is entirely contained in the subtracting path that it gets removed
+        let circle       = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil))
+        let biggerCircle = Path(cgPath: CGPath(ellipseIn: CGRect(x: -2, y: -2, width: 4, height: 4), transform: nil))
+        XCTAssertEqual(circle.subtracting(biggerCircle).subpaths.count, 0)
+    }
+    
     func testCrossingsRemoved() {
         let points: [CGPoint] = [
             CGPoint(x: 0, y: 0),
