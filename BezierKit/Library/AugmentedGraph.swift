@@ -135,6 +135,15 @@ internal class PathLinkedListRepresentation {
     
     fileprivate func markEntryExit(_ path: Path, _ nonCrossingComponents: inout [PathComponent]) {
         let fillRule = PathFillRule.winding
+        
+        // determine the min winding count
+        
+        // if the vertex at min winding count is inside the other path, then the path must be fully contained
+        
+        // otherwise subtract that value from all winding counts because the min winding count must be zero
+        
+        // determine entry / exit from the winding count
+
         for i in 0..<lists.count {
             var hasCrossing: Bool = false
             
@@ -162,10 +171,10 @@ internal class PathLinkedListRepresentation {
                     let wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
                     let c = CGPoint.cross(v2, n2)
                     if c < 0 {
-                        windingCount -= 1
+                        windingCount += 1
                     }
                     else if c > 0 {
-                        windingCount += 1
+                        windingCount -= 1
                     }
                     let isInside = windingCountImpliesContainment(windingCount, using: fillRule)
                     v.intersectionInfo.isEntry = wasInside == false && isInside == true
