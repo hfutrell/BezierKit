@@ -28,11 +28,21 @@ public struct LineSegment: BezierCurve, Equatable {
     }
     
     public var startingPoint: CGPoint {
-        return p0
+        get {
+            return p0
+        }
+        set(newValue) {
+            p0 = newValue
+        }
     }
     
     public var endingPoint: CGPoint {
-        return p1
+        get {
+            return p1
+        }
+        set(newValue) {
+            p1 = newValue
+        }
     }
     
     public var order: Int {

@@ -49,6 +49,16 @@ class QuadraticBezierCurveTests: XCTestCase {
         XCTAssertEqual(q.startingPoint, CGPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(q.endingPoint, CGPoint(x: 6.0, y: 1.0))
     }
+    
+    func testSetStartEndPoints() {
+        var q = QuadraticBezierCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: CGPoint(x: 6.0, y: 5.0), p2: CGPoint(x: 8.0, y: 7.0))
+        q.startingPoint = CGPoint(x: 4.0, y: 5.0)
+        XCTAssertEqual(q.p0, q.startingPoint)
+        XCTAssertEqual(q.startingPoint, CGPoint(x: 4.0, y: 5.0))
+        q.endingPoint = CGPoint(x: 9.0, y: 8.0)
+        XCTAssertEqual(q.p2, q.endingPoint)
+        XCTAssertEqual(q.endingPoint, CGPoint(x: 9.0, y: 8.0))
+    }
 
 //    func testSimple() {
 //    }

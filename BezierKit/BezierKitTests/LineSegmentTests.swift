@@ -45,6 +45,16 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(l.endingPoint, CGPoint(x: 2.0, y: 5.0))
     }
     
+    func testSetStartEndPoints() {
+        var l = LineSegment(p0: CGPoint(x: 5.0, y: 6.0), p1: CGPoint(x: 8.0, y: 7.0))
+        l.startingPoint = CGPoint(x: 4.0, y: 5.0)
+        XCTAssertEqual(l.p0, l.startingPoint)
+        XCTAssertEqual(l.startingPoint, CGPoint(x: 4.0, y: 5.0))
+        l.endingPoint = CGPoint(x: 9.0, y: 8.0)
+        XCTAssertEqual(l.p1, l.endingPoint)
+        XCTAssertEqual(l.endingPoint, CGPoint(x: 9.0, y: 8.0))
+    }
+    
     func testDerivative() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0))
         XCTAssertEqual(l.derivative(0.23), CGPoint(x: 2.0, y: 1.0))
