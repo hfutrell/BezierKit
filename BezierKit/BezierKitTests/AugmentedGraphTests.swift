@@ -162,6 +162,28 @@ class AugmentedGraphTests: XCTestCase {
         
     }
     
+    func testWindingDirection() {
+        // if this test fails it's likely that the increment / decrement of the winding direction in the augmented graph is flipped from what it should be
+        // the first square begins its path *inside* the second square so only if the winding count is properly decremented (to zero) at the first crossing
+        // will it be recognized as an exit
+        let origin1 = CGPoint(x: 2, y: 1)
+        let size1 = CGSize(width: 2, height: 1)
+        let origin2 = CGPoint(x: 0, y: 0)
+        let size2 = CGSize(width: 3, height: 3)
+
+        let square1 = Path(cgPath: CGPath(rect: CGRect(origin: origin1, size: size1), transform: nil))
+        let square2 = Path(cgPath: CGPath(rect: CGRect(origin: origin2, size: size2), transform: nil))
+        
+        let intersections = square1.intersects(path: square2)
+        let augmentedGraph = AugmentedGraph(path1: square1, path2: square2, intersections: intersections)
+
+        XCTAssertEqual(crossingCountOnLinkedList(augmentedGraph.list1), 2)
+        let intersection1Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 0).next
+        XCTAssertTrue(intersection1Path1.intersectionInfo.isExit)
+        let intersection2Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 2).next
+        XCTAssertTrue(intersection2Path1.intersectionInfo.isEntry)
+    }
+    
 //    func testMultipleIntersectionsSameElement() {
 //        
 //    }
