@@ -174,31 +174,31 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCountImpliesContainment(count, using: rule)
     }
     
-    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path) -> Path {
-        let intersections = self.intersects(path: other)
+    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path, threshold: CGFloat) -> Path {
+        let intersections = self.intersects(path: other, threshold: threshold)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(operation)
     }
     
-    @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
-        return self.performBooleanOperation(.difference, withPath: other.reversed())
+    @objc(subtractingPath:threshold:) public func subtracting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+        return self.performBooleanOperation(.difference, withPath: other.reversed(), threshold: threshold)
     }
     
-    @objc(unionedWithPath:) public func `union`(_ other: Path) -> Path {
-        return self.performBooleanOperation(.union, withPath: other)
+    @objc(unionedWithPath:threshold:) public func `union`(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+        return self.performBooleanOperation(.union, withPath: other, threshold: threshold)
     }
     
-    @objc(intersectedWithPath:) public func intersecting(_ other: Path) -> Path {
-        return self.performBooleanOperation(.intersection, withPath: other)
+    @objc(intersectedWithPath:threshold:) public func intersecting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+        return self.performBooleanOperation(.intersection, withPath: other, threshold: threshold)
     }
     
-    @objc public func crossingsRemoved() -> Path {
+    @objc(crossingsRemovedWithThreshold:) public func crossingsRemoved(threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
         assert(self.subpaths.count <= 1, "todo: support multi-component paths")
         guard self.subpaths.count > 0 else {
             return Path()
         }
         let component = self.subpaths[0]
-        let intersections = component.intersects().compactMap { (i: PathComponentIntersection) -> PathIntersection? in
+        let intersections = component.intersects(threshold: threshold).compactMap { (i: PathComponentIntersection) -> PathIntersection? in
             guard i.indexedComponentLocation1.elementIndex <= i.indexedComponentLocation2.elementIndex else {
                 return nil
             }
