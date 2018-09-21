@@ -418,6 +418,7 @@ class PathTests: XCTestCase {
             CGPoint(x: 1, y: 1),
             CGPoint(x: 2, y: 1),
             CGPoint(x: 0, y: 3),
+            CGPoint(x: 0, y: 0)
         ]
         let cgPath = CGMutablePath()
         cgPath.addLines(between: points)
@@ -437,6 +438,14 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result.subpaths.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
         
+        // check also that the algorithm works when the first point falls *inside* the path
+        let cgPathAlt = CGMutablePath()
+        cgPathAlt.addLines(between: Array(points[3..<points.count]) + Array(points[1...3]))
+        let pathAlt = Path(cgPath: cgPathAlt)
+
+        let resultAlt = pathAlt.crossingsRemoved()
+        XCTAssertEqual(resultAlt.subpaths.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.subpaths[0], expectedResult.subpaths[0]))
     }
     
     func testCrossingsRemovedNoCrossings() {

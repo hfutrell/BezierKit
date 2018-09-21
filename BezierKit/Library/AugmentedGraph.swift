@@ -172,14 +172,16 @@ internal class PathLinkedListRepresentation {
             // determine the initial winding count (winding count before first vertex)
             var initialWinding = 0
             if useRelativeWinding {
+                var minimumWinding = Int.max
                 self.forEachVertexInComponent(atIndex: i) { v in
                     guard v.isIntersection else {
                         return
                     }
-                    if v.intersectionInfo.nextWinding < -initialWinding {
-                        initialWinding = v.intersectionInfo.nextWinding
+                    if v.intersectionInfo.nextWinding < minimumWinding {
+                        minimumWinding = v.intersectionInfo.nextWinding
                     }
                 }
+                initialWinding = -minimumWinding
             }
             else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
