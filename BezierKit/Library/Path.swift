@@ -162,11 +162,28 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.subpaths[location.componentIndex].curves[location.elementIndex]
     }
     
-    internal func windingCount(_ point: CGPoint) -> Int {
+    internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
         let windingCount = self.subpaths.reduce(0) {
-            $0 + $1.windingCount(at: point)
+            if $1 !== ignoring {
+                return $0 + $1.windingCount(at: point)
+            }
+            else {
+                return $0
+            }
         }
         return windingCount
+    }
+
+    private func contains(_ other: Path) -> Bool {
+        guard other.subpaths.isEmpty == false else {
+            return true
+        }
+        guard self.intersects(path: other).isEmpty else {
+            return false
+        }
+        return other.subpaths.reduce(true) {
+            $0 && self.contains($1.curves[0].startingPoint)
+        }
     }
     
     @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
@@ -211,6 +228,36 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
         return augmentedGraph.booleanOperation(.union)
     }
+    
+    @objc public func disjointSubpaths() -> [Path] {
+        
+        var paths: Set<Path> = Set<Path>()
+        let subpathsAsPaths = self.subpaths.map { Path(subpaths: [$0]) }
+        for subpath in subpathsAsPaths {
+            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) == 0 {
+                paths.insert(subpath)
+            }
+        }
+        
+        var pathsWithHoles: [Path: Path] = [:]
+        for path in paths {
+            pathsWithHoles[path] = path
+        }
+        
+        for subpath in subpathsAsPaths {
+            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) != 0 {
+                for other in paths {
+                    if other.contains(subpath) {
+                        pathsWithHoles[other] = Path(subpaths: pathsWithHoles[other]!.subpaths + subpath.subpaths)
+                        break
+                    }
+                }
+            }
+        }
+        
+        return Array(pathsWithHoles.values)
+    }
+
 }
 
 @objc extension Path: Transformable {
