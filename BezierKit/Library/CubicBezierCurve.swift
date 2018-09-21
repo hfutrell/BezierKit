@@ -24,11 +24,21 @@ public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
     }
 
     public var startingPoint: CGPoint {
-        return p0
+        get {
+            return p0
+        }
+        set(newValue) {
+            p0 = newValue
+        }
     }
     
     public var endingPoint: CGPoint {
-        return p3
+        get {
+            return p3
+        }
+        set(newValue) {
+            p3 = newValue
+        }
     }
     
     // MARK: - Initializers

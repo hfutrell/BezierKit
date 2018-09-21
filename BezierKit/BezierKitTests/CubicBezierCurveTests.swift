@@ -106,6 +106,16 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.endingPoint, CGPoint(x: 6.0, y: 1.0))
     }
 
+    func testSetStartEndPoints() {
+        var c = CubicBezierCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: CGPoint(x: 6.0, y: 5.0), p2: CGPoint(x: 7.0, y: 8.0), p3: CGPoint(x: 8.0, y: 7.0))
+        c.startingPoint = CGPoint(x: 4.0, y: 5.0)
+        XCTAssertEqual(c.p0, c.startingPoint)
+        XCTAssertEqual(c.startingPoint, CGPoint(x: 4.0, y: 5.0))
+        c.endingPoint = CGPoint(x: 9.0, y: 8.0)
+        XCTAssertEqual(c.p3, c.endingPoint)
+        XCTAssertEqual(c.endingPoint, CGPoint(x: 9.0, y: 8.0))
+    }
+    
     func testSimple() {
         // create a simple cubic curve (very simple, because it's equal to a line segment)
         let c1 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 3.0, y: 3.0), p3: CGPoint(x: 4.0, y: 4.0))

@@ -188,12 +188,25 @@ class PathTests: XCTestCase {
     
     // MARK: - contains
     
+    func testWindingCount() {
+        let rect1 = Path(cgPath: CGPath(rect: CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2)), transform: nil))
+        let rect2 = Path(cgPath: CGPath(rect: CGRect(origin: CGPoint(x: -2, y: -2), size: CGSize(width: 4, height: 4)), transform: nil))
+        let path = Path(subpaths: rect1.subpaths + rect2.subpaths)
+        // outside of both rects
+        XCTAssertEqual(path.windingCount(CGPoint(x: -3, y: 0)), 0)
+        // inside rect1 but outside rect2
+        XCTAssertEqual(path.windingCount(CGPoint(x: -1.5, y: 0)), 1)
+        // inside both rects
+        XCTAssertEqual(path.windingCount(CGPoint(x: 0, y: 0)), 2)
+    }
+    
     func testContainsSimple1() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path = Path(cgPath: CGPath(rect: rect, transform: nil))
         XCTAssertFalse(path.contains(CGPoint(x: -2, y: 0))) // the first point is outside the rectangle on the left
         XCTAssertTrue(path.contains(CGPoint(x: 0, y: 0)))  // the second point falls inside the rectangle
         XCTAssertFalse(path.contains(CGPoint(x: 3, y: 0))) // the third point falls outside the rectangle on the right
+        XCTAssertTrue(path.contains(CGPoint(x: -0.99999, y: 0)))  // just *barely* in the rectangle
     }
     
     func testContainsSimple2() {
@@ -388,6 +401,13 @@ class PathTests: XCTestCase {
         let donut    = circle.subtracting(hole)
         XCTAssertTrue(donut.contains(CGPoint(x: 0.5, y: 0.5), using: .winding))  // inside the donut (but not the hole)
         XCTAssertFalse(donut.contains(CGPoint(x: 1.5, y: 1.5), using: .winding)) // center of donut hole
+    }
+    
+    func testSubtractingEntirelyErased() {
+        // this is a specific test of `subtracting` to ensure that if a path component is entirely contained in the subtracting path that it gets removed
+        let circle       = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil))
+        let biggerCircle = Path(cgPath: CGPath(ellipseIn: CGRect(x: -2, y: -2, width: 4, height: 4), transform: nil))
+        XCTAssertEqual(circle.subtracting(biggerCircle).subpaths.count, 0)
     }
     
     func testCrossingsRemoved() {

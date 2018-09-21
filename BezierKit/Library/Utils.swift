@@ -15,7 +15,7 @@ import CoreGraphics
 internal class Utils {
 
     // float precision significant decimal
-    static let epsilon: Double = 0.000001
+    static let epsilon: Double = 1.0e-5
     static let tau: Double = 2.0 * Double.pi
     static let quart: Double = Double.pi / 2.0
     

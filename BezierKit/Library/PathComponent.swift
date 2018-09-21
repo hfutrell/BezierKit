@@ -180,12 +180,7 @@ public final class PathComponent: NSObject, NSCoding {
             if case let .leaf(object, elementIndex) = node.nodeType {
                 let curve = object as! BezierCurve
                 results += curve.intersects(line: line).compactMap {
-                    if $0.t2 == 0 || $0.t2 == 1.0 { // hmm: we need this for `contains` but it's probably not good elsewhere
-                        return nil
-                    }
-                    else {
-                        return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
-                    }
+                return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
                 }
             }
             // TODO: better line box intersection
@@ -201,7 +196,7 @@ public final class PathComponent: NSObject, NSCoding {
     internal func windingCount(at point: CGPoint) -> Int {
         // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
-        let delta = line.p1 - line.p0
+        let delta = line.p0 - line.p1
         let intersections = self.intersects(line: line)
         var windingCount = 0
         intersections.forEach {

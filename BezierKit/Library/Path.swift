@@ -59,7 +59,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
-    public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
+    @objc(intersectsWithPath:threshold:) public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return []
         }
@@ -162,38 +162,60 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.subpaths[location.componentIndex].curves[location.elementIndex]
     }
     
-    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+    internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
         let windingCount = self.subpaths.reduce(0) {
-            $0 + $1.windingCount(at: point)
+            if $1 !== ignoring {
+                return $0 + $1.windingCount(at: point)
+            }
+            else {
+                return $0
+            }
         }
-        return windingCountImpliesContainment(windingCount, using: rule)
+        return windingCount
+    }
+
+    private func contains(_ other: Path) -> Bool {
+        guard other.subpaths.isEmpty == false else {
+            return true
+        }
+        guard self.intersects(path: other).isEmpty else {
+            return false
+        }
+        return other.subpaths.reduce(true) {
+            $0 && self.contains($1.curves[0].startingPoint)
+        }
     }
     
-    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path) -> Path {
-        let intersections = self.intersects(path: other)
+    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+        let count = self.windingCount(point)
+        return windingCountImpliesContainment(count, using: rule)
+    }
+    
+    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path, threshold: CGFloat) -> Path {
+        let intersections = self.intersects(path: other, threshold: threshold)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(operation)
     }
     
-    @objc(subtractingPath:) public func subtracting(_ other: Path) -> Path {
-        return self.performBooleanOperation(.difference, withPath: other.reversed())
+    @objc(subtractingPath:threshold:) public func subtracting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+        return self.performBooleanOperation(.difference, withPath: other.reversed(), threshold: threshold)
     }
     
-    @objc(unionedWithPath:) public func `union`(_ other: Path) -> Path {
-        return self.performBooleanOperation(.union, withPath: other)
+    @objc(unionedWithPath:threshold:) public func `union`(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+        return self.performBooleanOperation(.union, withPath: other, threshold: threshold)
     }
     
-    @objc(intersectedWithPath:) public func intersecting(_ other: Path) -> Path {
-        return self.performBooleanOperation(.intersection, withPath: other)
+    @objc(intersectedWithPath:threshold:) public func intersecting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+        return self.performBooleanOperation(.intersection, withPath: other, threshold: threshold)
     }
     
-    @objc public func crossingsRemoved() -> Path {
+    @objc(crossingsRemovedWithThreshold:) public func crossingsRemoved(threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
         assert(self.subpaths.count <= 1, "todo: support multi-component paths")
         guard self.subpaths.count > 0 else {
             return Path()
         }
         let component = self.subpaths[0]
-        let intersections = component.intersects().compactMap { (i: PathComponentIntersection) -> PathIntersection? in
+        let intersections = component.intersects(threshold: threshold).compactMap { (i: PathComponentIntersection) -> PathIntersection? in
             guard i.indexedComponentLocation1.elementIndex <= i.indexedComponentLocation2.elementIndex else {
                 return nil
             }
@@ -206,6 +228,36 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
         return augmentedGraph.booleanOperation(.union)
     }
+    
+    @objc public func disjointSubpaths() -> [Path] {
+        
+        var paths: Set<Path> = Set<Path>()
+        let subpathsAsPaths = self.subpaths.map { Path(subpaths: [$0]) }
+        for subpath in subpathsAsPaths {
+            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) == 0 {
+                paths.insert(subpath)
+            }
+        }
+        
+        var pathsWithHoles: [Path: Path] = [:]
+        for path in paths {
+            pathsWithHoles[path] = path
+        }
+        
+        for subpath in subpathsAsPaths {
+            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) != 0 {
+                for other in paths {
+                    if other.contains(subpath) {
+                        pathsWithHoles[other] = Path(subpaths: pathsWithHoles[other]!.subpaths + subpath.subpaths)
+                        break
+                    }
+                }
+            }
+        }
+        
+        return Array(pathsWithHoles.values)
+    }
+
 }
 
 @objc extension Path: Transformable {
@@ -231,6 +283,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-public struct PathIntersection {
+@objc(BezierKitPathIntersection) public class PathIntersection: NSObject {
     public let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
+    init(indexedPathLocation1: IndexedPathLocation, indexedPathLocation2: IndexedPathLocation) {
+        self.indexedPathLocation1 = indexedPathLocation1
+        self.indexedPathLocation2 = indexedPathLocation2
+    }
 }

@@ -97,7 +97,7 @@ internal class PathLinkedListRepresentation {
         }
         self.lists[location.componentIndex] = list
     }
-
+    
     private func createListFor(component: PathComponent) -> [Vertex] {
         guard component.curves.count > 0 else {
             return []
@@ -133,12 +133,12 @@ internal class PathLinkedListRepresentation {
         self.lists = p.subpaths.map { self.createListFor(component: $0) }
     }
     
-    fileprivate func markEntryExit(_ path: Path, _ nonCrossingComponents: inout [PathComponent]) {
+    fileprivate func markEntryExit(_ path: Path, _ nonCrossingComponents: inout [PathComponent], useRelativeWinding: Bool = false) {
+        let fillRule = PathFillRule.winding
         for i in 0..<lists.count {
-            var hasCrossing: Bool = false
             
-            var windingCount: Int? = nil
-            
+            // determine winding counts relative to the first vertex
+            var relativeWindingCount = 0
             self.forEachVertexInComponent(atIndex: i) { v in
                 guard v.isIntersection else {
                     return
@@ -146,34 +146,65 @@ internal class PathLinkedListRepresentation {
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
                 
-                if windingCount == nil {
-                    windingCount = path.contains(previous.compute(0.5), using: .evenOdd) ? 1 : 0
-                }
-                
                 let n1 = v.intersectionInfo.neighbor!.emitPrevious().derivative(0)
                 let n2 = v.intersectionInfo.neighbor!.emitNext().derivative(0)
-
+                
                 let v1 = previous.derivative(0)
                 let v2 = next.derivative(0)
                 
                 let side1 = between(v1, n1, n2)
                 let side2 = between(v2, n1, n2)
-
+                
                 let cross = (side1 != side2)
                 
                 if cross {
-                    let prior = windingCount!
                     let c = CGPoint.cross(v2, n2)
                     if c < 0 {
-                        windingCount! += 1
+                        relativeWindingCount += 1
                     }
                     else if c > 0 {
-                        windingCount! -= 1
+                        relativeWindingCount -= 1
                     }
-                    v.intersectionInfo.isEntry = (prior % 2 == 0) && (windingCount! % 2 != 0)
-                    v.intersectionInfo.isExit = (prior % 2 != 0) && (windingCount! % 2 == 0)
                 }
-                
+                v.intersectionInfo.nextWinding = relativeWindingCount
+            }
+            
+            // determine the initial winding count (winding count before first vertex)
+            var initialWinding = 0
+            if useRelativeWinding {
+                self.forEachVertexInComponent(atIndex: i) { v in
+                    guard v.isIntersection else {
+                        return
+                    }
+                    if v.intersectionInfo.nextWinding < -initialWinding {
+                        initialWinding = v.intersectionInfo.nextWinding
+                    }
+                }
+            }
+            else {
+                initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
+            }
+            
+            // adjust winding counts based on the initial winding count
+            self.forEachVertexInComponent(atIndex: i) { v in
+                guard v.isIntersection else {
+                    return
+                }
+                v.intersectionInfo.nextWinding += initialWinding
+            }
+            
+            // for each intersection, determine isEntry / isExit based on winding count
+            var hasCrossing: Bool = false
+            var windingCount: Int = initialWinding
+            self.forEachVertexInComponent(atIndex: i) { v in
+                guard v.isIntersection else {
+                    return
+                }
+                let wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                windingCount = v.intersectionInfo.nextWinding
+                let isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                v.intersectionInfo.isEntry = wasInside == false && isInside == true
+                v.intersectionInfo.isExit = wasInside == true && isInside == false
                 if v.intersectionInfo.isEntry || v.intersectionInfo.isExit {
                     hasCrossing = true
                 }
@@ -183,7 +214,7 @@ internal class PathLinkedListRepresentation {
             }
         }
     }
-    
+
     private func forEachVertexStartingFrom(_ v: Vertex, _ callback: (Vertex) -> Void) {
         var current = v
         repeat {
@@ -251,20 +282,21 @@ internal class AugmentedGraph {
             list2.insertIntersectionVertex(vertex2, at: $0.indexedPathLocation2)
         }
         // mark each intersection as either entry or exit
-        list1.markEntryExit(path2, &nonCrossingComponents1)
-        if list1 !== list2 {
-            list2.markEntryExit(path1, &nonCrossingComponents2)
+        let useRelativeWinding = (list1 === list2)
+        list1.markEntryExit(path2, &nonCrossingComponents1, useRelativeWinding: useRelativeWinding)
+        if useRelativeWinding == false {
+            list2.markEntryExit(path1, &nonCrossingComponents2, useRelativeWinding: useRelativeWinding)
         }
     }
     
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
         switch operation {
-            case .union:
-                return v.intersectionInfo.isExit
-            case .difference:
-                return isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
-            case .intersection:
-                return v.intersectionInfo.isEntry
+        case .union:
+            return v.intersectionInfo.isExit
+        case .difference:
+            return isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
+        case .intersection:
+            return v.intersectionInfo.isEntry
         }
     }
     
@@ -275,15 +307,15 @@ internal class AugmentedGraph {
         }
         var pathComponents: [PathComponent] = []
         switch operation {
-            case .union:
-                pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
-                pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
-            case .difference:
-                pathComponents += nonCrossingComponents1
-                pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
-            case .intersection:
-                pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
-                pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
+        case .union:
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
+        case .difference:
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
+        case .intersection:
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
         }
         // handle components that have crossings
         var unvisitedCrossings: [Vertex] = []
@@ -366,6 +398,7 @@ internal class Vertex {
     public struct IntersectionInfo {
         public var isEntry: Bool = false
         public var isExit: Bool = false
+        public var nextWinding: Int = 0
         public var neighbor: Vertex? = nil
     }
     public var intersectionInfo: IntersectionInfo = IntersectionInfo()

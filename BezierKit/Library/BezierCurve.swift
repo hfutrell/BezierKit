@@ -613,8 +613,8 @@ public protocol Reversible {
 public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var simple: Bool { get }
     var points: [CGPoint] { get }
-    var startingPoint: CGPoint { get }
-    var endingPoint: CGPoint { get }
+    var startingPoint: CGPoint { get set }
+    var endingPoint: CGPoint { get set }
     var order: Int { get }
     init(points: [CGPoint])
     func derivative(_ t: CGFloat) -> CGPoint
