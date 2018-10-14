@@ -12,7 +12,7 @@ extension CGPoint {
     public var length: CGFloat {
         return sqrt(self.lengthSquared)
     }
-    private var lengthSquared: CGFloat {
+    internal var lengthSquared: CGFloat {
         return self.dot(self)
     }
     public func normalize() -> CGPoint {
@@ -26,6 +26,10 @@ extension CGPoint {
         return CGPoint(x: p1.x > p2.x ? p1.x : p2.x,
                        y: p1.y > p2.y ? p1.y : p2.y)
     }
+}
+
+public func cross(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
+    return p1.x * p2.y - p1.y * p2.x
 }
 
 public func distance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {

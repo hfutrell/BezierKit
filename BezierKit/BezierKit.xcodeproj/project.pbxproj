@@ -12,6 +12,8 @@
 		FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
 		FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FD362DCF217337D300FAE09D /* FatLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD362DCE217337D300FAE09D /* FatLine.swift */; };
+		FD362DD0217337D300FAE09D /* FatLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD362DCE217337D300FAE09D /* FatLine.swift */; };
 		FD4024502110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */; };
 		FD4024512110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -122,6 +124,7 @@
 		FD26253B1EAC7B9A00C64652 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_iOS.h; sourceTree = "<group>"; };
 		FD26253E1EAC7B9A00C64652 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FD362DCE217337D300FAE09D /* FatLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatLine.swift; sourceTree = "<group>"; };
 		FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuadraticBezierCurveTests.swift; sourceTree = "<group>"; };
 		FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_Mac.h; sourceTree = "<group>"; };
@@ -272,6 +275,7 @@
 		FDB6B3F61EAFD6DF00001C61 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				FD362DCE217337D300FAE09D /* FatLine.swift */,
 				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
 				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */,
@@ -452,12 +456,12 @@
 					};
 					FD26253A1EAC7B9A00C64652 = {
 						CreatedOnToolsVersion = 8.3.2;
-						LastSwiftMigration = 0900;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Automatic;
 					};
 					FD4A0DBF1EAAD01F0031A393 = {
 						CreatedOnToolsVersion = 8.3.2;
-						LastSwiftMigration = 0910;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Automatic;
 					};
 					FDB9D72F1EB28CEB00413F0E = {
@@ -560,6 +564,7 @@
 				FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
+				FD362DD0217337D300FAE09D /* FatLine.swift in Sources */,
 				FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
@@ -581,6 +586,7 @@
 				FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
+				FD362DCF217337D300FAE09D /* FatLine.swift in Sources */,
 				FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
@@ -806,6 +812,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				CURRENT_PROJECT_VERSION = 1;
@@ -821,6 +828,7 @@
 				PRODUCT_NAME = BezierKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -833,6 +841,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				CURRENT_PROJECT_VERSION = 1;
@@ -861,6 +870,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -876,6 +886,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 4.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -887,6 +898,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
