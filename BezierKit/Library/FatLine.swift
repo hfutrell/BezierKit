@@ -205,6 +205,7 @@ private extension LineSegment {
         var line = (self.endingPoint.lengthSquared < self.startingPoint.lengthSquared) ? self.reversed() : self
         let v = (line.endingPoint - line.startingPoint).normalize()
         line.endingPoint = line.startingPoint + v;
+        return line
     }
 }
 
@@ -310,16 +311,15 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
     }
     //print(D);
     
-    var p = ConvexHull()
-    p.swap(D)
+    var p = ConvexHull(points: D).boundary
     //print(p);
     
     var tmin: CGFloat = 1
     var tmax: CGFloat = 0
     //    std::cerr << "bound : " << bound << std::endl;
     
-    var plower = (p[0].y < bound.min)
-    var phigher = (p[0].y > bound.max)
+    var plower = (p[0].y < bound.start)
+    var phigher = (p[0].y > bound.end)
     if !plower && !phigher {  // inside the fat line
         if tmin > p[0].x {
             tmin = p[0].x
@@ -332,8 +332,8 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
     }
     
     for i in 1..<p.count {
-        var clower = (p[i].y < bound.min)
-        var chigher = (p[i].y > bound.max)
+        let clower = (p[i].y < bound.start)
+        let chigher = (p[i].y > bound.end)
         if !clower && !chigher { // inside the fat line
             if tmin > p[i].x {
                tmin = p[i].x
@@ -346,7 +346,7 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
             //                      << std::endl;
         }
         if clower != plower { // cross the lower bound
-            t = intersect(p[i-1], p[i], bound.min)
+            let t = intersect(p[i-1], p[i], bound.start)
             if tmin > t {
                 tmin = t
             }
@@ -359,7 +359,7 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
             //                      << std::endl;
         }
         if chigher != phigher {  // cross the upper bound
-            t = intersect(p[i-1], p[i], bound.max)
+            let t = intersect(p[i-1], p[i], bound.end)
             if tmin > t {
                 tmin = t
             }
@@ -375,10 +375,10 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
     
     // we have to test the closing segment for intersection
     let last = p.count - 1
-    let clower = (p[0].y < bound.min)
-    let chigher = (p[0].y > bound.max)
+    let clower = (p[0].y < bound.start)
+    let chigher = (p[0].y > bound.end)
     if clower != plower { // cross the lower bound
-        let t = intersect(p[last], p[0], bound.min)
+        let t = intersect(p[last], p[0], bound.start)
         if tmin > t {
              tmin = t
         }
@@ -389,7 +389,7 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
         //                  << " : tmin = " << tmin << ", tmax = " << tmax << std::endl;
     }
     if chigher != phigher { // cross the upper bound
-        let t = intersect(p[last], p[0], bound.max)
+        let t = intersect(p[last], p[0], bound.end)
         if tmin > t {
             tmin = t
         }

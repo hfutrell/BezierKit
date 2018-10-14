@@ -14,6 +14,8 @@
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FD362DCF217337D300FAE09D /* FatLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD362DCE217337D300FAE09D /* FatLine.swift */; };
 		FD362DD0217337D300FAE09D /* FatLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD362DCE217337D300FAE09D /* FatLine.swift */; };
+		FD362DD52173674700FAE09D /* ConvexHull.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD362DD42173674700FAE09D /* ConvexHull.swift */; };
+		FD362DD62173674700FAE09D /* ConvexHull.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD362DD42173674700FAE09D /* ConvexHull.swift */; };
 		FD4024502110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */; };
 		FD4024512110CF5100FA723C /* QuadraticBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */; };
 		FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */ = {isa = PBXBuildFile; fileRef = FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -125,6 +127,7 @@
 		FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_iOS.h; sourceTree = "<group>"; };
 		FD26253E1EAC7B9A00C64652 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FD362DCE217337D300FAE09D /* FatLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatLine.swift; sourceTree = "<group>"; };
+		FD362DD42173674700FAE09D /* ConvexHull.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexHull.swift; sourceTree = "<group>"; };
 		FD40244F2110CF5100FA723C /* QuadraticBezierCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuadraticBezierCurveTests.swift; sourceTree = "<group>"; };
 		FD4A0DC01EAAD01F0031A393 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD4A0DC21EAAD01F0031A393 /* BezierKit_Mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_Mac.h; sourceTree = "<group>"; };
@@ -276,6 +279,7 @@
 			isa = PBXGroup;
 			children = (
 				FD362DCE217337D300FAE09D /* FatLine.swift */,
+				FD362DD42173674700FAE09D /* ConvexHull.swift */,
 				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
 				FDB6B3FE1EAFD6DF00001C61 /* QuadraticBezierCurve.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicBezierCurve.swift */,
@@ -557,6 +561,7 @@
 				FDB6B4111EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
 				FDC7D7042111323A00A9EEF0 /* Path.swift in Sources */,
 				FDC859642119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */,
+				FD362DD62173674700FAE09D /* ConvexHull.swift in Sources */,
 				FD4A63FF200AA50B00930E10 /* Shape.swift in Sources */,
 				FDB6B40D1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
 				FDB6B40F1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
@@ -579,6 +584,7 @@
 				FDB6B4101EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
 				FDC7D7032111323A00A9EEF0 /* Path.swift in Sources */,
 				FDC455EE211D057E00DBF2B2 /* BoundingVolumeHierarchy.swift in Sources */,
+				FD362DD52173674700FAE09D /* ConvexHull.swift in Sources */,
 				FD4A63FE200AA50B00930E10 /* Shape.swift in Sources */,
 				FDB6B40C1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
 				FDB6B40E1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
