@@ -448,10 +448,10 @@ extension BezierCurve {
         let s = Subcurve<Self>(curve: self)
         
         if let c = curve as? CubicBezierCurve {
-            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: c)], threshold: threshold)
+            return findIntersectionsBezierClipping(self, c)
         }
         else if let q = curve as? QuadraticBezierCurve {
-            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], threshold: threshold)
+            return findIntersectionsBezierClipping(self, q)
         }
         else if let l = curve as? LineSegment {
             if let m = self as? LineSegment {
