@@ -50,9 +50,11 @@ struct ConvexHull {
         }
         
         let _lower = k
-        _boundary = [CGPoint](_boundary[0..<k] + _boundary[k..._boundary.endIndex].sorted { // sort LexGreater<X>
-            $0.x > $1.x
-        })
+        if k < _boundary.endIndex {
+            _boundary = [CGPoint](_boundary[0..<k] + _boundary[k..<_boundary.endIndex].sorted { // sort LexGreater<X>
+                $0.x > $1.x
+            })
+        }
         
         _boundary.append(_boundary.first!)
         for i in _lower..<_boundary.count {

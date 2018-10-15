@@ -43,7 +43,7 @@ private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat
 private extension BezierCurve {
     func isConstant(_ epsilon: CGFloat) -> Bool {
         for i in 1...self.order {
-            if areNear(self.points[i], self.startingPoint, epsilon) {
+            if areNear(self.points[i], self.startingPoint, epsilon) == false {
                 return false
             }
         }
@@ -120,7 +120,7 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
     
     if (A.isConstant(precision) && B.isConstant(precision)) {
         let M1 = middle_point(C1.startingPoint, C1.endingPoint)
-        let M2 = middle_point(C1.startingPoint, C1.endingPoint)
+        let M2 = middle_point(C2.startingPoint, C2.endingPoint)
         if areNear(M1, M2) {
             domsA.append(domA)
             domsB.append(domB)
@@ -353,7 +353,7 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
             if tmax < t {
                 tmax = t
             }
-            plower = clower;
+            plower = clower
             //            std::cerr << i << " : lower " << p[i]
             //                      << " : tmin = " << tmin << ", tmax = " << tmax
             //                      << std::endl;
