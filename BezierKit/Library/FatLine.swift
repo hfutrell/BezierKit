@@ -54,6 +54,17 @@ private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat
     iterate(&domsA, &domsB, A, B, UNIT_INTERVAL, UNIT_INTERVAL, precision: precision, counter: &counter)
     assert(domsA.count == domsB.count)
     var i = 0
+   
+    func roundToEnd(_ value: CGFloat) -> CGFloat {
+        if Utils.approximately(Double(value), 0.0, precision: Utils.epsilon) {
+            return CGFloat(0.0)
+        }
+        else if Utils.approximately(Double(value), 1.0, precision: Utils.epsilon) {
+            return CGFloat(1.0)
+        }
+        return value
+    }
+    
     return zip(domsA, domsB).map {
         if verbose {
             print("\(i) : domB : \(domsA[i])")
@@ -64,7 +75,7 @@ private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat
             print("precision B: \(get_precision(domsB[i]))")
         }
         i += 1
-        return Intersection(t1: $0.0.middle, t2: $0.1.middle)
+        return Intersection(t1: roundToEnd($0.0.middle), t2: roundToEnd($0.1.middle))
     }
 }
 
