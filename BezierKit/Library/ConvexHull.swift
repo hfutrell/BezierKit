@@ -15,8 +15,39 @@ private func _is_clockwise_turn(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Boo
     return cross(b-a, c-a) > 0
 }
 
-/// Convex hull based on the Andrew's monotone chain algorithm
 internal func computeConvexHull(from points: [CGPoint]) -> [CGPoint] {
+    // naive (gift wrapping) Jarvis algorithm. Ok for n <= 4 as for Cubic Bezier curves
+    let C = points.count
+    var P = [CGPoint]()
+    P.reserveCapacity(C)
+
+    points.withUnsafeBufferPointer {(S: UnsafeBufferPointer<CGPoint>) in
+        var firstIndex = 0
+        for i in 1..<C {
+            if S[i].x < S[firstIndex].x {
+                firstIndex = i
+            }
+        }
+        var pointOnHull = S[firstIndex]
+        while(true) {
+            P.append(pointOnHull)
+            var endPoint = S[0]
+            for j in 1..<C {
+                if endPoint == pointOnHull || _is_clockwise_turn(pointOnHull, S[j], endPoint) {
+                    endPoint = S[j]
+                }
+            }
+            if endPoint == P[0] {
+                break
+            }
+            pointOnHull = endPoint
+        }
+    }
+    return P
+}
+
+/// Convex hull based on the Andrew's monotone chain algorithm
+/*internal func computeConvexHull(from points: [CGPoint]) -> [CGPoint] {
     
     var _boundary = points.sorted { // sorted in LexLess<X> order
         $0.x < $1.x || ($0.x == $1.x && $0.y < $1.y)
@@ -60,4 +91,4 @@ internal func computeConvexHull(from points: [CGPoint]) -> [CGPoint] {
     _boundary.removeLast(_boundary.count - k + 1)
     return _boundary
     
-}
+}*/
