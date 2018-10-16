@@ -1610,6 +1610,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-lgsl";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "Library/libgeom-bridge.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
