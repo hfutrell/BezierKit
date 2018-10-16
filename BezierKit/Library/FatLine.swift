@@ -31,7 +31,7 @@ public func findIntersectionsBezierClipping(_ A: BezierCurve, _ B: BezierCurve, 
         print("findIntersectionsBezierClipping called")
     }
     let clampedPrecision = precision < MAX_PRECISION ? precision: MAX_PRECISION
-    return getSolutions(A, B, precision: clampedPrecision)
+    return getSolutions(A.points, B.points, precision: clampedPrecision)
 }
 
 private func get_precision(_ I: Interval) -> Int {
@@ -47,7 +47,7 @@ private func get_precision(_ I: Interval) -> Int {
     return n
 }
 
-private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat) -> [Intersection] {
+private func getSolutions(_ A: [CGPoint], _ B: [CGPoint], precision: CGFloat) -> [Intersection] {
     var domsA = [Interval]()
     var domsB = [Interval]()
     var counter = 0
@@ -79,15 +79,13 @@ private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat
     }
 }
 
-private extension BezierCurve {
-    func isConstant(_ epsilon: CGFloat) -> Bool {
-        for i in 1...self.order {
-            if areNear(self.points[i], self.startingPoint, epsilon) == false {
-                return false
-            }
+func isConstant(_ array: [CGPoint], _ epsilon: CGFloat) -> Bool {
+    for i in 1..<array.count {
+        if areNear(array[i], array.first!, epsilon) == false {
+            return false
         }
-        return true
     }
+    return true
 }
 
 private func areNear(_ a: CGPoint, _ b: CGPoint, _ epsilon: CGFloat = EPSILON) -> Bool {
@@ -136,16 +134,52 @@ private func map_to(_ J: inout Interval, _ I: Interval) {
     J.setEnds(J.valueAt(I.start), J.valueAt(I.end));
 }
 
-private func portion(_ a: inout BezierCurve, _ interval: Interval) {
-    a = a.split(from: interval.start, to: interval.end)
+private func portion(_ B: UnsafeMutablePointer<CGPoint>, _ I: Interval, _ n: Int) {
+    if I.start == 0 {
+        if I.end == 1 {
+            return
+        }
+        left_portion(I.end, B, n)
+        return
+    }
+    right_portion(I.start, B, n)
+    if I.end == 1 {
+        return
+    }
+    let t = I.extent / (1 - I.start)
+    left_portion(t, B, n)
 }
 
-private func angle(_ A: BezierCurve) -> CGFloat {
-    let a: CGFloat = atan2(A.endingPoint.y - A.startingPoint.y, A.endingPoint.x - A.startingPoint.x)
+/*
+ *  Compute the portion of the Bezier curve "B" wrt the interval [0,t]
+ */
+// portion(Bezier, 0, t)
+private func left_portion(_ t: CGFloat, _ B: UnsafeMutablePointer<CGPoint>, _ n: Int) {
+    for i in 1..<n {
+        for j in stride(from: n-1, through: i, by: -1) {
+            B[j] = Utils.lerp(t, B[j-1], B[j])
+        }
+    }
+}
+
+/*
+ *  Compute the portion of the Bezier curve "B" wrt the interval [t,1]
+ */
+// portion(Bezier, t, 1)
+private func right_portion(_ t: CGFloat, _ B: UnsafeMutablePointer<CGPoint>, _ n: Int) {
+    for i in 1..<n {
+        for j in 0..<(n-i) {
+            B[j] = Utils.lerp(t, B[j], B[j+1])
+        }
+    }
+}
+
+private func angle(_ A: [CGPoint]) -> CGFloat {
+    let a: CGFloat = atan2(A.last!.y - A.first!.y, A.last!.x - A.first!.x)
     return (180.0 * a / CGFloat.pi)
 }
 
-private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: BezierCurve, _ B: BezierCurve, _ domA: Interval, _ domB: Interval, precision: CGFloat, counter: inout Int) {
+private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: [CGPoint], _ B: [CGPoint], _ domA: Interval, _ domB: Interval, precision: CGFloat, counter: inout Int) {
     
     counter += 1
     if counter > 100 {
@@ -163,18 +197,18 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
     
     var pA = A
     var pB = B
-    var C1 = UnsafeMutablePointer<BezierCurve>(&pA)
-    var C2 = UnsafeMutablePointer<BezierCurve>(&pB)
+    var C1 = UnsafeMutablePointer<[CGPoint]>(&pA)
+    var C2 = UnsafeMutablePointer<[CGPoint]>(&pB)
     
     var dompA = domA
     var dompB = domB
     var dom1 = UnsafeMutablePointer<Interval>(&dompA)
     var dom2 = UnsafeMutablePointer<Interval>(&dompB)
     
-    if (A.isConstant(precision) && B.isConstant(precision)) {
+    if (isConstant(A, precision) && isConstant(B, precision)) {
         // todo: at this point isn't C1.pointee garaunteed to be A?
-        let M1 = middle_point(C1.pointee.startingPoint, C1.pointee.endingPoint)
-        let M2 = middle_point(C2.pointee.startingPoint, C2.pointee.endingPoint)
+        let M1 = middle_point(C1.pointee.first!, C1.pointee.last!)
+        let M2 = middle_point(C2.pointee.first!, C2.pointee.last!)
         if areNear(M1, M2) {
             domsA.append(domA)
             domsB.append(domB)
@@ -200,11 +234,11 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
         
         map_to(&dom2.pointee, dom)
         
-        portion(&C2.pointee, dom)
+        portion(&C2.pointee, dom, C2.pointee.count)
         
-        if C2.pointee.isConstant(precision) && C1.pointee.isConstant(precision) {
-            let M1 = middle_point(C1.pointee.startingPoint, C1.pointee.endingPoint)
-            let M2 = middle_point(C2.pointee.startingPoint, C2.pointee.endingPoint)
+        if isConstant(C2.pointee, precision) && isConstant(C1.pointee, precision) {
+            let M1 = middle_point(C1.pointee.first!, C1.pointee.last!)
+            let M2 = middle_point(C2.pointee.first!, C2.pointee.last!)
             if verbose {
                 print("both curves are constant: \nM1: \(M1)\nM2: \(M2)")
                 print("C2\n\(C2)")
@@ -229,8 +263,8 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
             if dompA.extent > dompB.extent {
                 var pC1 = pA
                 var pC2 = pA
-                portion(&pC1, H1_INTERVAL)
-                portion(&pC2, H2_INTERVAL)
+                portion(&pC1, H1_INTERVAL, pC1.count)
+                portion(&pC2, H2_INTERVAL, pC2.count)
                 var dompC1 = dompA
                 var dompC2 = dompA
                 map_to(&dompC1, H1_INTERVAL)
@@ -241,8 +275,8 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
             else {
                 var pC1 = pB
                 var pC2 = pB
-                portion(&pC1, H1_INTERVAL)
-                portion(&pC2, H2_INTERVAL)
+                portion(&pC1, H1_INTERVAL, pC1.count)
+                portion(&pC2, H2_INTERVAL, pC2.count)
                 var dompC1 = dompB
                 var dompC2 = dompB
                 map_to(&dompC1, H1_INTERVAL)
@@ -288,10 +322,10 @@ private extension CGPoint {
     }
 }
 
-private func clip(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat) -> Interval? {
+private func clip(_ A: [CGPoint], _ B: [CGPoint], precision: CGFloat) -> Interval? {
     var bl: LineSegment = {
-        if A.isConstant(precision) {
-            let M = middle_point(A.startingPoint, A.endingPoint)
+        if isConstant(A, precision) {
+            let M = middle_point(A.first!, A.last!)
             return orthogonal_orientation_line(B, M, precision: precision)
         }
         else {
@@ -308,10 +342,10 @@ private func clip(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat) -> Int
  * curve "c" from the normalized orientation line "l".
  * This bounds are returned through the output Interval parameter"bound".
  */
-private func fat_line_bounds(_ c: BezierCurve, _ l: LineSegment) -> Interval {
+private func fat_line_bounds(_ c: [CGPoint], _ l: LineSegment) -> Interval {
     var bound = Interval(start: 0, end: 0)
-    for i in 0...c.order {
-        bound.expandTo(signed_distance(c.points[i], l))
+    for i in 0..<c.count {
+        bound.expandTo(signed_distance(c[i], l))
     }
     return bound
 }
@@ -320,11 +354,11 @@ private func fat_line_bounds(_ c: BezierCurve, _ l: LineSegment) -> Interval {
  * Pick up an orientation line for the Bezier curve "c" and return it in
  * the output parameter "l"
  */
-private func pick_orientation_line(_ c: BezierCurve, precision: CGFloat ) -> LineSegment {
-    var i = c.order + 1
+private func pick_orientation_line(_ c: [CGPoint], precision: CGFloat ) -> LineSegment {
+    var i = c.count
     repeat {
         i -= 1
-    } while i > 0 && areNear(c.startingPoint, c.points[i], precision)
+    } while i > 0 && areNear(c.first!, c[i], precision)
     
     // this should never happen because when a new curve portion is created
     // we check that it is not constant;
@@ -332,7 +366,7 @@ private func pick_orientation_line(_ c: BezierCurve, precision: CGFloat ) -> Lin
     // routine has to be the same used here in the are_near test
     assert(i != 0);
     
-    let line = LineSegment(p0: c.startingPoint, p1: c.points[i])
+    let line = LineSegment(p0: c.first!, p1: c[i])
     return line
     //std::cerr << "i = " << i << std::endl;
 }
@@ -343,11 +377,11 @@ private func pick_orientation_line(_ c: BezierCurve, precision: CGFloat ) -> Lin
  *  the line is returned in the output parameter "l" in the form of a 3 element
  *  vector : l[0] * x + l[1] * y + l[2] == 0; the line is normalized.
  */
-private func orthogonal_orientation_line(_ c: BezierCurve, _ p: CGPoint, precision: CGFloat) -> LineSegment {
+private func orthogonal_orientation_line(_ c: [CGPoint], _ p: CGPoint, precision: CGFloat) -> LineSegment {
     // this should never happen
-    assert(!c.isConstant(precision))
+    assert(!isConstant(c, precision))
     
-    let line = LineSegment(p0: p, p1: (c.endingPoint - c.startingPoint).cw() + p)
+    let line = LineSegment(p0: p, p1: (c.last! - c.first!).cw() + p)
     return line
 }
 
@@ -376,15 +410,17 @@ private func intersect(_ p1: CGPoint,_ p2: CGPoint, _ y: CGFloat) -> CGFloat {
  * line "l" and the interval range "bound", the new parameter interval for
  * the clipped curve is returned through the output parameter "dom"
  */
-private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval) -> Interval? {
-    let n = CGFloat(B.order) // number of sub-intervals
-    let D: [CGPoint] = (0...B.order).map {  // distance curve control points
-        let d: CGFloat = signed_distance(B.points[$0], l)
+private func clip_interval(_ B: [CGPoint], _ l: LineSegment, _ bound: Interval) -> Interval? {
+    let n = CGFloat(B.count-1) // number of sub-intervals
+    let D: [CGPoint] = (0..<B.count).map {  // distance curve control points
+        let d: CGFloat = signed_distance(B[$0], l)
         return CGPoint(x: CGFloat($0) / n, y: d)
     }
     //print(D);
     
-    var p = ConvexHull(points: D).boundary
+    let boundary = computeConvexHull(from: D)
+    let count = boundary.count
+    let p = UnsafePointer<CGPoint>(boundary)
     //print(p);
     
     var tmin: CGFloat = 1
@@ -404,7 +440,7 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
         //                  << " : tmin = " << tmin << ", tmax = " << tmax << std::endl;
     }
     
-    for i in 1..<p.count {
+    for i in 1..<count {
         let clower = (p[i].y < bound.start)
         let chigher = (p[i].y > bound.end)
         if !clower && !chigher { // inside the fat line
@@ -447,7 +483,7 @@ private func clip_interval(_ B: BezierCurve, _ l: LineSegment, _ bound: Interval
     }
     
     // we have to test the closing segment for intersection
-    let last = p.count - 1
+    let last = count - 1
     let clower = (p[0].y < bound.start)
     let chigher = (p[0].y > bound.end)
     if clower != plower { // cross the lower bound

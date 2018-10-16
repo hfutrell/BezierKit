@@ -77,266 +77,6 @@
 		FDEB70A51F3674CB00539003 /* ArcApproximateableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */; };
 		FDF0664E1FFA0C9900123308 /* BezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF0664D1FFA0C9900123308 /* BezierCurveTests.swift */; };
 		FDF0664F1FFA0C9900123308 /* BezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF0664D1FFA0C9900123308 /* BezierCurveTests.swift */; };
-		FDF4903B2175167D007E77F4 /* line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FA02175167D007E77F4 /* line.cpp */; };
-		FDF4903C2175167D007E77F4 /* line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FA02175167D007E77F4 /* line.cpp */; };
-		FDF4903D2175167D007E77F4 /* sbasis-2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FA12175167D007E77F4 /* sbasis-2d.cpp */; };
-		FDF4903E2175167D007E77F4 /* sbasis-2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FA12175167D007E77F4 /* sbasis-2d.cpp */; };
-		FDF4903F2175167D007E77F4 /* sbasis-geometric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FA22175167D007E77F4 /* sbasis-geometric.cpp */; };
-		FDF490402175167D007E77F4 /* sbasis-geometric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FA22175167D007E77F4 /* sbasis-geometric.cpp */; };
-		FDF490412175167D007E77F4 /* intersection-graph.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA32175167D007E77F4 /* intersection-graph.h */; };
-		FDF490422175167D007E77F4 /* intersection-graph.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA32175167D007E77F4 /* intersection-graph.h */; };
-		FDF490432175167D007E77F4 /* sbasis-curve.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA42175167D007E77F4 /* sbasis-curve.h */; };
-		FDF490442175167D007E77F4 /* sbasis-curve.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA42175167D007E77F4 /* sbasis-curve.h */; };
-		FDF490452175167D007E77F4 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA52175167D007E77F4 /* utils.h */; };
-		FDF490462175167D007E77F4 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA52175167D007E77F4 /* utils.h */; };
-		FDF490472175167D007E77F4 /* generic-interval.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA62175167D007E77F4 /* generic-interval.h */; };
-		FDF490482175167D007E77F4 /* generic-interval.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA62175167D007E77F4 /* generic-interval.h */; };
-		FDF490492175167D007E77F4 /* sweeper.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA72175167D007E77F4 /* sweeper.h */; };
-		FDF4904A2175167D007E77F4 /* sweeper.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA72175167D007E77F4 /* sweeper.h */; };
-		FDF4904B2175167D007E77F4 /* piecewise.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA82175167D007E77F4 /* piecewise.h */; };
-		FDF4904C2175167D007E77F4 /* piecewise.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA82175167D007E77F4 /* piecewise.h */; };
-		FDF4904D2175167D007E77F4 /* int-point.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA92175167D007E77F4 /* int-point.h */; };
-		FDF4904E2175167D007E77F4 /* int-point.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FA92175167D007E77F4 /* int-point.h */; };
-		FDF4904F2175167D007E77F4 /* crossing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FAA2175167D007E77F4 /* crossing.cpp */; };
-		FDF490502175167D007E77F4 /* crossing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FAA2175167D007E77F4 /* crossing.cpp */; };
-		FDF490512175167D007E77F4 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FAB2175167D007E77F4 /* utils.cpp */; };
-		FDF490522175167D007E77F4 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FAB2175167D007E77F4 /* utils.cpp */; };
-		FDF490532175167D007E77F4 /* transforms.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FAC2175167D007E77F4 /* transforms.cpp */; };
-		FDF490542175167D007E77F4 /* transforms.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FAC2175167D007E77F4 /* transforms.cpp */; };
-		FDF490552175167D007E77F4 /* conic_section_clipper_cr.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FAD2175167D007E77F4 /* conic_section_clipper_cr.h */; };
-		FDF490562175167D007E77F4 /* conic_section_clipper_cr.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FAD2175167D007E77F4 /* conic_section_clipper_cr.h */; };
-		FDF490572175167D007E77F4 /* nearest-time.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FAE2175167D007E77F4 /* nearest-time.h */; };
-		FDF490582175167D007E77F4 /* nearest-time.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FAE2175167D007E77F4 /* nearest-time.h */; };
-		FDF490592175167D007E77F4 /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = FDF48FAF2175167D007E77F4 /* CMakeLists.txt */; };
-		FDF4905A2175167D007E77F4 /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = FDF48FAF2175167D007E77F4 /* CMakeLists.txt */; };
-		FDF4905B2175167D007E77F4 /* intersection.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB02175167D007E77F4 /* intersection.h */; };
-		FDF4905C2175167D007E77F4 /* intersection.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB02175167D007E77F4 /* intersection.h */; };
-		FDF4905F2175167D007E77F4 /* basic-intersection.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB22175167D007E77F4 /* basic-intersection.h */; };
-		FDF490602175167D007E77F4 /* basic-intersection.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB22175167D007E77F4 /* basic-intersection.h */; };
-		FDF490612175167D007E77F4 /* conicsec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FB32175167D007E77F4 /* conicsec.cpp */; };
-		FDF490622175167D007E77F4 /* conicsec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FB32175167D007E77F4 /* conicsec.cpp */; };
-		FDF490632175167D007E77F4 /* conic_section_clipper_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB42175167D007E77F4 /* conic_section_clipper_impl.h */; };
-		FDF490642175167D007E77F4 /* conic_section_clipper_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB42175167D007E77F4 /* conic_section_clipper_impl.h */; };
-		FDF490652175167D007E77F4 /* circle.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB52175167D007E77F4 /* circle.h */; };
-		FDF490662175167D007E77F4 /* circle.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB52175167D007E77F4 /* circle.h */; };
-		FDF490672175167D007E77F4 /* curve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FB62175167D007E77F4 /* curve.cpp */; };
-		FDF490682175167D007E77F4 /* curve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FB62175167D007E77F4 /* curve.cpp */; };
-		FDF490692175167D007E77F4 /* path-intersection.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB72175167D007E77F4 /* path-intersection.h */; };
-		FDF4906A2175167D007E77F4 /* path-intersection.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB72175167D007E77F4 /* path-intersection.h */; };
-		FDF4906B2175167D007E77F4 /* int-interval.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB82175167D007E77F4 /* int-interval.h */; };
-		FDF4906C2175167D007E77F4 /* int-interval.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB82175167D007E77F4 /* int-interval.h */; };
-		FDF4906D2175167D007E77F4 /* polynomial.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB92175167D007E77F4 /* polynomial.h */; };
-		FDF4906E2175167D007E77F4 /* polynomial.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FB92175167D007E77F4 /* polynomial.h */; };
-		FDF4906F2175167D007E77F4 /* point.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBA2175167D007E77F4 /* point.h */; };
-		FDF490702175167D007E77F4 /* point.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBA2175167D007E77F4 /* point.h */; };
-		FDF490712175167D007E77F4 /* conic_section_clipper_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FBB2175167D007E77F4 /* conic_section_clipper_impl.cpp */; };
-		FDF490722175167D007E77F4 /* conic_section_clipper_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FBB2175167D007E77F4 /* conic_section_clipper_impl.cpp */; };
-		FDF490732175167D007E77F4 /* sbasis-geometric.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBC2175167D007E77F4 /* sbasis-geometric.h */; };
-		FDF490742175167D007E77F4 /* sbasis-geometric.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBC2175167D007E77F4 /* sbasis-geometric.h */; };
-		FDF490752175167D007E77F4 /* path.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBD2175167D007E77F4 /* path.h */; };
-		FDF490762175167D007E77F4 /* path.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBD2175167D007E77F4 /* path.h */; };
-		FDF490772175167D007E77F4 /* bezier-utils.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBE2175167D007E77F4 /* bezier-utils.h */; };
-		FDF490782175167D007E77F4 /* bezier-utils.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBE2175167D007E77F4 /* bezier-utils.h */; };
-		FDF490792175167D007E77F4 /* linear.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBF2175167D007E77F4 /* linear.h */; };
-		FDF4907A2175167D007E77F4 /* linear.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FBF2175167D007E77F4 /* linear.h */; };
-		FDF4907B2175167D007E77F4 /* bezier-curve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FC02175167D007E77F4 /* bezier-curve.cpp */; };
-		FDF4907C2175167D007E77F4 /* bezier-curve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FC02175167D007E77F4 /* bezier-curve.cpp */; };
-		FDF4909F2175167D007E77F4 /* nearest-time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FD32175167D007E77F4 /* nearest-time.cpp */; };
-		FDF490A02175167D007E77F4 /* nearest-time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FD32175167D007E77F4 /* nearest-time.cpp */; };
-		FDF490A32175167D007E77F4 /* cairo-path-sink.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD52175167D007E77F4 /* cairo-path-sink.h */; };
-		FDF490A42175167D007E77F4 /* cairo-path-sink.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD52175167D007E77F4 /* cairo-path-sink.h */; };
-		FDF490A52175167D007E77F4 /* solver.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD62175167D007E77F4 /* solver.h */; };
-		FDF490A62175167D007E77F4 /* solver.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD62175167D007E77F4 /* solver.h */; };
-		FDF490A72175167D007E77F4 /* pathvector.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD72175167D007E77F4 /* pathvector.h */; };
-		FDF490A82175167D007E77F4 /* pathvector.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD72175167D007E77F4 /* pathvector.h */; };
-		FDF490A92175167D007E77F4 /* bezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FD82175167D007E77F4 /* bezier.cpp */; };
-		FDF490AA2175167D007E77F4 /* bezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FD82175167D007E77F4 /* bezier.cpp */; };
-		FDF490AB2175167D007E77F4 /* sweep-bounds.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD92175167D007E77F4 /* sweep-bounds.h */; };
-		FDF490AC2175167D007E77F4 /* sweep-bounds.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FD92175167D007E77F4 /* sweep-bounds.h */; };
-		FDF490AF2175167D007E77F4 /* solve-bezier-parametric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FDB2175167D007E77F4 /* solve-bezier-parametric.cpp */; };
-		FDF490B02175167D007E77F4 /* solve-bezier-parametric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FDB2175167D007E77F4 /* solve-bezier-parametric.cpp */; };
-		FDF490B12175167D007E77F4 /* bezier.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FDC2175167D007E77F4 /* bezier.h */; };
-		FDF490B22175167D007E77F4 /* bezier.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FDC2175167D007E77F4 /* bezier.h */; };
-		FDF490B32175167D007E77F4 /* interval_tree.cc in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FDE2175167D007E77F4 /* interval_tree.cc */; };
-		FDF490B42175167D007E77F4 /* interval_tree.cc in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FDE2175167D007E77F4 /* interval_tree.cc */; };
-		FDF490B52175167D007E77F4 /* test2.cc in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FDF2175167D007E77F4 /* test2.cc */; };
-		FDF490B62175167D007E77F4 /* test2.cc in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FDF2175167D007E77F4 /* test2.cc */; };
-		FDF490B72175167D007E77F4 /* interval_tree.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE02175167D007E77F4 /* interval_tree.h */; };
-		FDF490B82175167D007E77F4 /* interval_tree.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE02175167D007E77F4 /* interval_tree.h */; };
-		FDF490B92175167D007E77F4 /* generic-rect.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE12175167D007E77F4 /* generic-rect.h */; };
-		FDF490BA2175167D007E77F4 /* generic-rect.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE12175167D007E77F4 /* generic-rect.h */; };
-		FDF490BB2175167D007E77F4 /* coord.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE22175167D007E77F4 /* coord.h */; };
-		FDF490BC2175167D007E77F4 /* coord.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE22175167D007E77F4 /* coord.h */; };
-		FDF490BD2175167D007E77F4 /* convex-hull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE32175167D007E77F4 /* convex-hull.cpp */; };
-		FDF490BE2175167D007E77F4 /* convex-hull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE32175167D007E77F4 /* convex-hull.cpp */; };
-		FDF490BF2175167D007E77F4 /* bezier-utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE42175167D007E77F4 /* bezier-utils.cpp */; };
-		FDF490C02175167D007E77F4 /* bezier-utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE42175167D007E77F4 /* bezier-utils.cpp */; };
-		FDF490C12175167D007E77F4 /* conicsec.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE52175167D007E77F4 /* conicsec.h */; };
-		FDF490C22175167D007E77F4 /* conicsec.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE52175167D007E77F4 /* conicsec.h */; };
-		FDF490C32175167D007E77F4 /* convex-hull.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE62175167D007E77F4 /* convex-hull.h */; };
-		FDF490C42175167D007E77F4 /* convex-hull.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE62175167D007E77F4 /* convex-hull.h */; };
-		FDF490C52175167D007E77F4 /* pathvector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE72175167D007E77F4 /* pathvector.cpp */; };
-		FDF490C62175167D007E77F4 /* pathvector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE72175167D007E77F4 /* pathvector.cpp */; };
-		FDF490C72175167D007E77F4 /* path-intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE82175167D007E77F4 /* path-intersection.cpp */; };
-		FDF490C82175167D007E77F4 /* path-intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FE82175167D007E77F4 /* path-intersection.cpp */; };
-		FDF490C92175167D007E77F4 /* d2.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE92175167D007E77F4 /* d2.h */; };
-		FDF490CA2175167D007E77F4 /* d2.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FE92175167D007E77F4 /* d2.h */; };
-		FDF490CB2175167D007E77F4 /* solve-bezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FEA2175167D007E77F4 /* solve-bezier.cpp */; };
-		FDF490CC2175167D007E77F4 /* solve-bezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FEA2175167D007E77F4 /* solve-bezier.cpp */; };
-		FDF490CD2175167D007E77F4 /* curve.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FEB2175167D007E77F4 /* curve.h */; };
-		FDF490CE2175167D007E77F4 /* curve.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FEB2175167D007E77F4 /* curve.h */; };
-		FDF490CF2175167D007E77F4 /* config.h.cmake in Resources */ = {isa = PBXBuildFile; fileRef = FDF48FEC2175167D007E77F4 /* config.h.cmake */; };
-		FDF490D02175167D007E77F4 /* config.h.cmake in Resources */ = {isa = PBXBuildFile; fileRef = FDF48FEC2175167D007E77F4 /* config.h.cmake */; };
-		FDF490D12175167D007E77F4 /* affine.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FED2175167D007E77F4 /* affine.h */; };
-		FDF490D22175167D007E77F4 /* affine.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FED2175167D007E77F4 /* affine.h */; };
-		FDF490D32175167D007E77F4 /* sbasis-poly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FEE2175167D007E77F4 /* sbasis-poly.cpp */; };
-		FDF490D42175167D007E77F4 /* sbasis-poly.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FEE2175167D007E77F4 /* sbasis-poly.cpp */; };
-		FDF490D52175167D007E77F4 /* doxygen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FEF2175167D007E77F4 /* doxygen.cpp */; };
-		FDF490D62175167D007E77F4 /* doxygen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FEF2175167D007E77F4 /* doxygen.cpp */; };
-		FDF490D72175167D007E77F4 /* basic-intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FF02175167D007E77F4 /* basic-intersection.cpp */; };
-		FDF490D82175167D007E77F4 /* basic-intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FF02175167D007E77F4 /* basic-intersection.cpp */; };
-		FDF490D92175167D007E77F4 /* angle.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF12175167D007E77F4 /* angle.h */; };
-		FDF490DA2175167D007E77F4 /* angle.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF12175167D007E77F4 /* angle.h */; };
-		FDF490DB2175167D007E77F4 /* piecewise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FF22175167D007E77F4 /* piecewise.cpp */; };
-		FDF490DC2175167D007E77F4 /* piecewise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FF22175167D007E77F4 /* piecewise.cpp */; };
-		FDF490DD2175167D007E77F4 /* intersection-graph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FF32175167D007E77F4 /* intersection-graph.cpp */; };
-		FDF490DE2175167D007E77F4 /* intersection-graph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FF32175167D007E77F4 /* intersection-graph.cpp */; };
-		FDF490DF2175167D007E77F4 /* linear_system.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF52175167D007E77F4 /* linear_system.h */; };
-		FDF490E02175167D007E77F4 /* linear_system.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF52175167D007E77F4 /* linear_system.h */; };
-		FDF490E12175167D007E77F4 /* matrix.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF62175167D007E77F4 /* matrix.h */; };
-		FDF490E22175167D007E77F4 /* matrix.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF62175167D007E77F4 /* matrix.h */; };
-		FDF490E32175167D007E77F4 /* fitting-tool.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF72175167D007E77F4 /* fitting-tool.h */; };
-		FDF490E42175167D007E77F4 /* fitting-tool.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF72175167D007E77F4 /* fitting-tool.h */; };
-		FDF490E52175167D007E77F4 /* symmetric-matrix-fs.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF82175167D007E77F4 /* symmetric-matrix-fs.h */; };
-		FDF490E62175167D007E77F4 /* symmetric-matrix-fs.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF82175167D007E77F4 /* symmetric-matrix-fs.h */; };
-		FDF490E72175167D007E77F4 /* fitting-model.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF92175167D007E77F4 /* fitting-model.h */; };
-		FDF490E82175167D007E77F4 /* fitting-model.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FF92175167D007E77F4 /* fitting-model.h */; };
-		FDF490E92175167D007E77F4 /* matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FFA2175167D007E77F4 /* matrix.cpp */; };
-		FDF490EA2175167D007E77F4 /* matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FFA2175167D007E77F4 /* matrix.cpp */; };
-		FDF490EB2175167D007E77F4 /* vector.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFB2175167D007E77F4 /* vector.h */; };
-		FDF490EC2175167D007E77F4 /* vector.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFB2175167D007E77F4 /* vector.h */; };
-		FDF490ED2175167D007E77F4 /* symmetric-matrix-fs-trace.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFC2175167D007E77F4 /* symmetric-matrix-fs-trace.h */; };
-		FDF490EE2175167D007E77F4 /* symmetric-matrix-fs-trace.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFC2175167D007E77F4 /* symmetric-matrix-fs-trace.h */; };
-		FDF490EF2175167D007E77F4 /* symmetric-matrix-fs-operation.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFD2175167D007E77F4 /* symmetric-matrix-fs-operation.h */; };
-		FDF490F02175167D007E77F4 /* symmetric-matrix-fs-operation.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFD2175167D007E77F4 /* symmetric-matrix-fs-operation.h */; };
-		FDF490F12175167D007E77F4 /* rect.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFE2175167D007E77F4 /* rect.h */; };
-		FDF490F22175167D007E77F4 /* rect.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF48FFE2175167D007E77F4 /* rect.h */; };
-		FDF490F32175167D007E77F4 /* sbasis-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FFF2175167D007E77F4 /* sbasis-math.cpp */; };
-		FDF490F42175167D007E77F4 /* sbasis-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF48FFF2175167D007E77F4 /* sbasis-math.cpp */; };
-		FDF490F52175167D007E77F4 /* point.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490002175167D007E77F4 /* point.cpp */; };
-		FDF490F62175167D007E77F4 /* point.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490002175167D007E77F4 /* point.cpp */; };
-		FDF490F72175167D007E77F4 /* rect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490012175167D007E77F4 /* rect.cpp */; };
-		FDF490F82175167D007E77F4 /* rect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490012175167D007E77F4 /* rect.cpp */; };
-		FDF490F92175167D007E77F4 /* elliptical-arc.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490022175167D007E77F4 /* elliptical-arc.h */; };
-		FDF490FA2175167D007E77F4 /* elliptical-arc.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490022175167D007E77F4 /* elliptical-arc.h */; };
-		FDF490FB2175167D007E77F4 /* sbasis-2d.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490032175167D007E77F4 /* sbasis-2d.h */; };
-		FDF490FC2175167D007E77F4 /* sbasis-2d.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490032175167D007E77F4 /* sbasis-2d.h */; };
-		FDF490FD2175167D007E77F4 /* crossing.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490042175167D007E77F4 /* crossing.h */; };
-		FDF490FE2175167D007E77F4 /* crossing.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490042175167D007E77F4 /* crossing.h */; };
-		FDF491032175167D007E77F4 /* affine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490072175167D007E77F4 /* affine.cpp */; };
-		FDF491042175167D007E77F4 /* affine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490072175167D007E77F4 /* affine.cpp */; };
-		FDF491052175167D007E77F4 /* bezier-curve.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490082175167D007E77F4 /* bezier-curve.h */; };
-		FDF491062175167D007E77F4 /* bezier-curve.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490082175167D007E77F4 /* bezier-curve.h */; };
-		FDF491072175167D007E77F4 /* 2geom.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490092175167D007E77F4 /* 2geom.h */; };
-		FDF491082175167D007E77F4 /* 2geom.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490092175167D007E77F4 /* 2geom.h */; };
-		FDF491092175167D007E77F4 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4900A2175167D007E77F4 /* path.cpp */; };
-		FDF4910A2175167D007E77F4 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4900A2175167D007E77F4 /* path.cpp */; };
-		FDF4910B2175167D007E77F4 /* sbasis-to-bezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4900B2175167D007E77F4 /* sbasis-to-bezier.cpp */; };
-		FDF4910C2175167D007E77F4 /* sbasis-to-bezier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4900B2175167D007E77F4 /* sbasis-to-bezier.cpp */; };
-		FDF4910D2175167D007E77F4 /* ray.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4900C2175167D007E77F4 /* ray.h */; };
-		FDF4910E2175167D007E77F4 /* ray.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4900C2175167D007E77F4 /* ray.h */; };
-		FDF4910F2175167D007E77F4 /* circle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4900D2175167D007E77F4 /* circle.cpp */; };
-		FDF491102175167D007E77F4 /* circle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4900D2175167D007E77F4 /* circle.cpp */; };
-		FDF491132175167D007E77F4 /* sbasis.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4900F2175167D007E77F4 /* sbasis.h */; };
-		FDF491142175167D007E77F4 /* sbasis.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4900F2175167D007E77F4 /* sbasis.h */; };
-		FDF491152175167D007E77F4 /* coord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490102175167D007E77F4 /* coord.cpp */; };
-		FDF491162175167D007E77F4 /* coord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490102175167D007E77F4 /* coord.cpp */; };
-		FDF491172175167D007E77F4 /* conic_section_clipper.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490112175167D007E77F4 /* conic_section_clipper.h */; };
-		FDF491182175167D007E77F4 /* conic_section_clipper.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490112175167D007E77F4 /* conic_section_clipper.h */; };
-		FDF491192175167D007E77F4 /* line.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490122175167D007E77F4 /* line.h */; };
-		FDF4911A2175167D007E77F4 /* line.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490122175167D007E77F4 /* line.h */; };
-		FDF4911B2175167D007E77F4 /* elliptical-arc-from-sbasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490132175167D007E77F4 /* elliptical-arc-from-sbasis.cpp */; };
-		FDF4911C2175167D007E77F4 /* elliptical-arc-from-sbasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490132175167D007E77F4 /* elliptical-arc-from-sbasis.cpp */; };
-		FDF4911D2175167D007E77F4 /* path-sink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490142175167D007E77F4 /* path-sink.cpp */; };
-		FDF4911E2175167D007E77F4 /* path-sink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490142175167D007E77F4 /* path-sink.cpp */; };
-		FDF4911F2175167D007E77F4 /* int-rect.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490152175167D007E77F4 /* int-rect.h */; };
-		FDF491202175167D007E77F4 /* int-rect.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490152175167D007E77F4 /* int-rect.h */; };
-		FDF491212175167D007E77F4 /* concepts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490162175167D007E77F4 /* concepts.cpp */; };
-		FDF491222175167D007E77F4 /* concepts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490162175167D007E77F4 /* concepts.cpp */; };
-		FDF491232175167D007E77F4 /* d2-sbasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490172175167D007E77F4 /* d2-sbasis.cpp */; };
-		FDF491242175167D007E77F4 /* d2-sbasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490172175167D007E77F4 /* d2-sbasis.cpp */; };
-		FDF491252175167D007E77F4 /* implicit.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490192175167D007E77F4 /* implicit.h */; };
-		FDF491262175167D007E77F4 /* implicit.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490192175167D007E77F4 /* implicit.h */; };
-		FDF491272175167D007E77F4 /* polynomial.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901A2175167D007E77F4 /* polynomial.h */; };
-		FDF491282175167D007E77F4 /* polynomial.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901A2175167D007E77F4 /* polynomial.h */; };
-		FDF491292175167D007E77F4 /* unity-builder.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901B2175167D007E77F4 /* unity-builder.h */; };
-		FDF4912A2175167D007E77F4 /* unity-builder.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901B2175167D007E77F4 /* unity-builder.h */; };
-		FDF4912B2175167D007E77F4 /* matrix.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901C2175167D007E77F4 /* matrix.h */; };
-		FDF4912C2175167D007E77F4 /* matrix.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901C2175167D007E77F4 /* matrix.h */; };
-		FDF4912D2175167D007E77F4 /* multi-index.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901D2175167D007E77F4 /* multi-index.h */; };
-		FDF4912E2175167D007E77F4 /* multi-index.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901D2175167D007E77F4 /* multi-index.h */; };
-		FDF4912F2175167D007E77F4 /* determinant-minor.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901E2175167D007E77F4 /* determinant-minor.h */; };
-		FDF491302175167D007E77F4 /* determinant-minor.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901E2175167D007E77F4 /* determinant-minor.h */; };
-		FDF491312175167D007E77F4 /* multipoly.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901F2175167D007E77F4 /* multipoly.h */; };
-		FDF491322175167D007E77F4 /* multipoly.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4901F2175167D007E77F4 /* multipoly.h */; };
-		FDF491332175167D007E77F4 /* mvpoly-tools.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490202175167D007E77F4 /* mvpoly-tools.h */; };
-		FDF491342175167D007E77F4 /* mvpoly-tools.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490202175167D007E77F4 /* mvpoly-tools.h */; };
-		FDF491352175167D007E77F4 /* ellipse.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490212175167D007E77F4 /* ellipse.h */; };
-		FDF491362175167D007E77F4 /* ellipse.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490212175167D007E77F4 /* ellipse.h */; };
-		FDF491372175167D007E77F4 /* geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490222175167D007E77F4 /* geom.cpp */; };
-		FDF491382175167D007E77F4 /* geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490222175167D007E77F4 /* geom.cpp */; };
-		FDF491392175167D007E77F4 /* curves.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490232175167D007E77F4 /* curves.h */; };
-		FDF4913A2175167D007E77F4 /* curves.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490232175167D007E77F4 /* curves.h */; };
-		FDF4913B2175167D007E77F4 /* sweep-bounds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490242175167D007E77F4 /* sweep-bounds.cpp */; };
-		FDF4913C2175167D007E77F4 /* sweep-bounds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490242175167D007E77F4 /* sweep-bounds.cpp */; };
-		FDF4913D2175167D007E77F4 /* bezier-to-sbasis.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490252175167D007E77F4 /* bezier-to-sbasis.h */; };
-		FDF4913E2175167D007E77F4 /* bezier-to-sbasis.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490252175167D007E77F4 /* bezier-to-sbasis.h */; };
-		FDF4913F2175167D007E77F4 /* sbasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490262175167D007E77F4 /* sbasis.cpp */; };
-		FDF491402175167D007E77F4 /* sbasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490262175167D007E77F4 /* sbasis.cpp */; };
-		FDF491412175167D007E77F4 /* exception.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490272175167D007E77F4 /* exception.h */; };
-		FDF491422175167D007E77F4 /* exception.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490272175167D007E77F4 /* exception.h */; };
-		FDF491432175167D007E77F4 /* solve-bezier-one-d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490282175167D007E77F4 /* solve-bezier-one-d.cpp */; };
-		FDF491442175167D007E77F4 /* solve-bezier-one-d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490282175167D007E77F4 /* solve-bezier-one-d.cpp */; };
-		FDF491452175167D007E77F4 /* concepts.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490292175167D007E77F4 /* concepts.h */; };
-		FDF491462175167D007E77F4 /* concepts.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490292175167D007E77F4 /* concepts.h */; };
-		FDF491472175167D007E77F4 /* transforms.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902A2175167D007E77F4 /* transforms.h */; };
-		FDF491482175167D007E77F4 /* transforms.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902A2175167D007E77F4 /* transforms.h */; };
-		FDF491492175167D007E77F4 /* ord.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902B2175167D007E77F4 /* ord.h */; };
-		FDF4914A2175167D007E77F4 /* ord.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902B2175167D007E77F4 /* ord.h */; };
-		FDF4914B2175167D007E77F4 /* choose.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902C2175167D007E77F4 /* choose.h */; };
-		FDF4914C2175167D007E77F4 /* choose.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902C2175167D007E77F4 /* choose.h */; };
-		FDF4914D2175167D007E77F4 /* path-sink.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902D2175167D007E77F4 /* path-sink.h */; };
-		FDF4914E2175167D007E77F4 /* path-sink.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4902D2175167D007E77F4 /* path-sink.h */; };
-		FDF4914F2175167D007E77F4 /* recursive-bezier-intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4902E2175167D007E77F4 /* recursive-bezier-intersection.cpp */; };
-		FDF491502175167D007E77F4 /* recursive-bezier-intersection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4902E2175167D007E77F4 /* recursive-bezier-intersection.cpp */; };
-		FDF491512175167D007E77F4 /* sbasis-roots.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4902F2175167D007E77F4 /* sbasis-roots.cpp */; };
-		FDF491522175167D007E77F4 /* sbasis-roots.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4902F2175167D007E77F4 /* sbasis-roots.cpp */; };
-		FDF491532175167D007E77F4 /* ellipse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490302175167D007E77F4 /* ellipse.cpp */; };
-		FDF491542175167D007E77F4 /* ellipse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490302175167D007E77F4 /* ellipse.cpp */; };
-		FDF491552175167D007E77F4 /* sbasis-math.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490312175167D007E77F4 /* sbasis-math.h */; };
-		FDF491562175167D007E77F4 /* sbasis-math.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490312175167D007E77F4 /* sbasis-math.h */; };
-		FDF491572175167D007E77F4 /* sbasis-poly.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490322175167D007E77F4 /* sbasis-poly.h */; };
-		FDF491582175167D007E77F4 /* sbasis-poly.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490322175167D007E77F4 /* sbasis-poly.h */; };
-		FDF491592175167D007E77F4 /* sbasis-to-bezier.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490332175167D007E77F4 /* sbasis-to-bezier.h */; };
-		FDF4915A2175167D007E77F4 /* sbasis-to-bezier.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490332175167D007E77F4 /* sbasis-to-bezier.h */; };
-		FDF4915B2175167D007E77F4 /* geom.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490342175167D007E77F4 /* geom.h */; };
-		FDF4915C2175167D007E77F4 /* geom.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490342175167D007E77F4 /* geom.h */; };
-		FDF4915D2175167D007E77F4 /* polynomial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490352175167D007E77F4 /* polynomial.cpp */; };
-		FDF4915E2175167D007E77F4 /* polynomial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490352175167D007E77F4 /* polynomial.cpp */; };
-		FDF4915F2175167D007E77F4 /* forward.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490362175167D007E77F4 /* forward.h */; };
-		FDF491602175167D007E77F4 /* forward.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490362175167D007E77F4 /* forward.h */; };
-		FDF491612175167D007E77F4 /* bezier-clipping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490372175167D007E77F4 /* bezier-clipping.cpp */; };
-		FDF491622175167D007E77F4 /* bezier-clipping.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF490372175167D007E77F4 /* bezier-clipping.cpp */; };
-		FDF491632175167D007E77F4 /* interval.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490382175167D007E77F4 /* interval.h */; };
-		FDF491642175167D007E77F4 /* interval.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490382175167D007E77F4 /* interval.h */; };
-		FDF491652175167D007E77F4 /* math-utils.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490392175167D007E77F4 /* math-utils.h */; };
-		FDF491662175167D007E77F4 /* math-utils.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF490392175167D007E77F4 /* math-utils.h */; };
-		FDF491672175167D007E77F4 /* elliptical-arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4903A2175167D007E77F4 /* elliptical-arc.cpp */; };
-		FDF491682175167D007E77F4 /* elliptical-arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4903A2175167D007E77F4 /* elliptical-arc.cpp */; };
-		FDF4916B21751B3C007E77F4 /* libgeom-bridge.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4916921751B3C007E77F4 /* libgeom-bridge.h */; };
-		FDF4916C21751B3C007E77F4 /* libgeom-bridge.h in Headers */ = {isa = PBXBuildFile; fileRef = FDF4916921751B3C007E77F4 /* libgeom-bridge.h */; };
-		FDF4916D21751B3C007E77F4 /* libgeom-bridge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4916A21751B3C007E77F4 /* libgeom-bridge.cpp */; };
-		FDF4916E21751B3C007E77F4 /* libgeom-bridge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDF4916A21751B3C007E77F4 /* libgeom-bridge.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -427,136 +167,6 @@
 		FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArcApproximateable.swift; sourceTree = "<group>"; };
 		FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArcApproximateableTests.swift; sourceTree = "<group>"; };
 		FDF0664D1FFA0C9900123308 /* BezierCurveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierCurveTests.swift; sourceTree = "<group>"; };
-		FDF48FA02175167D007E77F4 /* line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = line.cpp; sourceTree = "<group>"; };
-		FDF48FA12175167D007E77F4 /* sbasis-2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sbasis-2d.cpp"; sourceTree = "<group>"; };
-		FDF48FA22175167D007E77F4 /* sbasis-geometric.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sbasis-geometric.cpp"; sourceTree = "<group>"; };
-		FDF48FA32175167D007E77F4 /* intersection-graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "intersection-graph.h"; sourceTree = "<group>"; };
-		FDF48FA42175167D007E77F4 /* sbasis-curve.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbasis-curve.h"; sourceTree = "<group>"; };
-		FDF48FA52175167D007E77F4 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
-		FDF48FA62175167D007E77F4 /* generic-interval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "generic-interval.h"; sourceTree = "<group>"; };
-		FDF48FA72175167D007E77F4 /* sweeper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sweeper.h; sourceTree = "<group>"; };
-		FDF48FA82175167D007E77F4 /* piecewise.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = piecewise.h; sourceTree = "<group>"; };
-		FDF48FA92175167D007E77F4 /* int-point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "int-point.h"; sourceTree = "<group>"; };
-		FDF48FAA2175167D007E77F4 /* crossing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crossing.cpp; sourceTree = "<group>"; };
-		FDF48FAB2175167D007E77F4 /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = utils.cpp; sourceTree = "<group>"; };
-		FDF48FAC2175167D007E77F4 /* transforms.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = transforms.cpp; sourceTree = "<group>"; };
-		FDF48FAD2175167D007E77F4 /* conic_section_clipper_cr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = conic_section_clipper_cr.h; sourceTree = "<group>"; };
-		FDF48FAE2175167D007E77F4 /* nearest-time.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "nearest-time.h"; sourceTree = "<group>"; };
-		FDF48FAF2175167D007E77F4 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
-		FDF48FB02175167D007E77F4 /* intersection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = intersection.h; sourceTree = "<group>"; };
-		FDF48FB22175167D007E77F4 /* basic-intersection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "basic-intersection.h"; sourceTree = "<group>"; };
-		FDF48FB32175167D007E77F4 /* conicsec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = conicsec.cpp; sourceTree = "<group>"; };
-		FDF48FB42175167D007E77F4 /* conic_section_clipper_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = conic_section_clipper_impl.h; sourceTree = "<group>"; };
-		FDF48FB52175167D007E77F4 /* circle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = circle.h; sourceTree = "<group>"; };
-		FDF48FB62175167D007E77F4 /* curve.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = curve.cpp; sourceTree = "<group>"; };
-		FDF48FB72175167D007E77F4 /* path-intersection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "path-intersection.h"; sourceTree = "<group>"; };
-		FDF48FB82175167D007E77F4 /* int-interval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "int-interval.h"; sourceTree = "<group>"; };
-		FDF48FB92175167D007E77F4 /* polynomial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = polynomial.h; sourceTree = "<group>"; };
-		FDF48FBA2175167D007E77F4 /* point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = point.h; sourceTree = "<group>"; };
-		FDF48FBB2175167D007E77F4 /* conic_section_clipper_impl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = conic_section_clipper_impl.cpp; sourceTree = "<group>"; };
-		FDF48FBC2175167D007E77F4 /* sbasis-geometric.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbasis-geometric.h"; sourceTree = "<group>"; };
-		FDF48FBD2175167D007E77F4 /* path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path.h; sourceTree = "<group>"; };
-		FDF48FBE2175167D007E77F4 /* bezier-utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "bezier-utils.h"; sourceTree = "<group>"; };
-		FDF48FBF2175167D007E77F4 /* linear.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linear.h; sourceTree = "<group>"; };
-		FDF48FC02175167D007E77F4 /* bezier-curve.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "bezier-curve.cpp"; sourceTree = "<group>"; };
-		FDF48FD32175167D007E77F4 /* nearest-time.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "nearest-time.cpp"; sourceTree = "<group>"; };
-		FDF48FD52175167D007E77F4 /* cairo-path-sink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "cairo-path-sink.h"; sourceTree = "<group>"; };
-		FDF48FD62175167D007E77F4 /* solver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = solver.h; sourceTree = "<group>"; };
-		FDF48FD72175167D007E77F4 /* pathvector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pathvector.h; sourceTree = "<group>"; };
-		FDF48FD82175167D007E77F4 /* bezier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bezier.cpp; sourceTree = "<group>"; };
-		FDF48FD92175167D007E77F4 /* sweep-bounds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sweep-bounds.h"; sourceTree = "<group>"; };
-		FDF48FDB2175167D007E77F4 /* solve-bezier-parametric.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "solve-bezier-parametric.cpp"; sourceTree = "<group>"; };
-		FDF48FDC2175167D007E77F4 /* bezier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bezier.h; sourceTree = "<group>"; };
-		FDF48FDE2175167D007E77F4 /* interval_tree.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = interval_tree.cc; sourceTree = "<group>"; };
-		FDF48FDF2175167D007E77F4 /* test2.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test2.cc; sourceTree = "<group>"; };
-		FDF48FE02175167D007E77F4 /* interval_tree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interval_tree.h; sourceTree = "<group>"; };
-		FDF48FE12175167D007E77F4 /* generic-rect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "generic-rect.h"; sourceTree = "<group>"; };
-		FDF48FE22175167D007E77F4 /* coord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coord.h; sourceTree = "<group>"; };
-		FDF48FE32175167D007E77F4 /* convex-hull.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "convex-hull.cpp"; sourceTree = "<group>"; };
-		FDF48FE42175167D007E77F4 /* bezier-utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "bezier-utils.cpp"; sourceTree = "<group>"; };
-		FDF48FE52175167D007E77F4 /* conicsec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = conicsec.h; sourceTree = "<group>"; };
-		FDF48FE62175167D007E77F4 /* convex-hull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "convex-hull.h"; sourceTree = "<group>"; };
-		FDF48FE72175167D007E77F4 /* pathvector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathvector.cpp; sourceTree = "<group>"; };
-		FDF48FE82175167D007E77F4 /* path-intersection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "path-intersection.cpp"; sourceTree = "<group>"; };
-		FDF48FE92175167D007E77F4 /* d2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d2.h; sourceTree = "<group>"; };
-		FDF48FEA2175167D007E77F4 /* solve-bezier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "solve-bezier.cpp"; sourceTree = "<group>"; };
-		FDF48FEB2175167D007E77F4 /* curve.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curve.h; sourceTree = "<group>"; };
-		FDF48FEC2175167D007E77F4 /* config.h.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = config.h.cmake; sourceTree = "<group>"; };
-		FDF48FED2175167D007E77F4 /* affine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = affine.h; sourceTree = "<group>"; };
-		FDF48FEE2175167D007E77F4 /* sbasis-poly.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sbasis-poly.cpp"; sourceTree = "<group>"; };
-		FDF48FEF2175167D007E77F4 /* doxygen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = doxygen.cpp; sourceTree = "<group>"; };
-		FDF48FF02175167D007E77F4 /* basic-intersection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "basic-intersection.cpp"; sourceTree = "<group>"; };
-		FDF48FF12175167D007E77F4 /* angle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = angle.h; sourceTree = "<group>"; };
-		FDF48FF22175167D007E77F4 /* piecewise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = piecewise.cpp; sourceTree = "<group>"; };
-		FDF48FF32175167D007E77F4 /* intersection-graph.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "intersection-graph.cpp"; sourceTree = "<group>"; };
-		FDF48FF52175167D007E77F4 /* linear_system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linear_system.h; sourceTree = "<group>"; };
-		FDF48FF62175167D007E77F4 /* matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = matrix.h; sourceTree = "<group>"; };
-		FDF48FF72175167D007E77F4 /* fitting-tool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "fitting-tool.h"; sourceTree = "<group>"; };
-		FDF48FF82175167D007E77F4 /* symmetric-matrix-fs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "symmetric-matrix-fs.h"; sourceTree = "<group>"; };
-		FDF48FF92175167D007E77F4 /* fitting-model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "fitting-model.h"; sourceTree = "<group>"; };
-		FDF48FFA2175167D007E77F4 /* matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = matrix.cpp; sourceTree = "<group>"; };
-		FDF48FFB2175167D007E77F4 /* vector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vector.h; sourceTree = "<group>"; };
-		FDF48FFC2175167D007E77F4 /* symmetric-matrix-fs-trace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "symmetric-matrix-fs-trace.h"; sourceTree = "<group>"; };
-		FDF48FFD2175167D007E77F4 /* symmetric-matrix-fs-operation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "symmetric-matrix-fs-operation.h"; sourceTree = "<group>"; };
-		FDF48FFE2175167D007E77F4 /* rect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rect.h; sourceTree = "<group>"; };
-		FDF48FFF2175167D007E77F4 /* sbasis-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sbasis-math.cpp"; sourceTree = "<group>"; };
-		FDF490002175167D007E77F4 /* point.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = point.cpp; sourceTree = "<group>"; };
-		FDF490012175167D007E77F4 /* rect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rect.cpp; sourceTree = "<group>"; };
-		FDF490022175167D007E77F4 /* elliptical-arc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "elliptical-arc.h"; sourceTree = "<group>"; };
-		FDF490032175167D007E77F4 /* sbasis-2d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbasis-2d.h"; sourceTree = "<group>"; };
-		FDF490042175167D007E77F4 /* crossing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crossing.h; sourceTree = "<group>"; };
-		FDF490072175167D007E77F4 /* affine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = affine.cpp; sourceTree = "<group>"; };
-		FDF490082175167D007E77F4 /* bezier-curve.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "bezier-curve.h"; sourceTree = "<group>"; };
-		FDF490092175167D007E77F4 /* 2geom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = 2geom.h; sourceTree = "<group>"; };
-		FDF4900A2175167D007E77F4 /* path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path.cpp; sourceTree = "<group>"; };
-		FDF4900B2175167D007E77F4 /* sbasis-to-bezier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sbasis-to-bezier.cpp"; sourceTree = "<group>"; };
-		FDF4900C2175167D007E77F4 /* ray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ray.h; sourceTree = "<group>"; };
-		FDF4900D2175167D007E77F4 /* circle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = circle.cpp; sourceTree = "<group>"; };
-		FDF4900F2175167D007E77F4 /* sbasis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sbasis.h; sourceTree = "<group>"; };
-		FDF490102175167D007E77F4 /* coord.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = coord.cpp; sourceTree = "<group>"; };
-		FDF490112175167D007E77F4 /* conic_section_clipper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = conic_section_clipper.h; sourceTree = "<group>"; };
-		FDF490122175167D007E77F4 /* line.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = line.h; sourceTree = "<group>"; };
-		FDF490132175167D007E77F4 /* elliptical-arc-from-sbasis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "elliptical-arc-from-sbasis.cpp"; sourceTree = "<group>"; };
-		FDF490142175167D007E77F4 /* path-sink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "path-sink.cpp"; sourceTree = "<group>"; };
-		FDF490152175167D007E77F4 /* int-rect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "int-rect.h"; sourceTree = "<group>"; };
-		FDF490162175167D007E77F4 /* concepts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = concepts.cpp; sourceTree = "<group>"; };
-		FDF490172175167D007E77F4 /* d2-sbasis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "d2-sbasis.cpp"; sourceTree = "<group>"; };
-		FDF490192175167D007E77F4 /* implicit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = implicit.h; sourceTree = "<group>"; };
-		FDF4901A2175167D007E77F4 /* polynomial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = polynomial.h; sourceTree = "<group>"; };
-		FDF4901B2175167D007E77F4 /* unity-builder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "unity-builder.h"; sourceTree = "<group>"; };
-		FDF4901C2175167D007E77F4 /* matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = matrix.h; sourceTree = "<group>"; };
-		FDF4901D2175167D007E77F4 /* multi-index.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "multi-index.h"; sourceTree = "<group>"; };
-		FDF4901E2175167D007E77F4 /* determinant-minor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "determinant-minor.h"; sourceTree = "<group>"; };
-		FDF4901F2175167D007E77F4 /* multipoly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = multipoly.h; sourceTree = "<group>"; };
-		FDF490202175167D007E77F4 /* mvpoly-tools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "mvpoly-tools.h"; sourceTree = "<group>"; };
-		FDF490212175167D007E77F4 /* ellipse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ellipse.h; sourceTree = "<group>"; };
-		FDF490222175167D007E77F4 /* geom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = geom.cpp; sourceTree = "<group>"; };
-		FDF490232175167D007E77F4 /* curves.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curves.h; sourceTree = "<group>"; };
-		FDF490242175167D007E77F4 /* sweep-bounds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sweep-bounds.cpp"; sourceTree = "<group>"; };
-		FDF490252175167D007E77F4 /* bezier-to-sbasis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "bezier-to-sbasis.h"; sourceTree = "<group>"; };
-		FDF490262175167D007E77F4 /* sbasis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sbasis.cpp; sourceTree = "<group>"; };
-		FDF490272175167D007E77F4 /* exception.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = exception.h; sourceTree = "<group>"; };
-		FDF490282175167D007E77F4 /* solve-bezier-one-d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "solve-bezier-one-d.cpp"; sourceTree = "<group>"; };
-		FDF490292175167D007E77F4 /* concepts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = concepts.h; sourceTree = "<group>"; };
-		FDF4902A2175167D007E77F4 /* transforms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = transforms.h; sourceTree = "<group>"; };
-		FDF4902B2175167D007E77F4 /* ord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ord.h; sourceTree = "<group>"; };
-		FDF4902C2175167D007E77F4 /* choose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = choose.h; sourceTree = "<group>"; };
-		FDF4902D2175167D007E77F4 /* path-sink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "path-sink.h"; sourceTree = "<group>"; };
-		FDF4902E2175167D007E77F4 /* recursive-bezier-intersection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "recursive-bezier-intersection.cpp"; sourceTree = "<group>"; };
-		FDF4902F2175167D007E77F4 /* sbasis-roots.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sbasis-roots.cpp"; sourceTree = "<group>"; };
-		FDF490302175167D007E77F4 /* ellipse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ellipse.cpp; sourceTree = "<group>"; };
-		FDF490312175167D007E77F4 /* sbasis-math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbasis-math.h"; sourceTree = "<group>"; };
-		FDF490322175167D007E77F4 /* sbasis-poly.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbasis-poly.h"; sourceTree = "<group>"; };
-		FDF490332175167D007E77F4 /* sbasis-to-bezier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "sbasis-to-bezier.h"; sourceTree = "<group>"; };
-		FDF490342175167D007E77F4 /* geom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geom.h; sourceTree = "<group>"; };
-		FDF490352175167D007E77F4 /* polynomial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = polynomial.cpp; sourceTree = "<group>"; };
-		FDF490362175167D007E77F4 /* forward.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = forward.h; sourceTree = "<group>"; };
-		FDF490372175167D007E77F4 /* bezier-clipping.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "bezier-clipping.cpp"; sourceTree = "<group>"; };
-		FDF490382175167D007E77F4 /* interval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interval.h; sourceTree = "<group>"; };
-		FDF490392175167D007E77F4 /* math-utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "math-utils.h"; sourceTree = "<group>"; };
-		FDF4903A2175167D007E77F4 /* elliptical-arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "elliptical-arc.cpp"; sourceTree = "<group>"; };
-		FDF4916921751B3C007E77F4 /* libgeom-bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "libgeom-bridge.h"; sourceTree = "<group>"; };
-		FDF4916A21751B3C007E77F4 /* libgeom-bridge.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "libgeom-bridge.cpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -668,7 +278,6 @@
 		FDB6B3F61EAFD6DF00001C61 /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				FDF48F9F2175167D007E77F4 /* 2geom */,
 				FD362DCE217337D300FAE09D /* FatLine.swift */,
 				FD362DD42173674700FAE09D /* ConvexHull.swift */,
 				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
@@ -685,8 +294,6 @@
 				FDB6B3FD1EAFD6DF00001C61 /* PathComponent.swift */,
 				FD149EB92135CBFF009E791D /* AugmentedGraph.swift */,
 				FDC859622119274A00AF7642 /* BoundingVolumeHierarchy.swift */,
-				FDF4916921751B3C007E77F4 /* libgeom-bridge.h */,
-				FDF4916A21751B3C007E77F4 /* libgeom-bridge.cpp */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -723,165 +330,6 @@
 			path = BezierKit_MacTests;
 			sourceTree = "<group>";
 		};
-		FDF48F9F2175167D007E77F4 /* 2geom */ = {
-			isa = PBXGroup;
-			children = (
-				FDF48FA02175167D007E77F4 /* line.cpp */,
-				FDF48FA12175167D007E77F4 /* sbasis-2d.cpp */,
-				FDF48FA22175167D007E77F4 /* sbasis-geometric.cpp */,
-				FDF48FA32175167D007E77F4 /* intersection-graph.h */,
-				FDF48FA42175167D007E77F4 /* sbasis-curve.h */,
-				FDF48FA52175167D007E77F4 /* utils.h */,
-				FDF48FA62175167D007E77F4 /* generic-interval.h */,
-				FDF48FA72175167D007E77F4 /* sweeper.h */,
-				FDF48FA82175167D007E77F4 /* piecewise.h */,
-				FDF48FA92175167D007E77F4 /* int-point.h */,
-				FDF48FAA2175167D007E77F4 /* crossing.cpp */,
-				FDF48FAB2175167D007E77F4 /* utils.cpp */,
-				FDF48FAC2175167D007E77F4 /* transforms.cpp */,
-				FDF48FAD2175167D007E77F4 /* conic_section_clipper_cr.h */,
-				FDF48FAE2175167D007E77F4 /* nearest-time.h */,
-				FDF48FAF2175167D007E77F4 /* CMakeLists.txt */,
-				FDF48FB02175167D007E77F4 /* intersection.h */,
-				FDF48FB22175167D007E77F4 /* basic-intersection.h */,
-				FDF48FB32175167D007E77F4 /* conicsec.cpp */,
-				FDF48FB42175167D007E77F4 /* conic_section_clipper_impl.h */,
-				FDF48FB52175167D007E77F4 /* circle.h */,
-				FDF48FB62175167D007E77F4 /* curve.cpp */,
-				FDF48FB72175167D007E77F4 /* path-intersection.h */,
-				FDF48FB82175167D007E77F4 /* int-interval.h */,
-				FDF48FB92175167D007E77F4 /* polynomial.h */,
-				FDF48FBA2175167D007E77F4 /* point.h */,
-				FDF48FBB2175167D007E77F4 /* conic_section_clipper_impl.cpp */,
-				FDF48FBC2175167D007E77F4 /* sbasis-geometric.h */,
-				FDF48FBD2175167D007E77F4 /* path.h */,
-				FDF48FBE2175167D007E77F4 /* bezier-utils.h */,
-				FDF48FBF2175167D007E77F4 /* linear.h */,
-				FDF48FC02175167D007E77F4 /* bezier-curve.cpp */,
-				FDF48FD32175167D007E77F4 /* nearest-time.cpp */,
-				FDF48FD52175167D007E77F4 /* cairo-path-sink.h */,
-				FDF48FD62175167D007E77F4 /* solver.h */,
-				FDF48FD72175167D007E77F4 /* pathvector.h */,
-				FDF48FD82175167D007E77F4 /* bezier.cpp */,
-				FDF48FD92175167D007E77F4 /* sweep-bounds.h */,
-				FDF48FDB2175167D007E77F4 /* solve-bezier-parametric.cpp */,
-				FDF48FDC2175167D007E77F4 /* bezier.h */,
-				FDF48FDD2175167D007E77F4 /* intervaltree */,
-				FDF48FE12175167D007E77F4 /* generic-rect.h */,
-				FDF48FE22175167D007E77F4 /* coord.h */,
-				FDF48FE32175167D007E77F4 /* convex-hull.cpp */,
-				FDF48FE42175167D007E77F4 /* bezier-utils.cpp */,
-				FDF48FE52175167D007E77F4 /* conicsec.h */,
-				FDF48FE62175167D007E77F4 /* convex-hull.h */,
-				FDF48FE72175167D007E77F4 /* pathvector.cpp */,
-				FDF48FE82175167D007E77F4 /* path-intersection.cpp */,
-				FDF48FE92175167D007E77F4 /* d2.h */,
-				FDF48FEA2175167D007E77F4 /* solve-bezier.cpp */,
-				FDF48FEB2175167D007E77F4 /* curve.h */,
-				FDF48FEC2175167D007E77F4 /* config.h.cmake */,
-				FDF48FED2175167D007E77F4 /* affine.h */,
-				FDF48FEE2175167D007E77F4 /* sbasis-poly.cpp */,
-				FDF48FEF2175167D007E77F4 /* doxygen.cpp */,
-				FDF48FF02175167D007E77F4 /* basic-intersection.cpp */,
-				FDF48FF12175167D007E77F4 /* angle.h */,
-				FDF48FF22175167D007E77F4 /* piecewise.cpp */,
-				FDF48FF32175167D007E77F4 /* intersection-graph.cpp */,
-				FDF48FF42175167D007E77F4 /* numeric */,
-				FDF48FFE2175167D007E77F4 /* rect.h */,
-				FDF48FFF2175167D007E77F4 /* sbasis-math.cpp */,
-				FDF490002175167D007E77F4 /* point.cpp */,
-				FDF490012175167D007E77F4 /* rect.cpp */,
-				FDF490022175167D007E77F4 /* elliptical-arc.h */,
-				FDF490032175167D007E77F4 /* sbasis-2d.h */,
-				FDF490042175167D007E77F4 /* crossing.h */,
-				FDF490072175167D007E77F4 /* affine.cpp */,
-				FDF490082175167D007E77F4 /* bezier-curve.h */,
-				FDF490092175167D007E77F4 /* 2geom.h */,
-				FDF4900A2175167D007E77F4 /* path.cpp */,
-				FDF4900B2175167D007E77F4 /* sbasis-to-bezier.cpp */,
-				FDF4900C2175167D007E77F4 /* ray.h */,
-				FDF4900D2175167D007E77F4 /* circle.cpp */,
-				FDF4900F2175167D007E77F4 /* sbasis.h */,
-				FDF490102175167D007E77F4 /* coord.cpp */,
-				FDF490112175167D007E77F4 /* conic_section_clipper.h */,
-				FDF490122175167D007E77F4 /* line.h */,
-				FDF490132175167D007E77F4 /* elliptical-arc-from-sbasis.cpp */,
-				FDF490142175167D007E77F4 /* path-sink.cpp */,
-				FDF490152175167D007E77F4 /* int-rect.h */,
-				FDF490162175167D007E77F4 /* concepts.cpp */,
-				FDF490172175167D007E77F4 /* d2-sbasis.cpp */,
-				FDF490182175167D007E77F4 /* symbolic */,
-				FDF490212175167D007E77F4 /* ellipse.h */,
-				FDF490222175167D007E77F4 /* geom.cpp */,
-				FDF490232175167D007E77F4 /* curves.h */,
-				FDF490242175167D007E77F4 /* sweep-bounds.cpp */,
-				FDF490252175167D007E77F4 /* bezier-to-sbasis.h */,
-				FDF490262175167D007E77F4 /* sbasis.cpp */,
-				FDF490272175167D007E77F4 /* exception.h */,
-				FDF490282175167D007E77F4 /* solve-bezier-one-d.cpp */,
-				FDF490292175167D007E77F4 /* concepts.h */,
-				FDF4902A2175167D007E77F4 /* transforms.h */,
-				FDF4902B2175167D007E77F4 /* ord.h */,
-				FDF4902C2175167D007E77F4 /* choose.h */,
-				FDF4902D2175167D007E77F4 /* path-sink.h */,
-				FDF4902E2175167D007E77F4 /* recursive-bezier-intersection.cpp */,
-				FDF4902F2175167D007E77F4 /* sbasis-roots.cpp */,
-				FDF490302175167D007E77F4 /* ellipse.cpp */,
-				FDF490312175167D007E77F4 /* sbasis-math.h */,
-				FDF490322175167D007E77F4 /* sbasis-poly.h */,
-				FDF490332175167D007E77F4 /* sbasis-to-bezier.h */,
-				FDF490342175167D007E77F4 /* geom.h */,
-				FDF490352175167D007E77F4 /* polynomial.cpp */,
-				FDF490362175167D007E77F4 /* forward.h */,
-				FDF490372175167D007E77F4 /* bezier-clipping.cpp */,
-				FDF490382175167D007E77F4 /* interval.h */,
-				FDF490392175167D007E77F4 /* math-utils.h */,
-				FDF4903A2175167D007E77F4 /* elliptical-arc.cpp */,
-			);
-			path = 2geom;
-			sourceTree = "<group>";
-		};
-		FDF48FDD2175167D007E77F4 /* intervaltree */ = {
-			isa = PBXGroup;
-			children = (
-				FDF48FDE2175167D007E77F4 /* interval_tree.cc */,
-				FDF48FDF2175167D007E77F4 /* test2.cc */,
-				FDF48FE02175167D007E77F4 /* interval_tree.h */,
-			);
-			path = intervaltree;
-			sourceTree = "<group>";
-		};
-		FDF48FF42175167D007E77F4 /* numeric */ = {
-			isa = PBXGroup;
-			children = (
-				FDF48FF52175167D007E77F4 /* linear_system.h */,
-				FDF48FF62175167D007E77F4 /* matrix.h */,
-				FDF48FF72175167D007E77F4 /* fitting-tool.h */,
-				FDF48FF82175167D007E77F4 /* symmetric-matrix-fs.h */,
-				FDF48FF92175167D007E77F4 /* fitting-model.h */,
-				FDF48FFA2175167D007E77F4 /* matrix.cpp */,
-				FDF48FFB2175167D007E77F4 /* vector.h */,
-				FDF48FFC2175167D007E77F4 /* symmetric-matrix-fs-trace.h */,
-				FDF48FFD2175167D007E77F4 /* symmetric-matrix-fs-operation.h */,
-			);
-			path = numeric;
-			sourceTree = "<group>";
-		};
-		FDF490182175167D007E77F4 /* symbolic */ = {
-			isa = PBXGroup;
-			children = (
-				FDF490192175167D007E77F4 /* implicit.h */,
-				FDF4901A2175167D007E77F4 /* polynomial.h */,
-				FDF4901B2175167D007E77F4 /* unity-builder.h */,
-				FDF4901C2175167D007E77F4 /* matrix.h */,
-				FDF4901D2175167D007E77F4 /* multi-index.h */,
-				FDF4901E2175167D007E77F4 /* determinant-minor.h */,
-				FDF4901F2175167D007E77F4 /* multipoly.h */,
-				FDF490202175167D007E77F4 /* mvpoly-tools.h */,
-			);
-			path = symbolic;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -889,86 +337,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FDF4911A2175167D007E77F4 /* line.h in Headers */,
-				FDF4914C2175167D007E77F4 /* choose.h in Headers */,
-				FDF491482175167D007E77F4 /* transforms.h in Headers */,
-				FDF490662175167D007E77F4 /* circle.h in Headers */,
-				FDF4906C2175167D007E77F4 /* int-interval.h in Headers */,
-				FDF490E22175167D007E77F4 /* matrix.h in Headers */,
-				FDF4912C2175167D007E77F4 /* matrix.h in Headers */,
-				FDF490442175167D007E77F4 /* sbasis-curve.h in Headers */,
-				FDF491282175167D007E77F4 /* polynomial.h in Headers */,
-				FDF491202175167D007E77F4 /* int-rect.h in Headers */,
-				FDF490EC2175167D007E77F4 /* vector.h in Headers */,
-				FDF490422175167D007E77F4 /* intersection-graph.h in Headers */,
-				FDF491462175167D007E77F4 /* concepts.h in Headers */,
-				FDF490782175167D007E77F4 /* bezier-utils.h in Headers */,
-				FDF490BA2175167D007E77F4 /* generic-rect.h in Headers */,
-				FDF490482175167D007E77F4 /* generic-interval.h in Headers */,
-				FDF490F22175167D007E77F4 /* rect.h in Headers */,
-				FDF4915C2175167D007E77F4 /* geom.h in Headers */,
-				FDF490B22175167D007E77F4 /* bezier.h in Headers */,
-				FDF490762175167D007E77F4 /* path.h in Headers */,
-				FDF4910E2175167D007E77F4 /* ray.h in Headers */,
-				FDF4904E2175167D007E77F4 /* int-point.h in Headers */,
-				FDF4906E2175167D007E77F4 /* polynomial.h in Headers */,
-				FDF490A82175167D007E77F4 /* pathvector.h in Headers */,
-				FDF4906A2175167D007E77F4 /* path-intersection.h in Headers */,
-				FDF491642175167D007E77F4 /* interval.h in Headers */,
-				FDF490602175167D007E77F4 /* basic-intersection.h in Headers */,
-				FDF490582175167D007E77F4 /* nearest-time.h in Headers */,
-				FDF4912E2175167D007E77F4 /* multi-index.h in Headers */,
-				FDF490FC2175167D007E77F4 /* sbasis-2d.h in Headers */,
-				FDF4914A2175167D007E77F4 /* ord.h in Headers */,
-				FDF490462175167D007E77F4 /* utils.h in Headers */,
-				FDF490E02175167D007E77F4 /* linear_system.h in Headers */,
-				FDF4913A2175167D007E77F4 /* curves.h in Headers */,
-				FDF491602175167D007E77F4 /* forward.h in Headers */,
-				FDF491662175167D007E77F4 /* math-utils.h in Headers */,
-				FDF491302175167D007E77F4 /* determinant-minor.h in Headers */,
-				FDF490FE2175167D007E77F4 /* crossing.h in Headers */,
-				FDF490CA2175167D007E77F4 /* d2.h in Headers */,
-				FDF491182175167D007E77F4 /* conic_section_clipper.h in Headers */,
-				FDF490A42175167D007E77F4 /* cairo-path-sink.h in Headers */,
-				FDF490AC2175167D007E77F4 /* sweep-bounds.h in Headers */,
-				FDF491422175167D007E77F4 /* exception.h in Headers */,
-				FDF490E82175167D007E77F4 /* fitting-model.h in Headers */,
-				FDF490FA2175167D007E77F4 /* elliptical-arc.h in Headers */,
-				FDF4915A2175167D007E77F4 /* sbasis-to-bezier.h in Headers */,
-				FDF490B82175167D007E77F4 /* interval_tree.h in Headers */,
-				FDF4916C21751B3C007E77F4 /* libgeom-bridge.h in Headers */,
-				FDF490642175167D007E77F4 /* conic_section_clipper_impl.h in Headers */,
-				FDF4912A2175167D007E77F4 /* unity-builder.h in Headers */,
-				FDF490C22175167D007E77F4 /* conicsec.h in Headers */,
-				FDF491062175167D007E77F4 /* bezier-curve.h in Headers */,
-				FDF490562175167D007E77F4 /* conic_section_clipper_cr.h in Headers */,
-				FDF4907A2175167D007E77F4 /* linear.h in Headers */,
-				FDF4913E2175167D007E77F4 /* bezier-to-sbasis.h in Headers */,
-				FDF491582175167D007E77F4 /* sbasis-poly.h in Headers */,
-				FDF490742175167D007E77F4 /* sbasis-geometric.h in Headers */,
-				FDF490F02175167D007E77F4 /* symmetric-matrix-fs-operation.h in Headers */,
-				FDF490BC2175167D007E77F4 /* coord.h in Headers */,
-				FDF491362175167D007E77F4 /* ellipse.h in Headers */,
-				FDF490D22175167D007E77F4 /* affine.h in Headers */,
-				FDF491262175167D007E77F4 /* implicit.h in Headers */,
-				FDF491562175167D007E77F4 /* sbasis-math.h in Headers */,
-				FDF491342175167D007E77F4 /* mvpoly-tools.h in Headers */,
-				FDF490C42175167D007E77F4 /* convex-hull.h in Headers */,
-				FDF490CE2175167D007E77F4 /* curve.h in Headers */,
-				FDF491082175167D007E77F4 /* 2geom.h in Headers */,
-				FDF4904A2175167D007E77F4 /* sweeper.h in Headers */,
-				FDF4905C2175167D007E77F4 /* intersection.h in Headers */,
-				FDF490DA2175167D007E77F4 /* angle.h in Headers */,
-				FDF490EE2175167D007E77F4 /* symmetric-matrix-fs-trace.h in Headers */,
-				FDF491142175167D007E77F4 /* sbasis.h in Headers */,
-				FDF491322175167D007E77F4 /* multipoly.h in Headers */,
-				FDF490A62175167D007E77F4 /* solver.h in Headers */,
-				FDF490702175167D007E77F4 /* point.h in Headers */,
-				FDF4914E2175167D007E77F4 /* path-sink.h in Headers */,
 				FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */,
-				FDF490E62175167D007E77F4 /* symmetric-matrix-fs.h in Headers */,
-				FDF490E42175167D007E77F4 /* fitting-tool.h in Headers */,
-				FDF4904C2175167D007E77F4 /* piecewise.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -976,86 +345,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FDF491192175167D007E77F4 /* line.h in Headers */,
-				FDF4914B2175167D007E77F4 /* choose.h in Headers */,
-				FDF491472175167D007E77F4 /* transforms.h in Headers */,
-				FDF490652175167D007E77F4 /* circle.h in Headers */,
-				FDF4906B2175167D007E77F4 /* int-interval.h in Headers */,
-				FDF490E12175167D007E77F4 /* matrix.h in Headers */,
-				FDF4912B2175167D007E77F4 /* matrix.h in Headers */,
-				FDF490432175167D007E77F4 /* sbasis-curve.h in Headers */,
-				FDF491272175167D007E77F4 /* polynomial.h in Headers */,
-				FDF4911F2175167D007E77F4 /* int-rect.h in Headers */,
-				FDF490EB2175167D007E77F4 /* vector.h in Headers */,
-				FDF490412175167D007E77F4 /* intersection-graph.h in Headers */,
-				FDF491452175167D007E77F4 /* concepts.h in Headers */,
-				FDF490772175167D007E77F4 /* bezier-utils.h in Headers */,
-				FDF490B92175167D007E77F4 /* generic-rect.h in Headers */,
-				FDF490472175167D007E77F4 /* generic-interval.h in Headers */,
-				FDF490F12175167D007E77F4 /* rect.h in Headers */,
-				FDF4915B2175167D007E77F4 /* geom.h in Headers */,
-				FDF490B12175167D007E77F4 /* bezier.h in Headers */,
-				FDF490752175167D007E77F4 /* path.h in Headers */,
-				FDF4910D2175167D007E77F4 /* ray.h in Headers */,
-				FDF4904D2175167D007E77F4 /* int-point.h in Headers */,
-				FDF4906D2175167D007E77F4 /* polynomial.h in Headers */,
-				FDF490A72175167D007E77F4 /* pathvector.h in Headers */,
-				FDF490692175167D007E77F4 /* path-intersection.h in Headers */,
-				FDF491632175167D007E77F4 /* interval.h in Headers */,
-				FDF4905F2175167D007E77F4 /* basic-intersection.h in Headers */,
-				FDF490572175167D007E77F4 /* nearest-time.h in Headers */,
-				FDF4912D2175167D007E77F4 /* multi-index.h in Headers */,
-				FDF490FB2175167D007E77F4 /* sbasis-2d.h in Headers */,
-				FDF491492175167D007E77F4 /* ord.h in Headers */,
-				FDF490452175167D007E77F4 /* utils.h in Headers */,
-				FDF490DF2175167D007E77F4 /* linear_system.h in Headers */,
-				FDF491392175167D007E77F4 /* curves.h in Headers */,
-				FDF4915F2175167D007E77F4 /* forward.h in Headers */,
-				FDF491652175167D007E77F4 /* math-utils.h in Headers */,
-				FDF4912F2175167D007E77F4 /* determinant-minor.h in Headers */,
-				FDF490FD2175167D007E77F4 /* crossing.h in Headers */,
-				FDF490C92175167D007E77F4 /* d2.h in Headers */,
-				FDF491172175167D007E77F4 /* conic_section_clipper.h in Headers */,
-				FDF490A32175167D007E77F4 /* cairo-path-sink.h in Headers */,
-				FDF490AB2175167D007E77F4 /* sweep-bounds.h in Headers */,
-				FDF491412175167D007E77F4 /* exception.h in Headers */,
-				FDF490E72175167D007E77F4 /* fitting-model.h in Headers */,
-				FDF490F92175167D007E77F4 /* elliptical-arc.h in Headers */,
-				FDF491592175167D007E77F4 /* sbasis-to-bezier.h in Headers */,
-				FDF490B72175167D007E77F4 /* interval_tree.h in Headers */,
-				FDF4916B21751B3C007E77F4 /* libgeom-bridge.h in Headers */,
-				FDF490632175167D007E77F4 /* conic_section_clipper_impl.h in Headers */,
-				FDF491292175167D007E77F4 /* unity-builder.h in Headers */,
-				FDF490C12175167D007E77F4 /* conicsec.h in Headers */,
-				FDF491052175167D007E77F4 /* bezier-curve.h in Headers */,
-				FDF490552175167D007E77F4 /* conic_section_clipper_cr.h in Headers */,
-				FDF490792175167D007E77F4 /* linear.h in Headers */,
-				FDF4913D2175167D007E77F4 /* bezier-to-sbasis.h in Headers */,
-				FDF491572175167D007E77F4 /* sbasis-poly.h in Headers */,
-				FDF490732175167D007E77F4 /* sbasis-geometric.h in Headers */,
-				FDF490EF2175167D007E77F4 /* symmetric-matrix-fs-operation.h in Headers */,
-				FDF490BB2175167D007E77F4 /* coord.h in Headers */,
-				FDF491352175167D007E77F4 /* ellipse.h in Headers */,
-				FDF490D12175167D007E77F4 /* affine.h in Headers */,
-				FDF491252175167D007E77F4 /* implicit.h in Headers */,
-				FDF491552175167D007E77F4 /* sbasis-math.h in Headers */,
-				FDF491332175167D007E77F4 /* mvpoly-tools.h in Headers */,
-				FDF490C32175167D007E77F4 /* convex-hull.h in Headers */,
-				FDF490CD2175167D007E77F4 /* curve.h in Headers */,
-				FDF491072175167D007E77F4 /* 2geom.h in Headers */,
-				FDF490492175167D007E77F4 /* sweeper.h in Headers */,
-				FDF4905B2175167D007E77F4 /* intersection.h in Headers */,
-				FDF490D92175167D007E77F4 /* angle.h in Headers */,
-				FDF490ED2175167D007E77F4 /* symmetric-matrix-fs-trace.h in Headers */,
-				FDF491132175167D007E77F4 /* sbasis.h in Headers */,
-				FDF491312175167D007E77F4 /* multipoly.h in Headers */,
-				FDF490A52175167D007E77F4 /* solver.h in Headers */,
-				FDF4906F2175167D007E77F4 /* point.h in Headers */,
-				FDF4914D2175167D007E77F4 /* path-sink.h in Headers */,
 				FD4A0DC41EAAD01F0031A393 /* BezierKit_Mac.h in Headers */,
-				FDF490E52175167D007E77F4 /* symmetric-matrix-fs.h in Headers */,
-				FDF490E32175167D007E77F4 /* fitting-tool.h in Headers */,
-				FDF4904B2175167D007E77F4 /* piecewise.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1226,8 +516,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FDF490D02175167D007E77F4 /* config.h.cmake in Resources */,
-				FDF4905A2175167D007E77F4 /* CMakeLists.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1235,8 +523,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FDF490CF2175167D007E77F4 /* config.h.cmake in Resources */,
-				FDF490592175167D007E77F4 /* CMakeLists.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1272,70 +558,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FDF4911E2175167D007E77F4 /* path-sink.cpp in Sources */,
-				FDF490D62175167D007E77F4 /* doxygen.cpp in Sources */,
-				FDF491502175167D007E77F4 /* recursive-bezier-intersection.cpp in Sources */,
-				FDF490DC2175167D007E77F4 /* piecewise.cpp in Sources */,
-				FDF4903E2175167D007E77F4 /* sbasis-2d.cpp in Sources */,
 				FDB6B4111EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
-				FDF4911C2175167D007E77F4 /* elliptical-arc-from-sbasis.cpp in Sources */,
 				FDC7D7042111323A00A9EEF0 /* Path.swift in Sources */,
-				FDF491402175167D007E77F4 /* sbasis.cpp in Sources */,
-				FDF491162175167D007E77F4 /* coord.cpp in Sources */,
 				FDC859642119274A00AF7642 /* BoundingVolumeHierarchy.swift in Sources */,
 				FD362DD62173674700FAE09D /* ConvexHull.swift in Sources */,
-				FDF491542175167D007E77F4 /* ellipse.cpp in Sources */,
-				FDF491442175167D007E77F4 /* solve-bezier-one-d.cpp in Sources */,
-				FDF490F42175167D007E77F4 /* sbasis-math.cpp in Sources */,
-				FDF490682175167D007E77F4 /* curve.cpp in Sources */,
-				FDF490402175167D007E77F4 /* sbasis-geometric.cpp in Sources */,
-				FDF490AA2175167D007E77F4 /* bezier.cpp in Sources */,
-				FDF490C62175167D007E77F4 /* pathvector.cpp in Sources */,
-				FDF491102175167D007E77F4 /* circle.cpp in Sources */,
-				FDF490522175167D007E77F4 /* utils.cpp in Sources */,
 				FD4A63FF200AA50B00930E10 /* Shape.swift in Sources */,
-				FDF4910C2175167D007E77F4 /* sbasis-to-bezier.cpp in Sources */,
-				FDF491042175167D007E77F4 /* affine.cpp in Sources */,
-				FDF490A02175167D007E77F4 /* nearest-time.cpp in Sources */,
-				FDF491222175167D007E77F4 /* concepts.cpp in Sources */,
-				FDF491242175167D007E77F4 /* d2-sbasis.cpp in Sources */,
-				FDF4916E21751B3C007E77F4 /* libgeom-bridge.cpp in Sources */,
 				FDB6B40D1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
-				FDF490F62175167D007E77F4 /* point.cpp in Sources */,
 				FDB6B40F1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
-				FDF4903C2175167D007E77F4 /* line.cpp in Sources */,
-				FDF491622175167D007E77F4 /* bezier-clipping.cpp in Sources */,
-				FDF490BE2175167D007E77F4 /* convex-hull.cpp in Sources */,
-				FDF491682175167D007E77F4 /* elliptical-arc.cpp in Sources */,
 				FDB6B4151EAFD6DF00001C61 /* Utils.swift in Sources */,
 				FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
-				FDF490F82175167D007E77F4 /* rect.cpp in Sources */,
-				FDF4910A2175167D007E77F4 /* path.cpp in Sources */,
-				FDF4915E2175167D007E77F4 /* polynomial.cpp in Sources */,
-				FDF490CC2175167D007E77F4 /* solve-bezier.cpp in Sources */,
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
-				FDF490D42175167D007E77F4 /* sbasis-poly.cpp in Sources */,
-				FDF490C82175167D007E77F4 /* path-intersection.cpp in Sources */,
 				FD362DD0217337D300FAE09D /* FatLine.swift in Sources */,
-				FDF490DE2175167D007E77F4 /* intersection-graph.cpp in Sources */,
-				FDF490722175167D007E77F4 /* conic_section_clipper_impl.cpp in Sources */,
-				FDF4907C2175167D007E77F4 /* bezier-curve.cpp in Sources */,
-				FDF490542175167D007E77F4 /* transforms.cpp in Sources */,
 				FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
-				FDF490B62175167D007E77F4 /* test2.cc in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
-				FDF490622175167D007E77F4 /* conicsec.cpp in Sources */,
-				FDF490C02175167D007E77F4 /* bezier-utils.cpp in Sources */,
-				FDF490502175167D007E77F4 /* crossing.cpp in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
-				FDF4913C2175167D007E77F4 /* sweep-bounds.cpp in Sources */,
-				FDF490EA2175167D007E77F4 /* matrix.cpp in Sources */,
-				FDF490B42175167D007E77F4 /* interval_tree.cc in Sources */,
-				FDF491382175167D007E77F4 /* geom.cpp in Sources */,
-				FDF491522175167D007E77F4 /* sbasis-roots.cpp in Sources */,
-				FDF490D82175167D007E77F4 /* basic-intersection.cpp in Sources */,
-				FDF490B02175167D007E77F4 /* solve-bezier-parametric.cpp in Sources */,
 				FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1344,70 +581,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FDF4911D2175167D007E77F4 /* path-sink.cpp in Sources */,
-				FDF490D52175167D007E77F4 /* doxygen.cpp in Sources */,
-				FDF4914F2175167D007E77F4 /* recursive-bezier-intersection.cpp in Sources */,
-				FDF490DB2175167D007E77F4 /* piecewise.cpp in Sources */,
-				FDF4903D2175167D007E77F4 /* sbasis-2d.cpp in Sources */,
 				FDB6B4101EAFD6DF00001C61 /* QuadraticBezierCurve.swift in Sources */,
-				FDF4911B2175167D007E77F4 /* elliptical-arc-from-sbasis.cpp in Sources */,
 				FDC7D7032111323A00A9EEF0 /* Path.swift in Sources */,
-				FDF4913F2175167D007E77F4 /* sbasis.cpp in Sources */,
-				FDF491152175167D007E77F4 /* coord.cpp in Sources */,
 				FDC455EE211D057E00DBF2B2 /* BoundingVolumeHierarchy.swift in Sources */,
 				FD362DD52173674700FAE09D /* ConvexHull.swift in Sources */,
-				FDF491532175167D007E77F4 /* ellipse.cpp in Sources */,
-				FDF491432175167D007E77F4 /* solve-bezier-one-d.cpp in Sources */,
-				FDF490F32175167D007E77F4 /* sbasis-math.cpp in Sources */,
-				FDF490672175167D007E77F4 /* curve.cpp in Sources */,
-				FDF4903F2175167D007E77F4 /* sbasis-geometric.cpp in Sources */,
-				FDF490A92175167D007E77F4 /* bezier.cpp in Sources */,
-				FDF490C52175167D007E77F4 /* pathvector.cpp in Sources */,
-				FDF4910F2175167D007E77F4 /* circle.cpp in Sources */,
-				FDF490512175167D007E77F4 /* utils.cpp in Sources */,
 				FD4A63FE200AA50B00930E10 /* Shape.swift in Sources */,
-				FDF4910B2175167D007E77F4 /* sbasis-to-bezier.cpp in Sources */,
-				FDF491032175167D007E77F4 /* affine.cpp in Sources */,
-				FDF4909F2175167D007E77F4 /* nearest-time.cpp in Sources */,
-				FDF491212175167D007E77F4 /* concepts.cpp in Sources */,
-				FDF491232175167D007E77F4 /* d2-sbasis.cpp in Sources */,
-				FDF4916D21751B3C007E77F4 /* libgeom-bridge.cpp in Sources */,
 				FDB6B40C1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
-				FDF490F52175167D007E77F4 /* point.cpp in Sources */,
 				FDB6B40E1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
-				FDF4903B2175167D007E77F4 /* line.cpp in Sources */,
-				FDF491612175167D007E77F4 /* bezier-clipping.cpp in Sources */,
-				FDF490BD2175167D007E77F4 /* convex-hull.cpp in Sources */,
-				FDF491672175167D007E77F4 /* elliptical-arc.cpp in Sources */,
 				FDB6B4141EAFD6DF00001C61 /* Utils.swift in Sources */,
 				FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
-				FDF490F72175167D007E77F4 /* rect.cpp in Sources */,
-				FDF491092175167D007E77F4 /* path.cpp in Sources */,
-				FDF4915D2175167D007E77F4 /* polynomial.cpp in Sources */,
-				FDF490CB2175167D007E77F4 /* solve-bezier.cpp in Sources */,
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
-				FDF490D32175167D007E77F4 /* sbasis-poly.cpp in Sources */,
-				FDF490C72175167D007E77F4 /* path-intersection.cpp in Sources */,
 				FD362DCF217337D300FAE09D /* FatLine.swift in Sources */,
-				FDF490DD2175167D007E77F4 /* intersection-graph.cpp in Sources */,
-				FDF490712175167D007E77F4 /* conic_section_clipper_impl.cpp in Sources */,
-				FDF4907B2175167D007E77F4 /* bezier-curve.cpp in Sources */,
-				FDF490532175167D007E77F4 /* transforms.cpp in Sources */,
 				FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
-				FDF490B52175167D007E77F4 /* test2.cc in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicBezierCurve.swift in Sources */,
-				FDF490612175167D007E77F4 /* conicsec.cpp in Sources */,
-				FDF490BF2175167D007E77F4 /* bezier-utils.cpp in Sources */,
-				FDF4904F2175167D007E77F4 /* crossing.cpp in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
-				FDF4913B2175167D007E77F4 /* sweep-bounds.cpp in Sources */,
-				FDF490E92175167D007E77F4 /* matrix.cpp in Sources */,
-				FDF490B32175167D007E77F4 /* interval_tree.cc in Sources */,
-				FDF491372175167D007E77F4 /* geom.cpp in Sources */,
-				FDF491512175167D007E77F4 /* sbasis-roots.cpp in Sources */,
-				FDF490D72175167D007E77F4 /* basic-intersection.cpp in Sources */,
-				FDF490AF2175167D007E77F4 /* solve-bezier-parametric.cpp in Sources */,
 				FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1533,23 +721,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					./Library/,
-					/usr/local/Cellar/boost/1.67.0_1/include,
-					/usr/local/Cellar/gsl/2.5/include,
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				LIBRARY_SEARCH_PATHS = (
-					/usr/local/Cellar/boost/1.67.0_1/lib,
-					/usr/local/Cellar/gsl/2.5/lib,
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "-lgsl";
+				OTHER_LDFLAGS = "";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OBJC_BRIDGING_HEADER = "Library/libgeom-bridge.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 			};
@@ -1598,21 +776,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					./Library/,
-					/usr/local/Cellar/boost/1.67.0_1/include,
-					/usr/local/Cellar/gsl/2.5/include,
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
-				LIBRARY_SEARCH_PATHS = (
-					/usr/local/Cellar/boost/1.67.0_1/lib,
-					/usr/local/Cellar/gsl/2.5/lib,
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "-lgsl";
+				OTHER_LDFLAGS = "";
 				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "Library/libgeom-bridge.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 			};

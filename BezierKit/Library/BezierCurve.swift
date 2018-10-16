@@ -445,7 +445,6 @@ extension BezierCurve {
     public func intersects(curve: BezierCurve, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
 //        precondition(curve !== self, "unsupported: use intersects() method for self-intersection")
         
-        
         if let l = curve as? LineSegment {
             if let m = self as? LineSegment {
                 // TODO: clean up this logic, the problem is that `intersects` is statically dispatched
@@ -456,75 +455,7 @@ extension BezierCurve {
                 return self.intersects(line: l)
             }
         }
-        
-        if true {
-            if let c = curve as? CubicBezierCurve {
-                return findIntersectionsBezierClipping(self, c).sorted()
-            }
-            else if let q = curve as? QuadraticBezierCurve {
-                return findIntersectionsBezierClipping(self, q).sorted()
-            }
-        }
-        
-        if true {
-        
-            let n1: Int32 = Int32(self.order + 1)
-            let n2: Int32 = Int32(curve.order + 1)
-            let ptr1 = UnsafeMutablePointer<Double>.allocate(capacity: Int(n1 * 2))
-            for i in 0..<Int(n1) {
-                ptr1[2*i+0] = Double(self.points[i].x)
-                ptr1[2*i+1] = Double(self.points[i].y)
-            }
-            let ptr2 = UnsafeMutablePointer<Double>.allocate(capacity: Int(n2 * 2))
-            for i in 0..<Int(n2) {
-                ptr2[2*i+0] = Double(curve.points[i].x)
-                ptr2[2*i+1] = Double(curve.points[i].y)
-            }
-
-            let maxSolutions = 256
-            let i1 = UnsafeMutablePointer<Double>.allocate(capacity: maxSolutions)
-            let i2 = UnsafeMutablePointer<Double>.allocate(capacity: maxSolutions)
-            var numSolutions: Int32 = 0
-            
-            libgeomIntersect(ptr1, n1, ptr2, n2, i1, i2, &numSolutions)
-
-            func round(_ val: CGFloat) -> CGFloat {
-                if val < 1.0e-8 {
-                    return 0.0
-                }
-                else if val > (1 - 1.0e-8) {
-                    return 1.0
-                }
-                else {
-                    return val
-                }
-            }
-            
-            let solutions = (0..<Int(numSolutions)).map { (index: Int) -> Intersection in
-                return Intersection(t1: round(CGFloat(i1[index])), t2: round(CGFloat(i2[index])))
-            }
-            
-            i1.deallocate()
-            i2.deallocate()
-            ptr1.deallocate()
-            ptr2.deallocate()
-            
-            return solutions.sorted()
-        
-        }
-        
-        //
-        
-        let s = Subcurve<Self>(curve: self)
-        if let c = curve as? CubicBezierCurve {
-            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: c)], threshold: threshold)
-        }
-        else if let q = curve as? QuadraticBezierCurve {
-            return Self.internalCurvesIntersect(c1: [s], c2: [Subcurve(curve: q)], threshold: threshold)
-        }
-        else {
-            fatalError("unsupported")
-        }
+        return findIntersectionsBezierClipping(self, curve).sorted()
     }
     
     private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], threshold: CGFloat) -> [Intersection] {
