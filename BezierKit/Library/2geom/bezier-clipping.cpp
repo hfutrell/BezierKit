@@ -52,7 +52,7 @@
 using std::swap;
 
 
-#define VERBOSE 0
+#define VERBOSE 1
 #define CHECK 0
 
 
@@ -746,7 +746,7 @@ void iterate<intersection_point_tag> (std::vector<Interval>& domsA,
     if (domA.extent() == 1 && domB.extent() == 1) counter  = 0;
     if (++counter > 100) return;
 #if VERBOSE
-    std::cerr << std::fixed << std::setprecision(16);
+//    std::cerr << std::fixed << std::setprecision(16);
     std::cerr << ">> curve subdision performed <<" << std::endl;
     std::cerr << "dom(A) : " << domA << std::endl;
     std::cerr << "dom(B) : " << domB << std::endl;
@@ -795,7 +795,7 @@ void iterate<intersection_point_tag> (std::vector<Interval>& domsA,
 #endif
             return;
         }
-#if VERBOSE
+#if 0
         std::cerr << "dom : " << dom << std::endl;
 #endif
         // all other cases where dom[0] > dom[1] are invalid
@@ -905,7 +905,7 @@ void iterate<collinear_normal_tag> (std::vector<Interval>& domsA,
     if (domA.extent() == 1 && domB.extent() == 1) counter  = 0;
     if (++counter > 100) return;
 #if VERBOSE
-    std::cerr << std::fixed << std::setprecision(16);
+//    std::cerr << std::fixed << std::setprecision(16);
     std::cerr << ">> curve subdision performed <<" << std::endl;
     std::cerr << "dom(A) : " << domA << std::endl;
     std::cerr << "dom(B) : " << domB << std::endl;
@@ -943,7 +943,7 @@ void iterate<collinear_normal_tag> (std::vector<Interval>& domsA,
 #endif
             return;
         }
-#if VERBOSE
+#if 0
         std::cerr << "dom : " << dom << std::endl;
 #endif
         assert(dom->min() <= dom->max());
@@ -1141,6 +1141,9 @@ void find_intersections_bezier_clipping (std::vector< std::pair<double, double> 
                          std::vector<Point> const& B,
                          double precision)
 {
+#if VERBOSE
+    std::cerr << "find_intersections_bezier_clipping called" << std::endl;
+#endif
     using detail::bezier_clipping::get_solutions;
     using detail::bezier_clipping::intersection_point_tag;
     get_solutions<intersection_point_tag>(xs, A, B, precision);
