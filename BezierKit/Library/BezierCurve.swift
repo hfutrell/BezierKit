@@ -458,6 +458,15 @@ extension BezierCurve {
         }
         
         if true {
+            if let c = curve as? CubicBezierCurve {
+                return findIntersectionsBezierClipping(self, c).sorted()
+            }
+            else if let q = curve as? QuadraticBezierCurve {
+                return findIntersectionsBezierClipping(self, q).sorted()
+            }
+        }
+        
+        if true {
         
             let n1: Int32 = Int32(self.order + 1)
             let n2: Int32 = Int32(curve.order + 1)
@@ -472,7 +481,7 @@ extension BezierCurve {
                 ptr2[2*i+1] = Double(curve.points[i].y)
             }
 
-            let maxSolutions = 24
+            let maxSolutions = 256
             let i1 = UnsafeMutablePointer<Double>.allocate(capacity: maxSolutions)
             let i2 = UnsafeMutablePointer<Double>.allocate(capacity: maxSolutions)
             var numSolutions: Int32 = 0

@@ -15,6 +15,8 @@ private let H1_INTERVAL = Interval(start: 0.0, end: 0.5)
 private let H2_INTERVAL = Interval(start: nextafter(0.5, 1.0), end: 1.0)
 private let EPSILON: CGFloat = 1.0e-6
 
+private let verbose = false
+
 private extension Interval {
     var middle: CGFloat {
         return 0.5 * (self.start + self.end)
@@ -25,8 +27,24 @@ private extension Interval {
 }
 
 public func findIntersectionsBezierClipping(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat = 1.0e-6) -> [Intersection] {
+    if verbose {
+        print("findIntersectionsBezierClipping called")
+    }
     let clampedPrecision = precision < MAX_PRECISION ? precision: MAX_PRECISION
     return getSolutions(A, B, precision: clampedPrecision)
+}
+
+private func get_precision(_ I: Interval) -> Int {
+    let d: CGFloat = I.extent
+    var e: CGFloat = 0.1
+    var p: CGFloat = 10
+    var n: Int = 0;
+    while (n < 16 && d < e) {
+        p *= 10
+        e = 1.0 / p
+        n += 1
+    }
+    return n
 }
 
 private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat) -> [Intersection] {
@@ -35,7 +53,17 @@ private func getSolutions(_ A: BezierCurve, _ B: BezierCurve, precision: CGFloat
     var counter = 0
     iterate(&domsA, &domsB, A, B, UNIT_INTERVAL, UNIT_INTERVAL, precision: precision, counter: &counter)
     assert(domsA.count == domsB.count)
+    var i = 0
     return zip(domsA, domsB).map {
+        if verbose {
+            print("\(i) : domB : \(domsA[i])")
+            print("extent A: \(domsA[i].extent)")
+            print("precision A: \(get_precision(domsA[i]))")
+            print("\(i) : domB : \(domsB[i])")
+            print("extent B: \(domsB[i].extent)")
+            print("precision B: \(get_precision(domsB[i]))")
+        }
+        i += 1
         return Intersection(t1: $0.0.middle, t2: $0.1.middle)
     }
 }
@@ -101,6 +129,11 @@ private func portion(_ a: inout BezierCurve, _ interval: Interval) {
     a = a.split(from: interval.start, to: interval.end)
 }
 
+private func angle(_ A: BezierCurve) -> CGFloat {
+    let a: CGFloat = atan2(A.endingPoint.y - A.startingPoint.y, A.endingPoint.x - A.startingPoint.x)
+    return (180.0 * a / CGFloat.pi)
+}
+
 private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: BezierCurve, _ B: BezierCurve, _ domA: Interval, _ domB: Interval, precision: CGFloat, counter: inout Int) {
     
     counter += 1
@@ -108,19 +141,29 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
         return
     }
     
-    let pA = A
-    let pB = B
-    var C1 = A
-    var C2 = B
+    if verbose {
+        //    std::cerr << std::fixed << std::setprecision(16);
+        print(">> curve subdision performed <<")
+        print("dom(A) : \(domA)")
+        print("dom(B) : \(domB)")
+        //    std::cerr << "angle(A) : " << angle(A) << std::endl;
+        //    std::cerr << "angle(B) : " << angle(B) << std::endl;
+    }
     
-    let dompA = domA
-    let dompB = domB
-    var dom1 = dompA
-    var dom2 = dompB 
+    var pA = A
+    var pB = B
+    var C1 = UnsafeMutablePointer<BezierCurve>(&pA)
+    var C2 = UnsafeMutablePointer<BezierCurve>(&pB)
+    
+    var dompA = domA
+    var dompB = domB
+    var dom1 = UnsafeMutablePointer<Interval>(&dompA)
+    var dom2 = UnsafeMutablePointer<Interval>(&dompB)
     
     if (A.isConstant(precision) && B.isConstant(precision)) {
-        let M1 = middle_point(C1.startingPoint, C1.endingPoint)
-        let M2 = middle_point(C2.startingPoint, C2.endingPoint)
+        // todo: at this point isn't C1.pointee garaunteed to be A?
+        let M1 = middle_point(C1.pointee.startingPoint, C1.pointee.endingPoint)
+        let M2 = middle_point(C2.pointee.startingPoint, C2.pointee.endingPoint)
         if areNear(M1, M2) {
             domsA.append(domA)
             domsB.append(domB)
@@ -130,22 +173,32 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
     
     var iter = 1;
     while iter < 100 && (dompA.extent >= precision || dompB.extent >= precision) {
+        if verbose {
+            print("iter: \(iter)")
+        }
         iter += 1
-
-        guard let dom = clip(C1, C2, precision: precision) else {
+        guard let dom = clip(C1.pointee, C2.pointee, precision: precision) else {
+            if verbose {
+                print("dom: empty")
+            }
             return
         }
 
         // all other cases where dom[0] > dom[1] are invalid
         assert(dom.start <= dom.end)
         
-        map_to(&dom2, dom)
+        map_to(&dom2.pointee, dom)
         
-        portion(&C2, dom)
+        portion(&C2.pointee, dom)
         
-        if C2.isConstant(precision) && C1.isConstant(precision) {
-            let M1 = middle_point(C1.startingPoint, C1.endingPoint)
-            let M2 = middle_point(C2.startingPoint, C2.endingPoint)
+        if C2.pointee.isConstant(precision) && C1.pointee.isConstant(precision) {
+            let M1 = middle_point(C1.pointee.startingPoint, C1.pointee.endingPoint)
+            let M2 = middle_point(C2.pointee.startingPoint, C2.pointee.endingPoint)
+            if verbose {
+                print("both curves are constant: \nM1: \(M1)\nM2: \(M2)")
+                print("C2\n\(C2)")
+                print("C1\n\(C1)")
+            }
             if areNear(M1,M2) {
                 break  // append the new interval
             }
@@ -157,6 +210,11 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
         // if we have clipped less than 20% than we need to subdive the curve
         // with the largest domain into two sub-curves
         if dom.extent > MIN_CLIPPED_SIZE_THRESHOLD {
+            if verbose {
+                print("clipped less than 20% : \(dom.extent)")
+                print("angle(pA) : \(angle(pA))")
+                print("angle(pB) : \(angle(pB))")
+            }
             if dompA.extent > dompB.extent {
                 var pC1 = pA
                 var pC2 = pA
@@ -183,7 +241,11 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
             }
             return
         }
-        
+        if verbose {
+            print("dom(pA) : \(dompA)")
+            print("dom(pB) : \(dompB)")
+        }
+
         swap(&C1, &C2);
         swap(&dom1, &dom2);
     }

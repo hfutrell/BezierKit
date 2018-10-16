@@ -23,7 +23,7 @@ struct ConvexHull {
     init(points: [CGPoint]) {
  
         var _boundary = points.sorted { // sorted in LexLess<X> order
-            $0.x < $1.x
+            $0.x < $1.x || ($0.x == $1.x && $0.y < $1.y)
         }
         
         // _boundary must already be sorted in LexLess<X> order
@@ -52,7 +52,7 @@ struct ConvexHull {
         let _lower = k
         if k < _boundary.endIndex {
             _boundary = [CGPoint](_boundary[0..<k] + _boundary[k..<_boundary.endIndex].sorted { // sort LexGreater<X>
-                $0.x > $1.x
+                $0.x > $1.x || ($0.x == $1.x && $0.y > $1.y)
             })
         }
         
