@@ -49,7 +49,7 @@ class BezierKit_MacTests: XCTestCase {
                 let c1 = self.randomCubicCurve()
                 let c2 = self.randomCubicCurve()
                 
-                let i = c1.intersects(curve: c2, threshold: 1.0e-4)
+                let i = c1.intersects(curve: c2, threshold: 1.0e-8)
                 i.forEach {
                     totalError += distance(c1.compute($0.t1), c2.compute($0.t2))
                 }

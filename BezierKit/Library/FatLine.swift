@@ -51,7 +51,12 @@ private func getSolutions(_ A: [CGPoint], _ B: [CGPoint], precision: CGFloat) ->
     var domsA = [Interval]()
     var domsB = [Interval]()
     var counter = 0
-    iterate(&domsA, &domsB, A, B, UNIT_INTERVAL, UNIT_INTERVAL, precision: precision, counter: &counter)
+    
+    A.withUnsafeBufferPointer { AA in
+        B.withUnsafeBufferPointer { BB in
+            iterate(&domsA, &domsB, AA, BB, UNIT_INTERVAL, UNIT_INTERVAL, precision: precision, counter: &counter)
+        }
+    }
     assert(domsA.count == domsB.count)
     var i = 0
    
@@ -79,7 +84,7 @@ private func getSolutions(_ A: [CGPoint], _ B: [CGPoint], precision: CGFloat) ->
     }
 }
 
-func isConstant(_ array: [CGPoint], _ epsilon: CGFloat) -> Bool {
+func isConstant(_ array: UnsafeBufferPointer<CGPoint>, _ epsilon: CGFloat) -> Bool {
     for i in 1..<array.count {
         if areNear(array[i], array.first!, epsilon) == false {
             return false
@@ -134,27 +139,28 @@ private func map_to(_ J: inout Interval, _ I: Interval) {
     J.setEnds(J.valueAt(I.start), J.valueAt(I.end));
 }
 
-private func portion(_ B: UnsafeMutablePointer<CGPoint>, _ I: Interval, _ n: Int) {
+private func portion(_ B: UnsafeMutableBufferPointer<CGPoint>, _ I: Interval) {
     if I.start == 0 {
         if I.end == 1 {
             return
         }
-        left_portion(I.end, B, n)
+        left_portion(I.end, B)
         return
     }
-    right_portion(I.start, B, n)
+    right_portion(I.start, B)
     if I.end == 1 {
         return
     }
     let t = I.extent / (1 - I.start)
-    left_portion(t, B, n)
+    left_portion(t, B)
 }
 
 /*
  *  Compute the portion of the Bezier curve "B" wrt the interval [0,t]
  */
 // portion(Bezier, 0, t)
-private func left_portion(_ t: CGFloat, _ B: UnsafeMutablePointer<CGPoint>, _ n: Int) {
+private func left_portion(_ t: CGFloat, _ B: UnsafeMutableBufferPointer<CGPoint>) {
+    let n = B.count
     for i in 1..<n {
         for j in stride(from: n-1, through: i, by: -1) {
             B[j] = Utils.lerp(t, B[j-1], B[j])
@@ -166,7 +172,8 @@ private func left_portion(_ t: CGFloat, _ B: UnsafeMutablePointer<CGPoint>, _ n:
  *  Compute the portion of the Bezier curve "B" wrt the interval [t,1]
  */
 // portion(Bezier, t, 1)
-private func right_portion(_ t: CGFloat, _ B: UnsafeMutablePointer<CGPoint>, _ n: Int) {
+private func right_portion(_ t: CGFloat, _ B: UnsafeMutableBufferPointer<CGPoint>) {
+    let n = B.count
     for i in 1..<n {
         for j in 0..<(n-i) {
             B[j] = Utils.lerp(t, B[j], B[j+1])
@@ -174,12 +181,16 @@ private func right_portion(_ t: CGFloat, _ B: UnsafeMutablePointer<CGPoint>, _ n
     }
 }
 
-private func angle(_ A: [CGPoint]) -> CGFloat {
+private func angle(_ A: UnsafeBufferPointer<CGPoint>) -> CGFloat {
     let a: CGFloat = atan2(A.last!.y - A.first!.y, A.last!.x - A.first!.x)
     return (180.0 * a / CGFloat.pi)
 }
 
-private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: [CGPoint], _ B: [CGPoint], _ domA: Interval, _ domB: Interval, precision: CGFloat, counter: inout Int) {
+private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval],
+                     _ A: UnsafeBufferPointer<CGPoint>, _ B: UnsafeBufferPointer<CGPoint>,
+                     _ domA: Interval, _ domB: Interval,
+                     precision: CGFloat,
+                     counter: inout Int) {
     
     counter += 1
     if counter > 100 {
@@ -195,34 +206,45 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
         //    std::cerr << "angle(B) : " << angle(B) << std::endl;
     }
     
-    var pA = A
-    var pB = B
-    var C1 = UnsafeMutablePointer<[CGPoint]>(&pA)
-    var C2 = UnsafeMutablePointer<[CGPoint]>(&pB)
+    var pA = UnsafeMutableBufferPointer<CGPoint>.allocate(capacity: A.count)
+    let _ = pA.initialize(from: A)
+    defer { pA.deallocate() }
     
+    var pB = UnsafeMutableBufferPointer<CGPoint>.allocate(capacity: B.count)
+    let _ = pB.initialize(from: B)
+    defer { pB.deallocate() }
+    
+    // memory used for left / right split of curves
+    let pC1 = UnsafeMutableBufferPointer<CGPoint>.allocate(capacity: max(pA.count, pB.count))
+    let pC2 = UnsafeMutableBufferPointer<CGPoint>.allocate(capacity: max(pA.count, pB.count))
+    defer { pC1.deallocate() }
+    defer { pC2.deallocate() }
+    
+    var C1 = pA
+    var C2 = pB
+
     var dompA = domA
     var dompB = domB
     var dom1 = UnsafeMutablePointer<Interval>(&dompA)
     var dom2 = UnsafeMutablePointer<Interval>(&dompB)
-    
+
     if (isConstant(A, precision) && isConstant(B, precision)) {
-        // todo: at this point isn't C1.pointee garaunteed to be A?
-        let M1 = middle_point(C1.pointee.first!, C1.pointee.last!)
-        let M2 = middle_point(C2.pointee.first!, C2.pointee.last!)
+        let M1 = middle_point(C1.first!, C1.last!)
+        let M2 = middle_point(C2.first!, C2.last!)
         if areNear(M1, M2) {
             domsA.append(domA)
             domsB.append(domB)
         }
         return
     }
-    
+
     var iter = 1;
     while iter < 100 && (dompA.extent >= precision || dompB.extent >= precision) {
         if verbose {
             print("iter: \(iter)")
         }
         iter += 1
-        guard let dom = clip(C1.pointee, C2.pointee, precision: precision) else {
+        guard let dom = clip(UnsafeBufferPointer(C1), UnsafeBufferPointer(C2), precision: precision) else {
             if verbose {
                 print("dom: empty")
             }
@@ -231,14 +253,14 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
 
         // all other cases where dom[0] > dom[1] are invalid
         assert(dom.start <= dom.end)
-        
+
         map_to(&dom2.pointee, dom)
-        
-        portion(&C2.pointee, dom, C2.pointee.count)
-        
-        if isConstant(C2.pointee, precision) && isConstant(C1.pointee, precision) {
-            let M1 = middle_point(C1.pointee.first!, C1.pointee.last!)
-            let M2 = middle_point(C2.pointee.first!, C2.pointee.last!)
+
+        portion(C2, dom)
+
+        if isConstant(UnsafeBufferPointer(C2), precision) && isConstant(UnsafeBufferPointer(C1), precision) {
+            let M1 = middle_point(C1.first!, C1.last!)
+            let M2 = middle_point(C2.first!, C2.last!)
             if verbose {
                 print("both curves are constant: \nM1: \(M1)\nM2: \(M2)")
                 print("C2\n\(C2)")
@@ -251,38 +273,38 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
                 return // exit without appending any new interval
             }
         }
-        
+
         // if we have clipped less than 20% than we need to subdive the curve
         // with the largest domain into two sub-curves
         if dom.extent > MIN_CLIPPED_SIZE_THRESHOLD {
             if verbose {
                 print("clipped less than 20% : \(dom.extent)")
-                print("angle(pA) : \(angle(pA))")
-                print("angle(pB) : \(angle(pB))")
+                print("angle(pA) : \(angle(UnsafeBufferPointer(pA)))")
+                print("angle(pB) : \(angle(UnsafeBufferPointer(pB)))")
             }
             if dompA.extent > dompB.extent {
-                var pC1 = pA
-                var pC2 = pA
-                portion(&pC1, H1_INTERVAL, pC1.count)
-                portion(&pC2, H2_INTERVAL, pC2.count)
+                let _ = pC1.initialize(from: pA)
+                let _ = pC2.initialize(from: pA)
+                portion(pC1, H1_INTERVAL)
+                portion(pC2, H2_INTERVAL)
                 var dompC1 = dompA
                 var dompC2 = dompA
                 map_to(&dompC1, H1_INTERVAL)
                 map_to(&dompC2, H2_INTERVAL)
-                iterate(&domsA, &domsB, pC1, pB, dompC1, dompB, precision: precision, counter: &counter)
-                iterate(&domsA, &domsB, pC2, pB, dompC2, dompB, precision: precision, counter: &counter)
+                iterate(&domsA, &domsB, UnsafeBufferPointer(pC1), UnsafeBufferPointer(pB), dompC1, dompB, precision: precision, counter: &counter)
+                iterate(&domsA, &domsB, UnsafeBufferPointer(pC2), UnsafeBufferPointer(pB), dompC2, dompB, precision: precision, counter: &counter)
             }
             else {
-                var pC1 = pB
-                var pC2 = pB
-                portion(&pC1, H1_INTERVAL, pC1.count)
-                portion(&pC2, H2_INTERVAL, pC2.count)
+                let _ = pC1.initialize(from: pB)
+                let _ = pC2.initialize(from: pB)
+                portion(pC1, H1_INTERVAL)
+                portion(pC2, H2_INTERVAL)
                 var dompC1 = dompB
                 var dompC2 = dompB
                 map_to(&dompC1, H1_INTERVAL)
                 map_to(&dompC2, H2_INTERVAL)
-                iterate(&domsB, &domsA, pC1, pA, dompC1, dompA, precision: precision, counter: &counter)
-                iterate(&domsB, &domsA, pC2, pA, dompC2, dompA, precision: precision, counter: &counter)
+                iterate(&domsB, &domsA, UnsafeBufferPointer(pC1), UnsafeBufferPointer(pA), dompC1, dompA, precision: precision, counter: &counter)
+                iterate(&domsB, &domsA, UnsafeBufferPointer(pC2), UnsafeBufferPointer(pA), dompC2, dompA, precision: precision, counter: &counter)
             }
             return
         }
@@ -291,8 +313,8 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval], _ A: 
             print("dom(pB) : \(dompB)")
         }
 
-        swap(&C1, &C2);
-        swap(&dom1, &dom2);
+        swap(&C1, &C2)
+        swap(&dom1, &dom2)
     }
     domsA.append(dompA)
     domsB.append(dompB)
@@ -322,7 +344,7 @@ private extension CGPoint {
     }
 }
 
-private func clip(_ A: [CGPoint], _ B: [CGPoint], precision: CGFloat) -> Interval? {
+private func clip(_ A:  UnsafeBufferPointer<CGPoint>, _ B:  UnsafeBufferPointer<CGPoint>, precision: CGFloat) -> Interval? {
     var bl: LineSegment = {
         if isConstant(A, precision) {
             let M = middle_point(A.first!, A.last!)
@@ -342,7 +364,7 @@ private func clip(_ A: [CGPoint], _ B: [CGPoint], precision: CGFloat) -> Interva
  * curve "c" from the normalized orientation line "l".
  * This bounds are returned through the output Interval parameter"bound".
  */
-private func fat_line_bounds(_ c: [CGPoint], _ l: LineSegment) -> Interval {
+private func fat_line_bounds(_ c: UnsafeBufferPointer<CGPoint>, _ l: LineSegment) -> Interval {
     var bound = Interval(start: 0, end: 0)
     for i in 0..<c.count {
         bound.expandTo(signed_distance(c[i], l))
@@ -354,7 +376,7 @@ private func fat_line_bounds(_ c: [CGPoint], _ l: LineSegment) -> Interval {
  * Pick up an orientation line for the Bezier curve "c" and return it in
  * the output parameter "l"
  */
-private func pick_orientation_line(_ c: [CGPoint], precision: CGFloat ) -> LineSegment {
+private func pick_orientation_line(_ c: UnsafeBufferPointer<CGPoint>, precision: CGFloat ) -> LineSegment {
     var i = c.count
     repeat {
         i -= 1
@@ -377,7 +399,7 @@ private func pick_orientation_line(_ c: [CGPoint], precision: CGFloat ) -> LineS
  *  the line is returned in the output parameter "l" in the form of a 3 element
  *  vector : l[0] * x + l[1] * y + l[2] == 0; the line is normalized.
  */
-private func orthogonal_orientation_line(_ c: [CGPoint], _ p: CGPoint, precision: CGFloat) -> LineSegment {
+private func orthogonal_orientation_line(_ c: UnsafeBufferPointer<CGPoint>, _ p: CGPoint, precision: CGFloat) -> LineSegment {
     // this should never happen
     assert(!isConstant(c, precision))
     
@@ -410,17 +432,27 @@ private func intersect(_ p1: CGPoint,_ p2: CGPoint, _ y: CGFloat) -> CGFloat {
  * line "l" and the interval range "bound", the new parameter interval for
  * the clipped curve is returned through the output parameter "dom"
  */
-private func clip_interval(_ B: [CGPoint], _ l: LineSegment, _ bound: Interval) -> Interval? {
+private func clip_interval(_ B: UnsafeBufferPointer<CGPoint>, _ l: LineSegment, _ bound: Interval) -> Interval? {
     let n = CGFloat(B.count-1) // number of sub-intervals
-    let D: [CGPoint] = (0..<B.count).map {  // distance curve control points
-        let d: CGFloat = signed_distance(B[$0], l)
-        return CGPoint(x: CGFloat($0) / n, y: d)
-    }
-    //print(D);
     
-    let boundary = computeConvexHull(from: D)
-    let count = boundary.count
-    let p = UnsafePointer<CGPoint>(boundary)
+    let D = UnsafeMutableBufferPointer<CGPoint>.allocate(capacity: B.count)
+    defer {
+        D.deallocate()
+    }
+    for i in 0..<B.count {
+        let d: CGFloat = signed_distance(B[i], l)
+        D[i] = CGPoint(x: CGFloat(i) / n, y: d)
+    }
+    
+    guard let p = computeConvexHullUnsafe(UnsafeBufferPointer(D)) else {
+        return nil
+    }
+    defer {
+        p.deallocate()
+    }
+    
+    let count = p.count
+
     //print(p);
     
     var tmin: CGFloat = 1
