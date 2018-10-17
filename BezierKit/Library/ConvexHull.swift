@@ -12,7 +12,17 @@ private func _is_clockwise_turn(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Boo
     if (b == c) {
         return false
     }
-    return cross(b-a, c-a) > 0 || (cross(b-a, c-a) == 0 && (b-a).length < (b-c).length)
+    return cross(b-a, c-a) > 0
+}
+
+private func _is_clockwise_turn2(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Bool {
+    if (a == b) {
+        return false
+    }
+    let bMinusA = b-a
+    let cMinusA = c-a
+    let crossProduct = cross(bMinusA, cMinusA)
+    return crossProduct < 0 || (crossProduct == 0 && (b-a).length < (c-a).length)
 }
 
 internal func computeConvexHull(from points: [CGPoint]) -> [CGPoint] {
@@ -39,7 +49,7 @@ internal func computeConvexHull(from points: [CGPoint]) -> [CGPoint] {
             P.append(pointOnHull)
             var endPoint = S[0]
             for j in 1..<C {
-                if endPoint == pointOnHull || _is_clockwise_turn(endPoint, P[i], S[j]) {
+                if endPoint == pointOnHull || _is_clockwise_turn2(P[i], endPoint, S[j]) {
                     endPoint = S[j]
                 }
             }
@@ -53,9 +63,9 @@ internal func computeConvexHull(from points: [CGPoint]) -> [CGPoint] {
     
    // assert(P == computeConvexHull2(from: points))
     
-    if ( P != computeConvexHull2(from: points) ) {
-        print("ugh")
-    }
+//    if ( P != computeConvexHull2(from: points) ) {
+//        print("ugh")
+//    }
     
     return P
 }

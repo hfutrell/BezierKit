@@ -75,7 +75,6 @@ class ConvexHullTests: XCTestCase {
         let point3 = CGPoint(x: 0.66666666666666663, y: 0.00000043824982753903896)
         let point4 = CGPoint(x: 1, y: -0.00000059261020624035154)
         XCTAssertEqual(computeConvexHull(from: [point1, point2, point3, point4]), [point1, point4])
-        XCTAssertEqual(computeConvexHull2(from: [point1, point2, point3, point4]), [point1, point4])
     }
 
 }
