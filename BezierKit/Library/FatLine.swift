@@ -94,7 +94,7 @@ func isConstant(_ array: UnsafeBufferPointer<CGPoint>, _ epsilon: CGFloat) -> Bo
 }
 
 private func areNear(_ a: CGPoint, _ b: CGPoint, _ epsilon: CGFloat = EPSILON) -> Bool {
-    return distance(a, b) <= epsilon
+    return (a-b).lengthSquared <= epsilon*epsilon
 }
 
 private func areNear(_ a: CGFloat, _ b: CGFloat, _ epsilon: CGFloat = EPSILON) -> Bool {
@@ -303,8 +303,8 @@ private func iterate(_ domsA: inout [Interval], _ domsB: inout [Interval],
                 var dompC2 = dompB
                 map_to(&dompC1, H1_INTERVAL)
                 map_to(&dompC2, H2_INTERVAL)
-                iterate(&domsB, &domsA, UnsafeBufferPointer(pC1), UnsafeBufferPointer(pA), dompC1, dompA, precision: precision, counter: &counter)
                 iterate(&domsB, &domsA, UnsafeBufferPointer(pC2), UnsafeBufferPointer(pA), dompC2, dompA, precision: precision, counter: &counter)
+                iterate(&domsB, &domsA, UnsafeBufferPointer(pC1), UnsafeBufferPointer(pA), dompC1, dompA, precision: precision, counter: &counter)
             }
             return
         }

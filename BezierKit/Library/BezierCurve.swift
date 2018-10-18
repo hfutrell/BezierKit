@@ -455,7 +455,7 @@ extension BezierCurve {
                 return self.intersects(line: l)
             }
         }
-        return findIntersectionsBezierClipping(self, curve).sorted()
+        return findIntersectionsBezierClipping(self, curve)
     }
     
     private static func internalCurvesIntersect<C1, C2>(c1: [Subcurve<C1>], c2: [Subcurve<C2>], threshold: CGFloat) -> [Intersection] {
