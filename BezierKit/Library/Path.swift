@@ -186,6 +186,12 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
+    @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
+        return Path(subpaths: self.subpaths.map {
+            $0.offset(distance: d)
+        })
+    }
+    
     @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let count = self.windingCount(point)
         return windingCountImpliesContainment(count, using: rule)
