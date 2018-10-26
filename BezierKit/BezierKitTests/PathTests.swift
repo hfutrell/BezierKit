@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import CoreGraphics
 @testable import BezierKit
 
 class PathTests: XCTestCase {
@@ -454,6 +455,34 @@ class PathTests: XCTestCase {
         let result = square.crossingsRemoved()
         XCTAssertEqual(result.subpaths.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], square.subpaths[0]))
+    }
+    
+    func testCrossingsRemovedEdgeCase() {
+        // this is an edge cases which caused difficulty in practice
+        // the contour, which intersects at (1,1) creates two squares, one with -1 winding count
+        // the other with +1 winding count
+        // incorrect implementation of this algorithm previously interpretted
+        // the crossing as an entry / exit, which would completely cull off the square with +1 count
+        
+        let points = [CGPoint(x: 0, y: 1),
+                      CGPoint(x: 2, y: 1),
+                      CGPoint(x: 2, y: 2),
+                      CGPoint(x: 1, y: 2),
+                      CGPoint(x: 1, y: 0),
+                      CGPoint(x: 0, y: 0)]
+
+        let cgPath = CGMutablePath()
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        
+        let contour = Path(cgPath: cgPath)
+        XCTAssertEqual(contour.windingCount(CGPoint(x: 0.5, y: 0.5)), -1) // winding count at center of one square region
+        XCTAssertEqual( contour.windingCount(CGPoint(x: 1.5, y: 1.5)), 1) // winding count at center of other square region
+
+        let crossingsRemoved = contour.crossingsRemoved()
+
+        XCTAssertEqual(crossingsRemoved.subpaths.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.subpaths[0], contour.subpaths[0]))
     }
     
 }
