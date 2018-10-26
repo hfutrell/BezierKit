@@ -182,6 +182,23 @@ internal class PathLinkedListRepresentation {
                     }
                 }
                 initialWinding = -minimumWinding
+                
+                let prev = lists[i][0].emitPrevious()
+                let a = prev.compute(0.5)
+                let b = a + 1.0e-5 * prev.normal(0.5)
+                let c = a - 1.0e-5 * prev.normal(0.5)
+                
+                let w1 = path.windingCount(b)
+                let w2 = path.windingCount(c)
+                
+                print("w1 = \(w1)")
+                print("w2 = \(w2)")
+                
+                if w1 < initialWinding {
+                    initialWinding = w1
+                }
+                
+
             }
             else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
@@ -202,9 +219,16 @@ internal class PathLinkedListRepresentation {
                 guard v.isIntersection else {
                     return
                 }
-                let wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                if useRelativeWinding {
+                    wasInside = windingCountImpliesContainment(windingCount, using: fillRule) && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                }
                 windingCount = v.intersectionInfo.nextWinding
-                let isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)  || (useRelativeWinding && windingCountImpliesContainment(windingCount+1, using: fillRule))
+                if useRelativeWinding {
+                    isInside = windingCountImpliesContainment(windingCount, using: fillRule) && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                }
+
                 v.intersectionInfo.isEntry = wasInside == false && isInside == true
                 v.intersectionInfo.isExit = wasInside == true && isInside == false
                 if v.intersectionInfo.isEntry || v.intersectionInfo.isExit {
@@ -244,6 +268,7 @@ internal enum BooleanPathOperation {
     case union
     case difference
     case intersection
+    case removeCrossings
 }
 
 internal class AugmentedGraph {
@@ -293,6 +318,8 @@ internal class AugmentedGraph {
     
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
         switch operation {
+        case .removeCrossings:
+            fallthrough
         case .union:
             return v.intersectionInfo.isExit
         case .difference:
@@ -309,6 +336,8 @@ internal class AugmentedGraph {
         }
         var pathComponents: [PathComponent] = []
         switch operation {
+        case .removeCrossings:
+            pathComponents += nonCrossingComponents1 // TODO: hmm7
         case .union:
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }

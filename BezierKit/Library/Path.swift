@@ -232,7 +232,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             return self
         }
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
-        return augmentedGraph.booleanOperation(.union)
+        return augmentedGraph.booleanOperation(.removeCrossings)
     }
     
     @objc public func disjointSubpaths() -> [Path] {
