@@ -117,20 +117,15 @@ class PathTests: XCTestCase {
     }
     
     func testIntersects() {
-
-        // TODO: improved unit tests ... currently this test is very lax and allows duplicated intersections
-        let circleCGPath = CGMutablePath()
-        circleCGPath.addEllipse(in: CGRect(origin: CGPoint(x: 2.0, y: 3.0), size: CGSize(width: 2.0, height: 2.0)))
-        
+        let circleCGPath = CGPath(ellipseIn: CGRect(x: 2.0, y: 3.0, width: 2.0, height: 2.0), transform: nil)
         let circlePath = Path(cgPath: circleCGPath) // a circle centered at (3, 4) with radius 2
         
-        let rectangleCGPath = CGMutablePath()
-        rectangleCGPath.addRect(CGRect(origin: CGPoint(x: 3.0, y: 4.0), size: CGSize(width: 2.0, height: 2.0)))
-        
+        let rectangleCGPath = CGPath(rect: CGRect(x: 3.0, y: 4.0, width: 2.0, height: 2.0), transform: nil)
         let rectanglePath = Path(cgPath: rectangleCGPath)
         
         let intersections = rectanglePath.intersects(path: circlePath).map { rectanglePath.point(at: $0.indexedPathLocation1 ) }
         
+        XCTAssertEqual(intersections.count, 2)
         XCTAssert(intersections.contains(CGPoint(x: 4.0, y: 4.0)))
         XCTAssert(intersections.contains(CGPoint(x: 3.0, y: 5.0)))
     }
