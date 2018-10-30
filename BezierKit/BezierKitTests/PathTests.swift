@@ -406,6 +406,20 @@ class PathTests: XCTestCase {
         XCTAssertEqual(circle.subtracting(biggerCircle).subpaths.count, 0)
     }
     
+    func testSubtractingEdgeCase() {
+        // this is a specific edge case test of `subtracting`. There was an issue where if a path element intersected at the exact border between
+        // two elements on the other path it would count as two intersections. The winding count would then be incremented twice on the way in
+        // but only once on the way out. So the entrance would be recognized but the exit not recognized.
+
+        let rectangle = Path(cgPath: CGPath(rect: CGRect(x: -1, y: -1, width: 4, height: 3), transform: nil))
+        let circle    = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 4, height: 4), transform: nil))
+        
+        // the circle intersects the rect at (0,2) and (3, 0.26792) ... the last number being exactly 2 - sqrt(3)
+        let difference = rectangle.subtracting(circle)
+        XCTAssertEqual(difference.subpaths.count, 1)
+        XCTAssertFalse(difference.contains(CGPoint(x: 0.0, y: 0.0)))
+    }
+    
     func testCrossingsRemoved() {
         let points: [CGPoint] = [
             CGPoint(x: 0, y: 0),
