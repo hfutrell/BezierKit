@@ -406,7 +406,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(circle.subtracting(biggerCircle).subpaths.count, 0)
     }
     
-    func testSubtractingEdgeCase() {
+    func testSubtractingEdgeCase1() {
         // this is a specific edge case test of `subtracting`. There was an issue where if a path element intersected at the exact border between
         // two elements on the other path it would count as two intersections. The winding count would then be incremented twice on the way in
         // but only once on the way out. So the entrance would be recognized but the exit not recognized.
@@ -418,6 +418,36 @@ class PathTests: XCTestCase {
         let difference = rectangle.subtracting(circle)
         XCTAssertEqual(difference.subpaths.count, 1)
         XCTAssertFalse(difference.contains(CGPoint(x: 2.0, y: 2.0)))
+    }
+    
+    func testSubtractingEdgeCase2() {
+        
+        // this unit test demosntrates an issue that came up in development where the logic for the winding direction
+        // when corners intersect was not quite correct.
+        
+        let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0.0, y: 0.0, width: 2.0, height: 2.0), transform: nil))
+        let square2CGPath = CGMutablePath()
+        square2CGPath.move(to: CGPoint.zero)
+        square2CGPath.addLine(to: CGPoint(x: 1.0, y: -1.0))
+        square2CGPath.addLine(to: CGPoint(x: 2.0, y: 0.0))
+        square2CGPath.addLine(to: CGPoint(x: 1.0, y: 1.0))
+        square2CGPath.closeSubpath()
+    
+        let square2 = Path(cgPath: square2CGPath)
+        let result = square1.subtracting(square2)
+        
+        let expectedResultCGPath = CGMutablePath()
+        expectedResultCGPath.move(to: CGPoint.zero)
+        expectedResultCGPath.addLine(to: CGPoint(x: 1.0, y: 1.0))
+        expectedResultCGPath.addLine(to: CGPoint(x: 2.0, y: 0.0))
+        expectedResultCGPath.addLine(to: CGPoint(x: 2.0, y: 2.0))
+        expectedResultCGPath.addLine(to: CGPoint(x: 0.0, y: 2.0))
+        expectedResultCGPath.closeSubpath()
+        
+        let expectedResult = Path(cgPath: expectedResultCGPath)
+        
+        XCTAssertEqual(result.subpaths.count, expectedResult.subpaths.count)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
     }
     
     func testCrossingsRemoved() {
