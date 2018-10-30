@@ -92,9 +92,13 @@ public final class PathComponent: NSObject, NSCoding {
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
-            let pathComponentIntersections = elementIntersections.map { (i: Intersection) -> PathComponentIntersection in
+            let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
+                guard i1.t != 0.0 && i2.t != 0.0 else {
+                    // we'll get this intersection at t=1 on the neighboring path element(s) instead
+                    return nil
+                }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
             }
             intersections += pathComponentIntersections

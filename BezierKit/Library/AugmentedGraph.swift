@@ -75,11 +75,9 @@ internal class PathLinkedListRepresentation {
         
         var list = self.lists[location.componentIndex]
         
-        if location.t == 0 {
-            // this vertex needs to replace the start vertex of the element
-            insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: location.elementIndex, inList: &list)
-        }
-        else if location.t == 1 {
+        assert(location.t != 0, "intersects are assumed pre-processed to have a t=1 intersection at the previous path element instead!")
+        
+        if location.t == 1 {
             // this vertex needs to replace the end vertex of the element
             insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: Utils.mod(location.elementIndex+1, list.count), inList: &list)
         }
@@ -158,6 +156,9 @@ internal class PathLinkedListRepresentation {
                 let cross = (side1 != side2)
                 
                 if cross {
+                    // TODO: there's an issue when corners intersect (try AugmentedGraphTests.testCornersIntersect which has this problem, even though it passes)
+                    // the relative winding count can be decremented both for entry and for exit. This is not an issue with the even-odd winding rule, but using
+                    // winding it can be an issue
                     let c = CGPoint.cross(v2, n2)
                     if c < 0 {
                         relativeWindingCount += 1
