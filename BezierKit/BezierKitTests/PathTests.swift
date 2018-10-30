@@ -417,7 +417,7 @@ class PathTests: XCTestCase {
         // the circle intersects the rect at (0,2) and (3, 0.26792) ... the last number being exactly 2 - sqrt(3)
         let difference = rectangle.subtracting(circle)
         XCTAssertEqual(difference.subpaths.count, 1)
-        XCTAssertFalse(difference.contains(CGPoint(x: 0.0, y: 0.0)))
+        XCTAssertFalse(difference.contains(CGPoint(x: 2.0, y: 2.0)))
     }
     
     func testCrossingsRemoved() {
