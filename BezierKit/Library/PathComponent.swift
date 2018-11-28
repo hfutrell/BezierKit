@@ -50,6 +50,7 @@ public final class PathComponent: NSObject, NSCoding {
     }()
     
     public init(curves: [BezierCurve]) {
+        precondition(curves.isEmpty == false, "Path components are by definition non-empty.")
         self.curves = curves
     }
     
@@ -118,7 +119,7 @@ public final class PathComponent: NSObject, NSCoding {
                     elementIntersections = c.intersects(threshold: threshold)
                 }
             }
-            else {
+            else if i1 < i2 {
                 // we are intersecting two distinct path elements
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
                     if i1 == Utils.mod(i2+1, self.curves.count) && $0.t1 == 0.0 {
