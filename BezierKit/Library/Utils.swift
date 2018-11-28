@@ -382,6 +382,12 @@ internal class Utils {
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
+        
+        if results.count > 20 {
+            // TODO: better bailout conditions
+            return
+        }
+        
         if c1b.overlaps(c2b) == false {
             return
         }
