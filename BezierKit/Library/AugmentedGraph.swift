@@ -132,7 +132,8 @@ internal class PathLinkedListRepresentation {
     }
     
     fileprivate func markEntryExit(_ path: Path, _ nonCrossingComponents: inout [PathComponent], useRelativeWinding: Bool = false) {
-        let fillRule = PathFillRule.winding
+        let fillRule: PathFillRule = useRelativeWinding ? .winding : .evenOdd
+//        let fillRule = PathFillRule.winding
         for i in 0..<lists.count {
             
             // determine winding counts relative to the first vertex
@@ -186,20 +187,19 @@ internal class PathLinkedListRepresentation {
                 
                 let prev = lists[i][0].emitPrevious()
                 let a = prev.compute(0.5)
+                // TODO: 1.0e-5 is a magic number (just an arbitrary small value)
                 let b = a + 1.0e-5 * prev.normal(0.5)
-                let c = a - 1.0e-5 * prev.normal(0.5)
+                //let c = a - 1.0e-5 * prev.normal(0.5)
                 
                 let w1 = path.windingCount(b)
-                let w2 = path.windingCount(c)
+                //let w2 = path.windingCount(c)
                 
-                print("w1 = \(w1)")
-                print("w2 = \(w2)")
+                // print("w1 = \(w1)")
+                // print("w2 = \(w2)")
                 
-                if w1 < initialWinding {
+                if w1 == initialWinding-1 {
                     initialWinding = w1
                 }
-                
-
             }
             else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
