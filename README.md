@@ -46,7 +46,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.1.12'
+    pod 'BezierKit', '>= 0.1.13'
 end
 ```
 
