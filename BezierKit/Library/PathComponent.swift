@@ -50,6 +50,7 @@ public final class PathComponent: NSObject, NSCoding {
     }()
     
     public init(curves: [BezierCurve]) {
+        precondition(curves.isEmpty == false, "Path components are by definition non-empty.")
         self.curves = curves
     }
     
@@ -92,9 +93,13 @@ public final class PathComponent: NSObject, NSCoding {
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
-            let pathComponentIntersections = elementIntersections.map { (i: Intersection) -> PathComponentIntersection in
+            let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
+                guard i1.t != 0.0 && i2.t != 0.0 else {
+                    // we'll get this intersection at t=1 on the neighboring path element(s) instead
+                    return nil
+                }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
             }
             intersections += pathComponentIntersections
@@ -114,7 +119,7 @@ public final class PathComponent: NSObject, NSCoding {
                     elementIntersections = c.intersects(threshold: threshold)
                 }
             }
-            else {
+            else if i1 < i2 {
                 // we are intersecting two distinct path elements
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
                     if i1 == Utils.mod(i2+1, self.curves.count) && $0.t1 == 0.0 {

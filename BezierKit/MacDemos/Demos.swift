@@ -433,6 +433,10 @@ class Demos {
                                 if let mouse = demoState.lastInputLocation {
                                     
                                     //let m2 = CGPoint(x: -21.19140625, y: 131.38671875)
+                                    //let me2 = CGPoint(x: 24.34375, y: 110.703125)
+                                    
+                                    //let me3 = CGPoint(x: -7.78515625, y: 161.7265625) // seems to cause an issue because intersections[5].t = 0.99999422905833845, clamping the t values when they are appropximately 1 or 0 seems to work (but fix not applied)
+                                    // let me4 = CGPoint(x: 22.41796875, y: 168.48046875) // caused an infinite loop or graphical glitches
                                     
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
