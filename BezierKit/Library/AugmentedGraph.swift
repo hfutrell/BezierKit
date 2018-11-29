@@ -389,10 +389,9 @@ internal class AugmentedGraph {
                     break
                 }
                 
-                unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
-                
                 if !v.isCrossing {
                     print("consistency error detected -- bailing out. Needs debugging.")
+                    unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                     v = v.intersectionInfo.neighbor! // jump back to avoid infinite loop
                     isOnFirstCurve = !isOnFirstCurve
                 }
