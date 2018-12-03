@@ -524,4 +524,44 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.subpaths[0], contour.subpaths[0]))
     }
     
+    func testCrossingsRemovedEqualVertices() {
+        
+        // this tests an edge case of crossingsRemoved() when vertices of the path are exactly equal
+        // the path does a complete loop in the middle
+        
+        let cgPath = CGMutablePath()
+        
+        cgPath.move(to: CGPoint.zero)
+        cgPath.addLine(to: CGPoint(x: 2.0, y: 0.0))
+        
+        // loop in a complete circle back to 2, 0
+        cgPath.addArc(tangent1End: CGPoint(x: 3.0, y: 0.0), tangent2End: CGPoint(x: 3.0, y: 1.0), radius: 1)
+        cgPath.addArc(tangent1End: CGPoint(x: 3.0, y: 2.0), tangent2End: CGPoint(x: 2.0, y: 2.0), radius: 1)
+        cgPath.addArc(tangent1End: CGPoint(x: 1.0, y: 2.0), tangent2End: CGPoint(x: 1.0, y: 1.0), radius: 1)
+        cgPath.addArc(tangent1End: CGPoint(x: 1.0, y: 0.0), tangent2End: CGPoint(x: 2.0, y: 0.0), radius: 1)
+        
+        // proceed around to close the shape (grazing the loop at (2,2)
+        cgPath.addLine(to: CGPoint(x: 4.0, y: 0.0))
+        cgPath.addLine(to: CGPoint(x: 4.0, y: 2.0))
+        cgPath.addLine(to: CGPoint(x: 2.0, y: 2.0))
+        cgPath.addLine(to: CGPoint(x: 0.0, y: 2.0))
+        cgPath.closeSubpath()
+    
+        
+        let path = Path(cgPath: cgPath)
+        
+        // Quartz 'addArc' function creates some terrible near-zero length line segments
+        var curves2 = path.subpaths[0].curves.map {
+            return BezierKit.createCurve(from: $0.points.map { point in
+                let rounded = CGPoint(x: round(point.x), y: round(point.y))
+                return distance(point, rounded) < 1.0e-3 ? rounded : point
+            })!
+        }.filter { $0.length() > 0.0 }
+        
+        let path2 = Path(subpaths: [PathComponent(curves: curves2)])
+        
+        let result = path2.crossingsRemoved()
+        
+    }
+    
 }
