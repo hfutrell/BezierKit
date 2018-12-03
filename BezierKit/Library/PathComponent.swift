@@ -122,11 +122,12 @@ public final class PathComponent: NSObject, NSCoding {
             else if i1 < i2 {
                 // we are intersecting two distinct path elements
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
-                    if i1 == Utils.mod(i2+1, self.curves.count) && $0.t1 == 0.0 {
-                        return false // exclude intersections of i and i-1 at t=0
-                    }
                     if i1 == Utils.mod(i2-1, self.curves.count) && $0.t1 == 1.0 {
                         return false // exclude intersections of i and i+1 at t=1
+                    }
+                    if $0.t1 == 0.0 || $0.t2 == 0.0 {
+                        // use the intersection with the prior path element at t=1.0 instead
+                        return false
                     }
                     return true
                 }
