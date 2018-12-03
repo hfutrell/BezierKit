@@ -145,11 +145,15 @@ internal class PathLinkedListRepresentation {
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
                 
-                let n1 = v.intersectionInfo.neighbor!.emitPrevious().compute(0.5) - v.location
-                let n2 = v.intersectionInfo.neighbor!.emitNext().compute(0.5) - v.location
+                // we used to use the derivative here but in important cases derivatives can be exactly tangent
+                // at intersections!
+                let smallNumber: CGFloat = 0.01
                 
-                let v1 = previous.compute(0.5) - v.location
-                let v2 = next.compute(0.5) - v.location
+                let n1 = v.intersectionInfo.neighbor!.emitPrevious().compute(smallNumber) - v.location
+                let n2 = v.intersectionInfo.neighbor!.emitNext().compute(smallNumber) - v.location
+                
+                let v1 = previous.compute(smallNumber) - v.location
+                let v2 = next.compute(smallNumber) - v.location
                 
                 let side1 = between(v1, n1, n2)
                 let side2 = between(v2, n1, n2)
