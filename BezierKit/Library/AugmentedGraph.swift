@@ -131,11 +131,27 @@ internal class PathLinkedListRepresentation {
         self.lists = p.subpaths.map { self.createListFor(component: $0) }
     }
     
-    fileprivate func markEntryExit(_ path: Path, _ nonCrossingComponents: inout [PathComponent], useRelativeWinding: Bool = false) {
-        let fillRule: PathFillRule = useRelativeWinding ? .winding : .evenOdd
-//        let fillRule = PathFillRule.winding
+    fileprivate func nonCrossingComponents() -> [PathComponent] {
+        // returns the components of this path that do not cross the path passed as the argument to markEntryExit(_:)
+        var result: [PathComponent] = []
         for i in 0..<lists.count {
-            
+            var hasCrossing = false
+            self.forEachVertexInComponent(atIndex: i) { v in
+                if v.isCrossing {
+                    hasCrossing = true
+                }
+            }
+            if hasCrossing == false {
+                result.append(self.path.subpaths[i])
+            }
+        }
+        return result
+    }
+    
+    fileprivate func markEntryExit(_ path: Path, useRelativeWinding: Bool = false) {
+        let fillRule: PathFillRule = useRelativeWinding ? .winding : .evenOdd
+
+        for i in 0..<lists.count {
             // determine winding counts relative to the first vertex
             var relativeWindingCount = 0
             self.forEachVertexInComponent(atIndex: i) { v in
@@ -218,7 +234,6 @@ internal class PathLinkedListRepresentation {
             }
             
             // for each intersection, determine isEntry / isExit based on winding count
-            var hasCrossing: Bool = false
             var windingCount: Int = initialWinding
             self.forEachVertexInComponent(atIndex: i) { v in
                 guard v.isIntersection else {
@@ -233,16 +248,8 @@ internal class PathLinkedListRepresentation {
                 if useRelativeWinding {
                     isInside = windingCountImpliesContainment(windingCount, using: fillRule) && windingCountImpliesContainment(windingCount+1, using: fillRule)
                 }
-
                 v.intersectionInfo.isEntry = wasInside == false && isInside == true
                 v.intersectionInfo.isExit = wasInside == true && isInside == false
-                if v.intersectionInfo.isEntry || v.intersectionInfo.isExit {
-                    hasCrossing = true
-                }
-            }
-            if !hasCrossing {
-                // TODO: fix logic here, we should do this after we are done and use .isCrossing
-                nonCrossingComponents.append(self.path.subpaths[i])
             }
         }
     }
@@ -293,9 +300,6 @@ internal class AugmentedGraph {
     private let path1: Path
     private let path2: Path
     
-    private var nonCrossingComponents1: [PathComponent] = []
-    private var nonCrossingComponents2: [PathComponent] = []
-    
     internal init(path1: Path, path2: Path, intersections: [PathIntersection]) {
         
         func intersectionVertexForPath(_ path: Path, at l: IndexedPathLocation) -> Vertex {
@@ -316,9 +320,9 @@ internal class AugmentedGraph {
         }
         // mark each intersection as either entry or exit
         let useRelativeWinding = (list1 === list2)
-        list1.markEntryExit(path2, &nonCrossingComponents1, useRelativeWinding: useRelativeWinding)
+        list1.markEntryExit(path2, useRelativeWinding: useRelativeWinding)
         if useRelativeWinding == false {
-            list2.markEntryExit(path1, &nonCrossingComponents2, useRelativeWinding: useRelativeWinding)
+            list2.markEntryExit(path1, useRelativeWinding: useRelativeWinding)
         }
     }
     
@@ -336,14 +340,18 @@ internal class AugmentedGraph {
     }
     
     internal func booleanOperation(_ operation: BooleanPathOperation) -> Path {
-        // handle components that have no crossings
+        
+        // special cases for components which do not cross
+        let nonCrossingComponents1: [PathComponent] = self.list1.nonCrossingComponents()
+        let nonCrossingComponents2: [PathComponent] = self.list2.nonCrossingComponents()
+        
         func anyPointOnComponent(_ c: PathComponent) -> CGPoint {
             return c.curves[0].startingPoint
         }
         var pathComponents: [PathComponent] = []
         switch operation {
         case .removeCrossings:
-            pathComponents += nonCrossingComponents1 // TODO: hmm7
+            pathComponents += nonCrossingComponents1
         case .union:
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
@@ -354,7 +362,8 @@ internal class AugmentedGraph {
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
         }
-        // handle components that have crossings
+        
+        // handle components that have crossings (the main algorithm)
         var unvisitedCrossings: [Vertex] = []
         list1.forEachVertex {
             if $0.isCrossing && shouldMoveForwards(fromVertex: $0, forOperation: operation, isOnFirstCurve: true) {
@@ -371,10 +380,6 @@ internal class AugmentedGraph {
             var isOnFirstCurve = true
             var v = start
             repeat {
-                //                if isOnFirstCurve && unvisitedCrossings.contains(v) == false {
-                //                    print("already visited this crossing! bailing out to avoid infinite loop! Needs debugging.")
-                //                    break
-                //                }
                 let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 repeat {
@@ -393,17 +398,9 @@ internal class AugmentedGraph {
                     }
                     break
                 }
-                
-                if !v.isCrossing {
-                    print("consistency error detected -- bailing out. Needs debugging.")
-                    unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
-                    v = v.intersectionInfo.neighbor! // jump back to avoid infinite loop
-                    isOnFirstCurve = !isOnFirstCurve
-                }
             } while v !== start
             pathComponents.append(PathComponent(curves: curves))
         }
-        // TODO: non-deterministic behavior from usage of Set when choosing starting vertex
         return Path(subpaths: pathComponents)
     }
 }
