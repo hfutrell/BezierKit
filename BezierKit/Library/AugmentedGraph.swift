@@ -241,6 +241,7 @@ internal class PathLinkedListRepresentation {
                 }
             }
             if !hasCrossing {
+                // TODO: fix logic here, we should do this after we are done and use .isCrossing
                 nonCrossingComponents.append(self.path.subpaths[i])
             }
         }
