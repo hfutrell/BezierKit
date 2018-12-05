@@ -464,7 +464,7 @@ class Demos {
 //                                        v = v.next
 //                                    } while v !== first
                                     
-                                    let subtracted = path1.intersecting(path2)
+                                    let subtracted = (try? path1.intersecting(path2)) ?? path1
                                     Draw.drawPath(context, subtracted)
                                 }
     })
