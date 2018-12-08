@@ -113,20 +113,21 @@ public final class PathComponent: NSObject, NSCoding {
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             var elementIntersections: [Intersection] = []
-            if i1 == i2 {
+            // TODO: fix behavior for `crossingsRemoved` when there are self intersections and re-enable
+            /*if i1 == i2 {
                 // we are intersecting a path element against itself
                 if let c = c1 as? CubicBezierCurve {
                     elementIntersections = c.intersects(threshold: threshold)
                 }
             }
-            else if i1 < i2 {
+            else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
                     if i1 == Utils.mod(i2-1, self.curves.count) && $0.t1 == 1.0 {
                         return false // exclude intersections of i and i+1 at t=1
                     }
                     if $0.t1 == 0.0 || $0.t2 == 0.0 {
-                        // use the intersection with the prior path element at t=1.0 instead
+                        // use the intersection with the prior path element at t=1 instead
                         return false
                     }
                     return true
