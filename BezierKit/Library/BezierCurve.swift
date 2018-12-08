@@ -578,7 +578,6 @@ extension BezierCurve {
 }
 
 public let defaultIntersectionThreshold = CGFloat(0.5)
-public let errorDomain = "BezierKit"
 
 // MARK: factory
 

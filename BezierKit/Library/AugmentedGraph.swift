@@ -7,7 +7,6 @@
 //
 
 import CoreGraphics
-import Foundation
 
 public func signedAngle(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
     return atan2(CGPoint.cross(a, b), a.dot(b))
@@ -340,7 +339,7 @@ internal class AugmentedGraph {
         }
     }
     
-    internal func booleanOperation(_ operation: BooleanPathOperation) throws -> Path {
+    internal func booleanOperation(_ operation: BooleanPathOperation) -> Path? {
         
         // special cases for components which do not cross
         let nonCrossingComponents1: [PathComponent] = self.list1.nonCrossingComponents()
@@ -393,8 +392,7 @@ internal class AugmentedGraph {
                 isOnFirstCurve = !isOnFirstCurve
                 
                 if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
-                    let userInfo = [NSLocalizedDescriptionKey: "Boolean operation failed, try more accurate threshold?"]
-                    throw NSError(domain: BezierKit.errorDomain, code: -1, userInfo: userInfo)
+                    return nil
                 }
             } while v !== start
             pathComponents.append(PathComponent(curves: curves))
