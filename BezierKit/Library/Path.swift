@@ -57,7 +57,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     
     public let subpaths: [PathComponent]
     
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
+    @objc(point:isWithinDistanceOfBoundary:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
         return self.subpaths.contains {
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
         }
@@ -159,11 +159,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     // MARK: - vector boolean operations
     
     public func point(at location: IndexedPathLocation) -> CGPoint {
-        return self.element(at: location).compute(location.t)
+        return self.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex).compute(location.t)
     }
     
-    internal func element(at location: IndexedPathLocation) -> BezierCurve {
-        return self.subpaths[location.componentIndex].curves[location.elementIndex]
+    internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {
+        return self.subpaths[componentIndex].curves[elementIndex]
     }
     
     internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
@@ -178,27 +178,29 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCount
     }
 
-    private func contains(_ other: Path) -> Bool {
-        guard other.subpaths.isEmpty == false else {
-            return true
+    @objc(containsPoint:usingRule:) public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+        let count = self.windingCount(point)
+        return windingCountImpliesContainment(count, using: rule)
+    }
+
+    @objc(containsPath:) public func contains(_ other: Path) -> Bool {
+        // first, check that each component of `other` starts inside self
+        for component in other.subpaths {
+            let p = component.curves[0].startingPoint
+            guard self.contains(p) else {
+                return false
+            }
         }
-        guard self.intersects(path: other).isEmpty else {
-            return false
-        }
-        return other.subpaths.reduce(true) {
-            $0 && self.contains($1.curves[0].startingPoint)
-        }
+        // next, for each intersection (if there are any) check that we stay inside the path
+        // TODO: use enumeration over intersections so we don't have to necessarily have to find each one
+        // TODO: make this work with winding fill rule and intersections that don't cross (suggestion, use AugmentedGraph)
+        return self.intersects(path: other).isEmpty
     }
     
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
         return Path(subpaths: self.subpaths.map {
             $0.offset(distance: d)
         })
-    }
-    
-    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
-        let count = self.windingCount(point)
-        return windingCountImpliesContainment(count, using: rule)
     }
     
     private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path, threshold: CGFloat) -> Path? {

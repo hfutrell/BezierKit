@@ -91,7 +91,7 @@ internal class PathLinkedListRepresentation {
                 assert(end !== list[location.elementIndex+1])
                 end = end.next
             }
-            insertIntersectionVertex(v, between: start, and: end, at: location.t, for: path.element(at: location), inList: &list)
+            insertIntersectionVertex(v, between: start, and: end, at: location.t, for: path.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex), inList: &list)
         }
         self.lists[location.componentIndex] = list
     }

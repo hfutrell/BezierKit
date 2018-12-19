@@ -270,6 +270,18 @@ class PathTests: XCTestCase {
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
     }
     
+    func testContainsPath() {
+        let rect1 = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil))
+        let rect2 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil)) // fully contained inside rect1
+        let rect3 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 5, height: 3), transform: nil)) // starts inside, but not contained in rect1
+        let rect4 = Path(cgPath: CGPath(rect: CGRect(x: 7, y: 1, width: 5, height: 5), transform: nil)) // fully outside rect1
+        XCTAssertTrue(rect1.contains(rect2))
+        XCTAssertFalse(rect1.contains(rect3))
+        XCTAssertFalse(rect1.contains(rect4))
+    }
+    
+    // TODO: more tests of contains path using .winding rule and where intersections are not crossings
+    
     // MARK: - vector boolean operations
     
     private func componentsEqualAsideFromElementOrdering(_ component1: PathComponent, _ component2: PathComponent) -> Bool {

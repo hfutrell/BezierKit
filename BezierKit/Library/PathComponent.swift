@@ -207,7 +207,7 @@ public final class PathComponent: NSObject, NSCoding {
         let intersections = self.intersects(line: line)
         var windingCount = 0
         intersections.forEach {
-            let element = self.element(at: $0)
+            let element = self.curves[$0.elementIndex]
             let t = $0.t
             assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
             let dotProduct = delta.dot(element.normal(t))
@@ -223,10 +223,6 @@ public final class PathComponent: NSObject, NSCoding {
             }
         }
         return windingCount
-    }
-    
-    private func element(at location: IndexedPathComponentLocation) -> BezierCurve {
-        return self.curves[location.elementIndex]
     }
     
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
