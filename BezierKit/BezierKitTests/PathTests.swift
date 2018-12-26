@@ -401,7 +401,7 @@ class PathTests: XCTestCase {
         )
     }
     
-    func testSubtractWindingDirection() {
+    func testSubtractingWindingDirection() {
         // this is a specific test of `subtracting` to ensure that when a component creates a "hole"
         // the order of the hole is reversed so that it is not contained in the shape when using .winding fill rule
         let circle   = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
