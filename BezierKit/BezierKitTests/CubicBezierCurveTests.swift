@@ -360,6 +360,19 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(i[2].t1, 1.0, accuracy: epsilon)
     }
 
+    func testCubicIntersectsLineEdgeCase() {
+        // this example caused issues in practice because it has a discriminant that is nearly equal to zero (but not exactly)
+        let c = CubicBezierCurve(p0: CGPoint(x: 3, y: 1),
+                                 p1: CGPoint(x: 3, y: 1.5522847498307932),
+                                 p2: CGPoint(x: 2.5522847498307932, y: 2),
+                                 p3: CGPoint(x: 2, y: 2))
+        let l = LineSegment(p0: CGPoint(x: 2, y: 2), p1: CGPoint(x: 0, y: 2))
+        let i = c.intersects(curve: l)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i[0].t1, 1)
+        XCTAssertEqual(i[0].t2, 0)
+    }
+    
     // MARK: -
     
     func testEquatable() {

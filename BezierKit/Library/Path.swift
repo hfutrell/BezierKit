@@ -45,6 +45,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return mutablePath.copy()!
     }()
     
+    @objc public var isEmpty: Bool {
+        return self.subpaths.isEmpty // components are not allowed to be empty
+    }
+    
     public lazy var boundingBox: BoundingBox = {
         return self.subpaths.reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
@@ -53,7 +57,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     
     public let subpaths: [PathComponent]
     
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
+    @objc(point:isWithinDistanceOfBoundary:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
         return self.subpaths.contains {
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
         }
@@ -155,11 +159,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     // MARK: - vector boolean operations
     
     public func point(at location: IndexedPathLocation) -> CGPoint {
-        return self.element(at: location).compute(location.t)
+        return self.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex).compute(location.t)
     }
     
-    internal func element(at location: IndexedPathLocation) -> BezierCurve {
-        return self.subpaths[location.componentIndex].curves[location.elementIndex]
+    internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {
+        return self.subpaths[componentIndex].curves[elementIndex]
     }
     
     internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
@@ -174,61 +178,78 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCount
     }
 
-    private func contains(_ other: Path) -> Bool {
-        guard other.subpaths.isEmpty == false else {
-            return true
-        }
-        guard self.intersects(path: other).isEmpty else {
-            return false
-        }
-        return other.subpaths.reduce(true) {
-            $0 && self.contains($1.curves[0].startingPoint)
-        }
-    }
-    
-    @objc public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+    @objc(containsPoint:usingRule:) public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let count = self.windingCount(point)
         return windingCountImpliesContainment(count, using: rule)
     }
+
+    @objc(containsPath:) public func contains(_ other: Path) -> Bool {
+        // first, check that each component of `other` starts inside self
+        for component in other.subpaths {
+            let p = component.curves[0].startingPoint
+            guard self.contains(p) else {
+                return false
+            }
+        }
+        // next, for each intersection (if there are any) check that we stay inside the path
+        // TODO: use enumeration over intersections so we don't have to necessarily have to find each one
+        // TODO: make this work with winding fill rule and intersections that don't cross (suggestion, use AugmentedGraph)
+        return self.intersects(path: other).isEmpty
+    }
     
-    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path, threshold: CGFloat) -> Path {
+    @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
+        return Path(subpaths: self.subpaths.map {
+            $0.offset(distance: d)
+        })
+    }
+    
+    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path, threshold: CGFloat) -> Path? {
         let intersections = self.intersects(path: other, threshold: threshold)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(operation)
     }
     
-    @objc(subtractingPath:threshold:) public func subtracting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+    @objc(subtractingPath:threshold:) public func subtracting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
         return self.performBooleanOperation(.difference, withPath: other.reversed(), threshold: threshold)
     }
     
-    @objc(unionedWithPath:threshold:) public func `union`(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+    @objc(unionedWithPath:threshold:) public func `union`(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
+        guard self.isEmpty == false else {
+            return other
+        }
+        guard other.isEmpty == false else {
+            return self
+        }
         return self.performBooleanOperation(.union, withPath: other, threshold: threshold)
     }
     
-    @objc(intersectedWithPath:threshold:) public func intersecting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
+    @objc(intersectedWithPath:threshold:) public func intersecting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
         return self.performBooleanOperation(.intersection, withPath: other, threshold: threshold)
     }
     
-    @objc(crossingsRemovedWithThreshold:) public func crossingsRemoved(threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path {
-        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
-        guard self.subpaths.count > 0 else {
-            return Path()
-        }
-        let component = self.subpaths[0]
-        let intersections = component.intersects(threshold: threshold).compactMap { (i: PathComponentIntersection) -> PathIntersection? in
-            guard i.indexedComponentLocation1.elementIndex <= i.indexedComponentLocation2.elementIndex else {
+    @objc(crossingsRemovedWithThreshold:) public func crossingsRemoved(threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
+        //        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
+        return self.subpaths.reduce(Path(), { (result: Path?, component: PathComponent) -> Path? in
+            // TODO: this won't work properly if components intersect
+            guard let result = result else {
                 return nil
             }
-            return PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation1.elementIndex, t: i.indexedComponentLocation1.t),
-                                    indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation2.elementIndex, t: i.indexedComponentLocation2.t))
-        }
-        if intersections.count == 0 {
-            return self
-        }
-        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
-        return augmentedGraph.booleanOperation(.union)
+            let intersections = component.intersects(threshold: threshold).map {(i: PathComponentIntersection) -> PathIntersection in
+                return PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation1.elementIndex, t: i.indexedComponentLocation1.t),
+                                        indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation2.elementIndex, t: i.indexedComponentLocation2.t))
+            }
+            guard intersections.isEmpty == false else {
+                return Path(subpaths: result.subpaths + [component])
+            }
+            let singleComponentPath = Path(subpaths: [component])
+            let augmentedGraph = AugmentedGraph(path1: singleComponentPath, path2: singleComponentPath, intersections: intersections)
+            guard let path = augmentedGraph.booleanOperation(.removeCrossings) else {
+                return nil
+            }
+            return Path(subpaths: result.subpaths + path.subpaths)
+        })
     }
-    
+
     @objc public func disjointSubpaths() -> [Path] {
         
         var paths: Set<Path> = Set<Path>()

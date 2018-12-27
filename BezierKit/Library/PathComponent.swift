@@ -50,6 +50,7 @@ public final class PathComponent: NSObject, NSCoding {
     }()
     
     public init(curves: [BezierCurve]) {
+        precondition(curves.isEmpty == false, "Path components are by definition non-empty.")
         self.curves = curves
     }
     
@@ -92,9 +93,13 @@ public final class PathComponent: NSObject, NSCoding {
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
-            let pathComponentIntersections = elementIntersections.map { (i: Intersection) -> PathComponentIntersection in
+            let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
+                guard i1.t != 0.0 && i2.t != 0.0 else {
+                    // we'll get this intersection at t=1 on the neighboring path element(s) instead
+                    return nil
+                }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
             }
             intersections += pathComponentIntersections
@@ -108,20 +113,22 @@ public final class PathComponent: NSObject, NSCoding {
             let c1 = o1 as! BezierCurve
             let c2 = o2 as! BezierCurve
             var elementIntersections: [Intersection] = []
-            if i1 == i2 {
+            // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
+            /*if i1 == i2 {
                 // we are intersecting a path element against itself
                 if let c = c1 as? CubicBezierCurve {
                     elementIntersections = c.intersects(threshold: threshold)
                 }
             }
-            else {
+            else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
-                    if i1 == Utils.mod(i2+1, self.curves.count) && $0.t1 == 0.0 {
-                        return false // exclude intersections of i and i-1 at t=0
-                    }
                     if i1 == Utils.mod(i2-1, self.curves.count) && $0.t1 == 1.0 {
                         return false // exclude intersections of i and i+1 at t=1
+                    }
+                    if $0.t1 == 0.0 || $0.t2 == 0.0 {
+                        // use the intersection with the prior path element at t=1 instead
+                        return false
                     }
                     return true
                 }
@@ -200,7 +207,7 @@ public final class PathComponent: NSObject, NSCoding {
         let intersections = self.intersects(line: line)
         var windingCount = 0
         intersections.forEach {
-            let element = self.element(at: $0)
+            let element = self.curves[$0.elementIndex]
             let t = $0.t
             assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
             let dotProduct = delta.dot(element.normal(t))
@@ -216,10 +223,6 @@ public final class PathComponent: NSObject, NSCoding {
             }
         }
         return windingCount
-    }
-    
-    private func element(at location: IndexedPathComponentLocation) -> BezierCurve {
-        return self.curves[location.elementIndex]
     }
     
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {

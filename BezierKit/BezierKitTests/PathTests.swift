@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import CoreGraphics
 @testable import BezierKit
 
 class PathTests: XCTestCase {
@@ -116,20 +117,15 @@ class PathTests: XCTestCase {
     }
     
     func testIntersects() {
-
-        // TODO: improved unit tests ... currently this test is very lax and allows duplicated intersections
-        let circleCGPath = CGMutablePath()
-        circleCGPath.addEllipse(in: CGRect(origin: CGPoint(x: 2.0, y: 3.0), size: CGSize(width: 2.0, height: 2.0)))
-        
+        let circleCGPath = CGPath(ellipseIn: CGRect(x: 2.0, y: 3.0, width: 2.0, height: 2.0), transform: nil)
         let circlePath = Path(cgPath: circleCGPath) // a circle centered at (3, 4) with radius 2
         
-        let rectangleCGPath = CGMutablePath()
-        rectangleCGPath.addRect(CGRect(origin: CGPoint(x: 3.0, y: 4.0), size: CGSize(width: 2.0, height: 2.0)))
-        
+        let rectangleCGPath = CGPath(rect: CGRect(x: 3.0, y: 4.0, width: 2.0, height: 2.0), transform: nil)
         let rectanglePath = Path(cgPath: rectangleCGPath)
         
         let intersections = rectanglePath.intersects(path: circlePath).map { rectanglePath.point(at: $0.indexedPathLocation1 ) }
         
+        XCTAssertEqual(intersections.count, 2)
         XCTAssert(intersections.contains(CGPoint(x: 4.0, y: 4.0)))
         XCTAssert(intersections.contains(CGPoint(x: 3.0, y: 5.0)))
     }
@@ -274,6 +270,18 @@ class PathTests: XCTestCase {
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
     }
     
+    func testContainsPath() {
+        let rect1 = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil))
+        let rect2 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil)) // fully contained inside rect1
+        let rect3 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 5, height: 3), transform: nil)) // starts inside, but not contained in rect1
+        let rect4 = Path(cgPath: CGPath(rect: CGRect(x: 7, y: 1, width: 5, height: 5), transform: nil)) // fully outside rect1
+        XCTAssertTrue(rect1.contains(rect2))
+        XCTAssertFalse(rect1.contains(rect3))
+        XCTAssertFalse(rect1.contains(rect4))
+    }
+    
+    // TODO: more tests of contains path using .winding rule and where intersections are not crossings
+    
     // MARK: - vector boolean operations
     
     private func componentsEqualAsideFromElementOrdering(_ component1: PathComponent, _ component2: PathComponent) -> Bool {
@@ -346,7 +354,7 @@ class PathTests: XCTestCase {
         )])
         let square1 = createSquare1()
         let square2 = createSquare2()
-        let subtracted = square1.subtracting(square2)
+        let subtracted = square1.subtracting(square2)!
         XCTAssertEqual(subtracted.subpaths.count, 1)
         XCTAssert(
             componentsEqualAsideFromElementOrdering(subtracted.subpaths[0], expectedResult.subpaths[0])
@@ -368,7 +376,7 @@ class PathTests: XCTestCase {
         )])
         let square1 = createSquare1()
         let square2 = createSquare2()
-        let unioned = square1.union(square2)
+        let unioned = square1.union(square2)!
         XCTAssertEqual(unioned.subpaths.count, 1)
         XCTAssert(
             componentsEqualAsideFromElementOrdering(unioned.subpaths[0], expectedResult.subpaths[0])
@@ -386,19 +394,19 @@ class PathTests: XCTestCase {
         )])
         let square1 = createSquare1()
         let square2 = createSquare2()
-        let intersected = square1.intersecting(square2)
+        let intersected = square1.intersecting(square2)!
         XCTAssertEqual(intersected.subpaths.count, 1)
         XCTAssert(
             componentsEqualAsideFromElementOrdering(intersected.subpaths[0], expectedResult.subpaths[0])
         )
     }
     
-    func testSubtractWindingDirection() {
+    func testSubtractingWindingDirection() {
         // this is a specific test of `subtracting` to ensure that when a component creates a "hole"
         // the order of the hole is reversed so that it is not contained in the shape when using .winding fill rule
         let circle   = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
         let hole     = Path(cgPath: CGPath(ellipseIn: CGRect(x: 1, y: 1, width: 1, height: 1), transform: nil))
-        let donut    = circle.subtracting(hole)
+        let donut    = circle.subtracting(hole)!
         XCTAssertTrue(donut.contains(CGPoint(x: 0.5, y: 0.5), using: .winding))  // inside the donut (but not the hole)
         XCTAssertFalse(donut.contains(CGPoint(x: 1.5, y: 1.5), using: .winding)) // center of donut hole
     }
@@ -407,7 +415,51 @@ class PathTests: XCTestCase {
         // this is a specific test of `subtracting` to ensure that if a path component is entirely contained in the subtracting path that it gets removed
         let circle       = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil))
         let biggerCircle = Path(cgPath: CGPath(ellipseIn: CGRect(x: -2, y: -2, width: 4, height: 4), transform: nil))
-        XCTAssertEqual(circle.subtracting(biggerCircle).subpaths.count, 0)
+        XCTAssertEqual(circle.subtracting(biggerCircle)!.subpaths.count, 0)
+    }
+    
+    func testSubtractingEdgeCase1() {
+        // this is a specific edge case test of `subtracting`. There was an issue where if a path element intersected at the exact border between
+        // two elements on the other path it would count as two intersections. The winding count would then be incremented twice on the way in
+        // but only once on the way out. So the entrance would be recognized but the exit not recognized.
+
+        let rectangle = Path(cgPath: CGPath(rect: CGRect(x: -1, y: -1, width: 4, height: 3), transform: nil))
+        let circle    = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 4, height: 4), transform: nil))
+        
+        // the circle intersects the rect at (0,2) and (3, 0.26792) ... the last number being exactly 2 - sqrt(3)
+        let difference = rectangle.subtracting(circle)!
+        XCTAssertEqual(difference.subpaths.count, 1)
+        XCTAssertFalse(difference.contains(CGPoint(x: 2.0, y: 2.0)))
+    }
+    
+    func testSubtractingEdgeCase2() {
+        
+        // this unit test demosntrates an issue that came up in development where the logic for the winding direction
+        // when corners intersect was not quite correct.
+        
+        let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0.0, y: 0.0, width: 2.0, height: 2.0), transform: nil))
+        let square2CGPath = CGMutablePath()
+        square2CGPath.move(to: CGPoint.zero)
+        square2CGPath.addLine(to: CGPoint(x: 1.0, y: -1.0))
+        square2CGPath.addLine(to: CGPoint(x: 2.0, y: 0.0))
+        square2CGPath.addLine(to: CGPoint(x: 1.0, y: 1.0))
+        square2CGPath.closeSubpath()
+    
+        let square2 = Path(cgPath: square2CGPath)
+        let result = square1.subtracting(square2)!
+        
+        let expectedResultCGPath = CGMutablePath()
+        expectedResultCGPath.move(to: CGPoint.zero)
+        expectedResultCGPath.addLine(to: CGPoint(x: 1.0, y: 1.0))
+        expectedResultCGPath.addLine(to: CGPoint(x: 2.0, y: 0.0))
+        expectedResultCGPath.addLine(to: CGPoint(x: 2.0, y: 2.0))
+        expectedResultCGPath.addLine(to: CGPoint(x: 0.0, y: 2.0))
+        expectedResultCGPath.closeSubpath()
+        
+        let expectedResult = Path(cgPath: expectedResultCGPath)
+        
+        XCTAssertEqual(result.subpaths.count, expectedResult.subpaths.count)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
     }
     
     func testCrossingsRemoved() {
@@ -434,7 +486,7 @@ class PathTests: XCTestCase {
         XCTAssertTrue(path.contains(CGPoint(x: 1.5, y: 1.25), using: .winding))
         XCTAssertFalse(path.contains(CGPoint(x: 1.5, y: 1.25), using: .evenOdd))
 
-        let result = path.crossingsRemoved()
+        let result = path.crossingsRemoved()!
         XCTAssertEqual(result.subpaths.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
         
@@ -443,7 +495,7 @@ class PathTests: XCTestCase {
         cgPathAlt.addLines(between: Array(points[3..<points.count]) + Array(points[1...3]))
         let pathAlt = Path(cgPath: cgPathAlt)
 
-        let resultAlt = pathAlt.crossingsRemoved()
+        let resultAlt = pathAlt.crossingsRemoved()!
         XCTAssertEqual(resultAlt.subpaths.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.subpaths[0], expectedResult.subpaths[0]))
     }
@@ -451,9 +503,80 @@ class PathTests: XCTestCase {
     func testCrossingsRemovedNoCrossings() {
         // a test which ensures that if a path has no crossings then crossingsRemoved does not modify it
         let square = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0), transform: nil))
-        let result = square.crossingsRemoved()
+        let result = square.crossingsRemoved()!
         XCTAssertEqual(result.subpaths.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], square.subpaths[0]))
+    }
+    
+    func testCrossingsRemovedEdgeCase() {
+        // this is an edge cases which caused difficulty in practice
+        // the contour, which intersects at (1,1) creates two squares, one with -1 winding count
+        // the other with +1 winding count
+        // incorrect implementation of this algorithm previously interpretted
+        // the crossing as an entry / exit, which would completely cull off the square with +1 count
+        
+        let points = [CGPoint(x: 0, y: 1),
+                      CGPoint(x: 2, y: 1),
+                      CGPoint(x: 2, y: 2),
+                      CGPoint(x: 1, y: 2),
+                      CGPoint(x: 1, y: 0),
+                      CGPoint(x: 0, y: 0)]
+
+        let cgPath = CGMutablePath()
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        
+        let contour = Path(cgPath: cgPath)
+        XCTAssertEqual(contour.windingCount(CGPoint(x: 0.5, y: 0.5)), -1) // winding count at center of one square region
+        XCTAssertEqual( contour.windingCount(CGPoint(x: 1.5, y: 1.5)), 1) // winding count at center of other square region
+
+        let crossingsRemoved = contour.crossingsRemoved()!
+
+        XCTAssertEqual(crossingsRemoved.subpaths.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.subpaths[0], contour.subpaths[0]))
+    }
+    
+    func testCrossingsRemovedEdgeCaseInnerLoop() {
+        
+        // this tests an edge case of crossingsRemoved() when vertices of the path are exactly equal
+        // the path does a complete loop in the middle
+        
+        let cgPath = CGMutablePath()
+        
+        cgPath.move(to: CGPoint.zero)
+        cgPath.addLine(to: CGPoint(x: 2.0, y: 0.0))
+        
+        // loop in a complete circle back to 2, 0
+        cgPath.addArc(tangent1End: CGPoint(x: 3.0, y: 0.0), tangent2End: CGPoint(x: 3.0, y: 1.0), radius: 1)
+        cgPath.addArc(tangent1End: CGPoint(x: 3.0, y: 2.0), tangent2End: CGPoint(x: 2.0, y: 2.0), radius: 1)
+        cgPath.addArc(tangent1End: CGPoint(x: 1.0, y: 2.0), tangent2End: CGPoint(x: 1.0, y: 1.0), radius: 1)
+        cgPath.addArc(tangent1End: CGPoint(x: 1.0, y: 0.0), tangent2End: CGPoint(x: 2.0, y: 0.0), radius: 1)
+        
+        // proceed around to close the shape (grazing the loop at (2,2)
+        cgPath.addLine(to: CGPoint(x: 4.0, y: 0.0))
+        cgPath.addLine(to: CGPoint(x: 4.0, y: 2.0))
+        cgPath.addLine(to: CGPoint(x: 2.0, y: 2.0))
+        cgPath.addLine(to: CGPoint(x: 0.0, y: 2.0))
+        cgPath.closeSubpath()
+        
+        let path = Path(cgPath: cgPath)
+        
+        // Quartz 'addArc' function creates some terrible near-zero length line segments
+        // let's eliminate those
+        let curves2 = path.subpaths[0].curves.map {
+            return BezierKit.createCurve(from: $0.points.map { point in
+                let rounded = CGPoint(x: round(point.x), y: round(point.y))
+                return distance(point, rounded) < 1.0e-3 ? rounded : point
+            })!
+        }.filter { $0.length() > 0.0 }
+        let cleanPath = Path(subpaths: [PathComponent(curves: curves2)])
+        
+        let result = cleanPath.crossingsRemoved(threshold: 1.0e-4)!
+
+        // check that the inner loop was eliminated by checking the winding count in the middle
+        XCTAssertEqual(result.windingCount(CGPoint(x: 0.5, y: 1)), 1)
+        XCTAssertEqual(result.windingCount(CGPoint(x: 2.0, y: 1)), 1) // if the inner loop wasn't eliminated we'd have a winding count of 2 here
+        XCTAssertEqual(result.windingCount(CGPoint(x: 3.5, y: 1)), 1)
     }
     
 }

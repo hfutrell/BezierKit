@@ -235,7 +235,7 @@ internal class Utils {
             let q = (2*a*a*a - 9*a*b + 27*c)/27
             let q2 = q/2
             let discriminant = q2*q2 + p3*p3*p3
-            if discriminant < 0 {
+            if discriminant < -epsilon {
                 let mp3 = -p/3
                 let mp33 = mp3*mp3*mp3
                 let r = sqrt( mp33 )
@@ -249,17 +249,17 @@ internal class Utils {
                 let x3 = t1 * cos((phi+2*tau)/3) - a/3
                 return [x1, x2, x3].compactMap(clamp)
             }
-            else if discriminant == 0 {
-                let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
-                let x1 = 2*u1-a/3
-                let x2 = -u1 - a/3
-                return [x1,x2].compactMap(clamp)
-            }
-            else {
+            else if discriminant > epsilon {
                 let sd = sqrt(discriminant)
                 let u1 = crt(-q2+sd)
                 let v1 = crt(q2+sd)
                 return [u1-v1-a/3].compactMap(clamp)
+            }
+            else {
+                let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
+                let x1 = 2*u1-a/3
+                let x2 = -u1 - a/3
+                return [x1,x2].compactMap(clamp)
             }
         }
         else {
@@ -382,6 +382,12 @@ internal class Utils {
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) {
         let c1b = c1.curve.boundingBox
         let c2b = c2.curve.boundingBox
+        
+        if results.count > 20 {
+            // TODO: better bailout conditions
+            return
+        }
+        
         if c1b.overlaps(c2b) == false {
             return
         }

@@ -27,6 +27,8 @@
 		FD4A6404200ACBD200930E10 /* ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6400200ACB8900930E10 /* ShapeTests.swift */; };
 		FD4A6408200B11DF00930E10 /* PathComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6405200B11DA00930E10 /* PathComponentTests.swift */; };
 		FD4A6409200B11DF00930E10 /* PathComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4A6405200B11DA00930E10 /* PathComponentTests.swift */; };
+		FD6D9C9F21BEE75C008652C5 /* TransformableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */; };
+		FD6D9CA021BEE75C008652C5 /* TransformableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */; };
 		FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */; };
 		FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */; };
 		FDB512C821373BBD007CBA20 /* AugmentedGraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB512C521373A3D007CBA20 /* AugmentedGraphTests.swift */; };
@@ -137,6 +139,7 @@
 		FD4A63FD200AA50B00930E10 /* Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Shape.swift; path = Library/Shape.swift; sourceTree = SOURCE_ROOT; };
 		FD4A6400200ACB8900930E10 /* ShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeTests.swift; sourceTree = "<group>"; };
 		FD4A6405200B11DA00930E10 /* PathComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathComponentTests.swift; sourceTree = "<group>"; };
+		FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformableTests.swift; sourceTree = "<group>"; };
 		FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicBezierCurveTests.swift; sourceTree = "<group>"; };
 		FDB512C521373A3D007CBA20 /* AugmentedGraphTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AugmentedGraphTests.swift; sourceTree = "<group>"; };
 		FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
@@ -257,6 +260,7 @@
 				FDC7D705211288BD00A9EEF0 /* PathTests.swift */,
 				FDC859592118EC5600AF7642 /* DrawTests.swift */,
 				FDB512C521373A3D007CBA20 /* AugmentedGraphTests.swift */,
+				FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */,
 			);
 			path = BezierKitTests;
 			sourceTree = "<group>";
@@ -621,6 +625,7 @@
 				FD05111820153EAE000D035E /* BoundingBoxTests.swift in Sources */,
 				FDB512C821373BBD007CBA20 /* AugmentedGraphTests.swift in Sources */,
 				FDC7D706211288BD00A9EEF0 /* PathTests.swift in Sources */,
+				FD6D9C9F21BEE75C008652C5 /* TransformableTests.swift in Sources */,
 				FDC8595A2118EC5600AF7642 /* DrawTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -642,6 +647,7 @@
 				FD05111920153EAE000D035E /* BoundingBoxTests.swift in Sources */,
 				FDB512C921373BBD007CBA20 /* AugmentedGraphTests.swift in Sources */,
 				FDC7D707211288BD00A9EEF0 /* PathTests.swift in Sources */,
+				FD6D9CA021BEE75C008652C5 /* TransformableTests.swift in Sources */,
 				FDC8595B2118EC5600AF7642 /* DrawTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

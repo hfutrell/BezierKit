@@ -194,7 +194,7 @@ extension BezierCurve {
      */
     public func reduce() -> [Subcurve<Self>] {
         
-        // todo: handle degenerate case of Cubic with all zero points better!
+        // TODO: handle degenerate case of Cubic with all zero points better!
         
         let step: CGFloat = 0.01
         var extrema: [CGFloat] = self.extrema().values
