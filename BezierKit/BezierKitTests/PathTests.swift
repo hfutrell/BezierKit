@@ -579,4 +579,38 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result.windingCount(CGPoint(x: 3.5, y: 1)), 1)
     }
     
+    func testSubtractionPerformance() {
+        
+        func circlePath(origin: CGPoint, radius: CGFloat, numPoints: Int) -> Path {
+            let c: CGFloat = 0.551915024494 * radius * 4.0 / CGFloat(numPoints)
+            let cgPath = CGMutablePath()
+            var lastPoint = origin + CGPoint(x: radius, y: 0.0)
+            var lastTangent = CGPoint(x: 0.0, y: c)
+            cgPath.move(to: lastPoint)
+            for i in 1...numPoints {
+                var theta = CGFloat(2.0 * Double.pi) * CGFloat(i) / CGFloat(numPoints)
+                if i == numPoints {
+                    theta = 0.0 // prevents round-off error in last theta computation
+                }
+                let cosTheta = cos(theta)
+                let sinTheta = sin(theta)
+                let point = origin + radius * CGPoint(x: cosTheta, y: sinTheta)
+                let tangent = c * CGPoint(x: -sinTheta, y: cosTheta)
+                cgPath.addCurve(to: point, control1: lastPoint + lastTangent, control2: point - tangent)
+              //  cgPath.addLine(to: point)
+                lastPoint = point
+                lastTangent = tangent
+            }
+            return Path(cgPath: cgPath)
+        }
+        
+        let numPoints = 300
+        let path1 = circlePath(origin: CGPoint(x: 0, y: 0), radius: 100, numPoints: numPoints)
+        let path2 = circlePath(origin: CGPoint(x: 1, y: 0), radius: 100, numPoints: numPoints)
+
+        self.measure { // roughly 0.018s in debug mode
+            let _ = path1.subtracting(path2, threshold: 1.0e-3)
+        }
+    }
+    
 }
