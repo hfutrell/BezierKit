@@ -472,8 +472,10 @@ extension BezierCurve {
 
         var intersections: [Intersection] = []
         for l in c1 {
+            let lb = l.curve.boundingBox
             for r in c2 {
-                Utils.pairiteration(l, r, &intersections, threshold)
+                let rb = r.curve.boundingBox
+                Utils.pairiteration(l, r, lb, rb, &intersections, threshold)
             }
         }
         // TODO: you should probably have a unit test that ensures de-duping actually works

@@ -205,21 +205,59 @@ public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
         var mmin = CGPoint.min(p0, p3)
         var mmax = CGPoint.max(p0, p3)
         
-        let d0 = p1 - p0
-        let d1 = p2 - p1
-        let d2 = p3 - p2
-
-        for d in 0..<CGPoint.dimensions {
-            Utils.droots(d0[d], d1[d], d2[d]) {(r: CGFloat) in
+        if (p1.x < mmin.x || p1.x > mmax.x || p2.x < mmin.x || p2.x > mmax.x) {
+            let d0 = p1.x - p0.x
+            let d1 = p2.x - p1.x
+            let d2 = p3.x - p2.x
+            Utils.droots(d0, d1, d2) {(r: CGFloat) in
                 if r <= 0.0 || r >= 1.0 {
                     return
                 }
-                let value = self.compute(r)[d]
-                if value < mmin[d] {
-                    mmin[d] = value
+                let mt = 1.0 - r
+                let mt2: CGFloat    = mt*mt
+                let t2: CGFloat     = r*r
+                let a = mt2 * mt
+                let b = mt2 * r * 3.0
+                let c = mt * t2 * 3.0
+                let d = r * t2
+                let temp1 = a * p0.x
+                let temp2 = b * p1.x
+                let temp3 = c * p2.x
+                let temp4 = d * p3.x
+                let x = temp1 + temp2 + temp3 + temp4
+                if x < mmin.x {
+                    mmin.x = x
                 }
-                else if value > mmax[d] {
-                    mmax[d] = value
+                else if x > mmax.x {
+                    mmax.x = x
+                }
+            }
+        }
+        if (p1.y < mmin.y || p1.y > mmax.y || p2.y < mmin.y || p2.y > mmax.y) {
+            let d0 = p1.y - p0.y
+            let d1 = p2.y - p1.y
+            let d2 = p3.y - p2.y
+            Utils.droots(d0, d1, d2) {(r: CGFloat) in
+                if r <= 0.0 || r >= 1.0 {
+                    return
+                }
+                let mt = 1.0 - r
+                let mt2: CGFloat    = mt*mt
+                let t2: CGFloat     = r*r
+                let a = mt2 * mt
+                let b = mt2 * r * 3.0
+                let c = mt * t2 * 3.0
+                let d = r * t2
+                let temp1 = a * p0.y
+                let temp2 = b * p1.y
+                let temp3 = c * p2.y
+                let temp4 = d * p3.y
+                let y = temp1 + temp2 + temp3 + temp4
+                if y < mmin.y {
+                    mmin.y = y
+                }
+                else if y > mmax.y {
+                    mmax.y = y
                 }
             }
         }

@@ -379,19 +379,20 @@ internal class Utils {
         return ( mdist:mdist, mpos:mpos! )
     }
     
-    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>, _ results: inout [Intersection], _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) {
-        let c1b = c1.curve.boundingBox
-        let c2b = c2.curve.boundingBox
+    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
+                                      _ c1b: BoundingBox, _ c2b: BoundingBox,
+                                      _ results: inout [Intersection],
+                                      _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) {
         
         if results.count > 20 {
             // TODO: better bailout conditions
             return
         }
         
-        if c1b.overlaps(c2b) == false {
+        guard c1b.overlaps(c2b) else {
             return
         }
-        else if ((c1b.size.x + c1b.size.y) < threshold && (c2b.size.x + c2b.size.y) < threshold) {
+        if (c1b.size.x + c1b.size.y) < threshold, (c2b.size.x + c2b.size.y) < threshold {
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
             guard let intersection = l1.intersects(line: l2).first else {
@@ -405,10 +406,14 @@ internal class Utils {
         else {
             let cc1 = c1.split(at: 0.5)
             let cc2 = c2.split(at: 0.5)
-            Utils.pairiteration(cc1.left, cc2.left, &results, threshold)
-            Utils.pairiteration(cc1.left, cc2.right, &results, threshold)
-            Utils.pairiteration(cc1.right, cc2.left, &results, threshold)
-            Utils.pairiteration(cc1.right, cc2.right, &results, threshold)
+            let cc1lb = cc1.left.curve.boundingBox
+            let cc1rb = cc1.right.curve.boundingBox
+            let cc2lb = cc2.left.curve.boundingBox
+            let cc2rb = cc2.right.curve.boundingBox
+            Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, threshold)
+            Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, threshold)
+            Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, threshold)
+            Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, threshold)
         }
     }
             
