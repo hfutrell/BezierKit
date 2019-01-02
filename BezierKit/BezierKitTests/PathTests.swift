@@ -588,10 +588,7 @@ class PathTests: XCTestCase {
             var lastTangent = CGPoint(x: 0.0, y: c)
             cgPath.move(to: lastPoint)
             for i in 1...numPoints {
-                var theta = CGFloat(2.0 * Double.pi) * CGFloat(i) / CGFloat(numPoints)
-                if i == numPoints {
-                    theta = 0.0 // prevents round-off error in last theta computation
-                }
+                let theta = CGFloat(2.0 * Double.pi) * CGFloat(i % numPoints) / CGFloat(numPoints)
                 let cosTheta = cos(theta)
                 let sinTheta = sin(theta)
                 let point = origin + radius * CGPoint(x: cosTheta, y: sinTheta)
