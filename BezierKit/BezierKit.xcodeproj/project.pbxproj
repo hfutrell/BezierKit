@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		FD05111820153EAE000D035E /* BoundingBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoundingBoxTests.swift */; };
 		FD05111920153EAE000D035E /* BoundingBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoundingBoxTests.swift */; };
+		FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
+		FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
 		FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
 		FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -117,6 +119,7 @@
 
 /* Begin PBXFileReference section */
 		FD05111720153EAE000D035E /* BoundingBoxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingBoxTests.swift; sourceTree = "<group>"; };
+		FD06332221E03A58001181B6 /* CGPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPointTests.swift; sourceTree = "<group>"; };
 		FD0F54F51DC43FFB0084CDCD /* MacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTestHelpers.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -251,6 +254,7 @@
 				FDC859592118EC5600AF7642 /* DrawTests.swift */,
 				FDB512C521373A3D007CBA20 /* AugmentedGraphTests.swift */,
 				FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */,
+				FD06332221E03A58001181B6 /* CGPointTests.swift */,
 			);
 			path = BezierKitTests;
 			sourceTree = "<group>";
@@ -600,6 +604,7 @@
 				FD4A6403200ACBD200930E10 /* ShapeTests.swift in Sources */,
 				FDF0664E1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
 				FDEB70A41F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
+				FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */,
 				FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
 				FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
@@ -621,6 +626,7 @@
 				FD4A6404200ACBD200930E10 /* ShapeTests.swift in Sources */,
 				FDF0664F1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
 				FDEB70A51F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
+				FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */,
 				FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
 				FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,

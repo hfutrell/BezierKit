@@ -8,21 +8,21 @@
 
 import CoreGraphics
 
-extension CGPoint {
-    public var length: CGFloat {
+public extension CGPoint {
+    var length: CGFloat {
         return sqrt(self.lengthSquared)
     }
     private var lengthSquared: CGFloat {
         return self.dot(self)
     }
-    public func normalize() -> CGPoint {
+    func normalize() -> CGPoint {
         return self / self.length
     }
-    static func min(_ p1: CGPoint, _ p2: CGPoint) -> CGPoint {
+    internal static func min(_ p1: CGPoint, _ p2: CGPoint) -> CGPoint {
         return CGPoint(x: p1.x < p2.x ? p1.x : p2.x,
                        y: p1.y < p2.y ? p1.y : p2.y)
     }
-    static func max(_ p1: CGPoint, _ p2: CGPoint) -> CGPoint {
+    internal static func max(_ p1: CGPoint, _ p2: CGPoint) -> CGPoint {
         return CGPoint(x: p1.x > p2.x ? p1.x : p2.x,
                        y: p1.y > p2.y ? p1.y : p2.y)
     }
@@ -40,10 +40,10 @@ public extension CGPoint {
     static internal var dimensions: Int {
         return 2
     }
-    public func dot(_ other: CGPoint) -> CGFloat {
+    func dot(_ other: CGPoint) -> CGFloat {
         return self.x * other.x + self.y * other.y
     }
-    public subscript(index: Int) -> CGFloat {
+    subscript(index: Int) -> CGFloat {
         get {
             assert(index == 0 || index == 1)
             if index == 0 {
@@ -63,20 +63,25 @@ public extension CGPoint {
             }
         }
     }
-    public static func + (left: CGPoint, right: CGPoint) -> CGPoint {
+    static func + (left: CGPoint, right: CGPoint) -> CGPoint {
         return CGPoint(x: left.x + right.x, y: left.y + right.y)
     }
-    public static func - (left: CGPoint, right: CGPoint) -> CGPoint {
+    static func - (left: CGPoint, right: CGPoint) -> CGPoint {
         return CGPoint(x: left.x - right.x, y: left.y - right.y)
     }
-    public static func / (left: CGPoint, right: CGFloat) -> CGPoint {
+    static func += (left: inout CGPoint, right: CGPoint) {
+        left = left + right
+    }
+    static func -= (left: inout CGPoint, right: CGPoint) {
+        left = left - right
+    }
+    static func / (left: CGPoint, right: CGFloat) -> CGPoint {
         return CGPoint(x: left.x / right, y: left.y / right)
     }
-    public static func * (left: CGFloat, right: CGPoint) -> CGPoint {
+    static func * (left: CGFloat, right: CGPoint) -> CGPoint {
         return CGPoint(x: left * right.x, y: left * right.y)
     }
-    public static prefix func - (point: CGPoint) -> CGPoint {
+    static prefix func - (point: CGPoint) -> CGPoint {
         return CGPoint(x: -point.x, y: -point.y)
     }
 }
-
