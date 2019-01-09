@@ -148,14 +148,14 @@ class BezierCurveTests: XCTestCase {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let outline: PathComponent = lineSegment.outline(distance: 1)
-        XCTAssertEqual(outline.curves.count, 4)
+        XCTAssertEqual(outline.elementCount, 4)
         
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
         
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
 
     func testOutlineDistanceAlongNormalDistanceOppositeNormal() {
@@ -164,17 +164,17 @@ class BezierCurveTests: XCTestCase {
         let distanceAlongNormal: CGFloat = 1
         let distanceOppositeNormal: CGFloat = 2
         let outline: PathComponent = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
-        XCTAssertEqual(outline.curves.count, 4)
+        XCTAssertEqual(outline.elementCount, 4)
         
         let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(0)
         let o1 = lineSegment.endingPoint + distanceAlongNormal * lineSegment.normal(1)
         let o2 = lineSegment.endingPoint - distanceOppositeNormal * lineSegment.normal(1)
         let o3 = lineSegment.startingPoint - distanceOppositeNormal * lineSegment.normal(0)
         
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
     
     func testOutlineFourArguments() {
@@ -190,14 +190,14 @@ class BezierCurveTests: XCTestCase {
                                                       distanceAlongNormalEnd: distanceAlongNormal2,
                                                       distanceOppositeNormalEnd: distanceOppositeNormal2)
         
-        XCTAssertEqual(outline.curves.count, 4)
+        XCTAssertEqual(outline.elementCount, 4)
         
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal1, distanceOppositeNormal1, distanceAlongNormal2, distanceOppositeNormal2)
 
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: LineSegment(p0: o2, p1: o3)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: LineSegment(p0: o3, p1: o0)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: LineSegment(p0: o0, p1: o1)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: LineSegment(p0: o1, p1: o2)))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
 
     func testOutlineFourArgumentsQuadratic() {
@@ -213,12 +213,12 @@ class BezierCurveTests: XCTestCase {
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 18, y: 22), p1: CGPoint(x: 22, y: 18))
         let expectedSegment4 = QuadraticBezierCurve(p0: CGPoint(x: 22, y: 18), p1: CGPoint(x: 10.5, y: 9.5), p2: CGPoint(x: 1, y: -1))
         
-        XCTAssertEqual(outline.curves.count, 4)
+        XCTAssertEqual(outline.elementCount, 4)
         // hard to compute this outline exactly, so just check the computed value roughly equals our estimate of what it should be
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: expectedSegment1, tolerance: 0.33 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2, tolerance: 0.33 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3, tolerance: 0.33 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3, tolerance: 0.33 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: expectedSegment4, tolerance: 0.33 ))
     }
     
     func testOutlineQuadraticNormalsParallel() {
@@ -232,11 +232,11 @@ class BezierCurveTests: XCTestCase {
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 10, y: 1), p1: CGPoint(x: 10, y: -1))
         let expectedSegment4 = LineSegment(p0: CGPoint(x: 10, y: -1), p1: CGPoint(x: 0, y: -1))
         
-        XCTAssertEqual(outline.curves.count, 4)
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: expectedSegment1 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4 ))
+        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: expectedSegment4 ))
     }
     
     func testOutlineFourArgumentsQuadraticNormalsParallel() {
@@ -250,11 +250,11 @@ class BezierCurveTests: XCTestCase {
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 20.0, y: 1.0), p1: CGPoint(x: 20.0, y: -1.0))
         let expectedSegment4 = LineSegment(p0: CGPoint(x: 20.0, y: -1.0), p1: CGPoint(x: 0.0, y: -2.0))
 
-        XCTAssertEqual(outline.curves.count, 4)
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[0], matchesCurve: expectedSegment1 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[1], matchesCurve: expectedSegment2 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[2], matchesCurve: expectedSegment3 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.curves[3], matchesCurve: expectedSegment4 ))
+        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3 ))
+        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: expectedSegment4 ))
     }
     
     func testOutlineShapesDistance() {

@@ -97,10 +97,10 @@ internal class PathLinkedListRepresentation {
     }
     
     private func createListFor(component: PathComponent) -> [Vertex] {
-        guard component.curves.count > 0 else {
+        guard component.elementCount > 0 else {
             return []
         }
-        assert(component.curves.first!.startingPoint == component.curves.last!.endingPoint, "this method assumes component is closed!")
+        assert(component.startingPoint == component.endingPoint, "this method assumes component is closed!")
         var elements: [Vertex] = [] // elements[i] is the first vertex of curves[i]
         let firstPoint: CGPoint = component.curves.first!.startingPoint
         let firstVertex = Vertex(location: firstPoint, isIntersection: false)
@@ -346,7 +346,7 @@ internal class AugmentedGraph {
         let nonCrossingComponents2: [PathComponent] = self.list2.nonCrossingComponents()
         
         func anyPointOnComponent(_ c: PathComponent) -> CGPoint {
-            return c.curves[0].startingPoint
+            return c.startingPoint
         }
         var pathComponents: [PathComponent] = []
         switch operation {

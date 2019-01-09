@@ -15,7 +15,7 @@ internal class BVHNode {
     internal let nodeType: NodeType
     
     internal enum NodeType {
-        case leaf(object: BoundingBoxProtocol, elementIndex: Int)
+        case leaf(elementIndex: Int)
         case `internal`(list: [BVHNode])
     }
     
@@ -27,15 +27,15 @@ internal class BVHNode {
         self.visit(callback: callback, currentDepth: 0)
     }
     
-    internal func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol, Int, Int) -> Void) {
+    internal func intersects(node other: BVHNode, callback: (Int, Int) -> Void) {
         
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return // nothing to do
         }
         
-        if case let .leaf(object1, elementIndex1) = self.nodeType {
-            if case let .leaf(object2, elementIndex2) = other.nodeType {
-                callback(object1, object2, elementIndex1, elementIndex2)
+        if case let .leaf(elementIndex1) = self.nodeType {
+            if case let .leaf(elementIndex2) = other.nodeType {
+                callback(elementIndex1, elementIndex2)
             }
             else if case let .internal(list: list2) = other.nodeType {
                 list2.forEach {
@@ -44,7 +44,7 @@ internal class BVHNode {
             }
         }
         else if case let .`internal`(list: list1) = self.nodeType {
-            if case .leaf(_,_) = other.nodeType {
+            if case .leaf(_) = other.nodeType {
                 list1.forEach {
                     $0.intersects(node: other, callback: callback)
                 }
@@ -79,7 +79,7 @@ internal class BVHNode {
         }
         else if slice.count == 1 {
             let object = slice.first!
-            self.nodeType = .leaf(object: object, elementIndex: slice.startIndex)
+            self.nodeType = .leaf(elementIndex: slice.startIndex)
             self.boundingBox = object.boundingBox
         }
         else {

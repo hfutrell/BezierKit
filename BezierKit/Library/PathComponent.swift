@@ -23,16 +23,44 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 
 public final class PathComponent: NSObject, NSCoding {
     
-    public let curves: [BezierCurve]
+    private let offsets: [Int]
+    private let points: [CGPoint]
+    private let orders: [Int]
+    
+    public lazy var curves: [BezierCurve] = {
+        return (0..<self.elementCount).map {
+            self.element(at: $0)
+        }
+    }()
     
     internal lazy var bvh: BVHNode = BVHNode(objects: curves)
     
+    public var elementCount: Int {
+        return self.orders.count
+    }
+    
+    public var startingPoint: CGPoint {
+        return self.points[0]
+    }
+    
+    public var endingPoint: CGPoint {
+        return self.points.last!
+    }
+    
+    public func element(at index: Int) -> BezierCurve {
+        assert(index >= 0 && index < self.elementCount)
+        let order = self.orders[index]
+        let offset = self.offsets[index]
+        let points = Array(self.points[offset...offset+order])
+        return createCurve(from: points)!
+    }
+    
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
-        guard curves.count > 0 else {
+        guard self.elementCount > 0 else {
             return mutablePath.copy()!
         }
-        mutablePath.move(to: curves[0].startingPoint)
+        mutablePath.move(to: self.points[0])
         for curve in self.curves {
             switch curve {
                 case let line as LineSegment:
@@ -49,9 +77,47 @@ public final class PathComponent: NSObject, NSCoding {
         return mutablePath.copy()!
     }()
     
+    internal init(points: [CGPoint], orders: [Int]) {
+        self.points = points
+        self.orders = orders
+        
+        let expectedPointsCount = orders.reduce(1) { result, value in
+            return result + value
+        }
+        assert(points.count == expectedPointsCount)
+        
+        self.offsets = PathComponent.computeOffsets(from: self.orders)
+    }
+    
+    private static func computeOffsets(from orders: [Int]) -> [Int] {
+        var offsets = [Int]()
+        offsets.reserveCapacity(orders.count)
+        var sum = 0
+        offsets.append(sum)
+        for i in 1..<orders.count {
+            sum += orders[i-1]
+            offsets.append(sum)
+        }
+        return offsets
+    }
+    
     public init(curves: [BezierCurve]) {
         precondition(curves.isEmpty == false, "Path components are by definition non-empty.")
-        self.curves = curves
+        
+        self.points = curves.reduce([CGPoint]()) { result, value in
+            var temp = result
+            if temp.isEmpty {
+                temp.append(contentsOf: value.points)
+            }
+            else {
+                assert(temp.last! == value.startingPoint)
+                temp.append(contentsOf: value.points[1...value.order])
+            }
+            return temp
+        }
+        
+        self.orders = curves.map { $0.order }
+        self.offsets = PathComponent.computeOffsets(from: self.orders)
     }
     
     public var length: CGFloat {
@@ -75,8 +141,8 @@ public final class PathComponent: NSObject, NSCoding {
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
             }
-            else if case let .leaf(object, _) = node.nodeType {
-                let curve = object as! BezierCurve
+            else if case let .leaf(elementIndex) = node.nodeType {
+                let curve = self.element(at: elementIndex)
                 if distance(p, curve.project(point: p)) < d {
                     found = true
                 }
@@ -89,9 +155,9 @@ public final class PathComponent: NSObject, NSCoding {
     public func intersects(component other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         precondition(other !== self, "use intersects(threshold:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
-            let c1 = o1 as! BezierCurve
-            let c2 = o2 as! BezierCurve
+        self.bvh.intersects(node: other.bvh) { i1, i2 in
+            let c1 = self.element(at: i1)
+            let c2 = other.element(at: i2)
             let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
@@ -109,9 +175,9 @@ public final class PathComponent: NSObject, NSCoding {
     
     public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: self.bvh) { o1, o2, i1, i2 in
-            let c1 = o1 as! BezierCurve
-            let c2 = o2 as! BezierCurve
+        self.bvh.intersects(node: self.bvh) { i1, i2 in
+            let c1 = self.element(at: i1)
+            let c2 = self.element(at: i2)
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
             /*if i1 == i2 {
@@ -123,7 +189,7 @@ public final class PathComponent: NSObject, NSCoding {
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
-                    if i1 == Utils.mod(i2-1, self.curves.count) && $0.t1 == 1.0 {
+                    if i1 == Utils.mod(i2-1, self.elementCount) && $0.t1 == 1.0 {
                         return false // exclude intersections of i and i+1 at t=1
                     }
                     if $0.t1 == 0.0 || $0.t2 == 0.0 {
@@ -145,19 +211,14 @@ public final class PathComponent: NSObject, NSCoding {
     // (cannot be put in extension because init?(coder:) is a designated initializer)
     
     public func encode(with aCoder: NSCoder) {
-        let values: [[NSValue]] = self.curves.map { (curve: BezierCurve) -> [NSValue] in
-            return curve.points.map { return NSValue(cgPoint: $0) }
-        }
-        aCoder.encode(values)
+        aCoder.encode(self.orders)
+        aCoder.encode(self.points)
     }
     
     required public init?(coder aDecoder: NSCoder) {
-        guard let curveData = aDecoder.decodeObject() as? [[NSValue]] else {
-            return nil
-        }
-        self.curves = curveData.map { values in
-            createCurve(from: values.map { $0.cgPointValue })!
-        }
+        self.orders = aDecoder.decodeObject() as! [Int]
+        self.points = aDecoder.decodeObject() as! [CGPoint]
+        self.offsets = PathComponent.computeOffsets(from: self.orders)
     }
     
     // MARK: -
@@ -167,15 +228,7 @@ public final class PathComponent: NSObject, NSCoding {
         guard let otherPathComponent = object as? PathComponent else {
             return false
         }
-        guard self.curves.count == otherPathComponent.curves.count else {
-            return false
-        }
-        for i in 0..<self.curves.count { // loop is a little annoying, but BezierCurve cannot conform to Equatable without adding associated type requirements
-            guard self.curves[i] == otherPathComponent.curves[i] else {
-                return false
-            }
-        }
-        return true
+        return self.orders == otherPathComponent.orders && self.points == otherPathComponent.points
     }
     
     // MARK: -
@@ -184,10 +237,10 @@ public final class PathComponent: NSObject, NSCoding {
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathComponentLocation] = []
         self.bvh.visit { (node: BVHNode, depth: Int) in
-            if case let .leaf(object, elementIndex) = node.nodeType {
-                let curve = object as! BezierCurve
+            if case let .leaf(elementIndex) = node.nodeType {
+                let curve = self.element(at: elementIndex)
                 results += curve.intersects(line: line).compactMap {
-                return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
+                    return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
                 }
             }
             // TODO: better line box intersection
@@ -197,7 +250,7 @@ public final class PathComponent: NSObject, NSCoding {
     }
 
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
-        return self.curves[location.elementIndex].compute(location.t)
+        return self.element(at: location.elementIndex).compute(location.t)
     }
     
     internal func windingCount(at point: CGPoint) -> Int {
@@ -207,7 +260,7 @@ public final class PathComponent: NSObject, NSCoding {
         let intersections = self.intersects(line: line)
         var windingCount = 0
         intersections.forEach {
-            let element = self.curves[$0.elementIndex]
+            let element = self.element(at: $0.elementIndex)
             let t = $0.t
             assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
             let dotProduct = delta.dot(element.normal(t))
@@ -234,13 +287,13 @@ public final class PathComponent: NSObject, NSCoding {
 
 extension PathComponent: Transformable {
     public func copy(using t: CGAffineTransform) -> PathComponent {
-        return PathComponent(curves: self.curves.map { $0.copy(using: t)} )
+        return PathComponent(points: self.points.map { $0.applying(t)}, orders: self.orders )
     }
 }
 
 extension PathComponent: Reversible {
     public func reversed() -> PathComponent {
-        return PathComponent(curves: self.curves.reversed().map({$0.reversed()}))
+        return PathComponent(points: self.points.reversed(), orders: self.orders.reversed())
     }
 }
 

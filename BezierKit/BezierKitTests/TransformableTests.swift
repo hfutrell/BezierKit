@@ -62,8 +62,8 @@ class TransformableTests: XCTestCase {
         let expectedl2 = LineSegment(p0: CGPoint(x: -2, y: 2), p1: CGPoint(x: -4, y: 3))
 
         XCTAssertEqual(transformedPath.subpaths.count, 2)
-        XCTAssertEqual(transformedPath.subpaths[0].curves.count, 1)
-        XCTAssertEqual(transformedPath.subpaths[0].curves.count, 1)
+        XCTAssertEqual(transformedPath.subpaths[0].elementCount, 1)
+        XCTAssertEqual(transformedPath.subpaths[0].elementCount, 1)
         XCTAssertEqual(transformedPath.subpaths[0].curves[0] as! LineSegment, expectedl1)
         XCTAssertEqual(transformedPath.subpaths[1].curves[0] as! LineSegment, expectedl2)
     }

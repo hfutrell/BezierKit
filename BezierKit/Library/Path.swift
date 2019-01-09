@@ -27,12 +27,16 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint? = nil
         var subpathStartPoint: CGPoint? = nil
-        var currentSubpath: [BezierCurve] = []
+        
+        var currentSubpathPoints: [CGPoint] = []
+        var currentSubpathOrders: [Int] = []
+        
         var components: [PathComponent] = []
         func finishUp() {
-            if currentSubpath.isEmpty == false {
-                components.append(PathComponent(curves: currentSubpath))
-                currentSubpath = []
+            if currentSubpathPoints.isEmpty == false {
+                components.append(PathComponent(points: currentSubpathPoints, orders: currentSubpathOrders))
+                currentSubpathPoints = []
+                currentSubpathOrders = []
             }
         }
     }
@@ -97,32 +101,37 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             let points: UnsafeMutablePointer<CGPoint> = element.pointee.points
             switch element.pointee.type {
             case .moveToPoint:
-                if context.currentSubpath.isEmpty == false {
-                    context.components.append(PathComponent(curves: context.currentSubpath))
+                if context.currentSubpathOrders.isEmpty == false {
+                    context.components.append(PathComponent(points: context.currentSubpathPoints, orders: context.currentSubpathOrders))
                 }
-                context.currentPoint = points[0]
                 context.subpathStartPoint = points[0]
-                context.currentSubpath = []
+                context.currentSubpathOrders = []
+                context.currentSubpathPoints = [points[0]]
+                context.currentPoint = points[0]
             case .addLineToPoint:
-                let line = LineSegment(p0: context.currentPoint!, p1: points[0])
-                context.currentSubpath.append(line)
+                context.currentSubpathOrders.append(1)
+                context.currentSubpathPoints.append(points[0])
                 context.currentPoint = points[0]
             case .addQuadCurveToPoint:
-                let quadCurve = QuadraticBezierCurve(p0: context.currentPoint!, p1: points[0], p2: points[1])
-                context.currentSubpath.append(quadCurve)
+                context.currentSubpathOrders.append(2)
+                context.currentSubpathPoints.append(points[0])
+                context.currentSubpathPoints.append(points[1])
                 context.currentPoint = points[1]
             case .addCurveToPoint:
-                let cubicCurve = CubicBezierCurve(p0: context.currentPoint!, p1: points[0], p2: points[1], p3: points[2])
-                context.currentSubpath.append(cubicCurve)
+                context.currentSubpathOrders.append(3)
+                context.currentSubpathPoints.append(points[0])
+                context.currentSubpathPoints.append(points[1])
+                context.currentSubpathPoints.append(points[2])
                 context.currentPoint = points[2]
             case .closeSubpath:
                 if context.currentPoint != context.subpathStartPoint {
-                    let line = LineSegment(p0: context.currentPoint!, p1: context.subpathStartPoint!)
-                    context.currentSubpath.append(line)
+                    context.currentSubpathOrders.append(1)
+                    context.currentSubpathPoints.append(context.subpathStartPoint!)
                 }
-                context.components.append(PathComponent(curves: context.currentSubpath))
+                context.components.append(PathComponent(points: context.currentSubpathPoints, orders: context.currentSubpathOrders))
                 context.currentPoint = context.subpathStartPoint!
-                context.currentSubpath = []
+                context.currentSubpathPoints = []
+                context.currentSubpathOrders = []
             }
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
@@ -163,7 +172,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {
-        return self.subpaths[componentIndex].curves[elementIndex]
+        return self.subpaths[componentIndex].element(at: elementIndex)
     }
     
     internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
@@ -186,7 +195,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     @objc(containsPath:) public func contains(_ other: Path) -> Bool {
         // first, check that each component of `other` starts inside self
         for component in other.subpaths {
-            let p = component.curves[0].startingPoint
+            let p = component.startingPoint
             guard self.contains(p) else {
                 return false
             }
@@ -255,7 +264,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         var paths: Set<Path> = Set<Path>()
         let subpathsAsPaths = self.subpaths.map { Path(subpaths: [$0]) }
         for subpath in subpathsAsPaths {
-            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) == 0 {
+            if self.windingCount(subpath.subpaths[0].startingPoint, ignoring: subpath.subpaths[0]) == 0 {
                 paths.insert(subpath)
             }
         }
@@ -266,7 +275,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         
         for subpath in subpathsAsPaths {
-            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) != 0 {
+            if self.windingCount(subpath.subpaths[0].startingPoint, ignoring: subpath.subpaths[0]) != 0 {
                 for other in paths {
                     if other.contains(subpath) {
                         pathsWithHoles[other] = Path(subpaths: pathsWithHoles[other]!.subpaths + subpath.subpaths)
