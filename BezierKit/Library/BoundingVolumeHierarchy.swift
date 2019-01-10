@@ -8,50 +8,108 @@
 
 import CoreGraphics
 
-internal class BVHNode {
+internal class BVH {
     
-    internal let boundingBox: BoundingBox
+    fileprivate var boundingBoxes: [BoundingBox]
     
-    internal let nodeType: NodeType
-    
-    internal enum NodeType {
-        case leaf(elementIndex: Int)
-        case `internal`(left: BVHNode, right: BVHNode)
+    fileprivate var root: BVHNode {
+        return BVHNode(index: 0, bvh: Unmanaged.passUnretained(self) )
     }
     
-    convenience internal init(boxes: [BoundingBox]) {
-        self.init(slice: ArraySlice<BoundingBox>(boxes))
+    internal var boundingBox: BoundingBox {
+        return boundingBoxes.first!
+    }
+    
+    internal init(boxes leafBoxes: [BoundingBox]) {
+        // create a complete binary tree of bounding boxes where boxes[0] is the root and left child is 2*index+1 and right child is 2*index+2
+        var boxes = [BoundingBox](repeating: BoundingBox.empty, count: leafBoxes.count - 1) + leafBoxes
+        if leafBoxes.count > 1 {
+            for i in stride(from: leafBoxes.count-2, through: 0, by: -1) {
+                boxes[i] = BoundingBox(first: boxes[2*i+1], second: boxes[2*i+2])
+            }
+        }
+        self.boundingBoxes = boxes
     }
     
     internal func visit(callback: (BVHNode, Int) -> Bool) {
+        guard self.boundingBoxes.isEmpty == false else {
+            return
+        }
+        root.visit(callback: callback)
+    }
+    
+    internal func intersects(node other: BVH, callback: (Int, Int) -> Void) {
+        self.root.intersects(node: other.root, callback: callback)
+    }
+}
+
+internal struct BVHNode {
+    
+    private let bvh: Unmanaged<BVH>
+    fileprivate let index: Int
+    
+    fileprivate init(index: Int, bvh: Unmanaged<BVH>) {
+        self.bvh = bvh
+        self.index = index
+    }
+    
+    internal var boundingBox: BoundingBox {
+        return self.bvh.takeUnretainedValue().boundingBoxes[index]
+    }
+    
+    internal var nodeType: NodeType {
+        let count = self.bvh.takeUnretainedValue().boundingBoxes.count
+        let internalNodeCount = (count-1)/2
+        if index < internalNodeCount {
+            return .internal
+        }
+        else {
+            return .leaf(elementIndex: index - internalNodeCount)
+        }
+    }
+    
+    internal enum NodeType {
+        case leaf(elementIndex: Int)
+        case `internal`
+    }
+    
+    fileprivate var left: BVHNode {
+        return BVHNode(index: 2 * self.index + 1, bvh: self.bvh)
+    }
+    
+    fileprivate var right: BVHNode {
+        return BVHNode(index: 2 * self.index + 2, bvh: self.bvh)
+    }
+
+    fileprivate func visit(callback: (BVHNode, Int) -> Bool) {
         self.visit(callback: callback, currentDepth: 0)
     }
     
-    internal func intersects(node other: BVHNode, callback: (BoundingBoxProtocol, BoundingBoxProtocol, Int, Int) -> Void) {
-        
+    fileprivate func intersects(node other: BVHNode, callback: (Int, Int) -> Void) {
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return // nothing to do
         }
-        
-        if case let .leaf(object1, elementIndex1) = self.nodeType {
-            if case let .leaf(object2, elementIndex2) = other.nodeType {
-                callback(object1, object2, elementIndex1, elementIndex2)
+        if case let .leaf(elementIndex1) = self.nodeType {
+            if case let .leaf(elementIndex2) = other.nodeType {
+                callback(elementIndex1, elementIndex2)
             }
-            else if case let .internal(left: left, right: right) = other.nodeType {
-                self.intersects(node: left, callback: callback)
-                self.intersects(node: right, callback: callback)
+            else if case .internal = other.nodeType {
+                self.intersects(node: other.left, callback: callback)
+                self.intersects(node: other.right, callback: callback)
             }
         }
-        else if case let .internal(left: left1, right: right1) = self.nodeType {
+        else if case .internal = self.nodeType {
+            let left = self.left
+            let right = self.right
             if case .leaf(_) = other.nodeType {
-                left1.intersects(node: other, callback: callback)
-                right1.intersects(node: other, callback: callback)
+                left.intersects(node: other, callback: callback)
+                right.intersects(node: other, callback: callback)
             }
-            else if case let .internal(left: left2, right: right2) = other.nodeType {
-                left1.intersects(node: left2, callback: callback)
-                left1.intersects(node: right2, callback: callback)
-                right1.intersects(node: left2, callback: callback)
-                right1.intersects(node: right2, callback: callback)
+            else if case .internal = other.nodeType {
+                left.intersects(node: other.left, callback: callback)
+                left.intersects(node: other.right, callback: callback)
+                right.intersects(node: other.left, callback: callback)
+                right.intersects(node: other.right, callback: callback)
             }
         }
     }
@@ -62,30 +120,9 @@ internal class BVHNode {
         guard callback(self, depth) == true else {
             return
         }
-        if case let .`internal`(left: left, right: right) = self.nodeType {
-            left.visit(callback: callback, currentDepth: depth+1)
-            right.visit(callback: callback, currentDepth: depth+1)
-        }
-    }
-    
-    private init(slice: ArraySlice<BoundingBox>) {
-        
-        assert(slice.isEmpty == false)
-        
-        if slice.count == 1 {
-            let object = slice.first!
-            self.nodeType = .leaf(elementIndex: slice.startIndex)
-            self.boundingBox = object
-        }
-        else {
-            let startIndex = slice.startIndex
-            let splitIndex = ( slice.startIndex + slice.endIndex ) / 2
-            let endIndex   = slice.endIndex
-            let left    = BVHNode(slice: slice[startIndex..<splitIndex])
-            let right   = BVHNode(slice: slice[splitIndex..<endIndex])
-            let boundingBox = BoundingBox(first: left.boundingBox, second: right.boundingBox)
-            self.boundingBox = boundingBox
-            self.nodeType = .internal(left: left, right: right)
+        if case .`internal` = self.nodeType {
+            self.left.visit(callback: callback, currentDepth: depth+1)
+            self.right.visit(callback: callback, currentDepth: depth+1)
         }
     }
 }

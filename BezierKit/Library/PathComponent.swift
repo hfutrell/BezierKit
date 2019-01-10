@@ -25,7 +25,7 @@ public final class PathComponent: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
-    internal lazy var bvh: BVHNode = BVHNode(boxes: curves.map { $0.boundingBox })
+    internal lazy var bvh: BVH = BVH(boxes: curves.map { $0.boundingBox })
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
