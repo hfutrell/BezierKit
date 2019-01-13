@@ -39,7 +39,36 @@ internal class BVH {
     }
     
     internal func intersects(node other: BVH, callback: (Int, Int) -> Void) {
-        self.root.intersects(node: other.root, callback: callback)
+        func intersects(index1: Int, index2: Int, boxes1: [BoundingBox], boxes2: [BoundingBox], callback: (Int, Int) -> Void) {
+            guard boxes1[index1].overlaps(boxes2[index2]) else {
+                return // nothing to do
+            }
+            let inodecount1 = (boxes1.count-1)/2
+            let inodecount2 = (boxes2.count-1)/2
+            let leaf1 = index1 >= inodecount1
+            let leaf2 = index2 >= inodecount2
+            if leaf1, leaf2 {
+                callback(index1 - inodecount1, index2 - inodecount2)
+            }
+            else if leaf1 {
+                intersects(index1: index1, index2: 2*index2+1, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: index1, index2: 2*index2+2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+            }
+            else if leaf2 {
+                intersects(index1: 2*index1+1, index2: index2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: 2*index1+2, index2: index2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+            }
+            else {
+                intersects(index1: 2*index1+1, index2: 2*index2+1, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: 2*index1+1, index2: 2*index2+2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: 2*index1+2, index2: 2*index2+1, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: 2*index1+2, index2: 2*index2+2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+            }
+        }
+        guard self.boundingBoxes.isEmpty == false, other.boundingBoxes.isEmpty == false else {
+            return
+        }
+        intersects(index1: 0, index2: 0, boxes1: self.boundingBoxes, boxes2: other.boundingBoxes, callback: callback)
     }
 }
 
@@ -84,36 +113,7 @@ internal struct BVHNode {
     fileprivate func visit(callback: (BVHNode, Int) -> Bool) {
         self.visit(callback: callback, currentDepth: 0)
     }
-    
-    fileprivate func intersects(node other: BVHNode, callback: (Int, Int) -> Void) {
-        guard self.boundingBox.overlaps(other.boundingBox) else {
-            return // nothing to do
-        }
-        if case let .leaf(elementIndex1) = self.nodeType {
-            if case let .leaf(elementIndex2) = other.nodeType {
-                callback(elementIndex1, elementIndex2)
-            }
-            else if case .internal = other.nodeType {
-                self.intersects(node: other.left, callback: callback)
-                self.intersects(node: other.right, callback: callback)
-            }
-        }
-        else if case .internal = self.nodeType {
-            let left = self.left
-            let right = self.right
-            if case .leaf(_) = other.nodeType {
-                left.intersects(node: other, callback: callback)
-                right.intersects(node: other, callback: callback)
-            }
-            else if case .internal = other.nodeType {
-                left.intersects(node: other.left, callback: callback)
-                left.intersects(node: other.right, callback: callback)
-                right.intersects(node: other.left, callback: callback)
-                right.intersects(node: other.right, callback: callback)
-            }
-        }
-    }
-    
+        
     // MARK: - private
     
     private func visit(callback: (BVHNode, Int) -> Bool, currentDepth depth: Int) {
