@@ -39,6 +39,47 @@ internal class BVH {
     }
     
     internal func intersects(node other: BVH, callback: (Int, Int) -> Void) {
+        
+//        func intersects(index: Int, callback: (Int) -> Void) {
+//            if index >= inodecount { // if it's a leaf node
+//                callback(index - inodecount, index - inodecount)
+//            }
+//            else {
+//                let l = 2*index+1
+//                let r = 2*index+2
+//                intersects(index: l, callback: callback)
+//                intersects(index1: l, index2: r, callback: callback)
+//                intersects(index: r, callback: callback)
+//            }
+//        }
+//
+//        func intersects(index1: Int, index2: Int, callback: (Int) -> Void) {
+//            guard boundingBoxes[index1].overlaps(boundingBoxes[index2]) else {
+//                return // nothing to do
+//            }
+//            let leaf1 = index1 >= inodecount
+//            let leaf2 = index2 >= inodecount
+//            if leaf1, leaf2 {
+//                callback(index1 - inodecount, index2 - inodecount)
+//            }
+//            else if leaf1 {
+//                intersects(index1: index1, index2: 2*index2+1, callback: callback)
+//                intersects(index1: index1, index2: 2*index2+2, callback: callback)
+//            }
+//            else if leaf2 {
+//                intersects(index1: 2*index1+1, index2: index2, callback: callback)
+//                intersects(index1: 2*index1+2, index2: index2, callback: callback)
+//            }
+//            else {
+//                intersects(index1: 2*index1+1, index2: 2*index2+1, callback: callback)
+//                intersects(index1: 2*index1+1, index2: 2*index2+2, callback: callback)
+//                intersects(index1: 2*index1+2, index2: 2*index2+1, callback: callback)
+//                intersects(index1: 2*index1+2, index2: 2*index2+2, callback: callback)
+//            }
+//        }
+//
+
+        
         func intersects(index1: Int, index2: Int, boxes1: [BoundingBox], boxes2: [BoundingBox], callback: (Int, Int) -> Void) {
             guard boxes1[index1].overlaps(boxes2[index2]) else {
                 return // nothing to do
