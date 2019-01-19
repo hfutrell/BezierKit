@@ -10,29 +10,41 @@ import CoreGraphics
 
 internal class BVH {
     
-    fileprivate var boundingBoxes: [BoundingBox]
+    fileprivate let boundingBoxes: UnsafeMutablePointer<BoundingBox>?
+    fileprivate var inodeCount: Int
     
     fileprivate var root: BVHNode {
         return BVHNode(index: 0, bvh: Unmanaged.passUnretained(self) )
     }
     
     internal var boundingBox: BoundingBox {
-        return boundingBoxes.first!
+        if let boxes = self.boundingBoxes {
+            return boxes[0]
+        }
+        else {
+            return BoundingBox.empty
+        }
     }
     
     internal init(boxes leafBoxes: [BoundingBox]) {
         // create a complete binary tree of bounding boxes where boxes[0] is the root and left child is 2*index+1 and right child is 2*index+2
-        var boxes = [BoundingBox](repeating: BoundingBox.empty, count: leafBoxes.count - 1) + leafBoxes
-        if leafBoxes.count > 1 {
-            for i in stride(from: leafBoxes.count-2, through: 0, by: -1) {
-                boxes[i] = BoundingBox(first: boxes[2*i+1], second: boxes[2*i+2])
-            }
+        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: 2 * leafBoxes.count - 1)
+        self.inodeCount = leafBoxes.count - 1
+        for i in 0..<leafBoxes.count {
+            boxes[i+self.inodeCount] = leafBoxes[i]
+        }
+        for i in stride(from: self.inodeCount - 1, through: 0, by: -1) {
+            boxes[i] = BoundingBox(first: boxes[2*i+1], second: boxes[2*i+2])
         }
         self.boundingBoxes = boxes
     }
     
+    deinit {
+        self.boundingBoxes?.deallocate()
+    }
+    
     internal func visit(callback: (BVHNode, Int) -> Bool) {
-        guard self.boundingBoxes.isEmpty == false else {
+        guard self.boundingBoxes != nil else {
             return
         }
         root.visit(callback: callback)
@@ -78,38 +90,36 @@ internal class BVH {
 //            }
 //        }
 //
-
-        
-        func intersects(index1: Int, index2: Int, boxes1: [BoundingBox], boxes2: [BoundingBox], callback: (Int, Int) -> Void) {
+        let inodecount1 = self.inodeCount
+        let inodecount2 = other.inodeCount
+        guard let boxes1 = self.boundingBoxes, let boxes2 = other.boundingBoxes else {
+            return
+        }
+        func intersects(index1: Int, index2: Int, callback: (Int, Int) -> Void) {
             guard boxes1[index1].overlaps(boxes2[index2]) else {
                 return // nothing to do
             }
-            let inodecount1 = (boxes1.count-1)/2
-            let inodecount2 = (boxes2.count-1)/2
             let leaf1 = index1 >= inodecount1
             let leaf2 = index2 >= inodecount2
             if leaf1, leaf2 {
                 callback(index1 - inodecount1, index2 - inodecount2)
             }
             else if leaf1 {
-                intersects(index1: index1, index2: 2*index2+1, boxes1: boxes1, boxes2: boxes2, callback: callback)
-                intersects(index1: index1, index2: 2*index2+2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: index1, index2: 2*index2+1, callback: callback)
+                intersects(index1: index1, index2: 2*index2+2, callback: callback)
             }
             else if leaf2 {
-                intersects(index1: 2*index1+1, index2: index2, boxes1: boxes1, boxes2: boxes2, callback: callback)
-                intersects(index1: 2*index1+2, index2: index2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: 2*index1+1, index2: index2, callback: callback)
+                intersects(index1: 2*index1+2, index2: index2, callback: callback)
             }
             else {
-                intersects(index1: 2*index1+1, index2: 2*index2+1, boxes1: boxes1, boxes2: boxes2, callback: callback)
-                intersects(index1: 2*index1+1, index2: 2*index2+2, boxes1: boxes1, boxes2: boxes2, callback: callback)
-                intersects(index1: 2*index1+2, index2: 2*index2+1, boxes1: boxes1, boxes2: boxes2, callback: callback)
-                intersects(index1: 2*index1+2, index2: 2*index2+2, boxes1: boxes1, boxes2: boxes2, callback: callback)
+                intersects(index1: 2*index1+1, index2: 2*index2+1, callback: callback)
+                intersects(index1: 2*index1+1, index2: 2*index2+2, callback: callback)
+                intersects(index1: 2*index1+2, index2: 2*index2+1, callback: callback)
+                intersects(index1: 2*index1+2, index2: 2*index2+2, callback: callback)
             }
         }
-        guard self.boundingBoxes.isEmpty == false, other.boundingBoxes.isEmpty == false else {
-            return
-        }
-        intersects(index1: 0, index2: 0, boxes1: self.boundingBoxes, boxes2: other.boundingBoxes, callback: callback)
+        intersects(index1: 0, index2: 0, callback: callback)
     }
 }
 
@@ -124,12 +134,11 @@ internal struct BVHNode {
     }
     
     internal var boundingBox: BoundingBox {
-        return self.bvh.takeUnretainedValue().boundingBoxes[index]
+        return self.bvh.takeUnretainedValue().boundingBoxes![index]
     }
     
     internal var nodeType: NodeType {
-        let count = self.bvh.takeUnretainedValue().boundingBoxes.count
-        let internalNodeCount = (count-1)/2
+        let internalNodeCount = self.bvh.takeUnretainedValue().inodeCount
         if index < internalNodeCount {
             return .internal
         }
