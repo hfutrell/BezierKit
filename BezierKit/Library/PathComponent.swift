@@ -109,7 +109,7 @@ public final class PathComponent: NSObject, NSCoding {
     
     public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: self.bvh) { i1, i2 in
+        self.bvh.intersects() { i1, i2 in
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
             /*if i1 == i2 {
