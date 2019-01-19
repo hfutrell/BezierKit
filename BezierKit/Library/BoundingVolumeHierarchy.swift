@@ -10,7 +10,7 @@ import CoreGraphics
 
 internal class BVH {
     
-    fileprivate let boundingBoxes: UnsafeMutablePointer<BoundingBox>?
+    fileprivate let boundingBoxes: UnsafePointer<BoundingBox>?
     fileprivate var inodeCount: Int
     
     fileprivate var root: BVHNode {
@@ -28,15 +28,15 @@ internal class BVH {
     
     internal init(boxes leafBoxes: [BoundingBox]) {
         // create a complete binary tree of bounding boxes where boxes[0] is the root and left child is 2*index+1 and right child is 2*index+2
-        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: 2 * leafBoxes.count - 1)
-        self.inodeCount = leafBoxes.count - 1
+        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: 2*leafBoxes.count-1)
+        self.inodeCount = leafBoxes.count-1
         for i in 0..<leafBoxes.count {
             boxes[i+self.inodeCount] = leafBoxes[i]
         }
-        for i in stride(from: self.inodeCount - 1, through: 0, by: -1) {
+        for i in stride(from: self.inodeCount-1, through: 0, by: -1) {
             boxes[i] = BoundingBox(first: boxes[2*i+1], second: boxes[2*i+2])
         }
-        self.boundingBoxes = boxes
+        self.boundingBoxes = UnsafePointer<BoundingBox>(boxes)
     }
     
     deinit {
