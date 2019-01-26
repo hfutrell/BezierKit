@@ -8,56 +8,59 @@
 
 import CoreGraphics
 
-fileprivate func left(_ index: Int) -> Int {
+private func left(_ index: Int) -> Int {
     return 2 &* index &+ 1 // left child of complete binary tree is always 2*i+1
 }
 
-fileprivate func right(_ index: Int) -> Int {
+private func right(_ index: Int) -> Int {
     return 2 &* index &+ 2 // right child of complete binary tree is always 2*i+2
 }
 
 final internal class BVH {
     
     private let boundingBoxes: UnsafePointer<BoundingBox>
-    private let inodeCount: Int
     private let lastRowIndex: Int
     private let elementCount: Int
+    
+    private static func leafNodeIndexToElementIndex(_ nodeIndex: Int, elementCount: Int, lastRowIndex: Int) -> Int {
+        assert(isLeaf(nodeIndex, elementCount: elementCount))
+        var elementIndex = nodeIndex - lastRowIndex
+        if elementIndex < 0 {
+            elementIndex += elementCount
+        }
+        return elementIndex
+    }
+    
+    private func leafNodeIndexToElementIndex(_ nodeIndex: Int) -> Int {
+        return BVH.leafNodeIndexToElementIndex(nodeIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
+    }
+    
+    private static func isLeaf(_ index: Int, elementCount: Int) -> Bool {
+        return index >= elementCount-1
+    }
     
     var boundingBox: BoundingBox {
         return self.boundingBoxes[0]
     }
     
-    fileprivate static func leafNodeIndexToElementIndex(_ nodeIndex: Int, leafCount: Int, lastRowIndex: Int) -> Int {
-        assert(nodeIndex + 1 >= leafCount, "not actually a leaf (index of left child is a valid node")
-        var elementIndex = nodeIndex - lastRowIndex
-        if elementIndex < 0 {
-            elementIndex += leafCount
-        }
-        return elementIndex
-    }
-    
-    init(boxes leafBoxes: [BoundingBox]) {
-
-        assert(leafBoxes.count > 0)
-        
-        self.elementCount = leafBoxes.count
-        self.inodeCount = self.elementCount-1
-        
-        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: self.elementCount + self.inodeCount)
-        
+    init(boxes elementBoxes: [BoundingBox]) {
+        assert(elementBoxes.count > 0)
+        self.elementCount = elementBoxes.count
+        let inodeCount = self.elementCount-1 // in complete binary tree the number of inodes (internal nodes) is one fewer than the leafs
+        // compute `lastRowIndex` the index of the first leaf node in the bottom row of the tree
         var lastRowIndex = 0
-        while lastRowIndex < self.inodeCount {
-            lastRowIndex *= 2
-            lastRowIndex += 1
+        while lastRowIndex < inodeCount {
+            lastRowIndex = left(lastRowIndex)
         }
         self.lastRowIndex = lastRowIndex
-        
+        // compute bounding boxes
+        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: self.elementCount + inodeCount)
         for i in 0..<self.elementCount {
-            let nodeIndex = i+self.inodeCount
-            let elementIndex = BVH.leafNodeIndexToElementIndex(nodeIndex, leafCount: leafBoxes.count, lastRowIndex: lastRowIndex)
-            boxes[nodeIndex] = leafBoxes[elementIndex]
+            let nodeIndex = i+inodeCount
+            let elementIndex = BVH.leafNodeIndexToElementIndex(nodeIndex, elementCount: self.elementCount, lastRowIndex: lastRowIndex)
+            boxes[nodeIndex] = elementBoxes[elementIndex]
         }
-        for i in stride(from: self.inodeCount-1, through: 0, by: -1) {
+        for i in stride(from: inodeCount-1, through: 0, by: -1) {
             boxes[i] = BoundingBox(first: boxes[left(i)], second: boxes[right(i)])
         }
         self.boundingBoxes = UnsafePointer<BoundingBox>(boxes)
@@ -69,12 +72,13 @@ final internal class BVH {
     
     func visit(callback: (BVHNode, Int) -> Bool) {
         func visit(index: Int, depth: Int, callback: (BVHNode, Int) -> Bool) {
-            guard callback(BVHNode(boundingBox: self.boundingBoxes[index],
-                                   type: index < self.inodeCount ? .internal: .leaf(elementIndex: BVH.leafNodeIndexToElementIndex(index, leafCount: self.elementCount, lastRowIndex: self.lastRowIndex))),
-                           depth) == true else {
+            let leaf = BVH.isLeaf(index, elementCount: elementCount)
+            let nodeType: BVHNode.NodeType = leaf ? .leaf(elementIndex: self.leafNodeIndexToElementIndex(index)) : .internal
+            let node = BVHNode(boundingBox: self.boundingBoxes[index], type: nodeType)
+            guard callback(node, depth) == true else {
                 return
             }
-            if index < self.inodeCount {
+            if leaf == false {
                 let nextDepth = depth + 1
                 visit(index: left(index), depth: nextDepth, callback: callback)
                 visit(index: right(index), depth: nextDepth, callback: callback)
@@ -88,16 +92,16 @@ final internal class BVH {
     }
     
     func intersects(node other: BVH, callback: (Int, Int) -> Void) {
-        let inodecount1 = self.inodeCount
-        let inodecount2 = other.inodeCount
+        let elementCount1 = self.elementCount
+        let elementCount2 = other.elementCount
         let boxes1 = self.boundingBoxes
         let boxes2 = other.boundingBoxes
         let checkSelfIntersection = (other === self)
         func intersects(index1: Int, index2: Int, callback: (Int, Int) -> Void) {
             
             if checkSelfIntersection && index1 == index2 { // special handling for self-intersection
-                if index1 >= inodecount1 { // if it's a leaf node
-                    let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, leafCount: self.elementCount, lastRowIndex: self.lastRowIndex)
+                if BVH.isLeaf(index1, elementCount: elementCount1) { // if it's a leaf node
+                    let elementIndex1 = self.leafNodeIndexToElementIndex(index1)
                     callback(elementIndex1, elementIndex1)
                 }
                 else {
@@ -114,11 +118,11 @@ final internal class BVH {
                 return // nothing to do
             }
             
-            let leaf1 = index1 >= inodecount1
-            let leaf2 = index2 >= inodecount2
+            let leaf1: Bool = BVH.isLeaf(index1, elementCount: elementCount1)
+            let leaf2: Bool = BVH.isLeaf(index2, elementCount: elementCount2)
             if leaf1, leaf2 {
-                let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, leafCount: self.elementCount, lastRowIndex: self.lastRowIndex)
-                let elementIndex2 = BVH.leafNodeIndexToElementIndex(index2, leafCount: other.elementCount, lastRowIndex: other.lastRowIndex)
+                let elementIndex1 = self.leafNodeIndexToElementIndex(index1)
+                let elementIndex2 = other.leafNodeIndexToElementIndex(index2)
                 callback(elementIndex1, elementIndex2)
             }
             else if leaf1 {
@@ -142,13 +146,13 @@ final internal class BVH {
 
 internal struct BVHNode {
     let boundingBox: BoundingBox
-    let nodeType: NodeType
+    let type: NodeType
     enum NodeType {
         case leaf(elementIndex: Int)
         case `internal`
     }
     fileprivate init(boundingBox: BoundingBox, type: NodeType) {
-        self.nodeType = type
+        self.type = type
         self.boundingBox = boundingBox
     }
 }

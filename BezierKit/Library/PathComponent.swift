@@ -75,7 +75,7 @@ public final class PathComponent: NSObject, NSCoding {
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
             }
-            else if case let .leaf(elementIndex) = node.nodeType {
+            else if case let .leaf(elementIndex) = node.type {
                 let curve = self.curves[elementIndex]
                 if distance(p, curve.project(point: p)) < d {
                     found = true
@@ -184,7 +184,7 @@ public final class PathComponent: NSObject, NSCoding {
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathComponentLocation] = []
         self.bvh.visit { node, _ in
-            if case let .leaf(elementIndex) = node.nodeType {
+            if case let .leaf(elementIndex) = node.type {
                 let curve = self.curves[elementIndex]
                 results += curve.intersects(line: line).compactMap {
                     return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
