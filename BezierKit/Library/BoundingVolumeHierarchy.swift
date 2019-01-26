@@ -10,10 +10,10 @@ import CoreGraphics
 
 internal class BVH {
     
-    fileprivate let boundingBoxes: UnsafePointer<BoundingBox>
-    fileprivate var inodeCount: Int
-    fileprivate var lastRowIndex: Int
-    fileprivate var elementCount: Int
+    private let boundingBoxes: UnsafePointer<BoundingBox>
+    private let inodeCount: Int
+    private let lastRowIndex: Int
+    private let elementCount: Int
         
     var boundingBox: BoundingBox {
         return self.boundingBoxes[0]
@@ -154,8 +154,8 @@ internal class BVH {
 }
 
 internal struct BVHNode {
-    var boundingBox: BoundingBox
-    var nodeType: NodeType
+    let boundingBox: BoundingBox
+    let nodeType: NodeType
     enum NodeType {
         case leaf(elementIndex: Int)
         case `internal`
