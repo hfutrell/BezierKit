@@ -25,7 +25,7 @@ public final class PathComponent: NSObject, NSCoding {
     
     public let curves: [BezierCurve]
     
-    internal lazy var bvh: BVHNode = BVHNode(objects: curves)
+    internal lazy var bvh: BVH = BVH(boxes: curves.map { $0.boundingBox })
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
@@ -75,8 +75,8 @@ public final class PathComponent: NSObject, NSCoding {
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
             }
-            else if case let .leaf(object, _) = node.nodeType {
-                let curve = object as! BezierCurve
+            else if case let .leaf(elementIndex) = node.type {
+                let curve = self.curves[elementIndex]
                 if distance(p, curve.project(point: p)) < d {
                     found = true
                 }
@@ -89,9 +89,9 @@ public final class PathComponent: NSObject, NSCoding {
     public func intersects(component other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         precondition(other !== self, "use intersects(threshold:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: other.bvh) { o1, o2, i1, i2 in
-            let c1 = o1 as! BezierCurve
-            let c2 = o2 as! BezierCurve
+        self.bvh.intersects(node: other.bvh) { i1, i2 in
+            let c1 = self.curves[i1]
+            let c2 = other.curves[i2]
             let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
@@ -109,9 +109,7 @@ public final class PathComponent: NSObject, NSCoding {
     
     public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: self.bvh) { o1, o2, i1, i2 in
-            let c1 = o1 as! BezierCurve
-            let c2 = o2 as! BezierCurve
+        self.bvh.intersects() { i1, i2 in
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
             /*if i1 == i2 {
@@ -122,6 +120,8 @@ public final class PathComponent: NSObject, NSCoding {
             }
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
+                let c1 = self.curves[i1]
+                let c2 = self.curves[i2]
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
                     if i1 == Utils.mod(i2-1, self.curves.count) && $0.t1 == 1.0 {
                         return false // exclude intersections of i and i+1 at t=1
@@ -183,11 +183,11 @@ public final class PathComponent: NSObject, NSCoding {
     internal func intersects(line: LineSegment) -> [IndexedPathComponentLocation] {
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathComponentLocation] = []
-        self.bvh.visit { (node: BVHNode, depth: Int) in
-            if case let .leaf(object, elementIndex) = node.nodeType {
-                let curve = object as! BezierCurve
+        self.bvh.visit { node, _ in
+            if case let .leaf(elementIndex) = node.type {
+                let curve = self.curves[elementIndex]
                 results += curve.intersects(line: line).compactMap {
-                return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
+                    return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
                 }
             }
             // TODO: better line box intersection
