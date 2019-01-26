@@ -96,28 +96,23 @@ final internal class BVH {
         let elementCount2 = other.elementCount
         let boxes1 = self.boundingBoxes
         let boxes2 = other.boundingBoxes
-        let checkSelfIntersection = (other === self)
-        func intersects(index1: Int, index2: Int, callback: (Int, Int) -> Void) {
-            
-            if checkSelfIntersection && index1 == index2 { // special handling for self-intersection
-                if BVH.isLeaf(index1, elementCount: elementCount1) { // if it's a leaf node
-                    let elementIndex1 = self.leafNodeIndexToElementIndex(index1)
-                    callback(elementIndex1, elementIndex1)
-                }
-                else {
-                    let l = left(index1)
-                    let r = right(index1)
-                    intersects(index1: l, index2: l, callback: callback)
-                    intersects(index1: l, index2: r, callback: callback)
-                    intersects(index1: r, index2: r, callback: callback)
-                }
-                return
+        func intersects(index: Int, callback: (Int, Int) -> Void) {
+            if BVH.isLeaf(index, elementCount: elementCount1) { // if it's a leaf node
+                let elementIndex = self.leafNodeIndexToElementIndex(index)
+                callback(elementIndex, elementIndex)
             }
-            
+            else {
+                let l = left(index)
+                let r = right(index)
+                intersects(index: l, callback: callback)
+                intersects(index1: l, index2: r, callback: callback)
+                intersects(index: r, callback: callback)
+            }
+        }
+        func intersects(index1: Int, index2: Int, callback: (Int, Int) -> Void) {
             guard boxes1[index1].overlaps(boxes2[index2]) else {
                 return // nothing to do
             }
-            
             let leaf1: Bool = BVH.isLeaf(index1, elementCount: elementCount1)
             let leaf2: Bool = BVH.isLeaf(index2, elementCount: elementCount2)
             if leaf1, leaf2 {
@@ -140,7 +135,12 @@ final internal class BVH {
                 intersects(index1: right(index1), index2: right(index2), callback: callback)
             }
         }
-        intersects(index1: 0, index2: 0, callback: callback)
+        if (other === self) {
+            intersects(index: 0, callback: callback)
+        }
+        else {
+            intersects(index1: 0, index2: 0, callback: callback)
+        }
     }
 }
 
