@@ -75,47 +75,7 @@ internal class BVH {
     }
     
     func intersects(callback: (Int, Int) -> Void) {
-        let inodecount = self.inodeCount
-        func intersects(index: Int, callback: (Int, Int) -> Void) {
-            if index >= inodecount { // if it's a leaf node
-                let elementIndex1 = BVH.leafNodeIndexToElementIndex(index, leafCount: self.elementCount, lastRowIndex: lastRowIndex)
-                callback(elementIndex1, elementIndex1)
-            }
-            else {
-                let l = 2*index+1
-                let r = 2*index+2
-                intersects(index: l, callback: callback)
-                intersects(index1: l, index2: r, callback: callback)
-                intersects(index: r, callback: callback)
-            }
-        }
-        func intersects(index1: Int, index2: Int, callback: (Int, Int) -> Void) {
-            guard self.boundingBoxes[index1].overlaps(self.boundingBoxes[index2]) else {
-                return // nothing to do
-            }
-            let leaf1 = index1 >= inodecount
-            let leaf2 = index2 >= inodecount
-            if leaf1, leaf2 {
-                let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, leafCount: self.elementCount, lastRowIndex: lastRowIndex)
-                let elementIndex2 = BVH.leafNodeIndexToElementIndex(index2, leafCount: self.elementCount, lastRowIndex: lastRowIndex)
-                callback(elementIndex1, elementIndex2)
-            }
-            else if leaf1 {
-                intersects(index1: index1, index2: 2*index2+1, callback: callback)
-                intersects(index1: index1, index2: 2*index2+2, callback: callback)
-            }
-            else if leaf2 {
-                intersects(index1: 2*index1+1, index2: index2, callback: callback)
-                intersects(index1: 2*index1+2, index2: index2, callback: callback)
-            }
-            else {
-                intersects(index1: 2*index1+1, index2: 2*index2+1, callback: callback)
-                intersects(index1: 2*index1+1, index2: 2*index2+2, callback: callback)
-                intersects(index1: 2*index1+2, index2: 2*index2+1, callback: callback)
-                intersects(index1: 2*index1+2, index2: 2*index2+2, callback: callback)
-            }
-        }
-        intersects(index: 0, callback: callback)
+        self.intersects(node: self, callback: callback)
     }
     
     func intersects(node other: BVH, callback: (Int, Int) -> Void) {
@@ -123,10 +83,28 @@ internal class BVH {
         let inodecount2 = other.inodeCount
         let boxes1 = self.boundingBoxes
         let boxes2 = other.boundingBoxes
+        let checkSelfIntersection = (other === self)
         func intersects(index1: Int, index2: Int, callback: (Int, Int) -> Void) {
+            
+            if checkSelfIntersection && index1 == index2 { // special handling for self-intersection
+                if index1 >= inodecount1 { // if it's a leaf node
+                    let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, leafCount: self.elementCount, lastRowIndex: self.lastRowIndex)
+                    callback(elementIndex1, elementIndex1)
+                }
+                else {
+                    let l = 2*index1+1
+                    let r = 2*index1+2
+                    intersects(index1: l, index2: l, callback: callback)
+                    intersects(index1: l, index2: r, callback: callback)
+                    intersects(index1: r, index2: r, callback: callback)
+                }
+                return
+            }
+            
             guard boxes1[index1].overlaps(boxes2[index2]) else {
                 return // nothing to do
             }
+            
             let leaf1 = index1 >= inodecount1
             let leaf2 = index2 >= inodecount2
             if leaf1, leaf2 {
