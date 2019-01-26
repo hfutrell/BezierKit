@@ -8,13 +8,21 @@
 
 import CoreGraphics
 
-internal class BVH {
+fileprivate func left(_ index: Int) -> Int {
+    return 2 &* index &+ 1 // left child of complete binary tree is always 2*i+1
+}
+
+fileprivate func right(_ index: Int) -> Int {
+    return 2 &* index &+ 2 // right child of complete binary tree is always 2*i+2
+}
+
+final internal class BVH {
     
     private let boundingBoxes: UnsafePointer<BoundingBox>
     private let inodeCount: Int
     private let lastRowIndex: Int
     private let elementCount: Int
-        
+    
     var boundingBox: BoundingBox {
         return self.boundingBoxes[0]
     }
@@ -29,12 +37,13 @@ internal class BVH {
     }
     
     init(boxes leafBoxes: [BoundingBox]) {
-        // create a complete binary tree of bounding boxes where boxes[0] is the root and left child is 2*index+1 and right child is 2*index+2
+
         assert(leafBoxes.count > 0)
-        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: 2*leafBoxes.count-1)
         
         self.elementCount = leafBoxes.count
-        self.inodeCount = leafBoxes.count-1
+        self.inodeCount = self.elementCount-1
+        
+        let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: self.elementCount + self.inodeCount)
         
         var lastRowIndex = 0
         while lastRowIndex < self.inodeCount {
@@ -43,13 +52,13 @@ internal class BVH {
         }
         self.lastRowIndex = lastRowIndex
         
-        for i in 0..<leafBoxes.count {
+        for i in 0..<self.elementCount {
             let nodeIndex = i+self.inodeCount
             let elementIndex = BVH.leafNodeIndexToElementIndex(nodeIndex, leafCount: leafBoxes.count, lastRowIndex: lastRowIndex)
             boxes[nodeIndex] = leafBoxes[elementIndex]
         }
         for i in stride(from: self.inodeCount-1, through: 0, by: -1) {
-            boxes[i] = BoundingBox(first: boxes[2*i+1], second: boxes[2*i+2])
+            boxes[i] = BoundingBox(first: boxes[left(i)], second: boxes[right(i)])
         }
         self.boundingBoxes = UnsafePointer<BoundingBox>(boxes)
     }
@@ -67,8 +76,8 @@ internal class BVH {
             }
             if index < self.inodeCount {
                 let nextDepth = depth + 1
-                visit(index: 2*index+1, depth: nextDepth, callback: callback)
-                visit(index: 2*index+2, depth: nextDepth, callback: callback)
+                visit(index: left(index), depth: nextDepth, callback: callback)
+                visit(index: right(index), depth: nextDepth, callback: callback)
             }
         }
         visit(index: 0, depth: 0, callback: callback)
@@ -92,8 +101,8 @@ internal class BVH {
                     callback(elementIndex1, elementIndex1)
                 }
                 else {
-                    let l = 2*index1+1
-                    let r = 2*index1+2
+                    let l = left(index1)
+                    let r = right(index1)
                     intersects(index1: l, index2: l, callback: callback)
                     intersects(index1: l, index2: r, callback: callback)
                     intersects(index1: r, index2: r, callback: callback)
@@ -113,18 +122,18 @@ internal class BVH {
                 callback(elementIndex1, elementIndex2)
             }
             else if leaf1 {
-                intersects(index1: index1, index2: 2*index2+1, callback: callback)
-                intersects(index1: index1, index2: 2*index2+2, callback: callback)
+                intersects(index1: index1, index2: left(index2), callback: callback)
+                intersects(index1: index1, index2: right(index2), callback: callback)
             }
             else if leaf2 {
-                intersects(index1: 2*index1+1, index2: index2, callback: callback)
-                intersects(index1: 2*index1+2, index2: index2, callback: callback)
+                intersects(index1: left(index1), index2: index2, callback: callback)
+                intersects(index1: right(index1), index2: index2, callback: callback)
             }
             else {
-                intersects(index1: 2*index1+1, index2: 2*index2+1, callback: callback)
-                intersects(index1: 2*index1+1, index2: 2*index2+2, callback: callback)
-                intersects(index1: 2*index1+2, index2: 2*index2+1, callback: callback)
-                intersects(index1: 2*index1+2, index2: 2*index2+2, callback: callback)
+                intersects(index1: left(index1), index2: left(index2), callback: callback)
+                intersects(index1: left(index1), index2: right(index2), callback: callback)
+                intersects(index1: right(index1), index2: left(index2), callback: callback)
+                intersects(index1: right(index1), index2: right(index2), callback: callback)
             }
         }
         intersects(index1: 0, index2: 0, callback: callback)
