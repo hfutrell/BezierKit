@@ -10,7 +10,7 @@ import XCTest
 @testable import BezierKit
 
  // because Swift tuples don't work with `Equatable` in Swift 4
-struct Tuple: Equatable, Hashable {
+private struct Tuple: Equatable, Hashable {
     var first: Int
     var second: Int
 }
