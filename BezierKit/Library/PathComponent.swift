@@ -183,7 +183,7 @@ public final class PathComponent: NSObject, NSCoding {
     internal func intersects(line: LineSegment) -> [IndexedPathComponentLocation] {
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathComponentLocation] = []
-        self.bvh.visit { (node: BVHNode, depth: Int) in
+        self.bvh.visit { node, _ in
             if case let .leaf(elementIndex) = node.nodeType {
                 let curve = self.curves[elementIndex]
                 results += curve.intersects(line: line).compactMap {

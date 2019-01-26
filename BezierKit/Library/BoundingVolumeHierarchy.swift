@@ -17,7 +17,7 @@ internal class BVH {
         return BVHNode(index: 0, bvh: Unmanaged.passUnretained(self) )
     }
     
-    internal var boundingBox: BoundingBox {
+    var boundingBox: BoundingBox {
         if let boxes = self.boundingBoxes {
             return boxes[0]
         }
@@ -26,7 +26,7 @@ internal class BVH {
         }
     }
     
-    internal init(boxes leafBoxes: [BoundingBox]) {
+    init(boxes leafBoxes: [BoundingBox]) {
         // create a complete binary tree of bounding boxes where boxes[0] is the root and left child is 2*index+1 and right child is 2*index+2
         let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: 2*leafBoxes.count-1)
         self.inodeCount = leafBoxes.count-1
@@ -43,14 +43,14 @@ internal class BVH {
         self.boundingBoxes?.deallocate()
     }
     
-    internal func visit(callback: (BVHNode, Int) -> Bool) {
+    func visit(callback: (BVHNode, Int) -> Bool) {
         guard self.boundingBoxes != nil else {
             return
         }
         root.visit(callback: callback)
     }
     
-    internal func intersects(callback: (Int, Int) -> Void) {
+    func intersects(callback: (Int, Int) -> Void) {
         let inodecount = self.inodeCount
         guard let boxes = self.boundingBoxes else {
             return
@@ -99,7 +99,7 @@ internal class BVH {
         intersects(index: 0, callback: callback)
     }
     
-    internal func intersects(node other: BVH, callback: (Int, Int) -> Void) {
+    func intersects(node other: BVH, callback: (Int, Int) -> Void) {
         let inodecount1 = self.inodeCount
         let inodecount2 = other.inodeCount
         guard let boxes1 = self.boundingBoxes, let boxes2 = other.boundingBoxes else {
