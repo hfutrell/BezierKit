@@ -30,7 +30,9 @@ class BoundingVolumeHierarchyTests: XCTestCase {
         let bvh = BVH(boxes: [BoundingBox](repeating: box, count: 5))
         var visitedSet = Set<Tuple>()
         bvh.intersects { i, j in
-            visitedSet.insert(Tuple(first: i, second: j))
+            let tuple = Tuple(first: i, second: j)
+            XCTAssertFalse(visitedSet.contains(tuple), "we already visited (\(i), \(j))!")
+            visitedSet.insert(tuple)
         }
         let expectedSet = { () -> Set<Tuple> in
             var set = Set<Tuple>()
