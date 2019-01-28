@@ -33,7 +33,7 @@ public final class PathComponent: NSObject, NSCoding {
         }
     }()
     
-    internal lazy var bvh: BVHNode = BVHNode(objects: curves)
+    internal lazy var bvh: BVH = BVH(boxes: curves.map { $0.boundingBox })
     
     public var elementCount: Int {
         return self.orders.count
@@ -141,7 +141,7 @@ public final class PathComponent: NSObject, NSCoding {
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
             }
-            else if case let .leaf(elementIndex) = node.nodeType {
+            else if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
                 if distance(p, curve.project(point: p)) < d {
                     found = true
@@ -175,7 +175,7 @@ public final class PathComponent: NSObject, NSCoding {
     
     public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: self.bvh) { i1, i2 in
+        self.bvh.intersects() { i1, i2 in
             let c1 = self.element(at: i1)
             let c2 = self.element(at: i2)
             var elementIntersections: [Intersection] = []
@@ -188,6 +188,8 @@ public final class PathComponent: NSObject, NSCoding {
             }
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
+                let c1 = self.curves[i1]
+                let c2 = self.curves[i2]
                 elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
                     if i1 == Utils.mod(i2-1, self.elementCount) && $0.t1 == 1.0 {
                         return false // exclude intersections of i and i+1 at t=1
@@ -236,8 +238,8 @@ public final class PathComponent: NSObject, NSCoding {
     internal func intersects(line: LineSegment) -> [IndexedPathComponentLocation] {
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathComponentLocation] = []
-        self.bvh.visit { (node: BVHNode, depth: Int) in
-            if case let .leaf(elementIndex) = node.nodeType {
+        self.bvh.visit { node, _ in
+            if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
                 results += curve.intersects(line: line).compactMap {
                     return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
