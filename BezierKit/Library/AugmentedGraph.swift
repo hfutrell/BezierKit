@@ -102,14 +102,14 @@ internal class PathLinkedListRepresentation {
         }
         assert(component.startingPoint == component.endingPoint, "this method assumes component is closed!")
         var elements: [Vertex] = [] // elements[i] is the first vertex of curves[i]
-        let firstPoint: CGPoint = component.curves.first!.startingPoint
+        let firstPoint: CGPoint = component.startingPoint
         let firstVertex = Vertex(location: firstPoint, isIntersection: false)
         elements.append(firstVertex)
         var lastVertex = firstVertex
-        for i in 1..<component.curves.count {
-            let v = Vertex(location: component.curves[i].startingPoint, isIntersection: false)
+        for i in 1..<component.elementCount {
+            let v = Vertex(location: component.element(at: i).startingPoint, isIntersection: false)
             elements.append(v)
-            let curveForTransition = component.curves[i-1]
+            let curveForTransition = component.element(at: i-1)
             // set the forwards reference for starting vertex of curve i-1
             lastVertex.setNextVertex(v, transition: VertexTransition(curve: curveForTransition))
             // set the backwards reference for starting vertex of curve i

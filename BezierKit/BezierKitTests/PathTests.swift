@@ -59,7 +59,7 @@ class PathTests: XCTestCase {
         let p4 = CGPoint(x: 0.5, y: 0.0)
         
         XCTAssertEqual(path2.subpaths.count, 1)
-        XCTAssertEqual(path2.subpaths[0].curves.count, 4)
+        XCTAssertEqual(path2.subpaths[0].elementCount, 4)
         XCTAssertEqual(path2.subpaths[0].element(at: 0).startingPoint, p1)
         XCTAssertEqual(path2.subpaths[0].element(at: 1).startingPoint, p2)
         XCTAssertEqual(path2.subpaths[0].element(at: 2).startingPoint, p3)
@@ -91,7 +91,7 @@ class PathTests: XCTestCase {
         let path3 = Path(cgPath: cgPath3)
         XCTAssertEqual(path3.subpaths.count, 1)
         XCTAssertEqual(path3.subpaths[0].elementCount, 4)
-        XCTAssertEqual(path3.subpaths[0].curves[1] as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
+        XCTAssertEqual(path3.subpaths[0].element(at: 1) as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
     }
     
     func testInitCGPathMultipleSubpaths() {
@@ -110,10 +110,10 @@ class PathTests: XCTestCase {
         
         let path4 = Path(cgPath: cgPath4)
         XCTAssertEqual(path4.subpaths.count, 2)
-        XCTAssertEqual(path4.subpaths[0].curves.count, 1)
-        XCTAssertEqual(path4.subpaths[1].curves.count, 1)
-        XCTAssertEqual(path4.subpaths[0].curves[0] as! LineSegment, LineSegment(p0: p1, p1: p2))
-        XCTAssertEqual(path4.subpaths[1].curves[0] as! LineSegment, LineSegment(p0: p3, p1: p4))
+        XCTAssertEqual(path4.subpaths[0].elementCount, 1)
+        XCTAssertEqual(path4.subpaths[1].elementCount, 1)
+        XCTAssertEqual(path4.subpaths[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path4.subpaths[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
     
     func testIntersects() {
