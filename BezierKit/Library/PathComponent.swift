@@ -33,7 +33,7 @@ public final class PathComponent: NSObject, NSCoding {
         }
     }()
     
-    internal lazy var bvh: BVH = BVH(boxes: curves.map { $0.boundingBox })
+    internal lazy var bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
     
     public var elementCount: Int {
         return self.orders.count
