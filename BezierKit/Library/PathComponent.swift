@@ -206,11 +206,11 @@ public final class PathComponent: NSObject, NSCoding {
             return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
         }
         if order1 == 2 {
-            let c1 = p2.quadratic(at: i1)
+            let c1 = p1.quadratic(at: i1)
             return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
         }
         else if order1 == 3 {
-            let c1 = p2.cubic(at: i1)
+            let c1 = p1.cubic(at: i1)
             return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
         }
         else {
