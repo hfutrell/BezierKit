@@ -12,6 +12,7 @@ import CoreGraphics
  Cubic Bézier Curve
  */
 public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
+    
  
     public var p0, p1, p2, p3: CGPoint
     
@@ -285,6 +286,23 @@ public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
         let temp4 = d * self.p3
         return temp1 + temp2 + temp3 + temp4
     }
+    
+    public func intersects(cubic: CubicBezierCurve, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> [Intersection] {
+        let l = Subcurve<CubicBezierCurve>(curve: self)
+        let r = Subcurve<CubicBezierCurve>(curve: cubic)
+        let lb = self.boundingBox
+        let rb = cubic.boundingBox
+        var intersections: [Intersection] = []
+        Utils.pairiteration(l, r, lb, rb, &intersections, threshold)
+        // sort the results by t1 (and by t2 if t1 equal)
+        intersections = intersections.sorted(by: <)
+        // de-dupe the sorted array
+        intersections = intersections.reduce(Array<Intersection>(), {(intersection: [Intersection], next: Intersection) in
+            return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
+        })
+        return intersections
+    }
+    
 }
 
 extension CubicBezierCurve: Transformable {

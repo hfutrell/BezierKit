@@ -55,6 +55,34 @@ public final class PathComponent: NSObject, NSCoding {
         return createCurve(from: points)!
     }
     
+    internal func cubic(at index: Int) -> CubicBezierCurve {
+        assert(self.order(at: index) == 3)
+        let offset = self.offsets[index]
+        return self.points.withUnsafeBufferPointer { p in
+            return CubicBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
+        }
+    }
+    
+    internal func quadratic(at index: Int) -> QuadraticBezierCurve {
+        assert(self.order(at: index) == 2)
+        let offset = self.offsets[index]
+        return self.points.withUnsafeBufferPointer { p in
+            return QuadraticBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2])
+        }
+    }
+    
+    internal func line(at index: Int) -> LineSegment {
+        assert(self.order(at: index) == 1)
+        let offset = self.offsets[index]
+        return self.points.withUnsafeBufferPointer { p in
+            return LineSegment(p0: p[offset], p1: p[offset+1])
+        }
+    }
+    
+    internal func order(at index: Int) -> Int {
+        return self.orders[index]
+    }
+    
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         guard self.elementCount > 0 else {
@@ -152,13 +180,49 @@ public final class PathComponent: NSObject, NSCoding {
         return found
     }
     
+    private static func intersectionBetween<U>(_ c1: U, _ i2: Int, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] where U: BezierCurve {
+        let order2 = p2.order(at: i2)
+        if order2 == 1 {
+            let c2 = p2.line(at: i2)
+            return c1.intersects(line: c2)
+        }
+        if order2 == 2 {
+            let c2 = p2.quadratic(at: i2)
+            return c1.intersects(curve: c2, threshold: threshold)
+        }
+        else if order2 == 3 {
+            let c2 = p2.cubic(at: i2)
+            return c1.intersects(cubic: c2, threshold: threshold)
+        }
+        else {
+            fatalError("unsupported")
+        }
+    }
+    
+    private static func intersectionsBetweenElements(_ i1: Int, _ i2: Int, _ p1: PathComponent, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] {
+        let order1 = p1.order(at: i1)
+        if order1 == 1 {
+            let c1 = p1.line(at: i1)
+            return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
+        }
+        if order1 == 2 {
+            let c1 = p2.quadratic(at: i1)
+            return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
+        }
+        else if order1 == 3 {
+            let c1 = p2.cubic(at: i1)
+            return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
+        }
+        else {
+            fatalError("unsupported")
+        }
+    }
+    
     public func intersects(component other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         precondition(other !== self, "use intersects(threshold:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
         self.bvh.intersects(node: other.bvh) { i1, i2 in
-            let c1 = self.element(at: i1)
-            let c2 = other.element(at: i2)
-            let elementIntersections = c1.intersects(curve: c2, threshold: threshold)
+            let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, threshold: threshold)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)

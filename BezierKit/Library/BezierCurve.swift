@@ -577,6 +577,10 @@ extension BezierCurve {
         return shapes
     }
     
+    public func intersects(cubic: CubicBezierCurve, threshold: CGFloat) -> [Intersection] {
+        return self.intersects(curve: cubic, threshold: threshold)
+    }
+    
 }
 
 public let defaultIntersectionThreshold = CGFloat(0.5)
@@ -627,4 +631,5 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
     func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
+    func intersects(cubic: CubicBezierCurve, threshold: CGFloat) -> [Intersection]
 }
