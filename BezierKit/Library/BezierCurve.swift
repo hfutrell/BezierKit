@@ -59,8 +59,8 @@ private func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: S
     var intersections: [Intersection] = []
     Utils.pairiteration(curve1, curve2, lb, rb, &intersections, threshold)
     let sortedIntersections = intersections.sorted(by: <)
-    return sortedIntersections.reduce([Intersection]()) { intersection, next in
-        (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
+    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next : Intersection) in
+        return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
     }
 }
 
