@@ -208,17 +208,24 @@ public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
         let d0 = p1 - p0
         let d1 = p2 - p1
         let d2 = p3 - p2
-
+        
         for d in 0..<CGPoint.dimensions {
+            let mmind = mmin[d]
+            let mmaxd = mmax[d]
+            let value1 = p1[d]
+            let value2 = p2[d]
+            guard value1 < mmind || value1 > mmaxd || value2 < mmind || value2 > mmaxd else {
+                continue
+            }
             Utils.droots(d0[d], d1[d], d2[d]) {(r: CGFloat) in
                 if r <= 0.0 || r >= 1.0 {
                     return
                 }
                 let value = self.compute(r)[d]
-                if value < mmin[d] {
+                if value < mmind {
                     mmin[d] = value
                 }
-                else if value > mmax[d] {
+                else if value > mmaxd {
                     mmax[d] = value
                 }
             }

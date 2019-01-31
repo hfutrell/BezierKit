@@ -69,6 +69,15 @@ public struct BoundingBox: Equatable {
         let size = self.size
         return size.x * size.y
     }
+    public func contains(_ point: CGPoint) -> Bool {
+        guard point.x >= min.x && point.x <= max.x else {
+            return false
+        }
+        guard point.y >= min.y && point.y <= max.y else {
+            return false
+        }
+        return true
+    }
     public func overlaps(_ other: BoundingBox) -> Bool {
         let p1 = CGPoint.max(self.min, other.min)
         let p2 = CGPoint.min(self.max, other.max)
