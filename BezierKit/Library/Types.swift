@@ -54,6 +54,17 @@ public struct BoundingBox: Equatable {
         self.max = CGPoint.max(self.max, other.max)
         return self
     }
+    public func intersection(_ other: BoundingBox) -> BoundingBox {
+        let box = BoundingBox(min: CGPoint.max(self.min, other.min),
+                              max: CGPoint.min(self.max, other.max))
+        guard box.max.x - box.min.x >= 0, box.max.y - box.min.y >= 0 else {
+            return BoundingBox.empty
+        }
+        return box
+    }
+    public var isEmpty: Bool {
+        return self.min.x > self.max.x || self.min.y > self.max.y
+    }
     public init(p1: CGPoint, p2: CGPoint) {
         self.min = CGPoint.min(p1, p2)
         self.max = CGPoint.max(p1, p2)

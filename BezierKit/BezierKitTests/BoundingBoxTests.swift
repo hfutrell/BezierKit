@@ -111,4 +111,22 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertEqual(result, BoundingBox(p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 3.0, y: 5.0)))
     }
     
+    func testIntersection() {
+        let box1 = BoundingBox(p1: CGPoint(x:0,y:0), p2: CGPoint(x:3,y:2))
+        let box2 = BoundingBox(p1: CGPoint(x:2,y:1), p2: CGPoint(x:4,y:5))      // overlaps box1
+        let box3 = BoundingBox(p1: CGPoint(x:2,y:4), p2: CGPoint(x:4,y:5))      // does not overlap box1
+        let box4 = BoundingBox(p1: CGPoint(x:3,y:0), p2: CGPoint(x:5,y:2))      // overlaps box1 exactly on x edge
+        let box5 = BoundingBox(p1: CGPoint(x:0,y:2), p2: CGPoint(x:3,y:4))      // overlaps box1 exactly on y edge
+        let box6 = BoundingBox(p1: CGPoint(x:0,y:0), p2: CGPoint(x:-5,y:-5))    // overlaps box1 only at (0,0)
+        let expectedBox = BoundingBox(p1: CGPoint(x:2,y:1), p2: CGPoint(x:3,y:2))
+        XCTAssertEqual(box1.intersection(box2), expectedBox)
+        XCTAssertEqual(box2.intersection(box1), expectedBox)
+        XCTAssertEqual(box1.intersection(box3), BoundingBox.empty)
+        XCTAssertEqual(box1.intersection(BoundingBox.empty), BoundingBox.empty)
+        XCTAssertEqual(BoundingBox.empty.intersection(box1), BoundingBox.empty)
+        XCTAssertEqual(BoundingBox.empty.intersection(BoundingBox.empty), BoundingBox.empty)
+        XCTAssertEqual(box1.intersection(box4), BoundingBox(p1: CGPoint(x:3,y:0), p2: CGPoint(x:3,y:2)))
+        XCTAssertEqual(box1.intersection(box5), BoundingBox(p1: CGPoint(x:0,y:2), p2: CGPoint(x:3,y:2)))
+        XCTAssertEqual(box1.intersection(box6), BoundingBox(p1: CGPoint.zero, p2: CGPoint.zero))
+    }
 }

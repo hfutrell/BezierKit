@@ -107,6 +107,19 @@ public final class PathComponent: NSObject, NSCoding {
         return intersections
     }
     
+    private func neighborsIntersectOnlyTrivially(_ c1: BezierCurve, _ c2: BezierCurve) -> Bool {
+        let boundingBox = c1.boundingBox
+        guard boundingBox.intersection(c2.boundingBox).area == 0 else {
+            return false
+        }
+        for i in 1..<c2.points.count {
+            if boundingBox.contains(c2.points[i]) {
+                return false
+            }
+        }
+        return true
+    }
+    
     public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
         self.bvh.intersects() { i1, i2 in
@@ -122,15 +135,22 @@ public final class PathComponent: NSObject, NSCoding {
                 // we are intersecting two distinct path elements
                 let c1 = self.curves[i1]
                 let c2 = self.curves[i2]
-                elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
-                    if i1 == Utils.mod(i2-1, self.curves.count) && $0.t1 == 1.0 {
-                        return false // exclude intersections of i and i+1 at t=1
+                let areNeighbors = i1 == Utils.mod(i2-1, self.curves.count)
+                if areNeighbors, neighborsIntersectOnlyTrivially(c1, c2) {
+                    // optimize the very common case of element i intersecting i+1 at its endpoint
+                    elementIntersections = []
+                }
+                else {
+                    elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
+                        if areNeighbors, $0.t1 == 1.0 {
+                            return false // exclude intersections of i and i+1 at t=1
+                        }
+                        if $0.t1 == 0.0 || $0.t2 == 0.0 {
+                            // use the intersection with the prior path element at t=1 instead
+                            return false
+                        }
+                        return true
                     }
-                    if $0.t1 == 0.0 || $0.t2 == 0.0 {
-                        // use the intersection with the prior path element at t=1 instead
-                        return false
-                    }
-                    return true
                 }
             }
             intersections += elementIntersections.map {
