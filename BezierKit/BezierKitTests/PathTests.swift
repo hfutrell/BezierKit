@@ -579,6 +579,23 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result.windingCount(CGPoint(x: 3.5, y: 1)), 1)
     }
     
+    func testCrossingsRemovedEdgeCase() {
+        // in practice this data was failing because 'smallNumber' in augmented graph was too large
+        // it was fixed by decreasing the value by 10x
+        let cgPath = CGMutablePath()
+        let start = CGPoint(x: 79.59559290956605, y: 697.9008011912572)
+        cgPath.move(to: start)
+        cgPath.addCurve(to: CGPoint(x:71.31576744881897, y:729.0705310397749), control1: CGPoint(x:85.91646553575535, y:708.7944954952286), control2: CGPoint(x:82.2094612873204, y:722.7496586836662))
+        cgPath.addCurve(to: CGPoint(x:40.14603795970622, y:720.7907053704894), control1: CGPoint(x:60.4220735042526, y:735.3914034574259), control2: CGPoint(x:46.46691031581487, y:731.6843992089908))
+        cgPath.addCurve(to: CGPoint(x:37.21144227099133, y:706.7177736592248), control1: CGPoint(x:39.07549105339858, y:718.7074812854011), control2: CGPoint(x:37.21110624960683, y:711.947464952338))
+        cgPath.addCurve(to: CGPoint(x:62.477966856736, y:686.6750666235641), control1: CGPoint(x:38.65395965539626, y:694.2059748336982), control2: CGPoint(x:49.96616803120935, y:685.2325492391592))
+        cgPath.addCurve(to: CGPoint(x:82.52067606376023, y:711.9415914596509), control1: CGPoint(x:74.98976785362623, y:688.1175842583111), control2: CGPoint(x:83.96319344816517, y:699.4297926341243))
+        cgPath.addCurve(to: start, control1: CGPoint(x:82.51999960076027, y:706.7206820370851), control2: CGPoint(x:80.65889482357387, y:699.9715389099819))
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(threshold: 1.0e-10)
+        XCTAssertEqual(path.boundingBox, result!.boundingBox) // in practice .crossingsRemoved
+    }
+    
     func testSubtractionPerformance() {
         
         func circlePath(origin: CGPoint, radius: CGFloat, numPoints: Int) -> Path {
