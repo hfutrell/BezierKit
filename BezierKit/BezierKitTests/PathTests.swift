@@ -594,6 +594,7 @@ class PathTests: XCTestCase {
         let path = Path(cgPath: cgPath)
         let result = path.crossingsRemoved(threshold: 1.0e-10)
         XCTAssertEqual(path.boundingBox, result!.boundingBox) // in practice .crossingsRemoved was cutting off most of the shape
+        XCTAssertEqual(result?.subpaths[0].curves.count, 5) // with crossings removed we should have 1 fewer curve (the last one)
     }
     
     func testSubtractionPerformance() {
