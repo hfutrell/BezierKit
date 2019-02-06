@@ -579,8 +579,8 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result.windingCount(CGPoint(x: 3.5, y: 1)), 1)
     }
     
-    func testCrossingsRemovedEdgeCase() {
-        // in practice this data was failing because 'smallNumber' in augmented graph was too large
+    func testCrossingsRemovedRealWorldEdgeCaseMagicNumbers() {
+        // in practice this data was failing because 'smallNumber', a magic number in augmented graph was too large
         // it was fixed by decreasing the value by 10x
         let cgPath = CGMutablePath()
         let start = CGPoint(x: 79.59559290956605, y: 697.9008011912572)
@@ -593,7 +593,7 @@ class PathTests: XCTestCase {
         cgPath.addCurve(to: start, control1: CGPoint(x:82.51999960076027, y:706.7206820370851), control2: CGPoint(x:80.65889482357387, y:699.9715389099819))
         let path = Path(cgPath: cgPath)
         let result = path.crossingsRemoved(threshold: 1.0e-10)
-        XCTAssertEqual(path.boundingBox, result!.boundingBox) // in practice .crossingsRemoved
+        XCTAssertEqual(path.boundingBox, result!.boundingBox) // in practice .crossingsRemoved was cutting off most of the shape
     }
     
     func testSubtractionPerformance() {
