@@ -118,7 +118,7 @@ internal class PathLinkedListRepresentation {
             lastVertex = v
         }
         // connect the forward reference of the last vertex to the first vertex
-        let lastCurve = component.curves.last!
+        let lastCurve = component.element(at: component.elementCount-1)
         lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: lastCurve))
         // connect the backward reference of the first vertex to the last vertex
         firstVertex.setPreviousVertex(lastVertex)
