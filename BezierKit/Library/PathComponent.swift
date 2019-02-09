@@ -50,16 +50,22 @@ public final class PathComponent: NSObject, NSCoding {
     public func element(at index: Int) -> BezierCurve {
         assert(index >= 0 && index < self.elementCount)
         let order = self.orders[index]
-        let offset = self.offsets[index]
-        let points = Array(self.points[offset...offset+order])
-        return createCurve(from: points)!
+        if order == 3 {
+            return cubic(at: index)
+        }
+        else if order == 2 {
+            return quadratic(at: index)
+        }
+        else {
+            return line(at: index)
+        }
     }
     
     internal func cubic(at index: Int) -> CubicBezierCurve {
         assert(self.order(at: index) == 3)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
-            return CubicBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
+            CubicBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
         }
     }
     
@@ -263,9 +269,9 @@ public final class PathComponent: NSObject, NSCoding {
             }
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
-                let c1 = self.curves[i1]
-                let c2 = self.curves[i2]
-                let areNeighbors = i1 == Utils.mod(i2-1, self.curves.count)
+                let c1 = self.element(at: i1)
+                let c2 = self.element(at: i2)
+                let areNeighbors = i1 == Utils.mod(i2-1, self.elementCount)
                 if areNeighbors, neighborsIntersectOnlyTrivially(c1, c2) {
                     // optimize the very common case of element i intersecting i+1 at its endpoint
                     elementIntersections = []

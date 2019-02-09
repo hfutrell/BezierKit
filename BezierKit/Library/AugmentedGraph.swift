@@ -106,20 +106,22 @@ internal class PathLinkedListRepresentation {
         let firstVertex = Vertex(location: firstPoint, isIntersection: false)
         elements.append(firstVertex)
         var lastVertex = firstVertex
+        var prev: BezierCurve = component.element(at: 0)
         for i in 1..<component.elementCount {
-            let v = Vertex(location: component.element(at: i).startingPoint, isIntersection: false)
+            let curr = component.element(at: i)
+            let v = Vertex(location: curr.startingPoint, isIntersection: false)
             elements.append(v)
-            let curveForTransition = component.element(at: i-1)
+            let curveForTransition = prev
             // set the forwards reference for starting vertex of curve i-1
             lastVertex.setNextVertex(v, transition: VertexTransition(curve: curveForTransition))
             // set the backwards reference for starting vertex of curve i
             v.setPreviousVertex(lastVertex)
             // point previous at v for the next iteration
             lastVertex = v
+            prev = curr
         }
         // connect the forward reference of the last vertex to the first vertex
-        let lastCurve = component.element(at: component.elementCount-1)
-        lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: lastCurve))
+        lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: prev))
         // connect the backward reference of the first vertex to the last vertex
         firstVertex.setPreviousVertex(lastVertex)
         // return list of vertexes that point to the start of each element
