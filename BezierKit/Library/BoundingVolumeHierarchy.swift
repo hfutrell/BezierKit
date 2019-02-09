@@ -31,10 +31,6 @@ final internal class BVH {
         return elementIndex
     }
     
-    private func leafNodeIndexToElementIndex(_ nodeIndex: Int) -> Int {
-        return BVH.leafNodeIndexToElementIndex(nodeIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
-    }
-    
     private static func isLeaf(_ index: Int, elementCount: Int) -> Bool {
         return index >= elementCount-1
     }
@@ -71,10 +67,13 @@ final internal class BVH {
     }
     
     func visit(callback: (BVHNode, Int) -> Bool) {
+        let elementCount = self.elementCount
+        let lastRowIdnex = self.lastRowIndex
+        let boxes = self.boundingBoxes
         func visit(index: Int, depth: Int, callback: (BVHNode, Int) -> Bool) {
             let leaf = BVH.isLeaf(index, elementCount: elementCount)
-            let nodeType: BVHNode.NodeType = leaf ? .leaf(elementIndex: self.leafNodeIndexToElementIndex(index)) : .internal
-            let node = BVHNode(boundingBox: self.boundingBoxes[index], type: nodeType)
+            let nodeType: BVHNode.NodeType = leaf ? .leaf(elementIndex: BVH.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex)) : .internal
+            let node = BVHNode(boundingBox: boxes[index], type: nodeType)
             guard callback(node, depth) == true else {
                 return
             }
@@ -96,9 +95,11 @@ final internal class BVH {
         let elementCount2 = other.elementCount
         let boxes1 = self.boundingBoxes
         let boxes2 = other.boundingBoxes
+        let lastRowIndex1 = self.lastRowIndex
+        let lastRowIndex2 = other.lastRowIndex
         func intersects(index: Int, callback: (Int, Int) -> Void) {
             if BVH.isLeaf(index, elementCount: elementCount1) { // if it's a leaf node
-                let elementIndex = self.leafNodeIndexToElementIndex(index)
+                let elementIndex = BVH.leafNodeIndexToElementIndex(index, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
                 callback(elementIndex, elementIndex)
             }
             else {
@@ -116,8 +117,8 @@ final internal class BVH {
             let leaf1: Bool = BVH.isLeaf(index1, elementCount: elementCount1)
             let leaf2: Bool = BVH.isLeaf(index2, elementCount: elementCount2)
             if leaf1, leaf2 {
-                let elementIndex1 = self.leafNodeIndexToElementIndex(index1)
-                let elementIndex2 = other.leafNodeIndexToElementIndex(index2)
+                let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
+                let elementIndex2 = BVH.leafNodeIndexToElementIndex(index2, elementCount: elementCount2, lastRowIndex: lastRowIndex2)
                 callback(elementIndex1, elementIndex2)
             }
             else if leaf1 {
