@@ -63,9 +63,27 @@ public final class PathComponent: NSObject, NSCoding {
     }
     
     public func offset(distance d: CGFloat) -> PathComponent {
-        return PathComponent(curves: self.curves.reduce([]) {
+        var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
-        })
+        }
+        // force the set of curves to be contiguous
+        for i in 0..<offsetCurves.count-1 {
+            let start = offsetCurves[i+1].startingPoint
+            let end = offsetCurves[i].endingPoint
+            let average = Utils.lerp(0.5, start, end)
+            offsetCurves[i].endingPoint = average
+            offsetCurves[i+1].startingPoint = average
+        }
+        // we've touched everything but offsetCurves[0].startingPoint and offsetCurves[count-1].endingPoint
+        // if we are a closed componenet, keep the offset component closed as well
+        if curves.first!.startingPoint == curves.last!.endingPoint {
+            let start = offsetCurves[0].startingPoint
+            let end = offsetCurves[offsetCurves.count-1].endingPoint
+            let average = Utils.lerp(0.5, start, end)
+            offsetCurves[0].startingPoint = average
+            offsetCurves[offsetCurves.count-1].endingPoint = average
+        }
+        return PathComponent(curves: offsetCurves)
     }
     
     public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
