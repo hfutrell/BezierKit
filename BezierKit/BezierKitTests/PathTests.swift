@@ -597,6 +597,28 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result?.subpaths[0].curves.count, 5) // with crossings removed we should have 1 fewer curve (the last one)
     }
     
+    func testOffset() {
+        let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
+        let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
+        XCTAssertEqual(offsetCircle.subpaths.count, 1)
+        // make sure that the offsetting process created a series of elements that is *contiguous*
+        let component = offsetCircle.subpaths.first!
+        let elementCount = component.curves.count
+        for i in 0..<elementCount {
+            XCTAssertEqual(component.curves[i].endingPoint, component.curves[(i+1) % elementCount].startingPoint)
+        }
+        // make sure that the offset circle is a actually circle, or, well, close to one
+        let expectedRadius: CGFloat = 2.0
+        let expectedCenter = CGPoint(x: 1.0, y: 1.0)
+        for c in offsetCircle.subpaths[0].curves {
+            for p in c.generateLookupTable(withSteps: 10) {
+                let radius = distance(p, expectedCenter)
+                let percentError = 100.0 * abs(radius - expectedRadius) / expectedRadius
+                XCTAssert(percentError < 0.1, "expected offset circle to have radius \(expectedRadius), but there's a point distance \(distance(p, expectedCenter)) from the expected center.")
+            }
+        }
+    }
+    
     func testSubtractionPerformance() {
         
         func circlePath(origin: CGPoint, radius: CGFloat, numPoints: Int) -> Path {
