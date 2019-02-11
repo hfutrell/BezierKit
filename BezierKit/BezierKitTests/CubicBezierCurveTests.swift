@@ -178,6 +178,11 @@ class CubicBezierCurveTests: XCTestCase {
         let expectedBoundingBox3 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0),
                                                p2: CGPoint(x: 2.5, y: 1.5625))
         XCTAssertEqual(c3.boundingBox, expectedBoundingBox3)
+        
+        // bounding box of a degenerate curve made out of a single point
+        let p = CGPoint(x: 1.234, y: 2.394)
+        let degenerate = CubicBezierCurve(p0: p, p1: p, p2: p, p3: p)
+        XCTAssertEqual(degenerate.boundingBox, BoundingBox(p1: p, p2: p))
     }
 
     func testCompute() {
