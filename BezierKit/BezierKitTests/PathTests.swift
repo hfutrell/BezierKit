@@ -270,8 +270,27 @@ class PathTests: XCTestCase {
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
     }
     
-    func testContainsEdgeCase() {
-        // an edge case which caused errors in practice (due to precision issues?)
+    func testContainsCornerCase() {
+        let cgPath = CGMutablePath()
+        let points = [CGPoint(x: 0, y: 0),
+                      CGPoint(x: 2, y: 1),
+                      CGPoint(x: 1, y: 3),
+                      CGPoint(x: -1, y: 2)]
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        let rotatedSquare = Path(cgPath: cgPath)
+        // the square is rotated such that a horizontal line extended from `point1` or `point2` intersects the square
+        // at an edge on one side but a corner on the other. If corners aren't handled correctly things can go wrong
+        let squareCenter = CGPoint(x: 0.5, y: 0.5)
+        let point1 = CGPoint(x: -0.75, y: 1)
+        let point2 = CGPoint(x: 1.75, y: 2)
+        XCTAssertTrue(rotatedSquare.contains(squareCenter))
+        XCTAssertFalse(rotatedSquare.contains(point1))
+        XCTAssertFalse(rotatedSquare.contains(point2))
+    }
+    
+    func testContainsRealWorldEdgeCase() {
+        // an edge case which caused errors in practice because (rare!) line-curve intersections are found when bounding boxes do not even overlap
         let point = CGPoint(x: 281.2936999253952, y: 221.7262912473492)
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467))
