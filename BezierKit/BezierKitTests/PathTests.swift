@@ -270,6 +270,25 @@ class PathTests: XCTestCase {
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
     }
     
+    func testContainsEdgeCase() {
+        // an edge case which caused errors in practice (due to precision issues?)
+        let point = CGPoint(x: 281.2936999253952, y: 221.7262912473492)
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467))
+        cgPath.addLine(to: CGPoint(x: 195.80672765188274, y: 106.4029658046467))
+        cgPath.addLine(to: CGPoint(x: 195.80672765188274, y: 221.7262912473492))
+        cgPath.addLine(to: CGPoint(x: 273.5510327577471, y: 221.72629124734914)) // !!! precision issues comes from fact line is almost, but not perfectly horizontal
+        cgPath.addCurve(to: CGPoint(x: 271.9933072984535, y: 214.38053683325302), control1: CGPoint(x: 273.05768924540223, y: 219.26088569867528), control2: CGPoint(x: 272.5391291486813, y: 216.81119916319818))
+        cgPath.addCurve(to: CGPoint(x: 252.80681257385964, y: 162.18313232371986), control1: CGPoint(x: 267.39734333475377, y: 195.3589483577662), control2: CGPoint(x: 260.947626989152, y: 177.936810624913))
+        cgPath.addCurve(to: CGPoint(x: 215.4444979991486, y: 111.76311400605556), control1: CGPoint(x: 242.1552743057946, y: 142.6678463672315), control2: CGPoint(x: 229.03183407884012, y: 126.09450622380493))
+        cgPath.addCurve(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467), control1: CGPoint(x: 213.72825408056033, y: 109.93389850557801), control2: CGPoint(x: 212.02163105179878, y: 108.14905966376985))
+        let path = Path(cgPath: cgPath)
+
+        XCTAssertFalse(path.boundingBox.contains(point)) // the point is not even in the bounding box of the path!
+        XCTAssertFalse(path.contains(point, using: .evenOdd))
+        XCTAssertFalse(path.contains(point, using: .winding))
+    }
+    
     func testContainsPath() {
         let rect1 = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil))
         let rect2 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil)) // fully contained inside rect1
