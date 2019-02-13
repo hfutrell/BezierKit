@@ -66,6 +66,9 @@ private func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: S
 
 private func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment) -> [Intersection] where U: BezierCurve {
     assert(curve.order > 1 && curve.order <= 3)
+    guard line.boundingBox.overlaps(curve.boundingBox) else {
+        return []
+    }
     let lineDirection = (line.p1 - line.p0).normalize()
     let lineLength = (line.p1 - line.p0).length
     return Utils.roots(points: curve.points, line: line).map({t -> Intersection in
