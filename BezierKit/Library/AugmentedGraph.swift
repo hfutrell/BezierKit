@@ -241,12 +241,12 @@ internal class PathLinkedListRepresentation {
                 }
                 var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
                 if useRelativeWinding {
-                    wasInside = windingCountImpliesContainment(windingCount, using: fillRule) && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                    wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
                 }
                 windingCount = v.intersectionInfo.nextWinding
-                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)  || (useRelativeWinding && windingCountImpliesContainment(windingCount+1, using: fillRule))
+                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
                 if useRelativeWinding {
-                    isInside = windingCountImpliesContainment(windingCount, using: fillRule) && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                    isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
                 }
                 v.intersectionInfo.isEntry = wasInside == false && isInside == true
                 v.intersectionInfo.isExit = wasInside == true && isInside == false
