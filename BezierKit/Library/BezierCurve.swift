@@ -38,15 +38,11 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
         let (left, right) = curve.split(at: t)
         let t1 = self.t1
         let t2 = self.t2
-        let subcurveLeft = Subcurve<CurveType>(t1: Utils.map(0, 0,1, t1, t2),
-                                    t2: Utils.map(t, 0,1, t1, t2),
-                                    curve: left)
-        let subcurveRight = Subcurve<CurveType>(t1: Utils.map(t, 0,1, t1, t2),
-                                     t2: Utils.map(1, 0,1, t1, t2),
-                                     curve: right)
+        let tSplit = Utils.map(t, 0,1, t1, t2)
+        let subcurveLeft = Subcurve<CurveType>(t1: t1, t2: tSplit, curve: left)
+        let subcurveRight = Subcurve<CurveType>(t1: tSplit, t2: t2, curve: right)
         return (left: subcurveLeft, right: subcurveRight)
     }
-    // TODO: equatable support
 }
 
 // MARK: -
