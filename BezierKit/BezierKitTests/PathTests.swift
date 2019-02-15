@@ -314,7 +314,7 @@ class PathTests: XCTestCase {
         cgPath.move(to: CGPoint(x: 0.0, y: 1.0))
         cgPath.addQuadCurve(to: CGPoint(x: 1.0, y: 0.0), control: CGPoint(x: 0, y: 0)) // quad curve has derivative exactly horizontal at t=1
         cgPath.addLine(to: CGPoint(x: 2.0, y: -1.0e-5))
-        cgPath.addLine(to: CGPoint(x: 2.0, y: 1))
+        cgPath.addLine(to: CGPoint(x: 4.0, y: 1))
         cgPath.closeSubpath()
         let path = Path(cgPath: cgPath)
         XCTAssertTrue(path.contains(CGPoint(x: 0.5, y: 0.5)))

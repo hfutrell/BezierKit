@@ -239,6 +239,9 @@ public final class PathComponent: NSObject, NSCoding {
     }
     
     internal func windingCount(at point: CGPoint) -> Int {
+        guard self.boundingBox.contains(point) else {
+            return 0
+        }
         // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
         let delta = line.p0 - line.p1
