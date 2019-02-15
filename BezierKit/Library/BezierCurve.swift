@@ -51,6 +51,13 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
 
 // MARK: -
 
+private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -> [Intersection] {
+    let sortedIntersections = intersections.sorted(by: <)
+    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next : Intersection) in
+        return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
+    }
+}
+
 private func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, threshold: CGFloat) -> [Intersection] {
     assert(curve1.curve.order >= 2)
     assert(curve2.curve.order >= 2)
@@ -58,10 +65,7 @@ private func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: S
     let rb = curve2.curve.boundingBox
     var intersections: [Intersection] = []
     Utils.pairiteration(curve1, curve2, lb, rb, &intersections, threshold)
-    let sortedIntersections = intersections.sorted(by: <)
-    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next : Intersection) in
-        return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
-    }
+    return sortedAndUniquifiedIntersections(intersections)
 }
 
 private func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment) -> [Intersection] where U: BezierCurve {
@@ -71,11 +75,12 @@ private func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment) -> [I
     }
     let lineDirection = (line.p1 - line.p0).normalize()
     let lineLength = (line.p1 - line.p0).length
-    return Utils.roots(points: curve.points, line: line).map({t -> Intersection in
+    let intersections = Utils.roots(points: curve.points, line: line).map({t -> Intersection in
         let p = curve.compute(t) - line.p0
         let t2 = p.dot(lineDirection) / lineLength
         return Intersection(t1: t, t2: t2)
-    }).filter({$0.t2 >= 0.0 && $0.t2 <= 1.0}).sorted()
+    }).filter({$0.t2 >= 0.0 && $0.t2 <= 1.0})
+    return sortedAndUniquifiedIntersections(intersections)
 }
 
 // MARK: -
