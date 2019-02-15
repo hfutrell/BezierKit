@@ -75,11 +75,14 @@ private func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment) -> [I
     }
     let lineDirection = (line.p1 - line.p0).normalize()
     let lineLength = (line.p1 - line.p0).length
-    let intersections = Utils.roots(points: curve.points, line: line).map({t -> Intersection in
+    let intersections = Utils.roots(points: curve.points, line: line).compactMap({t -> Intersection? in
         let p = curve.compute(t) - line.p0
         let t2 = p.dot(lineDirection) / lineLength
+        guard t2 >= 0, t2 <= 1.0 else {
+            return nil
+        }
         return Intersection(t1: t, t2: t2)
-    }).filter({$0.t2 >= 0.0 && $0.t2 <= 1.0})
+    })
     return sortedAndUniquifiedIntersections(intersections)
 }
 
