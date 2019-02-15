@@ -279,6 +279,16 @@ class LineSegmentTests: XCTestCase {
         XCTAssert((l2.compute(i2[1].t1) - q.compute(i2[1].t2)).length < epsilon)
     }
     
+    func testIntersectsQuadraticSpecialCase() {
+        // this is case that failed in the real-world
+        let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
+        let q = QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1))
+        let i = l.intersects(curve: q)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i.first?.t1, 0.5)
+        XCTAssertEqual(i.first?.t2, 0)
+    }
+    
     func testIntersectsCubic() {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         let epsilon: CGFloat = 0.00001
@@ -337,6 +347,16 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
+    func testIntersectsCubicSpecialCase() {
+        // this is case that failed in the real-world
+        let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
+        let q = CubicBezierCurve(quadratic: QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
+        let i = l.intersects(curve: q)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i.first?.t1, 0.5)
+        XCTAssertEqual(i.first?.t2, 0)
+    }
+    
     // MARK: -
     
     func testEquatable() {

@@ -62,10 +62,32 @@ public final class PathComponent: NSObject, NSCoding {
         return self.bvh.boundingBox
     }
     
+    internal var isClosed: Bool {
+        return curves.first!.startingPoint == curves.last!.endingPoint
+    }
+    
     public func offset(distance d: CGFloat) -> PathComponent {
-        return PathComponent(curves: self.curves.reduce([]) {
+        var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
-        })
+        }
+        // force the set of curves to be contiguous
+        for i in 0..<offsetCurves.count-1 {
+            let start = offsetCurves[i+1].startingPoint
+            let end = offsetCurves[i].endingPoint
+            let average = Utils.lerp(0.5, start, end)
+            offsetCurves[i].endingPoint = average
+            offsetCurves[i+1].startingPoint = average
+        }
+        // we've touched everything but offsetCurves[0].startingPoint and offsetCurves[count-1].endingPoint
+        // if we are a closed componenet, keep the offset component closed as well
+        if self.isClosed {
+            let start = offsetCurves[0].startingPoint
+            let end = offsetCurves[offsetCurves.count-1].endingPoint
+            let average = Utils.lerp(0.5, start, end)
+            offsetCurves[0].startingPoint = average
+            offsetCurves[offsetCurves.count-1].endingPoint = average
+        }
+        return PathComponent(curves: offsetCurves)
     }
     
     public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
@@ -98,6 +120,7 @@ public final class PathComponent: NSObject, NSCoding {
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
                 guard i1.t != 0.0 && i2.t != 0.0 else {
                     // we'll get this intersection at t=1 on the neighboring path element(s) instead
+                    // TODO: in some cases 'see: testContainsEdgeCaseParallelDerivative it's possible to get an intersection at t=0 without an intersection at t=1 of the previous element
                     return nil
                 }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
@@ -221,22 +244,25 @@ public final class PathComponent: NSObject, NSCoding {
     }
     
     internal func windingCount(at point: CGPoint) -> Int {
+        guard self.isClosed, self.boundingBox.contains(point) else {
+            return 0
+        }
         // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
-        let delta = line.p0 - line.p1
+        let delta = (line.p0 - line.p1).normalize()
         let intersections = self.intersects(line: line)
         var windingCount = 0
         intersections.forEach {
             let element = self.curves[$0.elementIndex]
             let t = $0.t
             assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
-            let dotProduct = delta.dot(element.normal(t))
-            if dotProduct < 0 {
+            let dotProduct = Double(delta.dot(element.normal(t)))
+            if dotProduct < -Utils.epsilon {
                 if t != 0 {
                     windingCount -= 1
                 }
             }
-            else if dotProduct > 0 {
+            else if dotProduct > Utils.epsilon {
                 if t != 1 {
                     windingCount += 1
                 }

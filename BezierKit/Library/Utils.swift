@@ -352,16 +352,17 @@ internal class Utils {
     }
     
     static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
-        let tx = p1.x
-        let ty = p1.y
-        let a = -atan2(p2.y-ty, p2.x-tx)
-        let d =  {( v: CGPoint) in
+        let tx = Double(p1.x)
+        let ty = Double(p1.y)
+        let a = -atan2(Double(p2.y)-ty, Double(p2.x)-tx)
+        return points.map { v in
+            let vx = Double(v.x)
+            let vy = Double(v.y)
             return CGPoint(
-                x: (v.x-tx)*cos(a) - (v.y-ty)*sin(a),
-                y: (v.x-tx)*sin(a) + (v.y-ty)*cos(a)
+                x: (vx-tx)*cos(a) - (vy-ty)*sin(a),
+                y: (vx-tx)*sin(a) + (vy-ty)*cos(a)
             )
         }
-        return points.map(d)
     }
     
     static func closest(_ LUT: [CGPoint],_ point: CGPoint) -> (mdist: CGFloat, mpos: Int) {
@@ -392,7 +393,16 @@ internal class Utils {
         guard c1b.overlaps(c2b) else {
             return
         }
-        if (c1b.size.x + c1b.size.y) < threshold, (c2b.size.x + c2b.size.y) < threshold {
+        
+        let mid1 = 0.5 * (c1.t1 + c1.t2)
+        let mid2 = 0.5 * (c2.t1 + c2.t2)
+        let canSplit1 = mid1 > c1.t1 && mid1 < c1.t2
+        let canSplit2 = mid2 > c2.t1 && mid2 < c2.t2
+        let shouldRecurse1 = canSplit1 && ((c1b.size.x + c1b.size.y) >= threshold)
+        let shouldRecurse2 = canSplit2 && ((c2b.size.x + c2b.size.y) >= threshold)
+
+        if shouldRecurse1 == false, shouldRecurse2 == false {
+            // subcurves are small enough or we simply cannot recurse any more
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
             guard let intersection = l1.intersects(line: l2).first else {
@@ -403,7 +413,7 @@ internal class Utils {
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
                                         t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
         }
-        else {
+        else if shouldRecurse1, shouldRecurse2 {
             let cc1 = c1.split(at: 0.5)
             let cc2 = c2.split(at: 0.5)
             let cc1lb = cc1.left.curve.boundingBox
@@ -414,6 +424,20 @@ internal class Utils {
             Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, threshold)
             Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, threshold)
             Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, threshold)
+        }
+        else if shouldRecurse1 {
+            let cc1 = c1.split(at: 0.5)
+            let cc1lb = cc1.left.curve.boundingBox
+            let cc1rb = cc1.right.curve.boundingBox
+            Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, threshold)
+            Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, threshold)
+        }
+        else if shouldRecurse2 {
+            let cc2 = c2.split(at: 0.5)
+            let cc2lb = cc2.left.curve.boundingBox
+            let cc2rb = cc2.right.curve.boundingBox
+            Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, threshold)
+            Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, threshold)
         }
     }
             
