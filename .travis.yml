@@ -6,9 +6,9 @@ env:
   - LANG=en_US.UTF-8
   - PROJECT=BezierKit/BezierKit.xcodeproj
   - IOS_SCHEME=BezierKit_iOS
-  - IOS_SDK=iphonesimulator11.4
+  - IOS_SDK=iphonesimulator12.1
   - OSX_SCHEME=BezierKit_Mac
-  - OSX_SDK=macosx10.13
+  - OSX_SDK=macosx10.14
   matrix:
     - DESTINATION="OS=9.0,name=iPhone 5"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
     - DESTINATION="OS=11.4,name=iPhone 6"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
