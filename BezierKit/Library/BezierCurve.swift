@@ -45,6 +45,10 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     }
 }
 
+extension Subcurve: Equatable where CurveType: Equatable {
+    // extension exists for automatic Equatable synthesis
+}
+
 // MARK: -
 
 private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -> [Intersection] {
