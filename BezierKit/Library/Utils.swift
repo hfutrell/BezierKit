@@ -215,8 +215,7 @@ internal class Utils {
             let temp2 = 3*pb
             let temp3 = -3*pc
             let d = temp1 + temp2 + temp3 + pd
-            if d == 0.0 {
-                // TODO: epsilon testing ... use demos upgrade the quadratic to a cubic!
+            if abs(d) < Utils.epsilon {
                 let temp1 = 3*points[0]
                 let temp2 = -6*points[1]
                 let temp3 = 3*points[2]
