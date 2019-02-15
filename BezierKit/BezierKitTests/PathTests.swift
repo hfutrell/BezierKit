@@ -643,9 +643,14 @@ class PathTests: XCTestCase {
         cgPath.addCurve(to: CGPoint(x:82.52067606376023, y:711.9415914596509), control1: CGPoint(x:74.98976785362623, y:688.1175842583111), control2: CGPoint(x:83.96319344816517, y:699.4297926341243))
         cgPath.addCurve(to: start, control1: CGPoint(x:82.51999960076027, y:706.7206820370851), control2: CGPoint(x:80.65889482357387, y:699.9715389099819))
         let path = Path(cgPath: cgPath)
-        let result = path.crossingsRemoved(threshold: 1.0e-10)
-        XCTAssertEqual(path.boundingBox, result!.boundingBox) // in practice .crossingsRemoved was cutting off most of the shape
-        XCTAssertEqual(result?.subpaths[0].curves.count, 5) // with crossings removed we should have 1 fewer curve (the last one)
+        let result = path.crossingsRemoved(threshold: 0.01)
+         // in practice .crossingsRemoved was cutting off most of the shape
+        XCTAssertNotNil(result)
+        if let result = result {
+            XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
+            XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
+            XCTAssertEqual(result.subpaths[0].curves.count, 5) // with crossings removed we should have 1 fewer curve (the last one)
+        }
     }
     
     func testOffset() {
