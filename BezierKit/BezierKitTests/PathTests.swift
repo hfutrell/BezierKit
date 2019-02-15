@@ -308,6 +308,19 @@ class PathTests: XCTestCase {
         XCTAssertFalse(path.contains(point, using: .winding))
     }
     
+    func testContainsEdgeCaseParallelDerivative() {
+        // this is a real-world edge case that can happen with round-rects
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 0.0, y: 1.0))
+        cgPath.addQuadCurve(to: CGPoint(x: 1.0, y: 0.0), control: CGPoint(x: 0, y: 0)) // quad curve has derivative exactly horizontal at t=1
+        cgPath.addLine(to: CGPoint(x: 2.0, y: -1.0e-5))
+        cgPath.addLine(to: CGPoint(x: 2.0, y: 1))
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        XCTAssertTrue(path.contains(CGPoint(x: 0.5, y: 0.5)))
+        XCTAssertFalse(path.contains(CGPoint(x: 3.0, y: 0.0)))
+    }
+    
     func testContainsPath() {
         let rect1 = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil))
         let rect2 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil)) // fully contained inside rect1
