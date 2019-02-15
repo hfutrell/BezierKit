@@ -51,7 +51,7 @@ class ArcApproximateableTests: XCTestCase {
             let t2: CGFloat = 0.75
             let d1: CGFloat = distance(a.origin, subCurve.compute(t1))
             let d2: CGFloat = distance(a.origin, subCurve.compute(t2))
-            let error = fabs(a.radius - d1) + fabs(a.radius - d2)
+            let error = abs(a.radius - d1) + abs(a.radius - d2)
             if error > errorThreshold {
                 return false
             }
