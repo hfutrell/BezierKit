@@ -352,16 +352,17 @@ internal class Utils {
     }
     
     static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
-        let tx = p1.x
-        let ty = p1.y
-        let a = -atan2(p2.y-ty, p2.x-tx)
-        let d =  {( v: CGPoint) in
+        let tx = Double(p1.x)
+        let ty = Double(p1.y)
+        let a = -atan2(Double(p2.y)-ty, Double(p2.x)-tx)
+        return points.map { v in
+            let vx = Double(v.x)
+            let vy = Double(v.y)
             return CGPoint(
-                x: (v.x-tx)*cos(a) - (v.y-ty)*sin(a),
-                y: (v.x-tx)*sin(a) + (v.y-ty)*cos(a)
+                x: (vx-tx)*cos(a) - (vy-ty)*sin(a),
+                y: (vx-tx)*sin(a) + (vy-ty)*cos(a)
             )
         }
-        return points.map(d)
     }
     
     static func closest(_ LUT: [CGPoint],_ point: CGPoint) -> (mdist: CGFloat, mpos: Int) {
