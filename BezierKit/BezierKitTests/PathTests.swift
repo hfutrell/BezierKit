@@ -653,6 +653,26 @@ class PathTests: XCTestCase {
         }
     }
     
+    func testCrossingsRemovedAnotherRealWorldCase() {
+        let cgPath = CGMutablePath()
+        let start = CGPoint(x: 503.3060153966664, y: 766.9140612367046)
+        cgPath.move(to: start)
+        cgPath.addCurve(to: CGPoint(x:517.9306651149989, y:762.0523534483476), control1: CGPoint(x:506.0019772976378, y:761.5330522602719), control2: CGPoint(x:512.5496560294043, y:759.3563914926846))
+        cgPath.addCurve(to: CGPoint(x:522.7923732205169, y:776.6770033255823), control1: CGPoint(x:523.3116744085926, y:764.7483155082213), control2: CGPoint(x:525.4883351761798, y:771.2959942399877))
+        cgPath.addCurve(to: CGPoint(x:520.758836935199, y:764.316674774872), control1: CGPoint(x:522.6619398993569, y:776.9550303733141), control2: CGPoint(x:522.7228057838222, y:776.8532852161298))
+        cgPath.addCurve(to: CGPoint(x:520.6170414159213, y:779.7723863761416), control1: CGPoint(x:524.9876580913353, y:768.6238074338997), control2: CGPoint(x:524.9241740749491, y:775.5435652200052))
+        cgPath.addCurve(to: CGPoint(x:505.16132944417086, y:779.6305912206088), control1: CGPoint(x:516.3099083864128, y:784.001207896023), control2: CGPoint(x:509.3901506003072, y:783.9377238796366))
+        cgPath.addCurve(to: start, control1: CGPoint(x:503.19076843492786, y:767.0872665416827), control2: CGPoint(x:503.3761460381431, y:766.7563954079359))
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(threshold: 0.01)
+        // in practice .crossingsRemoved was cutting off most of the shape
+        XCTAssertNotNil(result)
+        if let result = result {
+            XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
+            XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
+        }
+    }
+    
     func testOffset() {
         let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
         let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
