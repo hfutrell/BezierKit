@@ -712,6 +712,44 @@ class PathTests: XCTestCase {
         }
     }
     
+    func testCrossingsRemovedMulticomponent() {
+        // this path is a square with a self-intersecting inner region that should form a square shaped hole when crossings
+        // this is similar to what happens if you use CoreGraphics to stroke shape, albeit simplified here for the sake of testing
+        let cgPath = CGMutablePath()
+        cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
+        let points: [CGPoint] = [
+            CGPoint(x: 1, y: 2),
+            CGPoint(x: 2, y: 1),
+            CGPoint(x: 2, y: 4),
+            CGPoint(x: 1, y: 3),
+            CGPoint(x: 4, y: 3),
+            CGPoint(x: 3, y: 4),
+            CGPoint(x: 3, y: 1),
+            CGPoint(x: 4, y: 2)
+        ]
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved()!
+        
+        let expectedResult = Path(cgPath: { () -> CGPath in
+            let cgPath = CGMutablePath()
+            cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
+            cgPath.addLines(between: [
+                CGPoint(x: 2, y: 2),
+                CGPoint(x: 2, y: 3),
+                CGPoint(x: 3, y: 3),
+                CGPoint(x: 3, y: 2)
+            ])
+            cgPath.closeSubpath()
+            return cgPath
+        }())
+        
+        XCTAssertEqual(result.subpaths.count, 2)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[1], expectedResult.subpaths[1]))
+    }
+    
     func testOffset() {
         let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
         let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
