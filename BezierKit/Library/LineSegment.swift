@@ -114,6 +114,23 @@ public struct LineSegment: BezierCurve, Equatable {
     }
     
     public func intersects(line: LineSegment) -> [Intersection] {
+        
+        guard self.boundingBox.overlaps(line.boundingBox) else {
+            return []
+        }
+        if self.p0 == line.p0 {
+            return [Intersection(t1: 0.0, t2: 0.0)]
+        }
+        else if self.p0 == line.p1 {
+            return [Intersection(t1: 0.0, t2: 1.0)]
+        }
+        else if self.p1 == line.p0 {
+            return [Intersection(t1: 1.0, t2: 0.0)]
+        }
+        else if self.p1 == line.p1 {
+            return [Intersection(t1: 1.0, t2: 1.0)]
+        }
+
         let a1 = self.p0
         let b1 = self.p1 - self.p0
         let a2 = line.p0
@@ -138,22 +155,9 @@ public struct LineSegment: BezierCurve, Equatable {
         let _e = -a1.x + a2.x
         let _f = -a1.y + a2.y
         
-        var t1 = ( _e * _d - _b * _f ) * inv_det // if inv_det is inf then this is NaN!
-        var t2 = ( _a * _f - _e * _c ) * inv_det // if inv_det is inf then this is NaN!
+        let t1 = ( _e * _d - _b * _f ) * inv_det // if inv_det is inf then this is NaN!
+        let t2 = ( _a * _f - _e * _c ) * inv_det // if inv_det is inf then this is NaN!
         
-        if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
-            t1 = 0.0
-        }
-        if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
-            t1 = 1.0
-        }
-        if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
-            t2 = 0.0
-        }
-        if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
-            t2 = 1.0
-        }
-
         if t1 > 1.0 || t1 < 0.0  {
             return [] // t1 out of interval [0, 1]
         }
