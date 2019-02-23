@@ -750,6 +750,42 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[1], expectedResult.subpaths[1]))
     }
     
+    func testCrossingsRemovedRealWorldInfiniteLoop() {
+        
+        // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)
+        
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 431.2394694928875, y: 109.81690300533613))
+        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 110.3870201809152), control1: CGPoint(x: 431.2394694928875, y: 110.13177002702506), control2: CGPoint(x: 430.9842193389974, y: 110.3870201809152))
+        cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 110.3870201809152))
+        cgPath.addLine(to: CGPoint(x: 383.46134494359774, y: 109.81690300533613))
+        cgPath.addLine(to: CGPoint(x: 383.46134494359774, y: 125.44498541142156))
+        cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 124.87486823584248))
+        cgPath.addLine(to: CGPoint(x: 430.66935231730844, y: 124.87486823584248))
+        cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 125.44498541142156))
+        cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
+        cgPath.addLine(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883))
+        cgPath.closeSubpath()
+        
+        cgPath.move(to: CGPoint(x: 430.09923514172937, y: 109.81690300533613))
+        cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
+        cgPath.addCurve(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883), control1: CGPoint(x: 430.09923514172937, y: 99.16380521344341), control2: CGPoint(x: 431.2394694928875, y: 99.16380521344341))
+        cgPath.addLine(to: CGPoint(x: 431.2394694928875, y: 125.44498541142156))
+        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 126.01510258700063), control1: CGPoint(x: 431.2394694928875, y: 125.75985243311048), control2: CGPoint(x: 430.9842193389974, y: 126.01510258700063))
+        cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 126.01510258700063))
+        cgPath.addCurve(to: CGPoint(x: 382.3211105924396, y: 125.44498541142156), control1: CGPoint(x: 382.5763607463297, y: 126.01510258700063), control2: CGPoint(x: 382.3211105924396, y: 125.75985243311048))
+        cgPath.addLine(to: CGPoint(x: 382.3211105924396, y: 109.81690300533613))
+        cgPath.addCurve(to: CGPoint(x: 382.89122776801867, y: 109.24678582975706), control1: CGPoint(x: 382.3211105924396, y: 109.5020359836472), control2: CGPoint(x: 382.5763607463297, y: 109.24678582975706))
+        cgPath.addLine(to: CGPoint(x: 430.66935231730844, y: 109.24678582975706))
+        cgPath.closeSubpath()
+
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(threshold: 0.01)
+        
+        // for now the test's only expectation is that we do not go into an infinite loop
+        // TODO: make test stricter
+    }
+    
     func testOffset() {
         let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
         let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
