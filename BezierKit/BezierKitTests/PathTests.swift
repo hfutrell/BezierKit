@@ -780,7 +780,7 @@ class PathTests: XCTestCase {
         cgPath.closeSubpath()
 
         let path = Path(cgPath: cgPath)
-        let result = path.crossingsRemoved(threshold: 0.01)
+        let _ = path.crossingsRemoved(threshold: 0.01)
         
         // for now the test's only expectation is that we do not go into an infinite loop
         // TODO: make test stricter
