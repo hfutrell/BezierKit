@@ -808,6 +808,46 @@ class PathTests: XCTestCase {
         }
     }
     
+    func testDisjointSubpathsNesting() {
+        XCTAssertEqual(Path().disjointSubpaths(), [])
+        // test that a simple square just gives the same square back
+        let squarePath = Path(cgPath: CGPath.init(rect: CGRect(x: 0, y: 0, width: 7, height: 7), transform: nil))
+        let result1 = squarePath.disjointSubpaths()
+        XCTAssertEqual(result1.count, 1)
+        if let result = result1.first {
+            XCTAssertEqual(squarePath, result)
+        }
+        // test that a square with a hole associates the hole correctly with the square
+        let squareWithHolePath = { () -> Path in
+            let cgPath = CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil)
+            let hole = Path(cgPath: cgPath).reversed()
+            return Path(subpaths: squarePath.subpaths + hole.subpaths)
+        }()
+        let result2 = squareWithHolePath.disjointSubpaths()
+        XCTAssertEqual(result2.count, 1)
+        if let result = result2.first {
+            XCTAssertEqual(squareWithHolePath, result)
+        }
+        // test that nested paths correctly produce two paths
+        let pegPath = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil))
+        let squareWithPegPath = Path(subpaths: squareWithHolePath.subpaths + pegPath.subpaths)
+        let result3 = squareWithPegPath.disjointSubpaths()
+        XCTAssertEqual(result3.count, 2)
+        XCTAssert(result3.contains(squareWithHolePath))
+        XCTAssert(result3.contains(pegPath))
+        // test a trickier case: a square with a hole, nested inside a square with a hole
+        let pegWithHolePath = { () -> Path in
+            let cgPath = CGPath(rect: CGRect(x: 3, y: 3, width: 1, height: 1), transform: nil)
+            let hole = Path(cgPath: cgPath).reversed()
+            return Path(subpaths: pegPath.subpaths + hole.subpaths)
+        }()
+        let squareWithPegWithHolePath = Path(subpaths: squareWithHolePath.subpaths + pegWithHolePath.subpaths)
+        let result4 = squareWithPegWithHolePath.disjointSubpaths()
+        XCTAssertEqual(result4.count, 2)
+        XCTAssert(result4.contains(squareWithHolePath))
+        XCTAssert(result4.contains(pegWithHolePath))
+    }
+    
     func testSubtractionPerformance() {
         
         func circlePath(origin: CGPoint, radius: CGFloat, numPoints: Int) -> Path {
