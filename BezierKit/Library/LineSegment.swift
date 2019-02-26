@@ -155,9 +155,22 @@ public struct LineSegment: BezierCurve, Equatable {
         let _e = -a1.x + a2.x
         let _f = -a1.y + a2.y
         
-        let t1 = ( _e * _d - _b * _f ) * inv_det // if inv_det is inf then this is NaN!
-        let t2 = ( _a * _f - _e * _c ) * inv_det // if inv_det is inf then this is NaN!
+        var t1 = ( _e * _d - _b * _f ) * inv_det // if inv_det is inf then this is NaN!
+        var t2 = ( _a * _f - _e * _c ) * inv_det // if inv_det is inf then this is NaN!
         
+        if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
+            t1 = 0.0
+        }
+        if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
+            t1 = 1.0
+        }
+        if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
+            t2 = 0.0
+        }
+        if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
+            t2 = 1.0
+        }
+
         if t1 > 1.0 || t1 < 0.0  {
             return [] // t1 out of interval [0, 1]
         }
