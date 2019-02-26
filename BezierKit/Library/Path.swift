@@ -255,12 +255,15 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc public func disjointSubpaths() -> [Path] {
         
-        var paths: Set<Path> = Set<Path>()
+        var paths: [Path] = []
+        var subpathWindingCounts: [Path: Int] = [:]
         let subpathsAsPaths = self.subpaths.map { Path(subpaths: [$0]) }
         for subpath in subpathsAsPaths {
-            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) == 0 {
-                paths.insert(subpath)
+            let windingCount = self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0])
+            if windingCount == 0 {
+                paths.append(subpath)
             }
+            subpathWindingCounts[subpath] = windingCount
         }
         
         var pathsWithHoles: [Path: Path] = [:]
@@ -269,19 +272,29 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         
         for subpath in subpathsAsPaths {
-            if self.windingCount(subpath.subpaths[0].curves[0].startingPoint, ignoring: subpath.subpaths[0]) != 0 {
-                for other in paths {
-                    if other.contains(subpath) {
-                        pathsWithHoles[other] = Path(subpaths: pathsWithHoles[other]!.subpaths + subpath.subpaths)
-                        break
+            guard subpathWindingCounts[subpath] != 0 else {
+                continue
+            }
+            var owner: Path? = nil
+            for path in paths {
+                guard path.contains(subpath) else {
+                    continue
+                }
+                if owner != nil {
+                    if owner!.contains(path) {
+                        owner = path
                     }
                 }
+                else {
+                    owner = path
+                }
+            }
+            if let owner = owner {
+                pathsWithHoles[owner] = Path(subpaths: pathsWithHoles[owner]!.subpaths + subpath.subpaths)
             }
         }
-        
         return Array(pathsWithHoles.values)
     }
-
 }
 
 @objc extension Path: Transformable {
