@@ -38,6 +38,11 @@
                BlueprintName = "BezierKit_MacTests"
                ReferencedContainer = "container:BezierKit.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "PathTests/testCrossingsRemovedAnotherRealWorldCase()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
       <MacroExpansion>

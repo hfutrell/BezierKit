@@ -433,7 +433,10 @@ internal class Vertex {
     public var intersectionInfo: IntersectionInfo = IntersectionInfo()
     
     public var isCrossing: Bool {
-        return self.isIntersection && (self.intersectionInfo.isEntry || self.intersectionInfo.isExit)
+        guard let neighborInfo = self.intersectionInfo.neighbor?.intersectionInfo else {
+            return false
+        }
+        return self.isIntersection && (self.intersectionInfo.isEntry || self.intersectionInfo.isExit) && (neighborInfo.isEntry || neighborInfo.isExit)
     }
     
     internal struct SplitInfo {
