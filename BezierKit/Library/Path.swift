@@ -140,7 +140,9 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                     let line = LineSegment(p0: context.currentPoint!, p1: context.subpathStartPoint!)
                     context.currentSubpath.append(line)
                 }
-                context.components.append(PathComponent(curves: context.currentSubpath))
+                if context.currentSubpath.isEmpty == false {
+                    context.components.append(PathComponent(curves: context.currentSubpath))
+                }
                 context.currentPoint = context.subpathStartPoint!
                 context.currentSubpath = []
             }

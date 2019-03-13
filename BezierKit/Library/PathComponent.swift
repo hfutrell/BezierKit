@@ -29,23 +29,25 @@ public final class PathComponent: NSObject, NSCoding {
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
-        guard curves.count > 0 else {
-            return mutablePath.copy()!
-        }
         mutablePath.move(to: curves[0].startingPoint)
-        for curve in self.curves {
+        for i in 0..<self.curves.count {
+            let curve = self.curves[i]
+            if i == self.curves.count-1, self.isClosed, curve as? LineSegment != nil {
+                // special case: if the path ends in a line segment that goes back to the start just emit a closepath
+                mutablePath.closeSubpath()
+                break
+            }
             switch curve {
-                case let line as LineSegment:
-                    mutablePath.addLine(to: line.endingPoint)
-                case let quadCurve as QuadraticBezierCurve:
-                    mutablePath.addQuadCurve(to: quadCurve.p2, control: quadCurve.p1)
-                case let cubicCurve as CubicBezierCurve:
-                    mutablePath.addCurve(to: cubicCurve.p3, control1: cubicCurve.p1, control2: cubicCurve.p2)
-                default:
-                    fatalError("CGPath does not support curve type (\(type(of: curve))")
+            case let line as LineSegment:
+                mutablePath.addLine(to: line.endingPoint)
+            case let quadCurve as QuadraticBezierCurve:
+                mutablePath.addQuadCurve(to: quadCurve.p2, control: quadCurve.p1)
+            case let cubicCurve as CubicBezierCurve:
+                mutablePath.addCurve(to: cubicCurve.p3, control1: cubicCurve.p1, control2: cubicCurve.p2)
+            default:
+                fatalError("CGPath does not support curve type (\(type(of: curve))")
             }
         }
-        mutablePath.closeSubpath()
         return mutablePath.copy()!
     }()
     
