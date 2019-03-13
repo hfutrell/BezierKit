@@ -37,7 +37,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
-    @objc public lazy var cgPath: CGPath = {
+    @objc(CGPath) public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         self.subpaths.forEach {
             mutablePath.addPath($0.cgPath)
