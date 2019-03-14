@@ -41,7 +41,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
-    @objc public lazy var cgPath: CGPath = {
+    @objc(CGPath) public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         self.subpaths.forEach {
             mutablePath.addPath($0.cgPath)
@@ -67,6 +67,24 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
     
+    @objc(intersectsWithThreshold:) public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
+        var intersections: [PathIntersection] = []
+        for i in 0..<self.subpaths.count {
+            for j in i..<self.subpaths.count {
+                let componentIntersectionToPathIntersection = {(componentIntersection: PathComponentIntersection) -> PathIntersection in
+                    PathIntersection(componentIntersection: componentIntersection, componentIndex1: i, componentIndex2: j)
+                }
+                if i == j {
+                    intersections += self.subpaths[i].intersects(threshold: threshold).map(componentIntersectionToPathIntersection)
+                }
+                else {
+                    intersections += self.subpaths[i].intersects(component: self.subpaths[j], threshold: threshold).map(componentIntersectionToPathIntersection)
+                }
+            }
+        }
+        return intersections
+    }
+    
     @objc(intersectsWithPath:threshold:) public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return []
@@ -74,11 +92,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         var intersections: [PathIntersection] = []
         for i in 0..<self.subpaths.count {
             for j in 0..<other.subpaths.count {
+                let componentIntersectionToPathIntersection = {(componentIntersection: PathComponentIntersection) -> PathIntersection in
+                    PathIntersection(componentIntersection: componentIntersection, componentIndex1: i, componentIndex2: j)
+                }
                 let s1 = self.subpaths[i]
                 let s2 = other.subpaths[j]
                 let componentIntersections: [PathComponentIntersection] = s1.intersects(component: s2, threshold: threshold)
-                intersections += componentIntersections.map { PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: i, elementIndex: $0.indexedComponentLocation1.elementIndex, t: $0.indexedComponentLocation1.t),
-                                                                               indexedPathLocation2: IndexedPathLocation(componentIndex: j, elementIndex: $0.indexedComponentLocation2.elementIndex, t: $0.indexedComponentLocation2.t)) }
+                intersections += componentIntersections.map(componentIntersectionToPathIntersection)
             }
         }
         return intersections
@@ -128,7 +148,9 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                     context.currentSubpathOrders.append(1)
                     context.currentSubpathPoints.append(context.subpathStartPoint!)
                 }
-                context.components.append(PathComponent(points: context.currentSubpathPoints, orders: context.currentSubpathOrders))
+                if context.currentSubpathOrders.isEmpty == false {
+                    context.components.append(PathComponent(points: context.currentSubpathPoints, orders: context.currentSubpathOrders))
+                }
                 context.currentPoint = context.subpathStartPoint!
                 context.currentSubpathPoints = []
                 context.currentSubpathOrders = []
@@ -237,36 +259,22 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     @objc(crossingsRemovedWithThreshold:) public func crossingsRemoved(threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
-        //        assert(self.subpaths.count <= 1, "todo: support multi-component paths")
-        return self.subpaths.reduce(Path(), { (result: Path?, component: PathComponent) -> Path? in
-            // TODO: this won't work properly if components intersect
-            guard let result = result else {
-                return nil
-            }
-            let intersections = component.intersects(threshold: threshold).map {(i: PathComponentIntersection) -> PathIntersection in
-                return PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation1.elementIndex, t: i.indexedComponentLocation1.t),
-                                        indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: i.indexedComponentLocation2.elementIndex, t: i.indexedComponentLocation2.t))
-            }
-            guard intersections.isEmpty == false else {
-                return Path(subpaths: result.subpaths + [component])
-            }
-            let singleComponentPath = Path(subpaths: [component])
-            let augmentedGraph = AugmentedGraph(path1: singleComponentPath, path2: singleComponentPath, intersections: intersections)
-            guard let path = augmentedGraph.booleanOperation(.removeCrossings) else {
-                return nil
-            }
-            return Path(subpaths: result.subpaths + path.subpaths)
-        })
+        let intersections = self.intersects(threshold: threshold)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
+        return augmentedGraph.booleanOperation(.removeCrossings)
     }
 
     @objc public func disjointSubpaths() -> [Path] {
         
-        var paths: Set<Path> = Set<Path>()
+        var paths: [Path] = []
+        var subpathWindingCounts: [Path: Int] = [:]
         let subpathsAsPaths = self.subpaths.map { Path(subpaths: [$0]) }
         for subpath in subpathsAsPaths {
-            if self.windingCount(subpath.subpaths[0].startingPoint, ignoring: subpath.subpaths[0]) == 0 {
-                paths.insert(subpath)
+            let windingCount = self.windingCount(subpath.subpaths[0].startingPoint, ignoring: subpath.subpaths[0])
+            if windingCount == 0 {
+                paths.append(subpath)
             }
+            subpathWindingCounts[subpath] = windingCount
         }
         
         var pathsWithHoles: [Path: Path] = [:]
@@ -275,19 +283,29 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         
         for subpath in subpathsAsPaths {
-            if self.windingCount(subpath.subpaths[0].startingPoint, ignoring: subpath.subpaths[0]) != 0 {
-                for other in paths {
-                    if other.contains(subpath) {
-                        pathsWithHoles[other] = Path(subpaths: pathsWithHoles[other]!.subpaths + subpath.subpaths)
-                        break
+            guard subpathWindingCounts[subpath] != 0 else {
+                continue
+            }
+            var owner: Path? = nil
+            for path in paths {
+                guard path.contains(subpath) else {
+                    continue
+                }
+                if owner != nil {
+                    if owner!.contains(path) {
+                        owner = path
                     }
                 }
+                else {
+                    owner = path
+                }
+            }
+            if let owner = owner {
+                pathsWithHoles[owner] = Path(subpaths: pathsWithHoles[owner]!.subpaths + subpath.subpaths)
             }
         }
-        
         return Array(pathsWithHoles.values)
     }
-
 }
 
 @objc extension Path: Transformable {
@@ -311,12 +329,33 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         self.elementIndex = elementIndex
         self.t = t
     }
+    public override func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? IndexedPathLocation else {
+            return false
+        }
+        return self.componentIndex == other.componentIndex && self.elementIndex == other.elementIndex && self.t == other.t
+    }
 }
 
 @objc(BezierKitPathIntersection) public class PathIntersection: NSObject {
     public let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
-    init(indexedPathLocation1: IndexedPathLocation, indexedPathLocation2: IndexedPathLocation) {
+    internal init(indexedPathLocation1: IndexedPathLocation, indexedPathLocation2: IndexedPathLocation) {
         self.indexedPathLocation1 = indexedPathLocation1
         self.indexedPathLocation2 = indexedPathLocation2
+    }
+    fileprivate init(componentIntersection: PathComponentIntersection, componentIndex1: Int, componentIndex2: Int) {
+        self.indexedPathLocation1 = IndexedPathLocation(componentIndex: componentIndex1,
+                                                        elementIndex: componentIntersection.indexedComponentLocation1.elementIndex,
+                                                        t: componentIntersection.indexedComponentLocation1.t)
+        self.indexedPathLocation2 = IndexedPathLocation(componentIndex: componentIndex2,
+                                                        elementIndex: componentIntersection.indexedComponentLocation2.elementIndex,
+                                                        t: componentIntersection.indexedComponentLocation2.t)
+
+    }
+    public override func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? PathIntersection else {
+            return false
+        }
+        return self.indexedPathLocation1 == other.indexedPathLocation1 && self.indexedPathLocation2 == other.indexedPathLocation2
     }
 }

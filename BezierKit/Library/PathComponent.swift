@@ -91,23 +91,26 @@ public final class PathComponent: NSObject, NSCoding {
     
     public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
-        guard self.elementCount > 0 else {
-            return mutablePath.copy()!
-        }
-        mutablePath.move(to: self.points[0])
-        for curve in self.curves {
-            switch curve {
-                case let line as LineSegment:
-                    mutablePath.addLine(to: line.endingPoint)
-                case let quadCurve as QuadraticBezierCurve:
-                    mutablePath.addQuadCurve(to: quadCurve.p2, control: quadCurve.p1)
-                case let cubicCurve as CubicBezierCurve:
-                    mutablePath.addCurve(to: cubicCurve.p3, control1: cubicCurve.p1, control2: cubicCurve.p2)
-                default:
-                    fatalError("CGPath does not support curve type (\(type(of: curve))")
+        mutablePath.move(to: self.startingPoint)
+        for i in 0..<self.elementCount {
+            let order = orders[i]
+            let offset = offsets[i]
+            if i == self.elementCount-1, self.isClosed, order == 1 {
+                // special case: if the path ends in a line segment that goes back to the start just emit a closepath
+                mutablePath.closeSubpath()
+                break
+            }
+            switch order {
+            case 1:
+                mutablePath.addLine(to: points[offset+1])
+            case 2:
+                mutablePath.addQuadCurve(to: points[offset+2], control: points[offset+1])
+            case 3:
+                mutablePath.addCurve(to: points[offset+3], control1: points[offset+1], control2: points[offset+2])
+            default:
+                fatalError("CGPath does not support curve of order \(order)")
             }
         }
-        mutablePath.closeSubpath()
         return mutablePath.copy()!
     }()
     
@@ -162,10 +165,32 @@ public final class PathComponent: NSObject, NSCoding {
         return self.bvh.boundingBox
     }
     
+    internal var isClosed: Bool {
+        return self.startingPoint == self.endingPoint
+    }
+    
     public func offset(distance d: CGFloat) -> PathComponent {
-        return PathComponent(curves: self.curves.reduce([]) {
+        var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
-        })
+        }
+        // force the set of curves to be contiguous
+        for i in 0..<offsetCurves.count-1 {
+            let start = offsetCurves[i+1].startingPoint
+            let end = offsetCurves[i].endingPoint
+            let average = Utils.lerp(0.5, start, end)
+            offsetCurves[i].endingPoint = average
+            offsetCurves[i+1].startingPoint = average
+        }
+        // we've touched everything but offsetCurves[0].startingPoint and offsetCurves[count-1].endingPoint
+        // if we are a closed componenet, keep the offset component closed as well
+        if self.isClosed {
+            let start = offsetCurves[0].startingPoint
+            let end = offsetCurves[offsetCurves.count-1].endingPoint
+            let average = Utils.lerp(0.5, start, end)
+            offsetCurves[0].startingPoint = average
+            offsetCurves[offsetCurves.count-1].endingPoint = average
+        }
+        return PathComponent(curves: offsetCurves)
     }
     
     public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
@@ -234,6 +259,7 @@ public final class PathComponent: NSObject, NSCoding {
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
                 guard i1.t != 0.0 && i2.t != 0.0 else {
                     // we'll get this intersection at t=1 on the neighboring path element(s) instead
+                    // TODO: in some cases 'see: testContainsEdgeCaseParallelDerivative it's possible to get an intersection at t=0 without an intersection at t=1 of the previous element
                     return nil
                 }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
@@ -344,22 +370,25 @@ public final class PathComponent: NSObject, NSCoding {
     }
     
     internal func windingCount(at point: CGPoint) -> Int {
+        guard self.isClosed, self.boundingBox.contains(point) else {
+            return 0
+        }
         // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
-        let delta = line.p0 - line.p1
+        let delta = (line.p0 - line.p1).normalize()
         let intersections = self.intersects(line: line)
         var windingCount = 0
         intersections.forEach {
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
             assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
-            let dotProduct = delta.dot(element.normal(t))
-            if dotProduct < 0 {
+            let dotProduct = Double(delta.dot(element.normal(t)))
+            if dotProduct < -Utils.epsilon {
                 if t != 0 {
                     windingCount -= 1
                 }
             }
-            else if dotProduct > 0 {
+            else if dotProduct > Utils.epsilon {
                 if t != 1 {
                     windingCount += 1
                 }

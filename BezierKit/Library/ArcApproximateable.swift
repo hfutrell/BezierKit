@@ -53,7 +53,7 @@ extension ArcApproximateable {
                 let ref = Utils.dist(pc, np1)
                 let d1  = Utils.dist(pc, c1)
                 let d2  = Utils.dist(pc, c2)
-                return fabs(d1-ref) + fabs(d2-ref)
+                return abs(d1-ref) + abs(d2-ref)
             }
             
             repeat {

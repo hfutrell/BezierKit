@@ -130,6 +130,45 @@ class PathTests: XCTestCase {
         XCTAssert(intersections.contains(CGPoint(x: 3.0, y: 5.0)))
     }
     
+    func testSelfIntersectsEmptyPath() {
+        let emptyPath = Path()
+        XCTAssertEqual(emptyPath.intersects(), [])
+    }
+    
+    func testSelfIntersectsSingleComponentPath() {
+        let singleComponentPath = { () -> Path in
+            let points: [CGPoint] = [
+                CGPoint(x: -1, y: 0),
+                CGPoint(x: 1, y: 0),
+                CGPoint(x: 1, y: 1),
+                CGPoint(x: 0, y: 1),
+                CGPoint(x: 0, y: -1),
+                CGPoint(x: -1, y: -1)
+            ]
+            let cgPath = CGMutablePath()
+            cgPath.addLines(between: points)
+            cgPath.closeSubpath()
+            return Path(cgPath: cgPath)
+        }()
+        let expectedIntersection = PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0.5),
+                                                    indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 3, t: 0.5))
+        XCTAssertEqual(singleComponentPath.intersects(), [expectedIntersection])
+    }
+    
+    func testSelfIntersectsMultiComponentPath() {
+        let multiComponentPath = { () -> Path in
+            let cgPath = CGMutablePath()
+            cgPath.addRect(CGRect(x: 0, y: 0, width: 2, height: 4))
+            cgPath.addRect(CGRect(x: 1, y: 2, width: 2, height: 1))
+            return Path(cgPath: cgPath)
+        }()
+        let expectedIntersection1 = PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.5),
+                                                     indexedPathLocation2: IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.5))
+        let expectedIntersection2 = PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.75),
+                                                     indexedPathLocation2: IndexedPathLocation(componentIndex: 1, elementIndex: 2, t: 0.5))
+        XCTAssertEqual(multiComponentPath.intersects(), [expectedIntersection1, expectedIntersection2])
+    }
+    
     func testPointIsWithinDistanceOfBoundary() {
         
         let circleCGPath = CGMutablePath()
@@ -268,6 +307,57 @@ class PathTests: XCTestCase {
         XCTAssertTrue(circleWithHole.contains(CGPoint(x: 2.0, y: 0.0), using: .winding))
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .evenOdd))
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 4.0, y: 0.0), using: .winding))
+    }
+    
+    func testContainsCornerCase() {
+        let cgPath = CGMutablePath()
+        let points = [CGPoint(x: 0, y: 0),
+                      CGPoint(x: 2, y: 1),
+                      CGPoint(x: 1, y: 3),
+                      CGPoint(x: -1, y: 2)]
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        let rotatedSquare = Path(cgPath: cgPath)
+        // the square is rotated such that a horizontal line extended from `point1` or `point2` intersects the square
+        // at an edge on one side but a corner on the other. If corners aren't handled correctly things can go wrong
+        let squareCenter = CGPoint(x: 0.5, y: 0.5)
+        let point1 = CGPoint(x: -0.75, y: 1)
+        let point2 = CGPoint(x: 1.75, y: 2)
+        XCTAssertTrue(rotatedSquare.contains(squareCenter))
+        XCTAssertFalse(rotatedSquare.contains(point1))
+        XCTAssertFalse(rotatedSquare.contains(point2))
+    }
+    
+    func testContainsRealWorldEdgeCase() {
+        // an edge case which caused errors in practice because (rare!) line-curve intersections are found when bounding boxes do not even overlap
+        let point = CGPoint(x: 281.2936999253952, y: 221.7262912473492)
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467))
+        cgPath.addLine(to: CGPoint(x: 195.80672765188274, y: 106.4029658046467))
+        cgPath.addLine(to: CGPoint(x: 195.80672765188274, y: 221.7262912473492))
+        cgPath.addLine(to: CGPoint(x: 273.5510327577471, y: 221.72629124734914)) // !!! precision issues comes from fact line is almost, but not perfectly horizontal
+        cgPath.addCurve(to: CGPoint(x: 271.9933072984535, y: 214.38053683325302), control1: CGPoint(x: 273.05768924540223, y: 219.26088569867528), control2: CGPoint(x: 272.5391291486813, y: 216.81119916319818))
+        cgPath.addCurve(to: CGPoint(x: 252.80681257385964, y: 162.18313232371986), control1: CGPoint(x: 267.39734333475377, y: 195.3589483577662), control2: CGPoint(x: 260.947626989152, y: 177.936810624913))
+        cgPath.addCurve(to: CGPoint(x: 215.4444979991486, y: 111.76311400605556), control1: CGPoint(x: 242.1552743057946, y: 142.6678463672315), control2: CGPoint(x: 229.03183407884012, y: 126.09450622380493))
+        cgPath.addCurve(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467), control1: CGPoint(x: 213.72825408056033, y: 109.93389850557801), control2: CGPoint(x: 212.02163105179878, y: 108.14905966376985))
+        let path = Path(cgPath: cgPath)
+
+        XCTAssertFalse(path.boundingBox.contains(point)) // the point is not even in the bounding box of the path!
+        XCTAssertFalse(path.contains(point, using: .evenOdd))
+        XCTAssertFalse(path.contains(point, using: .winding))
+    }
+    
+    func testContainsEdgeCaseParallelDerivative() {
+        // this is a real-world edge case that can happen with round-rects
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 0.0, y: 1.0))
+        cgPath.addQuadCurve(to: CGPoint(x: 1.0, y: 0.0), control: CGPoint(x: 0, y: 0)) // quad curve has derivative exactly horizontal at t=1
+        cgPath.addLine(to: CGPoint(x: 2.0, y: -1.0e-5))
+        cgPath.addLine(to: CGPoint(x: 4.0, y: 1))
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        XCTAssertTrue(path.contains(CGPoint(x: 0.5, y: 0.5)))
+        XCTAssertFalse(path.contains(CGPoint(x: 3.0, y: 0.0)))
     }
     
     func testContainsPath() {
@@ -577,6 +667,190 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result.windingCount(CGPoint(x: 0.5, y: 1)), 1)
         XCTAssertEqual(result.windingCount(CGPoint(x: 2.0, y: 1)), 1) // if the inner loop wasn't eliminated we'd have a winding count of 2 here
         XCTAssertEqual(result.windingCount(CGPoint(x: 3.5, y: 1)), 1)
+    }
+    
+    func testCrossingsRemovedRealWorldEdgeCaseMagicNumbers() {
+        // in practice this data was failing because 'smallNumber', a magic number in augmented graph was too large
+        // it was fixed by decreasing the value by 10x
+        let cgPath = CGMutablePath()
+        let start = CGPoint(x: 79.59559290956605, y: 697.9008011912572)
+        cgPath.move(to: start)
+        cgPath.addCurve(to: CGPoint(x:71.31576744881897, y:729.0705310397749), control1: CGPoint(x:85.91646553575535, y:708.7944954952286), control2: CGPoint(x:82.2094612873204, y:722.7496586836662))
+        cgPath.addCurve(to: CGPoint(x:40.14603795970622, y:720.7907053704894), control1: CGPoint(x:60.4220735042526, y:735.3914034574259), control2: CGPoint(x:46.46691031581487, y:731.6843992089908))
+        cgPath.addCurve(to: CGPoint(x:37.21144227099133, y:706.7177736592248), control1: CGPoint(x:39.07549105339858, y:718.7074812854011), control2: CGPoint(x:37.21110624960683, y:711.947464952338))
+        cgPath.addCurve(to: CGPoint(x:62.477966856736, y:686.6750666235641), control1: CGPoint(x:38.65395965539626, y:694.2059748336982), control2: CGPoint(x:49.96616803120935, y:685.2325492391592))
+        cgPath.addCurve(to: CGPoint(x:82.52067606376023, y:711.9415914596509), control1: CGPoint(x:74.98976785362623, y:688.1175842583111), control2: CGPoint(x:83.96319344816517, y:699.4297926341243))
+        cgPath.addCurve(to: start, control1: CGPoint(x:82.51999960076027, y:706.7206820370851), control2: CGPoint(x:80.65889482357387, y:699.9715389099819))
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(threshold: 0.01)
+         // in practice .crossingsRemoved was cutting off most of the shape
+        XCTAssertNotNil(result)
+        if let result = result {
+            XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
+            XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
+            XCTAssertEqual(result.subpaths[0].elementCount, 5) // with crossings removed we should have 1 fewer curve (the last one)
+        }
+    }
+    
+    func testCrossingsRemovedAnotherRealWorldCase() {
+        
+        // TODO: re-enable this unit test -- I was never able to get this to pass
+        // (must be re-enabled in Mac and iOS test suite separately)
+        
+        let cgPath = CGMutablePath()
+        let start = CGPoint(x: 503.3060153966664, y: 766.9140612367046)
+        cgPath.move(to: start)
+        cgPath.addCurve(to: CGPoint(x:517.9306651149989, y:762.0523534483476), control1: CGPoint(x:506.0019772976378, y:761.5330522602719), control2: CGPoint(x:512.5496560294043, y:759.3563914926846))
+        cgPath.addCurve(to: CGPoint(x:522.7923732205169, y:776.6770033255823), control1: CGPoint(x:523.3116744085926, y:764.7483155082213), control2: CGPoint(x:525.4883351761798, y:771.2959942399877))
+        cgPath.addCurve(to: CGPoint(x:520.758836935199, y:764.316674774872), control1: CGPoint(x:522.6619398993569, y:776.9550303733141), control2: CGPoint(x:522.7228057838222, y:776.8532852161298))
+        cgPath.addCurve(to: CGPoint(x:520.6170414159213, y:779.7723863761416), control1: CGPoint(x:524.9876580913353, y:768.6238074338997), control2: CGPoint(x:524.9241740749491, y:775.5435652200052))
+        cgPath.addCurve(to: CGPoint(x:505.16132944417086, y:779.6305912206088), control1: CGPoint(x:516.3099083864128, y:784.001207896023), control2: CGPoint(x:509.3901506003072, y:783.9377238796366))
+        cgPath.addCurve(to: start, control1: CGPoint(x:503.19076843492786, y:767.0872665416827), control2: CGPoint(x:503.3761460381431, y:766.7563954079359))
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(threshold: 0.01)
+        // in practice .crossingsRemoved was cutting off most of the shape
+        XCTAssertNotNil(result)
+        if let result = result {
+            XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
+            XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
+        }
+    }
+    
+    func testCrossingsRemovedMulticomponent() {
+        // this path is a square with a self-intersecting inner region that should form a square shaped hole when crossings
+        // this is similar to what happens if you use CoreGraphics to stroke shape, albeit simplified here for the sake of testing
+        let cgPath = CGMutablePath()
+        cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
+        let points: [CGPoint] = [
+            CGPoint(x: 1, y: 2),
+            CGPoint(x: 2, y: 1),
+            CGPoint(x: 2, y: 4),
+            CGPoint(x: 1, y: 3),
+            CGPoint(x: 4, y: 3),
+            CGPoint(x: 3, y: 4),
+            CGPoint(x: 3, y: 1),
+            CGPoint(x: 4, y: 2)
+        ]
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved()!
+        
+        let expectedResult = Path(cgPath: { () -> CGPath in
+            let cgPath = CGMutablePath()
+            cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
+            cgPath.addLines(between: [
+                CGPoint(x: 2, y: 2),
+                CGPoint(x: 2, y: 3),
+                CGPoint(x: 3, y: 3),
+                CGPoint(x: 3, y: 2)
+            ])
+            cgPath.closeSubpath()
+            return cgPath
+        }())
+        
+        XCTAssertEqual(result.subpaths.count, 2)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[1], expectedResult.subpaths[1]))
+    }
+    
+    func testCrossingsRemovedRealWorldInfiniteLoop() {
+        
+        // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)
+        
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 431.2394694928875, y: 109.81690300533613))
+        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 110.3870201809152), control1: CGPoint(x: 431.2394694928875, y: 110.13177002702506), control2: CGPoint(x: 430.9842193389974, y: 110.3870201809152))
+        cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 110.3870201809152))
+        cgPath.addLine(to: CGPoint(x: 383.46134494359774, y: 109.81690300533613))
+        cgPath.addLine(to: CGPoint(x: 383.46134494359774, y: 125.44498541142156))
+        cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 124.87486823584248))
+        cgPath.addLine(to: CGPoint(x: 430.66935231730844, y: 124.87486823584248))
+        cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 125.44498541142156))
+        cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
+        cgPath.addLine(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883))
+        cgPath.closeSubpath()
+        
+        cgPath.move(to: CGPoint(x: 430.09923514172937, y: 109.81690300533613))
+        cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
+        cgPath.addCurve(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883), control1: CGPoint(x: 430.09923514172937, y: 99.16380521344341), control2: CGPoint(x: 431.2394694928875, y: 99.16380521344341))
+        cgPath.addLine(to: CGPoint(x: 431.2394694928875, y: 125.44498541142156))
+        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 126.01510258700063), control1: CGPoint(x: 431.2394694928875, y: 125.75985243311048), control2: CGPoint(x: 430.9842193389974, y: 126.01510258700063))
+        cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 126.01510258700063))
+        cgPath.addCurve(to: CGPoint(x: 382.3211105924396, y: 125.44498541142156), control1: CGPoint(x: 382.5763607463297, y: 126.01510258700063), control2: CGPoint(x: 382.3211105924396, y: 125.75985243311048))
+        cgPath.addLine(to: CGPoint(x: 382.3211105924396, y: 109.81690300533613))
+        cgPath.addCurve(to: CGPoint(x: 382.89122776801867, y: 109.24678582975706), control1: CGPoint(x: 382.3211105924396, y: 109.5020359836472), control2: CGPoint(x: 382.5763607463297, y: 109.24678582975706))
+        cgPath.addLine(to: CGPoint(x: 430.66935231730844, y: 109.24678582975706))
+        cgPath.closeSubpath()
+
+        let path = Path(cgPath: cgPath)
+        let _ = path.crossingsRemoved(threshold: 0.01)
+        
+        // for now the test's only expectation is that we do not go into an infinite loop
+        // TODO: make test stricter
+    }
+    
+    func testOffset() {
+        let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
+        let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
+        XCTAssertEqual(offsetCircle.subpaths.count, 1)
+        // make sure that the offsetting process created a series of elements that is *contiguous*
+        let component = offsetCircle.subpaths.first!
+        let elementCount = component.elementCount
+        for i in 0..<elementCount {
+            XCTAssertEqual(component.element(at: i).endingPoint, component.element(at: (i+1) % elementCount).startingPoint)
+        }
+        // make sure that the offset circle is a actually circle, or, well, close to one
+        let expectedRadius: CGFloat = 2.0
+        let expectedCenter = CGPoint(x: 1.0, y: 1.0)
+        for i in 0..<offsetCircle.subpaths[0].elementCount {
+            let c = offsetCircle.subpaths[0].element(at: i)
+            for p in c.generateLookupTable(withSteps: 10) {
+                let radius = distance(p, expectedCenter)
+                let percentError = 100.0 * abs(radius - expectedRadius) / expectedRadius
+                XCTAssert(percentError < 0.1, "expected offset circle to have radius \(expectedRadius), but there's a point distance \(distance(p, expectedCenter)) from the expected center.")
+            }
+        }
+    }
+    
+    func testDisjointSubpathsNesting() {
+        XCTAssertEqual(Path().disjointSubpaths(), [])
+        // test that a simple square just gives the same square back
+        let squarePath = Path(cgPath: CGPath.init(rect: CGRect(x: 0, y: 0, width: 7, height: 7), transform: nil))
+        let result1 = squarePath.disjointSubpaths()
+        XCTAssertEqual(result1.count, 1)
+        if let result = result1.first {
+            XCTAssertEqual(squarePath, result)
+        }
+        // test that a square with a hole associates the hole correctly with the square
+        let squareWithHolePath = { () -> Path in
+            let cgPath = CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil)
+            let hole = Path(cgPath: cgPath).reversed()
+            return Path(subpaths: squarePath.subpaths + hole.subpaths)
+        }()
+        let result2 = squareWithHolePath.disjointSubpaths()
+        XCTAssertEqual(result2.count, 1)
+        if let result = result2.first {
+            XCTAssertEqual(squareWithHolePath, result)
+        }
+        // test that nested paths correctly produce two paths
+        let pegPath = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil))
+        let squareWithPegPath = Path(subpaths: squareWithHolePath.subpaths + pegPath.subpaths)
+        let result3 = squareWithPegPath.disjointSubpaths()
+        XCTAssertEqual(result3.count, 2)
+        XCTAssert(result3.contains(squareWithHolePath))
+        XCTAssert(result3.contains(pegPath))
+        // test a trickier case: a square with a hole, nested inside a square with a hole
+        let pegWithHolePath = { () -> Path in
+            let cgPath = CGPath(rect: CGRect(x: 3, y: 3, width: 1, height: 1), transform: nil)
+            let hole = Path(cgPath: cgPath).reversed()
+            return Path(subpaths: pegPath.subpaths + hole.subpaths)
+        }()
+        let squareWithPegWithHolePath = Path(subpaths: squareWithHolePath.subpaths + pegWithHolePath.subpaths)
+        let result4 = squareWithPegWithHolePath.disjointSubpaths()
+        XCTAssertEqual(result4.count, 2)
+        XCTAssert(result4.contains(squareWithHolePath))
+        XCTAssert(result4.contains(pegWithHolePath))
     }
     
     func testSubtractionPerformance() {

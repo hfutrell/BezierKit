@@ -279,6 +279,16 @@ class LineSegmentTests: XCTestCase {
         XCTAssert((l2.compute(i2[1].t1) - q.compute(i2[1].t2)).length < epsilon)
     }
     
+    func testIntersectsQuadraticSpecialCase() {
+        // this is case that failed in the real-world
+        let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
+        let q = QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1))
+        let i = l.intersects(curve: q)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i.first?.t1, 0.5)
+        XCTAssertEqual(i.first?.t2, 0)
+    }
+    
     func testIntersectsCubic() {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         let epsilon: CGFloat = 0.00001
@@ -337,6 +347,27 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
+    func testIntersectsCubicSpecialCase() {
+        // this is case that failed in the real-world
+        let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
+        let q = CubicBezierCurve(quadratic: QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
+        let i = l.intersects(curve: q)
+        XCTAssertEqual(i.count, 1)
+        XCTAssertEqual(i.first?.t1, 0.5)
+        XCTAssertEqual(i.first?.t2, 0)
+    }
+    
+    func testIntersectsCubicRootsEdgeCase() {
+        // this data caused issues in practice because because 'd' in the roots calculation is very near, but not exactly, zero.
+        let c = CubicBezierCurve(p0: CGPoint(x: 201.48419096574196, y: 570.7720830272123),
+                                 p1: CGPoint(x: 202.27135851996428, y: 570.7720830272123),
+                                 p2: CGPoint(x: 202.90948390468964, y: 571.4102084119377),
+                                 p3: CGPoint(x: 202.90948390468964, y: 572.1973759661599))
+        let l = LineSegment(p0: CGPoint(x: 200.05889802679428, y: 572.1973759661599), p1: CGPoint(x: 201.48419096574196, y: 573.6226689051076))
+        let i = l.intersects(curve: c)
+        XCTAssertEqual(i, [])
+    }
+    
     // MARK: -
     
     func testEquatable() {
