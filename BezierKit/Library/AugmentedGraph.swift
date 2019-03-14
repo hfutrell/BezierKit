@@ -8,11 +8,11 @@
 
 import CoreGraphics
 
-public func signedAngle(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
-    return atan2(CGPoint.cross(a, b), a.dot(b))
+internal func signedAngle(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
+    return atan2(a.cross(b), a.dot(b))
 }
 
-public func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
+internal func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
     let signedAngleAB = signedAngle(a, b)
     let signedAngleAV = signedAngle(a, v)
     if signedAngleAB > 0 {
@@ -23,12 +23,6 @@ public func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
     }
     else {
         return signedAngleAV == 0
-    }
-}
-
-extension CGPoint {
-    static func cross(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
-        return p1.x * p2.y - p1.y * p2.x
     }
 }
 
@@ -182,7 +176,7 @@ internal class PathLinkedListRepresentation {
                     // TODO: there's an issue when corners intersect (try AugmentedGraphTests.testCornersIntersect which has this problem, even though it passes)
                     // the relative winding count can be decremented both for entry and for exit. This is not an issue with the even-odd winding rule, but using
                     // winding it can be an issue
-                    let c = CGPoint.cross(v2, n2)
+                    let c = v2.cross(n2)
                     if c < 0 {
                         relativeWindingCount += 1
                     }
@@ -487,11 +481,5 @@ internal class Vertex {
 extension Vertex: Equatable {
     public static func == (left: Vertex, right: Vertex) -> Bool {
         return left === right
-    }
-}
-
-extension Vertex: Hashable {
-    public var hashValue: Int {
-        return ObjectIdentifier(self).hashValue
     }
 }
