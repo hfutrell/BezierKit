@@ -27,11 +27,11 @@ public final class PathComponent: NSObject, NSCoding {
     private let points: [CGPoint]
     private let orders: [Int]
     
-    public lazy var curves: [BezierCurve] = {
-        return (0..<self.elementCount).map {
+    internal var curves: [BezierCurve] { // in most cases use element(at:)
+        return (0..<elementCount).map {
             self.element(at: $0)
         }
-    }()
+    }
     
     internal lazy var bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
     
