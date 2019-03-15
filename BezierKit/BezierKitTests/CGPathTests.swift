@@ -91,8 +91,8 @@ class PathCGPathTests: XCTestCase {
 
     func testRectangle() {
         let rectCGPath = CGPath(rect: CGRect(x: 1, y: 1, width: 2, height: 3), transform: nil)
-        let path = Path(cgPath: rectCGPath)
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(path.cgPath, rectCGPath))
+        let data = Path(cgPath: rectCGPath).data
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(data: data).cgPath, rectCGPath))
     }
 
     func testSingleOpenPath() {

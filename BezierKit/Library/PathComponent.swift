@@ -24,8 +24,8 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 public final class PathComponent: NSObject, NSCoding {
     
     private let offsets: [Int]
-    private let points: [CGPoint]
-    private let orders: [Int]
+    internal let points: [CGPoint]
+    internal let orders: [Int]
     
     internal var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {

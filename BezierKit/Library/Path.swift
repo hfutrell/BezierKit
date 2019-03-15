@@ -359,3 +359,75 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.indexedPathLocation1 == other.indexedPathLocation1 && self.indexedPathLocation2 == other.indexedPathLocation2
     }
 }
+
+fileprivate extension Data {
+    mutating func appendNativeValue<U>(_ value: U) {
+        var temp = value
+        withUnsafePointer(to: &temp) { (ptr: UnsafePointer<U>) in
+            let bytesSize = MemoryLayout<U>.size
+            let bytes: UnsafePointer<UInt8> = UnsafeRawPointer(ptr).bindMemory(to: UInt8.self, capacity: bytesSize)
+            self.append(bytes, count: bytesSize)
+        }
+    }
+}
+
+public extension Path {
+
+    private typealias MagicNumberType = UInt32
+    static private let magicNumberVersion1: MagicNumberType = 1223013157 // just a random number that helps us identify if the data is OK and saved in compatible version
+
+    public convenience init(data: Data) {
+
+        var subpaths: [PathComponent] = []
+
+        var magic: MagicNumberType = MagicNumberType.max
+        var ptr = UnsafeMutablePointer<MagicNumberType>(&magic)
+        var blerg: UnsafeMutablePointer<UInt8> = UnsafeMutableRawPointer(ptr).bindMemory(to: UInt8.self, capacity: MemoryLayout<MagicNumberType>.size)
+
+        data.copyBytes(to: blerg, count: MemoryLayout<MagicNumberType>.size)
+        assert(magic == Path.magicNumberVersion1)
+
+        // TODO: all the rest of the data
+
+        self.init(subpaths: subpaths)
+    }
+
+    public var data: Data {
+        // one command to start each subpath (aside from the first subpath), plus one command for each element in the path
+        assert(MemoryLayout<MagicNumberType>.size == 4)
+        assert(MemoryLayout<UInt32>.size == 4)
+        assert(MemoryLayout<Float64>.size == 8)
+
+        let expectedPointsCount = 2 * self.subpaths.reduce(0) { $0 + $1.points.count }
+        let expectedCommandsCount = self.subpaths.reduce(0) { $0 + $1.elementCount } + (self.subpaths.count > 1 ? (self.subpaths.count-1) : 0)
+
+        // compile the data into a single buffer we can easily write
+        var commands: [UInt8] = []
+        var points: [Double] = []
+        points.reserveCapacity(expectedPointsCount)
+        for subpath in self.subpaths {
+            points += subpath.points.flatMap { [Float64($0.x), Float64($0.y)] }
+            if commands.isEmpty == false {
+                commands.append(0)
+            }
+            commands += subpath.orders.map { UInt8($0) }
+        }
+        assert(expectedPointsCount == points.count)
+        assert(expectedCommandsCount == commands.count)
+
+        var result = Data()
+        let expectedBytesCount = MemoryLayout<MagicNumberType>.size + MemoryLayout<UInt32>.size + MemoryLayout<UInt8>.size * commands.count + MemoryLayout<Float64>.size * points.count
+        result.reserveCapacity(expectedBytesCount)
+        // write the magicNumber
+        result.appendNativeValue(Path.magicNumberVersion1)
+        // write the commands count
+        result.appendNativeValue(UInt32(commands.count))
+        result.append(contentsOf: commands)
+        // write the points
+        points.withUnsafeBufferPointer { buffer in
+            result.append(buffer)
+        }
+        assert(result.count == expectedBytesCount, "wrong number of bytes! expected \(expectedBytesCount) got \(result.count)")
+        return result
+    }
+}
