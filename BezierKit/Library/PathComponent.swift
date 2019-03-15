@@ -27,7 +27,7 @@ public final class PathComponent: NSObject, NSCoding {
     internal let points: [CGPoint]
     internal let orders: [Int]
     
-    internal var curves: [BezierCurve] { // in most cases use element(at:)
+    public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {
             self.element(at: $0)
         }
