@@ -371,24 +371,92 @@ fileprivate extension Data {
     }
 }
 
+fileprivate extension UnsafePointer where Pointee == UInt8 {
+    func readNativeValue<T>(_ value: inout T) -> UnsafePointer<UInt8> {
+        let size = MemoryLayout<T>.size
+        let ptr = UnsafeRawPointer(self).bindMemory(to: T.self, capacity: 1)
+        value = ptr.pointee
+        return self + size
+    }
+    func readNativeValues<T>(to array: inout [T], count: Int) -> UnsafePointer<UInt8> {
+        let size = count * MemoryLayout<T>.size
+        let pointer: UnsafePointer<T> = UnsafeRawPointer(self).bindMemory(to: T.self, capacity: count)
+        let bufferPointer = UnsafeBufferPointer<T>(start: pointer, count: count)
+        array.append(contentsOf: bufferPointer)
+        return self + size
+    }
+}
+
 public extension Path {
 
     private typealias MagicNumberType = UInt32
     static private let magicNumberVersion1: MagicNumberType = 1223013157 // just a random number that helps us identify if the data is OK and saved in compatible version
 
-    public convenience init(data: Data) {
+    static private let startComponentCommand: UInt8 = 0
+    
+    internal enum PathDataError: Error {
+        case magicNumberUnsupportedOrWrong
+        case insufficientDataBytes
+    }
+    
+    public convenience init?(data: Data) {
 
         var subpaths: [PathComponent] = []
 
-        var magic: MagicNumberType = MagicNumberType.max
-        var ptr = UnsafeMutablePointer<MagicNumberType>(&magic)
-        var blerg: UnsafeMutablePointer<UInt8> = UnsafeMutableRawPointer(ptr).bindMemory(to: UInt8.self, capacity: MemoryLayout<MagicNumberType>.size)
-
-        data.copyBytes(to: blerg, count: MemoryLayout<MagicNumberType>.size)
-        assert(magic == Path.magicNumberVersion1)
-
-        // TODO: all the rest of the data
-
+        var commandCount: UInt32 = 0
+        
+        var commands: [UInt8] = []
+        //var error: PathDataError? = nil
+        var success = true
+        let _ = data.withUnsafeBytes { (dataBytes: UnsafePointer<UInt8>) -> Void in
+            var ptr = dataBytes
+            //var bytesRemaining = data.count
+            
+            // check the magic number
+            var magic: MagicNumberType = MagicNumberType.max
+            ptr = ptr.readNativeValue(&magic)
+            guard magic == Path.magicNumberVersion1 else {
+                //error = .magicNumberUnsupportedOrWrong
+                success = false
+                return
+            }
+            
+            ptr = ptr.readNativeValue(&commandCount)
+            ptr = ptr.readNativeValues(to: &commands, count: Int(commandCount))
+            
+            var currentPoints: [CGPoint] = []
+            var currentOrders: [Int] = []
+            
+            for command in commands {
+                
+                var pointsToRead = 1
+                if command == Path.startComponentCommand {
+                    if currentOrders.isEmpty == false {
+                        subpaths.append(PathComponent(points: currentPoints, orders: currentOrders))
+                        currentPoints = []
+                        currentOrders = []
+                    }
+                }
+                else {
+                    pointsToRead = Int(command)
+                    currentOrders.append(pointsToRead)
+                }
+                for _ in 0..<pointsToRead {
+                    var x: Double = 0
+                    var y: Double = 0
+                    ptr = ptr.readNativeValue(&x)
+                    ptr = ptr.readNativeValue(&y)
+                    let point = CGPoint(x: CGFloat(x), y: CGFloat(y))
+                    currentPoints.append(point)
+                }
+            }
+            if currentOrders.isEmpty == false {
+                subpaths.append(PathComponent(points: currentPoints, orders: currentOrders))
+            }
+        }
+        if success == false {
+            return nil
+        }
         self.init(subpaths: subpaths)
     }
 
@@ -399,7 +467,7 @@ public extension Path {
         assert(MemoryLayout<Float64>.size == 8)
 
         let expectedPointsCount = 2 * self.subpaths.reduce(0) { $0 + $1.points.count }
-        let expectedCommandsCount = self.subpaths.reduce(0) { $0 + $1.elementCount } + (self.subpaths.count > 1 ? (self.subpaths.count-1) : 0)
+        let expectedCommandsCount = self.subpaths.reduce(0) { $0 + $1.elementCount } + (self.subpaths.count)
 
         // compile the data into a single buffer we can easily write
         var commands: [UInt8] = []
@@ -407,9 +475,7 @@ public extension Path {
         points.reserveCapacity(expectedPointsCount)
         for subpath in self.subpaths {
             points += subpath.points.flatMap { [Float64($0.x), Float64($0.y)] }
-            if commands.isEmpty == false {
-                commands.append(0)
-            }
+            commands.append(0)
             commands += subpath.orders.map { UInt8($0) }
         }
         assert(expectedPointsCount == points.count)

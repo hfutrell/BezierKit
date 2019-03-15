@@ -49,6 +49,11 @@ fileprivate extension CGPath {
 
 class PathCGPathTests: XCTestCase {
 
+    
+    private func cgPathsHaveEqualCGPathElements(_ path1: Path, _ path2: CGPath) -> Bool {
+        return cgPathsHaveEqualCGPathElements(Path(data: path1.data)!.cgPath, path2)
+    }
+        
     private func cgPathsHaveEqualCGPathElements(_ path1: CGPath, _ path2: CGPath) -> Bool {
         // checks that the CGPathElements that make up the paths are exactly equal
         // unfortunately we cannot just check path1 == path2 because CGPath.isRect can differ even if the underlying data is the same
@@ -85,21 +90,20 @@ class PathCGPathTests: XCTestCase {
 
     func testEmpty() {
         let emptyCGPath = CGMutablePath()
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path().cgPath, emptyCGPath))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: emptyCGPath).cgPath, emptyCGPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(), emptyCGPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: emptyCGPath), emptyCGPath))
     }
 
     func testRectangle() {
         let rectCGPath = CGPath(rect: CGRect(x: 1, y: 1, width: 2, height: 3), transform: nil)
-        let data = Path(cgPath: rectCGPath).data
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(data: data).cgPath, rectCGPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: rectCGPath), rectCGPath))
     }
 
     func testSingleOpenPath() {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
         cgPath.addCurve(to: CGPoint(x: 4, y: 5), control1: CGPoint(x: 5, y: 5), control2: CGPoint(x: 6, y: 4))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath).cgPath, cgPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
     }
 
     func testSingleClosedPathClosePath() {
@@ -109,7 +113,7 @@ class PathCGPathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 4, y: 5))
         cgPath.addLine(to: CGPoint(x: 3, y: 5))
         cgPath.closeSubpath()
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath).cgPath, cgPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
     }
 
     func testMultipleOpenPaths() {
@@ -120,7 +124,7 @@ class PathCGPathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 7, y: 5))
         cgPath.move(to: CGPoint(x: 9, y: 4))
         cgPath.addLine(to: CGPoint(x: 10, y: 5))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath).cgPath, cgPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
     }
 
     func testUnsupportedPathDoesNotCrash() {
@@ -135,7 +139,7 @@ class PathCGPathTests: XCTestCase {
         let cgPath = CGMutablePath()
         cgPath.addRect(CGRect(x: 1, y: 1, width: 2, height: 3))
         cgPath.addRect(CGRect(x: 4, y: 2, width: 2, height: 3))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath).cgPath, cgPath))
+        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
     }
 
 }
