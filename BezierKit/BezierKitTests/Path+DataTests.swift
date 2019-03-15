@@ -1,5 +1,5 @@
 //
-//  PathCGPathTests.swift
+//  Path+DataTests.swift
 //  BezierKit
 //
 //  Created by Holmes Futrell on 3/13/19.
@@ -47,10 +47,9 @@ fileprivate extension CGPath {
     }
 }
 
-class PathCGPathTests: XCTestCase {
+class PathDataTests: XCTestCase {
 
-    
-    private func cgPathsHaveEqualCGPathElements(_ path1: Path, _ path2: CGPath) -> Bool {
+    private func pathHasEqualElementsToCGPath(_ path1: Path, _ path2: CGPath) -> Bool {
         return cgPathsHaveEqualCGPathElements(Path(data: path1.data)!.cgPath, path2)
     }
         
@@ -90,20 +89,20 @@ class PathCGPathTests: XCTestCase {
 
     func testEmpty() {
         let emptyCGPath = CGMutablePath()
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(), emptyCGPath))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: emptyCGPath), emptyCGPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(), emptyCGPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: emptyCGPath), emptyCGPath))
     }
 
     func testRectangle() {
         let rectCGPath = CGPath(rect: CGRect(x: 1, y: 1, width: 2, height: 3), transform: nil)
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: rectCGPath), rectCGPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: rectCGPath), rectCGPath))
     }
 
     func testSingleOpenPath() {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
         cgPath.addCurve(to: CGPoint(x: 4, y: 5), control1: CGPoint(x: 5, y: 5), control2: CGPoint(x: 6, y: 4))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
     func testSingleClosedPathClosePath() {
@@ -113,7 +112,7 @@ class PathCGPathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 4, y: 5))
         cgPath.addLine(to: CGPoint(x: 3, y: 5))
         cgPath.closeSubpath()
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
     func testMultipleOpenPaths() {
@@ -124,22 +123,51 @@ class PathCGPathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 7, y: 5))
         cgPath.move(to: CGPoint(x: 9, y: 4))
         cgPath.addLine(to: CGPoint(x: 10, y: 5))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
     func testUnsupportedPathDoesNotCrash() {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
         cgPath.closeSubpath()
-        let resultingCGPath = Path(cgPath: cgPath).cgPath
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(resultingCGPath, CGMutablePath()))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), CGMutablePath()))
     }
 
     func testMultipleClosedPaths() {
         let cgPath = CGMutablePath()
         cgPath.addRect(CGRect(x: 1, y: 1, width: 2, height: 3))
         cgPath.addRect(CGRect(x: 4, y: 2, width: 2, height: 3))
-        XCTAssertTrue(cgPathsHaveEqualCGPathElements(Path(cgPath: cgPath), cgPath))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
+    func testEmptyData() {
+        let path = Path(data: Data())
+        XCTAssertEqual(path, nil)
+    }
+
+    func testWrongMagicNumber() {
+        var data = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 2, width: 3, height: 4), transform: nil)).data
+        XCTAssertNotEqual(Path(data: data), nil)
+        data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) in
+            bytes[0] = ~bytes[0]
+        }
+        XCTAssertEqual(Path(data: data), nil)
+    }
+
+    func testCorruptedData() {
+        let data = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 2, width: 3, height: 4), transform: nil)).data
+        XCTAssertNotEqual(Path(data: data), nil)
+        let corruptData1 = data[0..<data.count-1] // missing last y coordinate
+        XCTAssertEqual(Path(data: corruptData1), nil)
+        let corruptData2 = data[0..<data.count-9] // missing last x coordinate
+        XCTAssertEqual(Path(data: corruptData2), nil)
+        let corruptData3 = data[0..<3] // magic number cut off
+        XCTAssertEqual(Path(data: corruptData3), nil)
+        let corruptData4 = data[0..<4] // only magic number
+        XCTAssertEqual(Path(data: corruptData4), nil)
+        let corruptData5 = data[0..<5] // command count cut off
+        XCTAssertEqual(Path(data: corruptData5), nil)
+        let corruptData6 = data[0..<10] // commands cut off
+        XCTAssertEqual(Path(data: corruptData6), nil)
+    }
 }
