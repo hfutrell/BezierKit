@@ -24,7 +24,7 @@ fileprivate extension InputStream {
     func readNativeValue<T>(_ value: UnsafeMutablePointer<T>) -> Bool {
         let size = MemoryLayout<T>.size
         return value.withMemoryRebound(to: UInt8.self, capacity: size) {
-            return self.read($0, maxLength: size) == size
+            self.read($0, maxLength: size) == size
         }
     }
     func appendNativeValues<T>(to array: inout [T], count: Int) -> Bool {
