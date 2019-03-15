@@ -54,18 +54,18 @@ class TransformableTests: XCTestCase {
         let l1 = LineSegment(p0: CGPoint(x: -1, y: -1), p1: CGPoint(x: 3, y: 1))
         let l2 = LineSegment(p0: CGPoint(x: 1, y: 1), p1: CGPoint(x: 2, y: 3))
 
-        let path = Path(subpaths: [PathComponent(curves: [l1]), PathComponent(curves: [l2])])
+        let path = Path(components: [PathComponent(curves: [l1]), PathComponent(curves: [l2])])
         
         let transformedPath = path.copy(using: transform)
         
         let expectedl1 = LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -2, y: 4))
         let expectedl2 = LineSegment(p0: CGPoint(x: -2, y: 2), p1: CGPoint(x: -4, y: 3))
 
-        XCTAssertEqual(transformedPath.subpaths.count, 2)
-        XCTAssertEqual(transformedPath.subpaths[0].elementCount, 1)
-        XCTAssertEqual(transformedPath.subpaths[0].elementCount, 1)
-        XCTAssertEqual(transformedPath.subpaths[0].element(at: 0) as! LineSegment, expectedl1)
-        XCTAssertEqual(transformedPath.subpaths[1].element(at: 0) as! LineSegment, expectedl2)
+        XCTAssertEqual(transformedPath.components.count, 2)
+        XCTAssertEqual(transformedPath.components[0].elementCount, 1)
+        XCTAssertEqual(transformedPath.components[0].elementCount, 1)
+        XCTAssertEqual(transformedPath.components[0].element(at: 0) as! LineSegment, expectedl1)
+        XCTAssertEqual(transformedPath.components[1].element(at: 0) as! LineSegment, expectedl2)
     }
 
 }

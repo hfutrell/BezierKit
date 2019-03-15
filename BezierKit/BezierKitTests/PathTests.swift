@@ -25,7 +25,7 @@ class PathTests: XCTestCase {
     func testInitCGPathEmpty() {
         // trivial test of an empty path
         let path = Path(cgPath: CGMutablePath())
-        XCTAssert(path.subpaths.isEmpty)
+        XCTAssert(path.components.isEmpty)
     }
     
     func testInitCGPathRect() {
@@ -40,11 +40,11 @@ class PathTests: XCTestCase {
         let p3 = CGPoint(x: 1.0, y: 2.0)
         let p4 = CGPoint(x: 0.0, y: 2.0)
         
-        XCTAssertEqual(path1.subpaths.count, 1)
-        XCTAssertEqual(path1.subpaths[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
-        XCTAssertEqual(path1.subpaths[0].element(at: 1) as! LineSegment, LineSegment(p0: p2, p1: p3))
-        XCTAssertEqual(path1.subpaths[0].element(at: 2) as! LineSegment, LineSegment(p0: p3, p1: p4))
-        XCTAssertEqual(path1.subpaths[0].element(at: 3) as! LineSegment, LineSegment(p0: p4, p1: p1))
+        XCTAssertEqual(path1.components.count, 1)
+        XCTAssertEqual(path1.components[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path1.components[0].element(at: 1) as! LineSegment, LineSegment(p0: p2, p1: p3))
+        XCTAssertEqual(path1.components[0].element(at: 2) as! LineSegment, LineSegment(p0: p3, p1: p4))
+        XCTAssertEqual(path1.components[0].element(at: 3) as! LineSegment, LineSegment(p0: p4, p1: p1))
     }
     
     func testInitCGPathEllipse() {
@@ -58,16 +58,16 @@ class PathTests: XCTestCase {
         let p3 = CGPoint(x: 0.0, y: 1.0)
         let p4 = CGPoint(x: 0.5, y: 0.0)
         
-        XCTAssertEqual(path2.subpaths.count, 1)
-        XCTAssertEqual(path2.subpaths[0].elementCount, 4)
-        XCTAssertEqual(path2.subpaths[0].element(at: 0).startingPoint, p1)
-        XCTAssertEqual(path2.subpaths[0].element(at: 1).startingPoint, p2)
-        XCTAssertEqual(path2.subpaths[0].element(at: 2).startingPoint, p3)
-        XCTAssertEqual(path2.subpaths[0].element(at: 3).startingPoint, p4)
-        XCTAssertEqual(path2.subpaths[0].element(at: 0).endingPoint, p2)
-        XCTAssertEqual(path2.subpaths[0].element(at: 1).endingPoint, p3)
-        XCTAssertEqual(path2.subpaths[0].element(at: 2).endingPoint, p4)
-        XCTAssertEqual(path2.subpaths[0].element(at: 3).endingPoint, p1)
+        XCTAssertEqual(path2.components.count, 1)
+        XCTAssertEqual(path2.components[0].elementCount, 4)
+        XCTAssertEqual(path2.components[0].element(at: 0).startingPoint, p1)
+        XCTAssertEqual(path2.components[0].element(at: 1).startingPoint, p2)
+        XCTAssertEqual(path2.components[0].element(at: 2).startingPoint, p3)
+        XCTAssertEqual(path2.components[0].element(at: 3).startingPoint, p4)
+        XCTAssertEqual(path2.components[0].element(at: 0).endingPoint, p2)
+        XCTAssertEqual(path2.components[0].element(at: 1).endingPoint, p3)
+        XCTAssertEqual(path2.components[0].element(at: 2).endingPoint, p4)
+        XCTAssertEqual(path2.components[0].element(at: 3).endingPoint, p1)
     }
         
     func testInitCGPathQuads() {
@@ -89,14 +89,14 @@ class PathTests: XCTestCase {
         cgPath3.closeSubpath()
         
         let path3 = Path(cgPath: cgPath3)
-        XCTAssertEqual(path3.subpaths.count, 1)
-        XCTAssertEqual(path3.subpaths[0].elementCount, 4)
-        XCTAssertEqual(path3.subpaths[0].element(at: 1) as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
+        XCTAssertEqual(path3.components.count, 1)
+        XCTAssertEqual(path3.components[0].elementCount, 4)
+        XCTAssertEqual(path3.components[0].element(at: 1) as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
     }
     
-    func testInitCGPathMultipleSubpaths() {
+    func testInitCGPathMultiplecomponents() {
         // test of 2 line segments where each segment is started with a moveTo
-        // this tests multiple subpaths and starting new paths with moveTo instead of closePath
+        // this tests multiple components and starting new paths with moveTo instead of closePath
         let cgPath4 = CGMutablePath()
         let p1 = CGPoint(x: 1.0, y: 2.0)
         let p2 = CGPoint(x: 3.0, y: 5.0)
@@ -109,11 +109,11 @@ class PathTests: XCTestCase {
         cgPath4.addLine(to: p4)
         
         let path4 = Path(cgPath: cgPath4)
-        XCTAssertEqual(path4.subpaths.count, 2)
-        XCTAssertEqual(path4.subpaths[0].elementCount, 1)
-        XCTAssertEqual(path4.subpaths[1].elementCount, 1)
-        XCTAssertEqual(path4.subpaths[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
-        XCTAssertEqual(path4.subpaths[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
+        XCTAssertEqual(path4.components.count, 2)
+        XCTAssertEqual(path4.components[0].elementCount, 1)
+        XCTAssertEqual(path4.components[1].elementCount, 1)
+        XCTAssertEqual(path4.components[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path4.components[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
     
     func testIntersects() {
@@ -226,7 +226,7 @@ class PathTests: XCTestCase {
     func testWindingCount() {
         let rect1 = Path(cgPath: CGPath(rect: CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2)), transform: nil))
         let rect2 = Path(cgPath: CGPath(rect: CGRect(origin: CGPoint(x: -2, y: -2), size: CGSize(width: 4, height: 4)), transform: nil))
-        let path = Path(subpaths: rect1.subpaths + rect2.subpaths)
+        let path = Path(components: rect1.components + rect2.components)
         // outside of both rects
         XCTAssertEqual(path.windingCount(CGPoint(x: -3, y: 0)), 0)
         // inside rect1 but outside rect2
@@ -300,7 +300,7 @@ class PathTests: XCTestCase {
         let circlePath = Path(cgPath: CGPath(ellipseIn: rect1, transform: nil))
         let rect2 = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let reversedCirclePath = Path(cgPath: CGPath(ellipseIn: rect2, transform: nil)).reversed()
-        let circleWithHole = Path(subpaths: circlePath.subpaths + reversedCirclePath.subpaths)
+        let circleWithHole = Path(components: circlePath.components + reversedCirclePath.components)
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 0.0, y: 0.0), using: .evenOdd))
         XCTAssertFalse(circleWithHole.contains(CGPoint(x: 0.0, y: 0.0), using: .winding))
         XCTAssertTrue(circleWithHole.contains(CGPoint(x: 2.0, y: 0.0), using: .evenOdd))
@@ -410,7 +410,7 @@ class PathTests: XCTestCase {
     let p9 = CGPoint(x: 1.0, y: 1.0)
     
     private func createSquare1() -> Path {
-        return Path(subpaths: [PathComponent(curves:
+        return Path(components: [PathComponent(curves:
             [
                 LineSegment(p0: p0, p1: p2),
                 LineSegment(p0: p2, p1: p4),
@@ -421,7 +421,7 @@ class PathTests: XCTestCase {
     }
     
     private func createSquare2() -> Path {
-        return Path(subpaths: [PathComponent(curves:
+        return Path(components: [PathComponent(curves:
         [
             LineSegment(p0: p6, p1: p7),
             LineSegment(p0: p7, p1: p8),
@@ -432,7 +432,7 @@ class PathTests: XCTestCase {
     }
     
     func testSubtracting() {
-        let expectedResult = Path(subpaths: [PathComponent(curves:
+        let expectedResult = Path(components: [PathComponent(curves:
             [
                 LineSegment(p0: p1, p1: p9),
                 LineSegment(p0: p9, p1: p3),
@@ -445,14 +445,14 @@ class PathTests: XCTestCase {
         let square1 = createSquare1()
         let square2 = createSquare2()
         let subtracted = square1.subtracting(square2)!
-        XCTAssertEqual(subtracted.subpaths.count, 1)
+        XCTAssertEqual(subtracted.components.count, 1)
         XCTAssert(
-            componentsEqualAsideFromElementOrdering(subtracted.subpaths[0], expectedResult.subpaths[0])
+            componentsEqualAsideFromElementOrdering(subtracted.components[0], expectedResult.components[0])
         )
     }
     
     func testUnion() {
-        let expectedResult = Path(subpaths: [PathComponent(curves:
+        let expectedResult = Path(components: [PathComponent(curves:
             [
                 LineSegment(p0: p0, p1: p1),
                 LineSegment(p0: p1, p1: p6),
@@ -467,14 +467,14 @@ class PathTests: XCTestCase {
         let square1 = createSquare1()
         let square2 = createSquare2()
         let unioned = square1.union(square2)!
-        XCTAssertEqual(unioned.subpaths.count, 1)
+        XCTAssertEqual(unioned.components.count, 1)
         XCTAssert(
-            componentsEqualAsideFromElementOrdering(unioned.subpaths[0], expectedResult.subpaths[0])
+            componentsEqualAsideFromElementOrdering(unioned.components[0], expectedResult.components[0])
         )
     }
     
     func testIntersecting() {
-        let expectedResult = Path(subpaths: [PathComponent(curves:
+        let expectedResult = Path(components: [PathComponent(curves:
             [
                 LineSegment(p0: p1, p1: p2),
                 LineSegment(p0: p2, p1: p3),
@@ -485,9 +485,9 @@ class PathTests: XCTestCase {
         let square1 = createSquare1()
         let square2 = createSquare2()
         let intersected = square1.intersecting(square2)!
-        XCTAssertEqual(intersected.subpaths.count, 1)
+        XCTAssertEqual(intersected.components.count, 1)
         XCTAssert(
-            componentsEqualAsideFromElementOrdering(intersected.subpaths[0], expectedResult.subpaths[0])
+            componentsEqualAsideFromElementOrdering(intersected.components[0], expectedResult.components[0])
         )
     }
     
@@ -505,7 +505,7 @@ class PathTests: XCTestCase {
         // this is a specific test of `subtracting` to ensure that if a path component is entirely contained in the subtracting path that it gets removed
         let circle       = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil))
         let biggerCircle = Path(cgPath: CGPath(ellipseIn: CGRect(x: -2, y: -2, width: 4, height: 4), transform: nil))
-        XCTAssertEqual(circle.subtracting(biggerCircle)!.subpaths.count, 0)
+        XCTAssertEqual(circle.subtracting(biggerCircle)!.components.count, 0)
     }
     
     func testSubtractingEdgeCase1() {
@@ -518,7 +518,7 @@ class PathTests: XCTestCase {
         
         // the circle intersects the rect at (0,2) and (3, 0.26792) ... the last number being exactly 2 - sqrt(3)
         let difference = rectangle.subtracting(circle)!
-        XCTAssertEqual(difference.subpaths.count, 1)
+        XCTAssertEqual(difference.components.count, 1)
         XCTAssertFalse(difference.contains(CGPoint(x: 2.0, y: 2.0)))
     }
     
@@ -548,8 +548,8 @@ class PathTests: XCTestCase {
         
         let expectedResult = Path(cgPath: expectedResultCGPath)
         
-        XCTAssertEqual(result.subpaths.count, expectedResult.subpaths.count)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
+        XCTAssertEqual(result.components.count, expectedResult.components.count)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], expectedResult.components[0]))
     }
     
     func testCrossingsRemoved() {
@@ -577,8 +577,8 @@ class PathTests: XCTestCase {
         XCTAssertFalse(path.contains(CGPoint(x: 1.5, y: 1.25), using: .evenOdd))
 
         let result = path.crossingsRemoved()!
-        XCTAssertEqual(result.subpaths.count, 1)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
+        XCTAssertEqual(result.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], expectedResult.components[0]))
         
         // check also that the algorithm works when the first point falls *inside* the path
         let cgPathAlt = CGMutablePath()
@@ -586,16 +586,16 @@ class PathTests: XCTestCase {
         let pathAlt = Path(cgPath: cgPathAlt)
 
         let resultAlt = pathAlt.crossingsRemoved()!
-        XCTAssertEqual(resultAlt.subpaths.count, 1)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.subpaths[0], expectedResult.subpaths[0]))
+        XCTAssertEqual(resultAlt.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.components[0], expectedResult.components[0]))
     }
     
     func testCrossingsRemovedNoCrossings() {
         // a test which ensures that if a path has no crossings then crossingsRemoved does not modify it
         let square = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0), transform: nil))
         let result = square.crossingsRemoved()!
-        XCTAssertEqual(result.subpaths.count, 1)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], square.subpaths[0]))
+        XCTAssertEqual(result.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], square.components[0]))
     }
     
     func testCrossingsRemovedEdgeCase() {
@@ -615,15 +615,15 @@ class PathTests: XCTestCase {
         let cgPath = CGMutablePath()
         cgPath.addLines(between: points)
         cgPath.closeSubpath()
-        
+
         let contour = Path(cgPath: cgPath)
         XCTAssertEqual(contour.windingCount(CGPoint(x: 0.5, y: 0.5)), -1) // winding count at center of one square region
         XCTAssertEqual( contour.windingCount(CGPoint(x: 1.5, y: 1.5)), 1) // winding count at center of other square region
 
         let crossingsRemoved = contour.crossingsRemoved()!
 
-        XCTAssertEqual(crossingsRemoved.subpaths.count, 1)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.subpaths[0], contour.subpaths[0]))
+        XCTAssertEqual(crossingsRemoved.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.components[0], contour.components[0]))
     }
     
     func testCrossingsRemovedEdgeCaseInnerLoop() {
@@ -648,18 +648,18 @@ class PathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 2.0, y: 2.0))
         cgPath.addLine(to: CGPoint(x: 0.0, y: 2.0))
         cgPath.closeSubpath()
-        
+
         let path = Path(cgPath: cgPath)
         
         // Quartz 'addArc' function creates some terrible near-zero length line segments
         // let's eliminate those
-        let curves2 = path.subpaths[0].curves.map {
+        let curves2 = path.components[0].curves.map {
             return BezierKit.createCurve(from: $0.points.map { point in
                 let rounded = CGPoint(x: round(point.x), y: round(point.y))
                 return distance(point, rounded) < 1.0e-3 ? rounded : point
             })!
         }.filter { $0.length() > 0.0 }
-        let cleanPath = Path(subpaths: [PathComponent(curves: curves2)])
+        let cleanPath = Path(components: [PathComponent(curves: curves2)])
         
         let result = cleanPath.crossingsRemoved(threshold: 1.0e-4)!
 
@@ -688,7 +688,7 @@ class PathTests: XCTestCase {
         if let result = result {
             XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
             XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
-            XCTAssertEqual(result.subpaths[0].elementCount, 5) // with crossings removed we should have 1 fewer curve (the last one)
+            XCTAssertEqual(result.components[0].elementCount, 5) // with crossings removed we should have 1 fewer curve (the last one)
         }
     }
     
@@ -749,9 +749,9 @@ class PathTests: XCTestCase {
             return cgPath
         }())
         
-        XCTAssertEqual(result.subpaths.count, 2)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[0], expectedResult.subpaths[0]))
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.subpaths[1], expectedResult.subpaths[1]))
+        XCTAssertEqual(result.components.count, 2)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], expectedResult.components[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[1], expectedResult.components[1]))
     }
     
     func testCrossingsRemovedRealWorldInfiniteLoop() {
@@ -770,7 +770,7 @@ class PathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
         cgPath.addLine(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883))
         cgPath.closeSubpath()
-        
+
         cgPath.move(to: CGPoint(x: 430.09923514172937, y: 109.81690300533613))
         cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
         cgPath.addCurve(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883), control1: CGPoint(x: 430.09923514172937, y: 99.16380521344341), control2: CGPoint(x: 431.2394694928875, y: 99.16380521344341))
@@ -793,9 +793,9 @@ class PathTests: XCTestCase {
     func testOffset() {
         let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
         let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
-        XCTAssertEqual(offsetCircle.subpaths.count, 1)
+        XCTAssertEqual(offsetCircle.components.count, 1)
         // make sure that the offsetting process created a series of elements that is *contiguous*
-        let component = offsetCircle.subpaths.first!
+        let component = offsetCircle.components.first!
         let elementCount = component.elementCount
         for i in 0..<elementCount {
             XCTAssertEqual(component.element(at: i).endingPoint, component.element(at: (i+1) % elementCount).startingPoint)
@@ -803,8 +803,8 @@ class PathTests: XCTestCase {
         // make sure that the offset circle is a actually circle, or, well, close to one
         let expectedRadius: CGFloat = 2.0
         let expectedCenter = CGPoint(x: 1.0, y: 1.0)
-        for i in 0..<offsetCircle.subpaths[0].elementCount {
-            let c = offsetCircle.subpaths[0].element(at: i)
+        for i in 0..<offsetCircle.components[0].elementCount {
+            let c = offsetCircle.components[0].element(at: i)
             for p in c.generateLookupTable(withSteps: 10) {
                 let radius = distance(p, expectedCenter)
                 let percentError = 100.0 * abs(radius - expectedRadius) / expectedRadius
@@ -813,11 +813,11 @@ class PathTests: XCTestCase {
         }
     }
     
-    func testDisjointSubpathsNesting() {
-        XCTAssertEqual(Path().disjointSubpaths(), [])
+    func testDisjointcomponentsNesting() {
+        XCTAssertEqual(Path().disjointComponents(), [])
         // test that a simple square just gives the same square back
         let squarePath = Path(cgPath: CGPath.init(rect: CGRect(x: 0, y: 0, width: 7, height: 7), transform: nil))
-        let result1 = squarePath.disjointSubpaths()
+        let result1 = squarePath.disjointComponents()
         XCTAssertEqual(result1.count, 1)
         if let result = result1.first {
             XCTAssertEqual(squarePath, result)
@@ -826,17 +826,17 @@ class PathTests: XCTestCase {
         let squareWithHolePath = { () -> Path in
             let cgPath = CGPath(rect: CGRect(x: 1, y: 1, width: 5, height: 5), transform: nil)
             let hole = Path(cgPath: cgPath).reversed()
-            return Path(subpaths: squarePath.subpaths + hole.subpaths)
+            return Path(components: squarePath.components + hole.components)
         }()
-        let result2 = squareWithHolePath.disjointSubpaths()
+        let result2 = squareWithHolePath.disjointComponents()
         XCTAssertEqual(result2.count, 1)
         if let result = result2.first {
             XCTAssertEqual(squareWithHolePath, result)
         }
         // test that nested paths correctly produce two paths
         let pegPath = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 3, height: 3), transform: nil))
-        let squareWithPegPath = Path(subpaths: squareWithHolePath.subpaths + pegPath.subpaths)
-        let result3 = squareWithPegPath.disjointSubpaths()
+        let squareWithPegPath = Path(components: squareWithHolePath.components + pegPath.components)
+        let result3 = squareWithPegPath.disjointComponents()
         XCTAssertEqual(result3.count, 2)
         XCTAssert(result3.contains(squareWithHolePath))
         XCTAssert(result3.contains(pegPath))
@@ -844,10 +844,10 @@ class PathTests: XCTestCase {
         let pegWithHolePath = { () -> Path in
             let cgPath = CGPath(rect: CGRect(x: 3, y: 3, width: 1, height: 1), transform: nil)
             let hole = Path(cgPath: cgPath).reversed()
-            return Path(subpaths: pegPath.subpaths + hole.subpaths)
+            return Path(components: pegPath.components + hole.components)
         }()
-        let squareWithPegWithHolePath = Path(subpaths: squareWithHolePath.subpaths + pegWithHolePath.subpaths)
-        let result4 = squareWithPegWithHolePath.disjointSubpaths()
+        let squareWithPegWithHolePath = Path(components: squareWithHolePath.components + pegWithHolePath.components)
+        let result4 = squareWithPegWithHolePath.disjointComponents()
         XCTAssertEqual(result4.count, 2)
         XCTAssert(result4.contains(squareWithHolePath))
         XCTAssert(result4.contains(pegWithHolePath))

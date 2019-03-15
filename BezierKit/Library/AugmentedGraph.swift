@@ -124,7 +124,7 @@ internal class PathLinkedListRepresentation {
     
     init(_ p: Path) {
         self.path = p
-        self.lists = p.subpaths.map { self.createListFor(component: $0) }
+        self.lists = p.components.map { self.createListFor(component: $0) }
     }
     
     fileprivate func nonCrossingComponents() -> [PathComponent] {
@@ -138,7 +138,7 @@ internal class PathLinkedListRepresentation {
                 }
             }
             if hasCrossing == false {
-                result.append(self.path.subpaths[i])
+                result.append(self.path.components[i])
             }
         }
         return result
@@ -393,7 +393,7 @@ internal class AugmentedGraph {
             } while v !== start
             pathComponents.append(PathComponent(curves: curves))
         }
-        return Path(subpaths: pathComponents)
+        return Path(components: pathComponents)
     }
 }
 

@@ -26,59 +26,59 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint? = nil
-        var subpathStartPoint: CGPoint? = nil
+        var componentStartPoint: CGPoint? = nil
         
-        var currentSubpathPoints: [CGPoint] = []
-        var currentSubpathOrders: [Int] = []
+        var currentComponentPoints: [CGPoint] = []
+        var currentComponentOrders: [Int] = []
         
         var components: [PathComponent] = []
         func finishUp() {
-            if currentSubpathPoints.isEmpty == false {
-                components.append(PathComponent(points: currentSubpathPoints, orders: currentSubpathOrders))
-                currentSubpathPoints = []
-                currentSubpathOrders = []
+            if currentComponentPoints.isEmpty == false {
+                components.append(PathComponent(points: currentComponentPoints, orders: currentComponentOrders))
+                currentComponentPoints = []
+                currentComponentOrders = []
             }
         }
     }
     
     @objc(CGPath) public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
-        self.subpaths.forEach {
+        self.components.forEach {
             mutablePath.addPath($0.cgPath)
         }
         return mutablePath.copy()!
     }()
     
     @objc public var isEmpty: Bool {
-        return self.subpaths.isEmpty // components are not allowed to be empty
+        return self.components.isEmpty // components are not allowed to be empty
     }
     
     public lazy var boundingBox: BoundingBox = {
-        return self.subpaths.reduce(BoundingBox.empty) {
+        return self.components.reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
         }
     }()
     
-    public let subpaths: [PathComponent]
+    public let components: [PathComponent]
     
     @objc(point:isWithinDistanceOfBoundary:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
-        return self.subpaths.contains {
+        return self.components.contains {
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
         }
     }
     
     @objc(intersectsWithThreshold:) public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
         var intersections: [PathIntersection] = []
-        for i in 0..<self.subpaths.count {
-            for j in i..<self.subpaths.count {
+        for i in 0..<self.components.count {
+            for j in i..<self.components.count {
                 let componentIntersectionToPathIntersection = {(componentIntersection: PathComponentIntersection) -> PathIntersection in
                     PathIntersection(componentIntersection: componentIntersection, componentIndex1: i, componentIndex2: j)
                 }
                 if i == j {
-                    intersections += self.subpaths[i].intersects(threshold: threshold).map(componentIntersectionToPathIntersection)
+                    intersections += self.components[i].intersects(threshold: threshold).map(componentIntersectionToPathIntersection)
                 }
                 else {
-                    intersections += self.subpaths[i].intersects(component: self.subpaths[j], threshold: threshold).map(componentIntersectionToPathIntersection)
+                    intersections += self.components[i].intersects(component: self.components[j], threshold: threshold).map(componentIntersectionToPathIntersection)
                 }
             }
         }
@@ -90,13 +90,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             return []
         }
         var intersections: [PathIntersection] = []
-        for i in 0..<self.subpaths.count {
-            for j in 0..<other.subpaths.count {
+        for i in 0..<self.components.count {
+            for j in 0..<other.components.count {
                 let componentIntersectionToPathIntersection = {(componentIntersection: PathComponentIntersection) -> PathIntersection in
                     PathIntersection(componentIntersection: componentIntersection, componentIndex1: i, componentIndex2: j)
                 }
-                let s1 = self.subpaths[i]
-                let s2 = other.subpaths[j]
+                let s1 = self.components[i]
+                let s2 = other.components[j]
                 let componentIntersections: [PathComponentIntersection] = s1.intersects(component: s2, threshold: threshold)
                 intersections += componentIntersections.map(componentIntersectionToPathIntersection)
             }
@@ -105,11 +105,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     @objc public convenience override init() {
-        self.init(subpaths: [])
+        self.init(components: [])
     }
     
-    required public init(subpaths: [PathComponent]) {
-        self.subpaths = subpaths
+    required public init(components: [PathComponent]) {
+        self.components = components
     }
     
     @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
@@ -121,60 +121,60 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             let points: UnsafeMutablePointer<CGPoint> = element.pointee.points
             switch element.pointee.type {
             case .moveToPoint:
-                if context.currentSubpathOrders.isEmpty == false {
-                    context.components.append(PathComponent(points: context.currentSubpathPoints, orders: context.currentSubpathOrders))
+                if context.currentComponentOrders.isEmpty == false {
+                    context.components.append(PathComponent(points: context.currentComponentPoints, orders: context.currentComponentOrders))
                 }
-                context.subpathStartPoint = points[0]
-                context.currentSubpathOrders = []
-                context.currentSubpathPoints = [points[0]]
+                context.componentStartPoint = points[0]
+                context.currentComponentOrders = []
+                context.currentComponentPoints = [points[0]]
                 context.currentPoint = points[0]
             case .addLineToPoint:
-                context.currentSubpathOrders.append(1)
-                context.currentSubpathPoints.append(points[0])
+                context.currentComponentOrders.append(1)
+                context.currentComponentPoints.append(points[0])
                 context.currentPoint = points[0]
             case .addQuadCurveToPoint:
-                context.currentSubpathOrders.append(2)
-                context.currentSubpathPoints.append(points[0])
-                context.currentSubpathPoints.append(points[1])
+                context.currentComponentOrders.append(2)
+                context.currentComponentPoints.append(points[0])
+                context.currentComponentPoints.append(points[1])
                 context.currentPoint = points[1]
             case .addCurveToPoint:
-                context.currentSubpathOrders.append(3)
-                context.currentSubpathPoints.append(points[0])
-                context.currentSubpathPoints.append(points[1])
-                context.currentSubpathPoints.append(points[2])
+                context.currentComponentOrders.append(3)
+                context.currentComponentPoints.append(points[0])
+                context.currentComponentPoints.append(points[1])
+                context.currentComponentPoints.append(points[2])
                 context.currentPoint = points[2]
             case .closeSubpath:
-                if context.currentPoint != context.subpathStartPoint {
-                    context.currentSubpathOrders.append(1)
-                    context.currentSubpathPoints.append(context.subpathStartPoint!)
+                if context.currentPoint != context.componentStartPoint {
+                    context.currentComponentOrders.append(1)
+                    context.currentComponentPoints.append(context.componentStartPoint!)
                 }
-                if context.currentSubpathOrders.isEmpty == false {
-                    context.components.append(PathComponent(points: context.currentSubpathPoints, orders: context.currentSubpathOrders))
+                if context.currentComponentOrders.isEmpty == false {
+                    context.components.append(PathComponent(points: context.currentComponentPoints, orders: context.currentComponentOrders))
                 }
-                context.currentPoint = context.subpathStartPoint!
-                context.currentSubpathPoints = []
-                context.currentSubpathOrders = []
+                context.currentPoint = context.componentStartPoint!
+                context.currentComponentPoints = []
+                context.currentComponentOrders = []
             }
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
         cgPath.apply(info: rawContextPointer, function: applierFunction)
         context.finishUp()
         
-        self.init(subpaths: context.components)
+        self.init(components: context.components)
     }
     
     // MARK: - NSCoding
     // (cannot be put in extension because init?(coder:) is a designated initializer)
     
     public func encode(with aCoder: NSCoder) {
-        aCoder.encode(self.subpaths)
+        aCoder.encode(self.components)
     }
     
     required public init?(coder aDecoder: NSCoder) {
         guard let array = aDecoder.decodeObject() as? Array<PathComponent> else {
             return nil
         }
-        self.subpaths = array
+        self.components = array
     }
     
     // MARK: -
@@ -184,7 +184,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         guard let otherPath = object as? Path else {
             return false
         }
-        return self.subpaths == otherPath.subpaths
+        return self.components == otherPath.components
     }
     
     // MARK: - vector boolean operations
@@ -194,11 +194,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {
-        return self.subpaths[componentIndex].element(at: elementIndex)
+        return self.components[componentIndex].element(at: elementIndex)
     }
     
     internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
-        let windingCount = self.subpaths.reduce(0) {
+        let windingCount = self.components.reduce(0) {
             if $1 !== ignoring {
                 return $0 + $1.windingCount(at: point)
             }
@@ -216,7 +216,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc(containsPath:) public func contains(_ other: Path) -> Bool {
         // first, check that each component of `other` starts inside self
-        for component in other.subpaths {
+        for component in other.components {
             let p = component.startingPoint
             guard self.contains(p) else {
                 return false
@@ -229,7 +229,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
     
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
-        return Path(subpaths: self.subpaths.map {
+        return Path(components: self.components.map {
             $0.offset(distance: d)
         })
     }
@@ -264,17 +264,17 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return augmentedGraph.booleanOperation(.removeCrossings)
     }
 
-    @objc public func disjointSubpaths() -> [Path] {
+    @objc public func disjointComponents() -> [Path] {
         
         var paths: [Path] = []
-        var subpathWindingCounts: [Path: Int] = [:]
-        let subpathsAsPaths = self.subpaths.map { Path(subpaths: [$0]) }
-        for subpath in subpathsAsPaths {
-            let windingCount = self.windingCount(subpath.subpaths[0].startingPoint, ignoring: subpath.subpaths[0])
+        var componentWindingCounts: [Path: Int] = [:]
+        let componentsAsPaths = self.components.map { Path(components: [$0]) }
+        for component in componentsAsPaths {
+            let windingCount = self.windingCount(component.components[0].startingPoint, ignoring: component.components[0])
             if windingCount == 0 {
-                paths.append(subpath)
+                paths.append(component)
             }
-            subpathWindingCounts[subpath] = windingCount
+            componentWindingCounts[component] = windingCount
         }
         
         var pathsWithHoles: [Path: Path] = [:]
@@ -282,13 +282,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             pathsWithHoles[path] = path
         }
         
-        for subpath in subpathsAsPaths {
-            guard subpathWindingCounts[subpath] != 0 else {
+        for component in componentsAsPaths {
+            guard componentWindingCounts[component] != 0 else {
                 continue
             }
             var owner: Path? = nil
             for path in paths {
-                guard path.contains(subpath) else {
+                guard path.contains(component) else {
                     continue
                 }
                 if owner != nil {
@@ -301,7 +301,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 }
             }
             if let owner = owner {
-                pathsWithHoles[owner] = Path(subpaths: pathsWithHoles[owner]!.subpaths + subpath.subpaths)
+                pathsWithHoles[owner] = Path(components: pathsWithHoles[owner]!.components + component.components)
             }
         }
         return Array(pathsWithHoles.values)
@@ -310,13 +310,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
 @objc extension Path: Transformable {
     @objc(copyUsingTransform:) public func copy(using t: CGAffineTransform) -> Self {
-        return type(of: self).init(subpaths: self.subpaths.map { $0.copy(using: t)})
+        return type(of: self).init(components: self.components.map { $0.copy(using: t)})
     }
 }
 
 @objc extension Path: Reversible {
     public func reversed() -> Self {
-        return type(of: self).init(subpaths: self.subpaths.map { $0.reversed() })
+        return type(of: self).init(components: self.components.map { $0.reversed() })
     }
 }
 

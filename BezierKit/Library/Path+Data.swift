@@ -56,7 +56,7 @@ fileprivate extension InputStream {
 
     @objc(initWithData:) public convenience init?(data: Data) {
 
-        var subpaths: [PathComponent] = []
+        var components: [PathComponent] = []
 
         var commandCount: SerializationTypes.CommandCount = 0
         var commands: [SerializationTypes.Command] = []
@@ -80,7 +80,7 @@ fileprivate extension InputStream {
             var pointsToRead = 0
             if command == SerializationConstants.startComponentCommand {
                 if currentPoints.isEmpty == false {
-                    subpaths.append(PathComponent(points: currentPoints, orders: currentOrders))
+                    components.append(PathComponent(points: currentPoints, orders: currentOrders))
                     currentPoints = []
                     currentOrders = []
                 }
@@ -100,25 +100,25 @@ fileprivate extension InputStream {
             }
         }
         if currentOrders.isEmpty == false {
-            subpaths.append(PathComponent(points: currentPoints, orders: currentOrders))
+            components.append(PathComponent(points: currentPoints, orders: currentOrders))
         }
-        self.init(subpaths: subpaths)
+        self.init(components: components)
     }
 
     @objc public var data: Data {
 
-        let expectedCoordinatesCount = 2 * self.subpaths.reduce(0) { $0 + $1.points.count }
-        let expectedCommandsCount = self.subpaths.reduce(0) { $0 + $1.elementCount } + self.subpaths.count
+        let expectedCoordinatesCount = 2 * self.components.reduce(0) { $0 + $1.points.count }
+        let expectedCommandsCount = self.components.reduce(0) { $0 + $1.elementCount } + self.components.count
 
         // compile the data into a format we can easily serialize
         var commands: [SerializationTypes.Command] = []
         commands.reserveCapacity(expectedCommandsCount)
         var coordinates: [SerializationTypes.Coordinate] = []
         coordinates.reserveCapacity(expectedCoordinatesCount)
-        for subpath in self.subpaths {
-            coordinates += subpath.points.flatMap { [SerializationTypes.Coordinate($0.x), SerializationTypes.Coordinate($0.y)] }
+        for component in self.components {
+            coordinates += component.points.flatMap { [SerializationTypes.Coordinate($0.x), SerializationTypes.Coordinate($0.y)] }
             commands.append(SerializationConstants.startComponentCommand)
-            commands += subpath.orders.map { SerializationTypes.Command($0) }
+            commands += component.orders.map { SerializationTypes.Command($0) }
         }
         assert(expectedCoordinatesCount == coordinates.count)
         assert(expectedCommandsCount == commands.count)
