@@ -21,22 +21,19 @@ fileprivate extension Data {
 }
 
 fileprivate extension InputStream {
-    func readNativeValue<T>(_ value: inout T) -> Bool {
+    func readNativeValue<T>(_ value: UnsafeMutablePointer<T>) -> Bool {
         let size = MemoryLayout<T>.size
-        let pointer = UnsafeMutableRawPointer(UnsafeMutablePointer(&value)).bindMemory(to: UInt8.self, capacity: size)
-        return self.read(pointer, maxLength: size) == size
+        return value.withMemoryRebound(to: UInt8.self, capacity: size) {
+            return self.read($0, maxLength: size) == size
+        }
     }
-    func readNativeValues<T>(to array: inout [T], count: Int) -> Bool {
+    func appendNativeValues<T>(to array: inout [T], count: Int) -> Bool {
         let size = count * MemoryLayout<T>.size
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
         defer { buffer.deallocate() }
-        guard let pointer = buffer.baseAddress else {
-            return false
-        }
+        guard let pointer = buffer.baseAddress else { return false }
         let bytesRead = self.read(pointer, maxLength: size)
-        guard bytesRead == size else {
-            return false
-        }
+        guard bytesRead == size else { return false }
         array.append(contentsOf: UnsafeRawBufferPointer(buffer).bindMemory(to: T.self))
         return true
     }
@@ -56,11 +53,6 @@ fileprivate extension InputStream {
         static let startComponentCommand: SerializationTypes.Command = 0
     }
 
-//    internal enum DeserializationError: Error {
-//        case magicNumberInvalidOrUnsupported
-//        case insufficientBytes
-//    }
-
     @objc(initWithData:) public convenience init?(data: Data) {
 
         var subpaths: [PathComponent] = []
@@ -78,7 +70,7 @@ fileprivate extension InputStream {
             return nil
         }
         guard stream.readNativeValue(&commandCount) else { return nil }
-        guard stream.readNativeValues(to: &commands, count: Int(commandCount)) else { return nil }
+        guard stream.appendNativeValues(to: &commands, count: Int(commandCount)) else { return nil }
 
         // read the commands and coordinates
         var currentPoints: [CGPoint] = []
