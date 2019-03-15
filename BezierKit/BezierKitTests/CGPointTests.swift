@@ -12,7 +12,6 @@ import BezierKit
 class CGPointTests: XCTestCase {
 
     func testOperators() {
-        
         let p1 = CGPoint(x: 1.25, y: 2.0)
         let p2 = CGPoint(x: -3.0, y: 4.5)
         XCTAssertEqual(p1 + p2, CGPoint(x: -1.75, y: 6.5))
@@ -42,9 +41,9 @@ class CGPointTests: XCTestCase {
         let a = CGPoint(x: 3, y: 4)
         let b = CGPoint(x: -1, y: 5)
         XCTAssertEqual(a.dot(b), 17)
+        XCTAssertEqual(a.cross(b), 19)
         XCTAssertEqual(a.length, 5)
         XCTAssertEqual(a.normalize(), CGPoint(x: 3.0 / 5.0, y: 4.0 / 5.0))
         XCTAssertEqual(distance(a, b), sqrt(17.0))
     }
-
 }

@@ -568,14 +568,18 @@ extension BezierCurve {
     }
     
     public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
-        var outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2).curves
+        let outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2)
         var shapes: [Shape] = []
-        let len = outline.count
+        let len = outline.elementCount
         for i in 1..<len/2 {
-            let shape = Shape(outline[i], outline[len-i], i > 1, i < len/2-1)
+            let shape = Shape(outline.element(at: i), outline.element(at: len-i), i > 1, i < len/2-1)
             shapes.append(shape)
         }
         return shapes
+    }
+    
+    public func intersects(cubic: CubicBezierCurve, threshold: CGFloat) -> [Intersection] {
+        return self.intersects(curve: cubic, threshold: threshold)
     }
     
 }
@@ -628,5 +632,6 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
     func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
+    func intersects(cubic: CubicBezierCurve, threshold: CGFloat) -> [Intersection]
     func intersects(line: LineSegment) -> [Intersection]
 }

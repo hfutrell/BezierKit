@@ -41,10 +41,10 @@ class PathTests: XCTestCase {
         let p4 = CGPoint(x: 0.0, y: 2.0)
         
         XCTAssertEqual(path1.subpaths.count, 1)
-        XCTAssertEqual(path1.subpaths[0].curves[0] as! LineSegment, LineSegment(p0: p1, p1: p2))
-        XCTAssertEqual(path1.subpaths[0].curves[1] as! LineSegment, LineSegment(p0: p2, p1: p3))
-        XCTAssertEqual(path1.subpaths[0].curves[2] as! LineSegment, LineSegment(p0: p3, p1: p4))
-        XCTAssertEqual(path1.subpaths[0].curves[3] as! LineSegment, LineSegment(p0: p4, p1: p1))
+        XCTAssertEqual(path1.subpaths[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path1.subpaths[0].element(at: 1) as! LineSegment, LineSegment(p0: p2, p1: p3))
+        XCTAssertEqual(path1.subpaths[0].element(at: 2) as! LineSegment, LineSegment(p0: p3, p1: p4))
+        XCTAssertEqual(path1.subpaths[0].element(at: 3) as! LineSegment, LineSegment(p0: p4, p1: p1))
     }
     
     func testInitCGPathEllipse() {
@@ -59,15 +59,15 @@ class PathTests: XCTestCase {
         let p4 = CGPoint(x: 0.5, y: 0.0)
         
         XCTAssertEqual(path2.subpaths.count, 1)
-        XCTAssertEqual(path2.subpaths[0].curves.count, 4)
-        XCTAssertEqual(path2.subpaths[0].curves[0].startingPoint, p1)
-        XCTAssertEqual(path2.subpaths[0].curves[1].startingPoint, p2)
-        XCTAssertEqual(path2.subpaths[0].curves[2].startingPoint, p3)
-        XCTAssertEqual(path2.subpaths[0].curves[3].startingPoint, p4)
-        XCTAssertEqual(path2.subpaths[0].curves[0].endingPoint, p2)
-        XCTAssertEqual(path2.subpaths[0].curves[1].endingPoint, p3)
-        XCTAssertEqual(path2.subpaths[0].curves[2].endingPoint, p4)
-        XCTAssertEqual(path2.subpaths[0].curves[3].endingPoint, p1)
+        XCTAssertEqual(path2.subpaths[0].elementCount, 4)
+        XCTAssertEqual(path2.subpaths[0].element(at: 0).startingPoint, p1)
+        XCTAssertEqual(path2.subpaths[0].element(at: 1).startingPoint, p2)
+        XCTAssertEqual(path2.subpaths[0].element(at: 2).startingPoint, p3)
+        XCTAssertEqual(path2.subpaths[0].element(at: 3).startingPoint, p4)
+        XCTAssertEqual(path2.subpaths[0].element(at: 0).endingPoint, p2)
+        XCTAssertEqual(path2.subpaths[0].element(at: 1).endingPoint, p3)
+        XCTAssertEqual(path2.subpaths[0].element(at: 2).endingPoint, p4)
+        XCTAssertEqual(path2.subpaths[0].element(at: 3).endingPoint, p1)
     }
         
     func testInitCGPathQuads() {
@@ -90,8 +90,8 @@ class PathTests: XCTestCase {
         
         let path3 = Path(cgPath: cgPath3)
         XCTAssertEqual(path3.subpaths.count, 1)
-        XCTAssertEqual(path3.subpaths[0].curves.count, 4)
-        XCTAssertEqual(path3.subpaths[0].curves[1] as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
+        XCTAssertEqual(path3.subpaths[0].elementCount, 4)
+        XCTAssertEqual(path3.subpaths[0].element(at: 1) as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
     }
     
     func testInitCGPathMultipleSubpaths() {
@@ -110,10 +110,10 @@ class PathTests: XCTestCase {
         
         let path4 = Path(cgPath: cgPath4)
         XCTAssertEqual(path4.subpaths.count, 2)
-        XCTAssertEqual(path4.subpaths[0].curves.count, 1)
-        XCTAssertEqual(path4.subpaths[1].curves.count, 1)
-        XCTAssertEqual(path4.subpaths[0].curves[0] as! LineSegment, LineSegment(p0: p1, p1: p2))
-        XCTAssertEqual(path4.subpaths[1].curves[0] as! LineSegment, LineSegment(p0: p3, p1: p4))
+        XCTAssertEqual(path4.subpaths[0].elementCount, 1)
+        XCTAssertEqual(path4.subpaths[1].elementCount, 1)
+        XCTAssertEqual(path4.subpaths[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path4.subpaths[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
     
     func testIntersects() {
@@ -688,7 +688,7 @@ class PathTests: XCTestCase {
         if let result = result {
             XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
             XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
-            XCTAssertEqual(result.subpaths[0].curves.count, 5) // with crossings removed we should have 1 fewer curve (the last one)
+            XCTAssertEqual(result.subpaths[0].elementCount, 5) // with crossings removed we should have 1 fewer curve (the last one)
         }
     }
     
@@ -796,14 +796,15 @@ class PathTests: XCTestCase {
         XCTAssertEqual(offsetCircle.subpaths.count, 1)
         // make sure that the offsetting process created a series of elements that is *contiguous*
         let component = offsetCircle.subpaths.first!
-        let elementCount = component.curves.count
+        let elementCount = component.elementCount
         for i in 0..<elementCount {
-            XCTAssertEqual(component.curves[i].endingPoint, component.curves[(i+1) % elementCount].startingPoint)
+            XCTAssertEqual(component.element(at: i).endingPoint, component.element(at: (i+1) % elementCount).startingPoint)
         }
         // make sure that the offset circle is a actually circle, or, well, close to one
         let expectedRadius: CGFloat = 2.0
         let expectedCenter = CGPoint(x: 1.0, y: 1.0)
-        for c in offsetCircle.subpaths[0].curves {
+        for i in 0..<offsetCircle.subpaths[0].elementCount {
+            let c = offsetCircle.subpaths[0].element(at: i)
             for p in c.generateLookupTable(withSteps: 10) {
                 let radius = distance(p, expectedCenter)
                 let percentError = 100.0 * abs(radius - expectedRadius) / expectedRadius

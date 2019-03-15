@@ -341,13 +341,9 @@ internal class Utils {
     }
     
     static func angle(o: CGPoint, v1: CGPoint, v2: CGPoint) -> CGFloat {
-        let dx1 = v1.x - o.x
-        let dy1 = v1.y - o.y
-        let dx2 = v2.x - o.x
-        let dy2 = v2.y - o.y
-        let cross = dx1*dy2 - dy1*dx2
-        let dot = dx1*dx2 + dy1*dy2
-        return atan2(cross, dot)
+        let d1 = v1 - o
+        let d2 = v2 - o
+        return atan2(d1.cross(d2), d1.dot(d2))
     }
     
     static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
