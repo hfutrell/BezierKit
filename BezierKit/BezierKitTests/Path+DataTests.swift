@@ -145,8 +145,15 @@ class PathDataTests: XCTestCase {
         XCTAssertEqual(path, nil)
     }
 
+    let simpleRectangle = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 2, width: 3, height: 4), transform: nil))
+    let expectedSimpleRectangleData = Data(base64Encoded: "JbPlSAUAAAAAAQEBAQAAAAAAAPA/AAAAAAAAAEAAAAAAAAAQQAAAAAAAAABAAAAAAAAAEEAAAAAAAAAYQAAAAAAAAPA/AAAAAAAAGEAAAAAAAADwPwAAAAAAAABA")!
+
+    func testSimpleRectangle() {
+        XCTAssertEqual(simpleRectangle.data, expectedSimpleRectangleData)
+    }
+
     func testWrongMagicNumber() {
-        var data = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 2, width: 3, height: 4), transform: nil)).data
+        var data = simpleRectangle.data
         XCTAssertNotEqual(Path(data: data), nil)
         data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) in
             bytes[0] = ~bytes[0]
@@ -155,7 +162,7 @@ class PathDataTests: XCTestCase {
     }
 
     func testCorruptedData() {
-        let data = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 2, width: 3, height: 4), transform: nil)).data
+        let data = simpleRectangle.data
         XCTAssertNotEqual(Path(data: data), nil)
         let corruptData1 = data[0..<data.count-1] // missing last y coordinate
         XCTAssertEqual(Path(data: corruptData1), nil)
