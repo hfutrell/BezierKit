@@ -28,13 +28,16 @@ fileprivate extension InputStream {
         }
     }
     func appendNativeValues<T>(to array: inout [T], count: Int) -> Bool {
+        guard count > 0 else {
+            return true  // nothin to do if asked to read zero elements
+        }
         let size = count * MemoryLayout<T>.size
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
         defer { buffer.deallocate() }
         guard let pointer = buffer.baseAddress else { return false }
         let bytesRead = self.read(pointer, maxLength: size)
         guard bytesRead == size else { return false }
-        array.append(contentsOf: UnsafeRawBufferPointer(buffer).bindMemory(to: T.self))
+        buffer.withMemoryRebound(to: T.self) { array.append(contentsOf: $0) }
         return true
     }
 }
