@@ -58,9 +58,7 @@ private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -
     }
 }
 
-private func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, threshold: CGFloat) -> [Intersection] {
-    assert(curve1.curve.order >= 2)
-    assert(curve2.curve.order >= 2)
+internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, threshold: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var intersections: [Intersection] = []
@@ -68,8 +66,8 @@ private func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: S
     return sortedAndUniquifiedIntersections(intersections)
 }
 
-private func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment) -> [Intersection] where U: BezierCurve {
-    assert(curve.order > 1 && curve.order <= 3)
+internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reversed: Bool = false) -> [Intersection] where U: NonlinearBezierCurve {
+    assert(curve.order <= 3)
     guard line.boundingBox.overlaps(curve.boundingBox) else {
         return []
     }
@@ -81,7 +79,7 @@ private func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment) -> [I
         guard t2 >= 0, t2 <= 1.0 else {
             return nil
         }
-        return Intersection(t1: t, t2: t2)
+        return reversed ? Intersection(t1: t2, t2: t) : Intersection(t1: t, t2: t2)
     })
     return sortedAndUniquifiedIntersections(intersections)
 }
@@ -447,50 +445,19 @@ extension BezierCurve {
         //        p.d = mdist
         return p
     }
-    
-    public func intersects(line: LineSegment) -> [Intersection]  {
-        assert(self.order > 1) // for lines execution shouldn't get here, because dynamic dispatch should hit implemenation in LineSegment.swift
-        return helperIntersectsCurveLine(self, line)
-    }
-    
+
     public func intersects(curve: BezierCurve) -> [Intersection] {
-        return intersects(curve: curve, threshold: BezierKit.defaultIntersectionThreshold)
+        return self.intersects(curve: curve, threshold: BezierKit.defaultIntersectionThreshold)
     }
-    
-    public func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection] {
-        assert(self.order > 1) // for lines execution shouldn't get here, because dynamic dispatch should hit implemenation in LineSegment.swift
-        if let c = curve as? CubicBezierCurve {
-            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: c), threshold: threshold)
-        }
-        if let q = curve as? QuadraticBezierCurve {
-            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: q), threshold: threshold)
-        }
-        else if let l = curve as? LineSegment {
-            return helperIntersectsCurveLine(self, l)
-        }
-        else {
-            fatalError("unsupported")
-        }
+
+    public func intersects() -> [Intersection] {
+        return self.intersects(threshold: BezierKit.defaultIntersectionThreshold)
     }
-    
-    public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
-        let reduced = self.reduce()
-        // "simple" curves cannot intersect with their direct
-        // neighbour, so for each segment X we check whether
-        // it intersects [0:x-2][x+2:last].
-        let len=reduced.count-2
-        var results: [Intersection] = []
-        if len > 0 {
-            for i in 0..<len {
-                let left = reduced[i]
-                for j in i+2..<reduced.count {
-                    results += helperIntersectsCurveCurve(left, reduced[j], threshold: threshold)
-                }
-            }
-        }
-        return results
+
+    public func intersects(threshold: CGFloat) -> [Intersection] {
+        return []
     }
-    
+
     // MARK: - outlines
     
     public func outline(distance d1: CGFloat) -> PathComponent {
@@ -577,11 +544,6 @@ extension BezierCurve {
         }
         return shapes
     }
-    
-    public func intersects(cubic: CubicBezierCurve, threshold: CGFloat) -> [Intersection] {
-        return self.intersects(curve: cubic, threshold: threshold)
-    }
-    
 }
 
 public let defaultIntersectionThreshold = CGFloat(0.5)
@@ -631,7 +593,32 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func length() -> CGFloat
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
+    func intersects(threshold: CGFloat) -> [Intersection]
     func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
-    func intersects(cubic: CubicBezierCurve, threshold: CGFloat) -> [Intersection]
     func intersects(line: LineSegment) -> [Intersection]
+}
+
+internal protocol NonlinearBezierCurve: BezierCurve {
+    // intentionally empty, just declare conformance if you're not a line
+}
+
+extension NonlinearBezierCurve {
+    public func intersects(line: LineSegment) -> [Intersection] {
+        assert(self.order > 1) // for lines execution shouldn't get here, because dynamic dispatch should hit implemenation in LineSegment.swift
+        return helperIntersectsCurveLine(self, line)
+    }
+    public func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection] {
+        if let c = curve as? CubicBezierCurve {
+            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: c), threshold: threshold)
+        }
+        if let q = curve as? QuadraticBezierCurve {
+            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: q), threshold: threshold)
+        }
+        else if let l = curve as? LineSegment {
+            return helperIntersectsCurveLine(self, l)
+        }
+        else {
+            fatalError("unsupported")
+        }
+    }
 }

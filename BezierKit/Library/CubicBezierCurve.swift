@@ -11,7 +11,7 @@ import CoreGraphics
 /**
  Cubic Bézier Curve
  */
-public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
+public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
     
  
     public var p0, p1, p2, p3: CGPoint
@@ -255,23 +255,25 @@ public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
         let temp4 = d * self.p3
         return temp1 + temp2 + temp3 + temp4
     }
-    
-    public func intersects(cubic: CubicBezierCurve, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> [Intersection] {
-        let l = Subcurve<CubicBezierCurve>(curve: self)
-        let r = Subcurve<CubicBezierCurve>(curve: cubic)
-        let lb = self.boundingBox
-        let rb = cubic.boundingBox
-        var intersections: [Intersection] = []
-        Utils.pairiteration(l, r, lb, rb, &intersections, threshold)
-        // sort the results by t1 (and by t2 if t1 equal)
-        intersections = intersections.sorted(by: <)
-        // de-dupe the sorted array
-        intersections = intersections.reduce(Array<Intersection>(), {(intersection: [Intersection], next: Intersection) in
-            return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
-        })
-        return intersections
+
+    public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
+        let reduced = self.reduce()
+        // "simple" curves cannot intersect with their direct
+        // neighbour, so for each segment X we check whether
+        // it intersects [0:x-2][x+2:last].
+        let len=reduced.count-2
+        var results: [Intersection] = []
+        if len > 0 {
+            for i in 0..<len {
+                let left = reduced[i]
+                for j in i+2..<reduced.count {
+                    results += helperIntersectsCurveCurve(left, reduced[j], threshold: threshold)
+                }
+            }
+        }
+        return results
     }
-    
+
 }
 
 extension CubicBezierCurve: Transformable {
