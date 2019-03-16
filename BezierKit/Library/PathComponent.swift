@@ -239,7 +239,7 @@ public final class PathComponent: NSObject, NSCoding {
             let order2 = p2.order(at: i2)
             if order2 == 1 {
                 let c2 = p2.line(at: i2)
-                return c1.intersects(curve: c2)
+                return c1.intersects(line: c2)
             }
             else if order2 == 2 {
                 let c2 = p2.quadratic(at: i2)
@@ -318,7 +318,7 @@ public final class PathComponent: NSObject, NSCoding {
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
 
-                // TODO: speed up this dispatch
+                var warn = "speed this up"
 
                 let c1 = self.element(at: i1)
                 let c2 = self.element(at: i2)
@@ -379,6 +379,9 @@ public final class PathComponent: NSObject, NSCoding {
         var results: [IndexedPathComponentLocation] = []
         self.bvh.visit { node, _ in
             if case let .leaf(elementIndex) = node.type {
+
+                var warn = "speed this up"
+
                 let curve = self.element(at: elementIndex)
                 results += curve.intersects(line: line).compactMap {
                     return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
