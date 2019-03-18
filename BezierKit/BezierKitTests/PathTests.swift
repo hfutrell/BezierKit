@@ -880,8 +880,7 @@ class PathTests: XCTestCase {
         let path2 = circlePath(origin: CGPoint(x: 1, y: 0), radius: 100, numPoints: numPoints)
 
         self.measure { // roughly 0.018s in debug mode
-            let _ = path1.intersects(path: path2, threshold: 1.0e-3)
+            let _ = path1.subtracting(path2, threshold: 1.0e-3)
         }
     }
-    
 }

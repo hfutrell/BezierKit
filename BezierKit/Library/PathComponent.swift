@@ -211,63 +211,43 @@ public final class PathComponent: NSObject, NSCoding {
         return found
     }
     
-    private static func intersectionBetween<U>(_ c1: U, _ i2: Int, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
-        let order2 = p2.order(at: i2)
-        if order2 == 1 {
-            let c2 = p2.line(at: i2)
-            return helperIntersectsCurveLine(c1, c2)
-        }
-        if order2 == 2 {
-            let c2 = p2.quadratic(at: i2)
-            return helperIntersectsCurveCurve(Subcurve(curve: c1), Subcurve(curve: c2), threshold: threshold)
-        }
-        else if order2 == 3 {
-            let c2 = p2.cubic(at: i2)
-            return helperIntersectsCurveCurve(Subcurve(curve: c1), Subcurve(curve: c2), threshold: threshold)
-        }
-        else {
-            // fallback to slow path
-            let c2 = p2.element(at: i2)
-            return c1.intersects(curve: c2, threshold: threshold)
+    private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
+        switch p2.order(at: i2) {
+        case 1:
+            return helperIntersectsCurveLine(curve, p2.line(at: i2))
+        case 2:
+            return helperIntersectsCurveCurve(Subcurve(curve: curve), Subcurve(curve: p2.quadratic(at: i2)), threshold: threshold)
+        case 3:
+            return helperIntersectsCurveCurve(Subcurve(curve: curve), Subcurve(curve: p2.cubic(at: i2)), threshold: threshold)
+        default:
+            fatalError("unsupported")
         }
     }
-    
+
+    private static func intersectionsBetweenElementAndLine(_ index: Int, _ line: LineSegment, _ component: PathComponent, reversed: Bool = false) -> [Intersection] {
+        switch component.order(at: index) {
+        case 1:
+            let element = component.line(at: index)
+            return reversed ? line.intersects(curve: element) : element.intersects(line: line)
+        case 2:
+            return helperIntersectsCurveLine(component.quadratic(at: index), line, reversed: reversed)
+        case 3:
+            return helperIntersectsCurveLine(component.cubic(at: index), line, reversed: reversed)
+        default:
+            fatalError("unsupported")
+        }
+    }
+
     private static func intersectionsBetweenElements(_ i1: Int, _ i2: Int, _ p1: PathComponent, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] {
-        let order1 = p1.order(at: i1)
-        if order1 == 1 {
-            let c1 = p1.line(at: i1)
-            let order2 = p2.order(at: i2)
-            if order2 == 1 {
-                let c2 = p2.line(at: i2)
-                return c1.intersects(line: c2)
-            }
-            else if order2 == 2 {
-                let c2 = p2.quadratic(at: i2)
-                return helperIntersectsCurveLine(c2, c1, reversed: true)
-            }
-            else if order2 == 3 {
-                let c2 = p2.cubic(at: i2)
-                return helperIntersectsCurveLine(c2, c1, reversed: true)
-            }
-            else {
-                // fallback to slow path
-                let c2 = p2.element(at: i2)
-                return c1.intersects(curve: c2, threshold: threshold)
-            }
-        }
-        if order1 == 2 {
-            let c1 = p1.quadratic(at: i1)
-            return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
-        }
-        else if order1 == 3 {
-            let c1 = p1.cubic(at: i1)
-            return PathComponent.intersectionBetween(c1, i2, p2, threshold: threshold)
-        }
-        else {
-            // fallback to slow path
-            let c1 = p1.element(at: i1)
-            let c2 = p2.element(at: i2)
-            return c1.intersects(curve: c2, threshold: threshold)
+        switch p1.order(at: i1) {
+        case 1:
+            return PathComponent.intersectionsBetweenElementAndLine(i2, p1.line(at: i1), p2, reversed: true)
+        case 2:
+            return PathComponent.intersectionBetween(p1.quadratic(at: i1), i2, p2, threshold: threshold)
+        case 3:
+            return PathComponent.intersectionBetween(p1.cubic(at: i1), i2, p2, threshold: threshold)
+        default:
+            fatalError("unsupported")
         }
     }
     
@@ -291,13 +271,16 @@ public final class PathComponent: NSObject, NSCoding {
         return intersections
     }
     
-    private func neighborsIntersectOnlyTrivially(_ c1: BezierCurve, _ c2: BezierCurve) -> Bool {
-        let boundingBox = c1.boundingBox
-        guard boundingBox.intersection(c2.boundingBox).area == 0 else {
+    private func neighborsIntersectOnlyTrivially(_ i1: Int, _ i2: Int) -> Bool {
+        let b1 = self.bvh.boundingBox(forElementIndex: i1)
+        let b2 = self.bvh.boundingBox(forElementIndex: i2)
+        guard b1.intersection(b2).area == 0 else {
             return false
         }
-        for i in 1..<c2.points.count {
-            if boundingBox.contains(c2.points[i]) {
+        let numPoints = self.order(at: i2) + 1
+        let offset = self.offsets[i2]
+        for i in 1..<numPoints {
+            if b1.contains(self.points[offset+i]) {
                 return false
             }
         }
@@ -317,18 +300,13 @@ public final class PathComponent: NSObject, NSCoding {
             }
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
-
-                var warn = "speed this up"
-
-                let c1 = self.element(at: i1)
-                let c2 = self.element(at: i2)
                 let areNeighbors = i1 == Utils.mod(i2-1, self.elementCount)
-                if areNeighbors, neighborsIntersectOnlyTrivially(c1, c2) {
+                if areNeighbors, neighborsIntersectOnlyTrivially(i1, i2) {
                     // optimize the very common case of element i intersecting i+1 at its endpoint
                     elementIntersections = []
                 }
                 else {
-                    elementIntersections = c1.intersects(curve: c2, threshold: threshold).filter {
+                    elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, self, threshold: threshold).filter {
                         if areNeighbors, $0.t1 == 1.0 {
                             return false // exclude intersections of i and i+1 at t=1
                         }
@@ -379,12 +357,8 @@ public final class PathComponent: NSObject, NSCoding {
         var results: [IndexedPathComponentLocation] = []
         self.bvh.visit { node, _ in
             if case let .leaf(elementIndex) = node.type {
-
-                var warn = "speed this up"
-
-                let curve = self.element(at: elementIndex)
-                results += curve.intersects(line: line).compactMap {
-                    return IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
+                results += PathComponent.intersectionsBetweenElementAndLine(elementIndex, line, self).map {
+                    IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
                 }
             }
             // TODO: better line box intersection

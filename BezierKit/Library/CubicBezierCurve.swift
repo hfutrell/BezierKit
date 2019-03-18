@@ -12,8 +12,7 @@ import CoreGraphics
  Cubic Bézier Curve
  */
 public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
-    
- 
+
     public var p0, p1, p2, p3: CGPoint
     
     public var points: [CGPoint] {
@@ -255,25 +254,6 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let temp4 = d * self.p3
         return temp1 + temp2 + temp3 + temp4
     }
-
-    public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Intersection] {
-        let reduced = self.reduce()
-        // "simple" curves cannot intersect with their direct
-        // neighbour, so for each segment X we check whether
-        // it intersects [0:x-2][x+2:last].
-        let len=reduced.count-2
-        var results: [Intersection] = []
-        if len > 0 {
-            for i in 0..<len {
-                let left = reduced[i]
-                for j in i+2..<reduced.count {
-                    results += helperIntersectsCurveCurve(left, reduced[j], threshold: threshold)
-                }
-            }
-        }
-        return results
-    }
-
 }
 
 extension CubicBezierCurve: Transformable {
