@@ -461,12 +461,27 @@ extension BezierCurve {
             }
             alen = alen + slen
         }
-        
+
+        func cleanupCurves(_ curves: inout [BezierCurve]) {
+            // ensures the curves are contiguous
+            for i in 0..<curves.count {
+                if i > 0 {
+                    curves[i].startingPoint = curves[i-1].endingPoint
+                }
+                if i < curves.count-1 {
+                    curves[i].endingPoint = 0.5 * ( curves[i].endingPoint + curves[i+1].startingPoint )
+                }
+            }
+        }
+
+        cleanupCurves(&fcurves)
+        cleanupCurves(&bcurves)
+
         // reverse the "return" outline
         bcurves = bcurves.map({(s: BezierCurve) in
             return s.reversed()
         }).reversed()
-        
+
         // form the endcaps as lines
         let fs = fcurves[0].points[0]
         let fe = fcurves[len-1].points[fcurves[len-1].points.count-1]
