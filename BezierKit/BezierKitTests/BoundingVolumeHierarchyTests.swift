@@ -45,4 +45,34 @@ class BoundingVolumeHierarchyTests: XCTestCase {
         }()
         XCTAssertEqual(visitedSet, expectedSet)
     }
+
+    func testBoundingBoxForElement() {
+        let boxes: [BoundingBox] = [BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 4)),
+                                    BoundingBox(p1: CGPoint(x: 5, y: 6), p2: CGPoint(x: 7, y: 8)),
+                                    BoundingBox(p1: CGPoint(x: 9, y: 10), p2: CGPoint(x: 11, y: 12))]
+        let bvh = BVH(boxes: boxes)
+        XCTAssertEqual(bvh.boundingBox(forElementIndex: 0), boxes[0])
+        XCTAssertEqual(bvh.boundingBox(forElementIndex: 1), boxes[1])
+        XCTAssertEqual(bvh.boundingBox(forElementIndex: 2), boxes[2])
+    }
+
+    private let zeroBox = BoundingBox(min: CGPoint.zero, max: CGPoint.zero)
+
+    func testLeafNodeToElementIndex() {
+        // check the simple case of a 1 element tree
+        XCTAssertEqual(BVH.leafNodeIndexToElementIndex(0, elementCount: 1, lastRowIndex: 0), 0)
+        // check the case of a 3 element tree
+        XCTAssertEqual(BVH.leafNodeIndexToElementIndex(3, elementCount: 3, lastRowIndex: 3), 0)
+        XCTAssertEqual(BVH.leafNodeIndexToElementIndex(4, elementCount: 3, lastRowIndex: 3), 1)
+        XCTAssertEqual(BVH.leafNodeIndexToElementIndex(2, elementCount: 3, lastRowIndex: 3), 2)
+    }
+
+    func testElementIndexToNodeIndex() {
+        // check the simple case of a 1 element tree
+        XCTAssertEqual(BVH.elementIndexToNodeIndex(0, elementCount: 1, lastRowIndex: 0), 0)
+        // check the case of a 3 element tree
+        XCTAssertEqual(BVH.elementIndexToNodeIndex(0, elementCount: 3, lastRowIndex: 3), 3)
+        XCTAssertEqual(BVH.elementIndexToNodeIndex(1, elementCount: 3, lastRowIndex: 3), 4)
+        XCTAssertEqual(BVH.elementIndexToNodeIndex(2, elementCount: 3, lastRowIndex: 3), 2)
+    }
 }

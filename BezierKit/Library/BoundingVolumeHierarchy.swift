@@ -22,13 +22,22 @@ final internal class BVH {
     private let lastRowIndex: Int
     private let elementCount: Int
     
-    private static func leafNodeIndexToElementIndex(_ nodeIndex: Int, elementCount: Int, lastRowIndex: Int) -> Int {
+    internal static func leafNodeIndexToElementIndex(_ nodeIndex: Int, elementCount: Int, lastRowIndex: Int) -> Int {
         assert(isLeaf(nodeIndex, elementCount: elementCount))
         var elementIndex = nodeIndex - lastRowIndex
         if elementIndex < 0 {
             elementIndex += elementCount
         }
         return elementIndex
+    }
+
+    internal static func elementIndexToNodeIndex(_ elementIndex: Int, elementCount: Int, lastRowIndex: Int) -> Int {
+        assert(elementIndex >= 0 && elementIndex < elementCount)
+        var nodeIndex = elementIndex + lastRowIndex
+        if nodeIndex >= 2 * elementCount - 1 {
+            nodeIndex -= elementCount
+        }
+        return nodeIndex
     }
     
     private static func isLeaf(_ index: Int, elementCount: Int) -> Bool {
@@ -85,7 +94,11 @@ final internal class BVH {
         }
         visit(index: 0, depth: 0, callback: callback)
     }
-    
+
+    func boundingBox(forElementIndex index: Int) -> BoundingBox {
+        return self.boundingBoxes[BVH.elementIndexToNodeIndex(index, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)]
+    }
+
     func intersects(callback: (Int, Int) -> Void) {
         self.intersects(node: self, callback: callback)
     }
