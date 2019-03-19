@@ -491,7 +491,7 @@ class Demos {
                                 mutablePath.closeSubpath()
                                 
                                 let path = Path(cgPath: mutablePath)
-                                for s in path.subpaths {
+                                for s in path.components {
                                     Draw.drawPathComponent(context, pathComponent: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
                                 }
 

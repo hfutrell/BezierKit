@@ -8,11 +8,11 @@
 
 import CoreGraphics
 
-public func signedAngle(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
-    return atan2(CGPoint.cross(a, b), a.dot(b))
+internal func signedAngle(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
+    return atan2(a.cross(b), a.dot(b))
 }
 
-public func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
+internal func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
     let signedAngleAB = signedAngle(a, b)
     let signedAngleAV = signedAngle(a, v)
     if signedAngleAB > 0 {
@@ -23,12 +23,6 @@ public func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
     }
     else {
         return signedAngleAV == 0
-    }
-}
-
-extension CGPoint {
-    static func cross(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
-        return p1.x * p2.y - p1.y * p2.x
     }
 }
 
@@ -97,29 +91,31 @@ internal class PathLinkedListRepresentation {
     }
     
     private func createListFor(component: PathComponent) -> [Vertex] {
-        guard component.curves.count > 0 else {
+        guard component.elementCount > 0 else {
             return []
         }
-        assert(component.curves.first!.startingPoint == component.curves.last!.endingPoint, "this method assumes component is closed!")
+        assert(component.startingPoint == component.endingPoint, "this method assumes component is closed!")
         var elements: [Vertex] = [] // elements[i] is the first vertex of curves[i]
-        let firstPoint: CGPoint = component.curves.first!.startingPoint
+        let firstPoint: CGPoint = component.startingPoint
         let firstVertex = Vertex(location: firstPoint, isIntersection: false)
         elements.append(firstVertex)
         var lastVertex = firstVertex
-        for i in 1..<component.curves.count {
-            let v = Vertex(location: component.curves[i].startingPoint, isIntersection: false)
+        var prev: BezierCurve = component.element(at: 0)
+        for i in 1..<component.elementCount {
+            let curr = component.element(at: i)
+            let v = Vertex(location: curr.startingPoint, isIntersection: false)
             elements.append(v)
-            let curveForTransition = component.curves[i-1]
+            let curveForTransition = prev
             // set the forwards reference for starting vertex of curve i-1
             lastVertex.setNextVertex(v, transition: VertexTransition(curve: curveForTransition))
             // set the backwards reference for starting vertex of curve i
             v.setPreviousVertex(lastVertex)
             // point previous at v for the next iteration
             lastVertex = v
+            prev = curr
         }
         // connect the forward reference of the last vertex to the first vertex
-        let lastCurve = component.curves.last!
-        lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: lastCurve))
+        lastVertex.setNextVertex(firstVertex, transition: VertexTransition(curve: prev))
         // connect the backward reference of the first vertex to the last vertex
         firstVertex.setPreviousVertex(lastVertex)
         // return list of vertexes that point to the start of each element
@@ -128,7 +124,7 @@ internal class PathLinkedListRepresentation {
     
     init(_ p: Path) {
         self.path = p
-        self.lists = p.subpaths.map { self.createListFor(component: $0) }
+        self.lists = p.components.map { self.createListFor(component: $0) }
     }
     
     fileprivate func nonCrossingComponents() -> [PathComponent] {
@@ -142,7 +138,7 @@ internal class PathLinkedListRepresentation {
                 }
             }
             if hasCrossing == false {
-                result.append(self.path.subpaths[i])
+                result.append(self.path.components[i])
             }
         }
         return result
@@ -180,7 +176,7 @@ internal class PathLinkedListRepresentation {
                     // TODO: there's an issue when corners intersect (try AugmentedGraphTests.testCornersIntersect which has this problem, even though it passes)
                     // the relative winding count can be decremented both for entry and for exit. This is not an issue with the even-odd winding rule, but using
                     // winding it can be an issue
-                    let c = CGPoint.cross(v2, n2)
+                    let c = v2.cross(n2)
                     if c < 0 {
                         relativeWindingCount += 1
                     }
@@ -346,7 +342,7 @@ internal class AugmentedGraph {
         let nonCrossingComponents2: [PathComponent] = self.list2.nonCrossingComponents()
         
         func anyPointOnComponent(_ c: PathComponent) -> CGPoint {
-            return c.curves[0].startingPoint
+            return c.startingPoint
         }
         var pathComponents: [PathComponent] = []
         switch operation {
@@ -397,7 +393,7 @@ internal class AugmentedGraph {
             } while v !== start
             pathComponents.append(PathComponent(curves: curves))
         }
-        return Path(subpaths: pathComponents)
+        return Path(components: pathComponents)
     }
 }
 
@@ -485,11 +481,5 @@ internal class Vertex {
 extension Vertex: Equatable {
     public static func == (left: Vertex, right: Vertex) -> Bool {
         return left === right
-    }
-}
-
-extension Vertex: Hashable {
-    public var hashValue: Int {
-        return ObjectIdentifier(self).hashValue
     }
 }

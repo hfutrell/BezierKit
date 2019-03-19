@@ -43,6 +43,9 @@ public extension CGPoint {
     func dot(_ other: CGPoint) -> CGFloat {
         return self.x * other.x + self.y * other.y
     }
+    func cross(_ other: CGPoint) -> CGFloat {
+        return self.x * other.y - self.y * other.x
+    }
     subscript(index: Int) -> CGFloat {
         get {
             assert(index == 0 || index == 1)

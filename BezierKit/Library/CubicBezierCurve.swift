@@ -11,8 +11,8 @@ import CoreGraphics
 /**
  Cubic Bézier Curve
  */
-public struct CubicBezierCurve: BezierCurve, ArcApproximateable, Equatable {
- 
+public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
+
     public var p0, p1, p2, p3: CGPoint
     
     public var points: [CGPoint] {
