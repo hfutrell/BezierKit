@@ -56,8 +56,6 @@ class BoundingVolumeHierarchyTests: XCTestCase {
         XCTAssertEqual(bvh.boundingBox(forElementIndex: 2), boxes[2])
     }
 
-    private let zeroBox = BoundingBox(min: CGPoint.zero, max: CGPoint.zero)
-
     func testLeafNodeToElementIndex() {
         // check the simple case of a 1 element tree
         XCTAssertEqual(BVH.leafNodeIndexToElementIndex(0, elementCount: 1, lastRowIndex: 0), 0)
