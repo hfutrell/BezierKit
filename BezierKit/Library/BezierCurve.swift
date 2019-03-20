@@ -561,6 +561,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func length() -> CGFloat
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
+    func project(point: CGPoint) -> CGPoint
     func intersects(threshold: CGFloat) -> [Intersection]
     func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
     func intersects(line: LineSegment) -> [Intersection]
