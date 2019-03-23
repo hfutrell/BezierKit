@@ -196,7 +196,7 @@ extension BezierCurve {
             // find the best upper bound
             for c in list {
                 iterations += 1
-                let mmax = self.upperBound(point, c)
+                let mmax = upperBound(point, c)
                 if mmax < bestMax {
                     bestMax = mmax
                     bestCurve = c
@@ -214,7 +214,7 @@ extension BezierCurve {
             }
             // for each curve, recurse on those whose lower bound is equal or better than the best upper bound
             for c in list {
-                if self.lowerBound(point, c) <= bestMax {
+                if lowerBound(point, c) <= bestMax {
                     let (left, right) = c.split(at: 0.5)
                     nextList.append(left)
                     nextList.append(right)
