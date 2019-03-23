@@ -27,7 +27,7 @@ public class Draw {
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
      */
-    private static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
+    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
         
         // Check for saturation. If there isn't any just return the luminance value for each, which results in gray.
         if s == 0.0 {
@@ -55,30 +55,25 @@ public class Draw {
         temp[2] = h - 1.0 / 3.0
         
         for i in 0..<3 {
-        
             // Adjust the range
             if temp[i] < 0.0 {
                 temp[i] += 1.0
             }
-            if temp[i] > 1.0 {
+            else if temp[i] > 1.0 {
                 temp[i] -= 1.0
             }
             
             if (6.0 * temp[i]) < 1.0 {
                 temp[i] = temp1 + (temp2 - temp1) * 6.0 * temp[i]
             }
+            else if (2.0 * temp[i]) < 1.0 {
+                temp[i] = temp2
+            }
+            else if (3.0 * temp[i]) < 2.0 {
+                temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
+            }
             else {
-                if (2.0 * temp[i]) < 1.0 {
-                    temp[i] = temp2
-                }
-                else {
-                    if (3.0 * temp[i]) < 2.0 {
-                        temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
-                    }
-                    else {
-                        temp[i] = temp1
-                    }
-                }
+                temp[i] = temp1
             }
         }
         // Assign temporary values to R, G, B
@@ -94,7 +89,9 @@ public class Draw {
     public static let pinkish = Draw.Color(red: 1.0, green: 100.0 / 255.0, blue: 100.0 / 255.0, alpha: 1.0)
     public static let transparentBlue = Draw.Color(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.3)
     public static let transparentBlack = Draw.Color(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.2)
-    
+    public static let blue = Draw.Color(red: 0.0, green: 0.0, blue: 255.0, alpha: 1.0)
+    public static let green = Draw.Color(red: 0.0, green: 255.0, blue: 0.0, alpha: 1.0)
+
     private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
         var temp: [CGColor] = []
@@ -138,22 +135,22 @@ public class Draw {
     
     // MARK: - drawing various geometry
     
-    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+    public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint.zero) {
         context.beginPath()
         if let quadraticCurve = curve as? QuadraticBezierCurve {
-            context.move(to: (quadraticCurve.p0 + offset).toCGPoint())
-            context.addQuadCurve(to: (quadraticCurve.p2 + offset).toCGPoint(),
-                                 control: (quadraticCurve.p1 + offset).toCGPoint())
+            context.move(to: quadraticCurve.p0 + offset)
+            context.addQuadCurve(to: quadraticCurve.p2 + offset,
+                                 control: quadraticCurve.p1 + offset)
         }
         else if let cubicCurve = curve as? CubicBezierCurve {
-            context.move(to: (cubicCurve.p0 + offset).toCGPoint())
-            context.addCurve(to: (cubicCurve.p3 + offset).toCGPoint(),
-                             control1: (cubicCurve.p1 + offset).toCGPoint(),
-                             control2: (cubicCurve.p2 + offset).toCGPoint())
+            context.move(to: cubicCurve.p0 + offset)
+            context.addCurve(to: cubicCurve.p3 + offset,
+                             control1: cubicCurve.p1 + offset,
+                             control2: cubicCurve.p2 + offset)
         }
         else if let lineSegment = curve as? LineSegment {
-            context.move(to: (lineSegment.p0 + offset).toCGPoint())
-            context.addLine(to: (lineSegment.p1 + offset).toCGPoint())
+            context.move(to: lineSegment.p0 + offset)
+            context.addLine(to: lineSegment.p1 + offset)
         }
         else {
             fatalError("unsupported curve type")
@@ -161,7 +158,7 @@ public class Draw {
         context.strokePath()
     }
     
-    public static func drawCircle(_ context: CGContext, center: BKPoint, radius r : BKFloat, offset: BKPoint=BKPoint(x:0.0, y: 0.0)) {
+    public static func drawCircle(_ context: CGContext, center: CGPoint, radius r : CGFloat, offset: CGPoint = .zero) {
         context.beginPath()
         context.addEllipse(in: CGRect(origin: CGPoint(x: center.x - r + offset.x, y: center.y - r + offset.y),
                             size: CGSize(width: 2.0 * r, height: 2.0 * r))
@@ -169,30 +166,30 @@ public class Draw {
         context.strokePath()
     }
     
-    public static func drawPoint(_ context: CGContext, origin o: BKPoint, offset: BKPoint=BKPointZero) {
+    public static func drawPoint(_ context: CGContext, origin o: CGPoint, offset: CGPoint = .zero) {
         self.drawCircle(context, center: o, radius: 5.0, offset: offset)
         
     }
     
     public static func drawPoints(_ context: CGContext,
-                    points: [BKPoint],
-                    offset: BKPoint=BKPoint(x: 0.0, y: 0.0)) {
+                    points: [CGPoint],
+                    offset: CGPoint=CGPoint(x: 0.0, y: 0.0)) {
         for p in points {
             self.drawCircle(context, center: p, radius: 3.0, offset: offset)
         }
     }
     
     public static func drawLine(_ context: CGContext,
-                  from p0: BKPoint,
-                  to p1: BKPoint,
-                  offset: BKPoint=BKPoint(x: 0.0, y: 0.0)) {
+                  from p0: CGPoint,
+                  to p1: CGPoint,
+                  offset: CGPoint=CGPoint(x: 0.0, y: 0.0)) {
         context.beginPath()
-        context.move(to: (p0 + offset).toCGPoint())
-        context.addLine(to: (p1 + offset).toCGPoint())
+        context.move(to: p0 + offset)
+        context.addLine(to: p1 + offset)
         context.strokePath()
     }
     
-    public static func drawText(_ context: CGContext, text: String, offset: BKPoint = BKPointZero) {
+    public static func drawText(_ context: CGContext, text: String, offset: CGPoint = .zero) {
     #if os(macOS)
         (text as NSString).draw(at: NSPoint(x: offset.x, y: offset.y), withAttributes: [:])
     #else
@@ -202,7 +199,7 @@ public class Draw {
  
     public static func drawSkeleton(_ context: CGContext,
                              curve: BezierCurve,
-                             offset: BKPoint=BKPoint(x: 0.0, y: 0.0),
+                             offset: CGPoint=CGPoint(x: 0.0, y: 0.0),
                              coords: Bool=true) {
         
         context.setStrokeColor(lightGrey)
@@ -223,82 +220,102 @@ public class Draw {
         
     }
     
-    public static func draw(_ context: CGContext, arc: Arc, offset: BKPoint = BKPointZero) {
+    public static func draw(_ context: CGContext, arc: Arc, offset: CGPoint = .zero) {
         let o = offset
         context.beginPath()
-        context.move(to: (arc.origin + o).toCGPoint())
-        context.addArc(center: (arc.origin + o).toCGPoint(),
+        context.move(to: arc.origin + o)
+        context.addArc(center: arc.origin + o,
                        radius: arc.radius,
-                       startAngle: arc.start,
-                       endAngle: arc.end,
+                       startAngle: arc.startAngle,
+                       endAngle: arc.endAngle,
                        clockwise: false)
-        context.addLine(to: (arc.origin + o).toCGPoint())
-        context.drawPath(using: CGPathDrawingMode.fillStroke)
+        context.addLine(to: arc.origin + o)
+        context.drawPath(using: .fillStroke)
     }
     
-    public static func drawHull(_ context: CGContext, hull: [BKPoint], offset : BKPoint = BKPointZero) {
+    public static func drawHull(_ context: CGContext, hull: [CGPoint], offset : CGPoint = .zero) {
         context.beginPath()
         if hull.count == 6 {
-            context.move(to: hull[0].toCGPoint())
-            context.addLine(to: hull[1].toCGPoint())
-            context.addLine(to: hull[2].toCGPoint())
-            context.move(to: hull[3].toCGPoint())
-            context.addLine(to: hull[4].toCGPoint())
+            context.move(to: hull[0])
+            context.addLine(to: hull[1])
+            context.addLine(to: hull[2])
+            context.move(to: hull[3])
+            context.addLine(to: hull[4])
         }
         else {
-            context.move(to: hull[0].toCGPoint())
-            context.addLine(to: hull[1].toCGPoint())
-            context.addLine(to: hull[2].toCGPoint())
-            context.addLine(to: hull[3].toCGPoint())
-            context.move(to: hull[4].toCGPoint())
-            context.addLine(to: hull[5].toCGPoint())
-            context.addLine(to: hull[6].toCGPoint())
-            context.move(to: hull[7].toCGPoint())
-            context.addLine(to: hull[8].toCGPoint())
+            context.move(to: hull[0])
+            context.addLine(to: hull[1])
+            context.addLine(to: hull[2])
+            context.addLine(to: hull[3])
+            context.move(to: hull[4])
+            context.addLine(to: hull[5])
+            context.addLine(to: hull[6])
+            context.move(to: hull[7])
+            context.addLine(to: hull[8])
         }
         context.strokePath()
     }
 
-    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset ox : BKPoint = BKPointZero) {
+    public static func drawBoundingBox(_ context: CGContext, boundingBox: BoundingBox, offset: CGPoint = .zero) {
         context.beginPath()
-        context.addRect(boundingBox.toCGRect)
+        context.addRect(boundingBox.cgRect.offsetBy(dx: offset.x, dy: offset.y))
         context.closePath()
         context.strokePath()
     }
 
-    public static func drawShape(_ context: CGContext, shape: Shape, offset: BKPoint = BKPointZero) {
+    public static func drawShape(_ context: CGContext, shape: Shape, offset: CGPoint = .zero) {
         let order = shape.forward.points.count - 1
         context.beginPath()
-        context.move(to: (offset + shape.startcap.curve.points[0]).toCGPoint())
-        context.addLine(to: (offset + shape.startcap.curve.points[3]).toCGPoint())
+        context.move(to: offset + shape.startcap.curve.startingPoint)
+        context.addLine(to: offset + shape.startcap.curve.endingPoint)
         if order == 3 {
-            context.addCurve(to: (offset + shape.forward.points[3]).toCGPoint(),
-                             control1: (offset + shape.forward.points[1]).toCGPoint(),
-                             control2: (offset + shape.forward.points[2]).toCGPoint()
+            context.addCurve(to: offset + shape.forward.points[3],
+                             control1: offset + shape.forward.points[1],
+                             control2: offset + shape.forward.points[2]
                              
             )
         }
         else {
-            context.addQuadCurve(to: (offset + shape.forward.points[2]).toCGPoint(),
-                                 control: (offset + shape.forward.points[1]).toCGPoint()
+            context.addQuadCurve(to: offset + shape.forward.points[2],
+                                 control: offset + shape.forward.points[1]
             )
         }
-        context.addLine(to: (offset + shape.endcap.curve.points[3]).toCGPoint())
+        context.addLine(to: offset + shape.endcap.curve.endingPoint)
         if order == 3 {
-            context.addCurve(to: (offset + shape.back.points[3]).toCGPoint(),
-                control1: (offset + shape.back.points[1]).toCGPoint(),
-                control2: (offset + shape.back.points[2]).toCGPoint()
+            context.addCurve(to: offset + shape.back.points[3],
+                control1: offset + shape.back.points[1],
+                control2: offset + shape.back.points[2]
             )
         }
         else {
-            context.addQuadCurve(to:(offset + shape.back.points[2]).toCGPoint(),
-                                 control: (offset + shape.back.points[1]).toCGPoint()
+            context.addQuadCurve(to: offset + shape.back.points[2],
+                                 control: offset + shape.back.points[1]
             )
         }
         context.closePath()
-        context.drawPath(using: CGPathDrawingMode.fillStroke)
+        context.drawPath(using: .fillStroke)
     
     }
     
+    public static func drawPathComponent(_ context: CGContext, pathComponent: PathComponent, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
+        if includeBoundingVolumeHierarchy {
+            pathComponent.bvh.visit { node, depth in
+                setColor(context, color: randomColors[depth])
+                context.setLineWidth(1.0)
+                context.setLineWidth(5.0 / CGFloat(depth+1))
+                context.setAlpha(1.0 / CGFloat(depth+1))
+                drawBoundingBox(context, boundingBox: node.boundingBox, offset: offset)
+                return true // always visit children
+            }
+        }
+        Draw.setRandomFill(context, alpha: 0.2)
+        context.addPath(pathComponent.cgPath)
+        context.drawPath(using: .fillStroke)
+    }
     
+    public static func drawPath(_ context: CGContext, _ path: Path, offset: CGPoint = .zero) {
+        Draw.setRandomFill(context, alpha: 0.2)
+        context.addPath(path.cgPath)
+        context.drawPath(using: .fillStroke)
+    }
 }

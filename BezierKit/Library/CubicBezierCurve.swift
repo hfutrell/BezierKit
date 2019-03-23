@@ -6,16 +6,16 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
 /**
  Cubic Bézier Curve
  */
-public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
- 
-    public var p0, p1, p2, p3: BKPoint
+public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
+
+    public var p0, p1, p2, p3: CGPoint
     
-    public var points: [BKPoint] {
+    public var points: [CGPoint] {
         return [p0, p1, p2, p3]
     }
     
@@ -23,17 +23,27 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return 3
     }
 
-    public var startingPoint: BKPoint {
-        return p0
+    public var startingPoint: CGPoint {
+        get {
+            return p0
+        }
+        set(newValue) {
+            p0 = newValue
+        }
     }
     
-    public var endingPoint: BKPoint {
-        return p3
+    public var endingPoint: CGPoint {
+        get {
+            return p3
+        }
+        set(newValue) {
+            p3 = newValue
+        }
     }
     
     // MARK: - Initializers
     
-    public init(points: [BKPoint]) {
+    public init(points: [CGPoint]) {
         precondition(points.count == 4)
         self.p0 = points[0]
         self.p1 = points[1]
@@ -41,20 +51,22 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         self.p3 = points[3]
     }
     
-    public init(p0: BKPoint, p1: BKPoint, p2: BKPoint, p3: BKPoint) {
-        let points = [p0, p1, p2, p3]
-        self.init(points: points)
+    public init(p0: CGPoint, p1: CGPoint, p2: CGPoint, p3: CGPoint) {
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
     }
     
     public init(lineSegment l: LineSegment) {
-        let oneThird: BKFloat = 1.0 / 3.0
-        let twoThirds: BKFloat = 2.0 / 3.0
+        let oneThird: CGFloat = 1.0 / 3.0
+        let twoThirds: CGFloat = 2.0 / 3.0
         self.init(p0: l.p0, p1: twoThirds * l.p0 + oneThird * l.p1, p2: oneThird * l.p0 + twoThirds * l.p1, p3: l.p1)
     }
     
     public init(quadratic q: QuadraticBezierCurve) {
-        let oneThird: BKFloat = 1.0 / 3.0
-        let twoThirds: BKFloat = 2.0 / 3.0
+        let oneThird: CGFloat = 1.0 / 3.0
+        let twoThirds: CGFloat = 2.0 / 3.0
         let p0 = q.p0
         let p1 = twoThirds * q.p1 + oneThird * q.p0
         let p2 = oneThird * q.p2 + twoThirds * q.p1
@@ -70,7 +82,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
 - parameter t: optional t-value at which the curve will pass through the point `mid` (default = 0.5)
 - parameter d: optional strut length with the full strut being length d * (1-t)/t. If omitted or `nil` the distance from `mid` to the baseline (line from `start` to `end`) is used.
 */
-    public init(start: BKPoint, end: BKPoint, mid: BKPoint, t: BKFloat = 0.5, d: BKFloat? = nil) {
+    public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5, d: CGFloat? = nil) {
         
         let s = start
         let b = mid
@@ -90,8 +102,8 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let by2 = d2 * ly
         
         // derivation of new hull coordinates
-        let e1  = BKPoint( x: b.x - bx1, y: b.y - by1 )
-        let e2  = BKPoint( x: b.x + bx2, y: b.y + by2 )
+        let e1  = CGPoint( x: b.x - bx1, y: b.y - by1 )
+        let e2  = CGPoint( x: b.x + bx2, y: b.y + by2 )
         let A   = abc.A
         let oneMinusT = 1.0 - t
         let v1  = A + (e1-A) / oneMinusT
@@ -113,13 +125,13 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let n1 = self.normal(0)
         let n2 = self.normal(1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
-        let angle: BKFloat = BKFloat(abs(acos(Double(s))))
-        return angle < (BKFloat.pi / 3.0)
+        let angle: CGFloat = CGFloat(abs(acos(Double(s))))
+        return angle < (CGFloat.pi / 3.0)
     }
     
-    public func derivative(_ t: BKFloat) -> BKPoint {
-        let mt: BKFloat = 1-t
-        let k: BKFloat = 3
+    public func derivative(_ t: CGFloat) -> CGPoint {
+        let mt: CGFloat = 1-t
+        let k: CGFloat = 3
         let p0 = k * (self.p1 - self.p0)
         let p1 = k * (self.p2 - self.p1)
         let p2 = k * (self.p3 - self.p2)
@@ -133,7 +145,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return temp1 + temp2 + temp3
     }
     
-    public func split(from t1: BKFloat, to t2: BKFloat) -> CubicBezierCurve {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> CubicBezierCurve {
         
         let h0 = self.p0
         let h1 = self.p1
@@ -163,7 +175,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         
     }
 
-    public func split(at t: BKFloat) -> (left: CubicBezierCurve, right: CubicBezierCurve) {
+    public func split(at t: CGFloat) -> (left: CubicBezierCurve, right: CubicBezierCurve) {
         
         let h0 = self.p0
         let h1 = self.p1
@@ -185,28 +197,35 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
     
     public var boundingBox: BoundingBox {
 
-        let p0: BKPoint = self.p0
-        let p1: BKPoint = self.p1
-        let p2: BKPoint = self.p2
-        let p3: BKPoint = self.p3
+        let p0: CGPoint = self.p0
+        let p1: CGPoint = self.p1
+        let p2: CGPoint = self.p2
+        let p3: CGPoint = self.p3
         
-        var mmin = BKPoint.min(p0, p3)
-        var mmax = BKPoint.max(p0, p3)
+        var mmin = CGPoint.min(p0, p3)
+        var mmax = CGPoint.max(p0, p3)
         
         let d0 = p1 - p0
         let d1 = p2 - p1
         let d2 = p3 - p2
-
-        for d in 0..<BKPoint.dimensions {
-            Utils.droots(d0[d], d1[d], d2[d]) {(r: BKFloat) in
+        
+        for d in 0..<CGPoint.dimensions {
+            let mmind = mmin[d]
+            let mmaxd = mmax[d]
+            let value1 = p1[d]
+            let value2 = p2[d]
+            guard value1 < mmind || value1 > mmaxd || value2 < mmind || value2 > mmaxd else {
+                continue
+            }
+            Utils.droots(d0[d], d1[d], d2[d]) {(r: CGFloat) in
                 if r <= 0.0 || r >= 1.0 {
                     return
                 }
                 let value = self.compute(r)[d]
-                if value < mmin[d] {
+                if value < mmind {
                     mmin[d] = value
                 }
-                else if value > mmax[d] {
+                else if value > mmaxd {
                     mmax[d] = value
                 }
             }
@@ -214,7 +233,7 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         return BoundingBox(min: mmin, max: mmax)
     }
     
-    public func compute(_ t: BKFloat) -> BKPoint {
+    public func compute(_ t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         }
@@ -222,8 +241,8 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
             return self.p3
         }
         let mt = 1.0 - t
-        let mt2: BKFloat    = mt*mt
-        let t2: BKFloat     = t*t
+        let mt2: CGFloat    = mt*mt
+        let t2: CGFloat     = t*t
         let a = mt2 * mt
         let b = mt2 * t * 3.0
         let c = mt * t2 * 3.0
@@ -235,11 +254,16 @@ public struct CubicBezierCurve: BezierCurve, Equatable, ArcApproximateable {
         let temp4 = d * self.p3
         return temp1 + temp2 + temp3 + temp4
     }
-    
-    // MARK: - Equatable
-    
-    public static func == (left: CubicBezierCurve, right: CubicBezierCurve) -> Bool {
-        return left.p0 == right.p0 && left.p1 == right.p1 && left.p2 == right.p2 && left.p3 == right.p3
+}
+
+extension CubicBezierCurve: Transformable {
+    public func copy(using t: CGAffineTransform) -> CubicBezierCurve {
+        return CubicBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t), p3: self.p3.applying(t))
     }
+}
     
+extension CubicBezierCurve: Reversible {
+    public func reversed() -> CubicBezierCurve {
+        return CubicBezierCurve(p0: self.p3, p1: self.p2, p2: self.p1, p3: self.p0)
+    }
 }
