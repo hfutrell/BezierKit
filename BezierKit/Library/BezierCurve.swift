@@ -159,26 +159,26 @@ extension BezierCurve {
         }
     }
 
-    func upperBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
-        // distance from point to curve <= this number
-        let d1 = distance(point, curve.startingPoint)
-        let d2 = distance(point, curve.endingPoint)
-        let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
-        let flatness = curve.flatness()
-        let f = sqrt(flatness)
-        let d3 = distance(point, line.project(point: point)) + f
-        return min(d3, min(d1, d2))
-    }
-    func lowerBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
-        // distance from point to curve >= this number
-        let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
-        let flatness = curve.flatness()
-        let f = sqrt(flatness)
-        let d = distance(point, line.project(point: point)) - f
-        return d < 0 ? 0 : d
-    }
-    
     public func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint {
+
+        func upperBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
+            // distance from point to curve <= this number
+            let d1 = distance(point, curve.startingPoint)
+            let d2 = distance(point, curve.endingPoint)
+            let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
+            let flatness = curve.flatness()
+            let f = sqrt(flatness)
+            let d3 = distance(point, line.project(point: point)) + f
+            return min(d3, min(d1, d2))
+        }
+        func lowerBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
+            // distance from point to curve >= this number
+            let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
+            let flatness = curve.flatness()
+            let f = sqrt(flatness)
+            let d = distance(point, line.project(point: point)) - f
+            return d < 0 ? 0 : d
+        }
 
         var list: [Self] = [self]
         var iterations = 0
