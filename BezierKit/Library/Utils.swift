@@ -359,22 +359,7 @@ internal class Utils {
             )
         }
     }
-    
-    static func closest(_ LUT: [CGPoint],_ point: CGPoint) -> (mdist: CGFloat, mpos: Int) {
-        assert(LUT.count > 0)
-        var mdist = CGFloat.infinity
-        var mpos: Int? = nil
-        for i in 0..<LUT.count {
-            let p = LUT[i]
-            let d = Utils.dist(point, p)
-            if d<mdist {
-                mdist = d
-                mpos = i
-            }
-        }
-        return ( mdist:mdist, mpos:mpos! )
-    }
-    
+        
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],
