@@ -161,16 +161,6 @@ extension BezierCurve {
 
     public func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint {
 
-        func upperBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
-            // distance from point to curve <= this number
-            let d1 = distance(point, curve.startingPoint)
-            let d2 = distance(point, curve.endingPoint)
-            let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
-            let flatness = curve.flatness()
-            let f = sqrt(flatness)
-            let d3 = distance(point, line.project(point: point)) + f
-            return min(d3, min(d1, d2))
-        }
         func lowerBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
             // distance from point to curve >= this number
             let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
@@ -196,7 +186,7 @@ extension BezierCurve {
             // find the best upper bound
             for c in list {
                 iterations += 1
-                let mmax = upperBound(point, c)
+                let mmax = distance(point, c.compute(0.5))
                 if mmax < bestMax {
                     bestMax = mmax
                     bestCurve = c
@@ -213,16 +203,31 @@ extension BezierCurve {
                 break
             }
             // for each curve, recurse on those whose lower bound is equal or better than the best upper bound
+            var exclusions = 0
             for c in list {
-                if lowerBound(point, c) <= bestMax {
+                if lowerBound(point, c) < bestMax {
                     let (left, right) = c.split(at: 0.5)
-                    nextList.append(left)
-                    nextList.append(right)
+                    if lowerBound(point, left) < bestMax {
+                        nextList.append(left)
+                    }
+                    else {
+                        exclusions += 1
+                    }
+                    if lowerBound(point, right) < bestMax {
+                        nextList.append(right)
+                    }
+                    else {
+                        exclusions += 1
+                    }
+                }
+                else {
+                    exclusions += 2
                 }
             }
+           // print("iteration has \(nextList.count) items (excluded \(exclusions) out of \(2*list.count).")
             list = nextList
         }
-        print("finished with \(iterations) iterations")
+      //  print("finished with \(iterations) iterations")
         return LineSegment(p0: bestCurve!.startingPoint, p1: bestCurve!.endingPoint).project(point: point)
     }
     
