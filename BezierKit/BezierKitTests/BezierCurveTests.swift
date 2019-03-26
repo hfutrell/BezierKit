@@ -117,7 +117,7 @@ class BezierCurveTests: XCTestCase {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let p1 = l.project(point: CGPoint(x: 0.0, y: 0.0)) // should project to p0
         XCTAssertEqual(p1, CGPoint(x: 1.0, y: 2.0))
-        let p2 = l.project(point: CGPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
+        let p2 = l.project(point: CGPoint(x: 1.0, y: 4.0), errorThreshold: epsilon) // should project to l.compute(0.25)
         XCTAssertEqual(p2, CGPoint(x: 2.0, y: 3.0))
         let p3 = l.project(point: CGPoint(x: 6.0, y: 7.0))
         XCTAssertEqual(p3, CGPoint(x: 5.0, y: 6.0)) // should project to p1
