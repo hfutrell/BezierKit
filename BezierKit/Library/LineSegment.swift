@@ -107,6 +107,10 @@ public struct LineSegment: BezierCurve, Equatable {
         let t                = relativePoint.dot(delta) / delta.dot(delta)
         return self.compute(Utils.clamp(t, 0.0, 1.0))
     }
+
+    public func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint {
+        return self.project(point: point)
+    }
 }
 
 extension LineSegment: Transformable {

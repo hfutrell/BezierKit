@@ -373,11 +373,9 @@ internal class Utils {
         guard c1b.overlaps(c2b) else {
             return
         }
-        
-        let mid1 = 0.5 * (c1.t1 + c1.t2)
-        let mid2 = 0.5 * (c2.t1 + c2.t2)
-        let canSplit1 = mid1 > c1.t1 && mid1 < c1.t2
-        let canSplit2 = mid2 > c2.t1 && mid2 < c2.t2
+
+        let canSplit1 = c1.canSplit
+        let canSplit2 = c2.canSplit
         let shouldRecurse1 = canSplit1 && ((c1b.size.x + c1b.size.y) >= threshold)
         let shouldRecurse2 = canSplit2 && ((c2b.size.x + c2b.size.y) >= threshold)
 

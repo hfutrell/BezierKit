@@ -14,7 +14,12 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t1: CGFloat
     public let t2: CGFloat
     public let curve: CurveType
-    
+
+    internal var canSplit: Bool {
+        let mid = 0.5 * (self.t1 + self.t2)
+        return mid > self.t1 && mid < self.t2
+    }
+
     internal init(curve: CurveType) {
         self.t1 = 0.0
         self.t2 = 1.0
@@ -161,74 +166,65 @@ extension BezierCurve {
 
     public func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint {
 
-        func lowerBound(_ point: CGPoint, _ curve: Self) -> CGFloat {
-            // distance from point to curve >= this number
-            let line = LineSegment(p0: curve.startingPoint, p1: curve.endingPoint)
-            let flatness = curve.flatness()
-            let f = sqrt(flatness)
-            let d = distance(point, line.project(point: point)) - f
-            return d < 0 ? 0 : d
+        let maxIterations = 1000
+
+        var list: [Subcurve<Self>] = [Subcurve(curve: self)]
+
+        let distanceStartingPoint = distance(self.startingPoint, point)
+        var bestMax = distanceStartingPoint
+        var bestPoint = self.startingPoint
+
+        let distanceEndingPoint = distance(self.endingPoint, point)
+        if distanceEndingPoint < bestMax {
+            bestMax = distanceEndingPoint
+            bestPoint = self.endingPoint
         }
 
-        var list: [Self] = [self]
-        var iterations = 0
-        var bestCurve: Self? = nil
-        var bestMax = CGFloat.infinity
+        func needCheckSubcurve(_ subcurve: Subcurve<Self>) -> Bool {
+            let line = LineSegment(p0: subcurve.curve.startingPoint, p1: subcurve.curve.endingPoint)
+            let f = sqrt(subcurve.curve.flatness())
+            guard 0.5 * line.length() + f > errorThreshold else {
+                return false
+            }
+            var lowerBoundOfDistance = distance(point, line.project(point: point)) - f
+            if lowerBoundOfDistance < 0 { lowerBoundOfDistance = 0 }
+            return lowerBoundOfDistance < bestMax
+        }
 
-        var done = false
-        while list.count > 0 && !done {
-            
-            bestMax = CGFloat.infinity
-            bestCurve = nil
-            
-            var nextList: [Self] = []
+        var iterations = 0
+        while list.count > 0, iterations < maxIterations {
+            var nextList: [Subcurve<Self>] = []
             nextList.reserveCapacity(10)
-            // find the best upper bound
-            for c in list {
-                iterations += 1
-                let mmax = distance(point, c.compute(0.5))
+            // for each item in our list, check the midpoint
+            // to try and find a new best
+            list.forEach {
+                let curvePoint = $0.curve.compute(0.5)
+                let mmax = distance(point, curvePoint)
                 if mmax < bestMax {
                     bestMax = mmax
-                    bestCurve = c
+                    bestPoint = curvePoint
                 }
             }
-            // check if our best curve is good enough to be done
-            let temp1 = distance(bestCurve!.startingPoint, bestCurve!.endingPoint)
-            let temp2 = 2.0 * sqrt(bestCurve!.flatness())
-            if (temp1 + temp2) < errorThreshold {
-                // TODO: this just means that within the segment the answer is sufficiently close
-                // but it might be another segment entirely that has the clost point if worst(lb) < best(up)
-                // so what we should do is compile a list of candidates
-                done = true
-                break
-            }
-            // for each curve, recurse on those whose lower bound is equal or better than the best upper bound
-            var exclusions = 0
-            for c in list {
-                if lowerBound(point, c) < bestMax {
-                    let (left, right) = c.split(at: 0.5)
-                    if lowerBound(point, left) < bestMax {
+            iterations += list.count
+            // for each item in our list, if the curve
+            // is large enough to be split, do so.
+            // add the subcurves to the next list if they are large
+            // enough to exceed our error threshold and they are close enough
+            // to possibly have a solution
+            list.forEach {
+                if $0.canSplit, needCheckSubcurve($0) {
+                    let (left, right) = $0.split(at: 0.5)
+                    if needCheckSubcurve(left) {
                         nextList.append(left)
                     }
-                    else {
-                        exclusions += 1
-                    }
-                    if lowerBound(point, right) < bestMax {
+                    if needCheckSubcurve(right) {
                         nextList.append(right)
                     }
-                    else {
-                        exclusions += 1
-                    }
-                }
-                else {
-                    exclusions += 2
                 }
             }
-           // print("iteration has \(nextList.count) items (excluded \(exclusions) out of \(2*list.count).")
             list = nextList
         }
-      //  print("finished with \(iterations) iterations")
-        return LineSegment(p0: bestCurve!.startingPoint, p1: bestCurve!.endingPoint).project(point: point)
+        return bestPoint
     }
     
     public func generateLookupTable(withSteps steps: Int = 100) -> [CGPoint] {
@@ -472,7 +468,7 @@ extension BezierCurve {
     // MARK: - intersection
 
     public func project(point: CGPoint) -> CGPoint {
-        return self.project(point: point, errorThreshold: 0.01)
+        return self.project(point: point, errorThreshold: BezierKit.defaultIntersectionThreshold)
     }
 
     // MARK: - outlines
