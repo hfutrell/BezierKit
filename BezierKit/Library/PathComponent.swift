@@ -193,7 +193,7 @@ public final class PathComponent: NSObject, NSCoding {
         return PathComponent(curves: offsetCurves)
     }
     
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, errorThreshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> Bool {
         var found = false
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
@@ -202,7 +202,7 @@ public final class PathComponent: NSObject, NSCoding {
             }
             else if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
-                if distance(p, curve.project(point: p)) < d {
+                if distance(p, curve.project(point: p, errorThreshold: errorThreshold)) < d {
                     found = true
                 }
             }

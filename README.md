@@ -24,9 +24,8 @@ Please note that BezierKit is currently pre-release software. Its releases follo
 - [x] Lengths of curves via Legendre-Gauss quadrature
 - [x] Intersects curves and computes cubic curve self-intersection to any degree of accuracy
 - [x] Determines bounding boxes, extrema,
-- [ ] and inflection points
 - [x] Locates nearest on-curve location to point
-- [ ] to any degree of accuracy
+- [x] to any degree of accuracy
 - [x] Splits curves into subcurves
 - [x] Offsets and outlines curves
 - [ ] Comprehensive Unit and Integration Test Coverage
@@ -46,7 +45,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.2.0'
+    pod 'BezierKit', '>= 0.2.1'
 end
 ```
 

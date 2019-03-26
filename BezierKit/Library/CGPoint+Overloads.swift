@@ -12,7 +12,7 @@ public extension CGPoint {
     var length: CGFloat {
         return sqrt(self.lengthSquared)
     }
-    private var lengthSquared: CGFloat {
+    internal var lengthSquared: CGFloat {
         return self.dot(self)
     }
     func normalize() -> CGPoint {

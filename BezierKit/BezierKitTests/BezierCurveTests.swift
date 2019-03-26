@@ -113,11 +113,11 @@ class BezierCurveTests: XCTestCase {
     
     func testProject() {
         // line segments override the project implementation, so test them specifically
-        let epsilon: CGFloat = 1.0e-3 // TODO: notice that this epsilon value is actually pretty big? it's because project uses a fixed number of iterations. See the flatness-project branch for a potential better solution.
+        let epsilon: CGFloat = 2.0e-4
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let p1 = l.project(point: CGPoint(x: 0.0, y: 0.0)) // should project to p0
         XCTAssertEqual(p1, CGPoint(x: 1.0, y: 2.0))
-        let p2 = l.project(point: CGPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
+        let p2 = l.project(point: CGPoint(x: 1.0, y: 4.0), errorThreshold: epsilon) // should project to l.compute(0.25)
         XCTAssertEqual(p2, CGPoint(x: 2.0, y: 3.0))
         let p3 = l.project(point: CGPoint(x: 6.0, y: 7.0))
         XCTAssertEqual(p3, CGPoint(x: 5.0, y: 6.0)) // should project to p1
@@ -129,9 +129,12 @@ class BezierCurveTests: XCTestCase {
         XCTAssertEqual(p5, CGPoint(x: 5.0, y: 1.0))
         let p6 = c.project(point: CGPoint(x: 3.0, y: 2.0)) // should project to center of curve
         XCTAssertEqual(p6, CGPoint(x: 3.0, y: 1.75))
-        let p7 = c.project(point: c.compute(0.831211) + c.normal(0.831211)) // should project back to (roughly) c.compute(0.831211)
-        XCTAssert(distance(p7, c.compute(0.831211)) < epsilon)
 
+        let t: CGFloat = 0.831211
+        let pointToProject = c.compute(t) + c.normal(t)
+        let expectedAnswer = c.compute(t)
+        let p7 = c.project(point: pointToProject, errorThreshold: epsilon) // should project back to (roughly) c.compute(0.831211)
+        XCTAssert(distance(p7, expectedAnswer) < epsilon)
     }
     
     static let lineSegmentForOutlining = LineSegment(p0: CGPoint(x: -10, y: -5), p1: CGPoint(x: 20, y: 10))
