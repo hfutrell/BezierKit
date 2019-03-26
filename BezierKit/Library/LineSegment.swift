@@ -124,3 +124,7 @@ extension LineSegment: Reversible {
         return LineSegment(p0: self.p1, p1: self.p0)
     }
 }
+
+extension LineSegment: Flatness {
+    internal var flatness: CGFloat { return 0.0 }
+}
