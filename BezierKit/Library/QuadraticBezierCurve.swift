@@ -193,3 +193,10 @@ extension QuadraticBezierCurve: Reversible {
         return QuadraticBezierCurve(p0: self.p2, p1: self.p1, p2: self.p0)
     }
 }
+
+extension QuadraticBezierCurve: Flatness {
+    internal var flatness: CGFloat {
+        let a: CGPoint = 2.0 * self.p1 - self.p0 - self.p2
+        return (1.0 / 16.0) * (a.x * a.x + a.y * a.y)
+    }
+}
