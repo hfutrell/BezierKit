@@ -49,7 +49,7 @@ final internal class BVH {
     }
     
     init(boxes elementBoxes: [BoundingBox]) {
-        assert(elementBoxes.count > 0)
+        assert(!elementBoxes.isEmpty)
         self.elementCount = elementBoxes.count
         let inodeCount = self.elementCount-1 // in complete binary tree the number of inodes (internal nodes) is one fewer than the leafs
         // compute `lastRowIndex` the index of the first leaf node in the bottom row of the tree

@@ -159,7 +159,7 @@ class LineSegmentTests: XCTestCase {
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 1.0, y: 2.0))
         let l2 = LineSegment(p0: CGPoint(x: 0.0, y: 2.001), p1: CGPoint(x: 2.0, y: 2.001))
         let i = l1.intersections(with: l2)
-        XCTAssertEqual(i.count, 0)
+        XCTAssert(i.isEmpty)
     }
     
     func testIntersectsLineNoOutsideInterval2() {
@@ -167,7 +167,7 @@ class LineSegmentTests: XCTestCase {
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 1.0, y: 2.0))
         let l2 = LineSegment(p0: CGPoint(x: 2.0, y: 1.0), p1: CGPoint(x: 1.001, y: 1.0))
         let i = l1.intersections(with: l2)
-        XCTAssertEqual(i.count, 0)
+        XCTAssert(i.isEmpty)
     }
     
     func testIntersectsLineYesEdge1() {
@@ -231,19 +231,19 @@ class LineSegmentTests: XCTestCase {
         let l1 = LineSegment(p0: CGPoint(x: -2.0, y: -1.0), p1: CGPoint(x: 2.0, y: 1.0))
         let l2 = LineSegment(p0: CGPoint(x: -4.0, y: -1.0), p1: CGPoint(x: 4.0, y: 3.0))
         let i1 = l1.intersections(with: l2)
-        XCTAssertEqual(i1.count, 0)
-        
+        XCTAssertTrue(i1.isEmpty)
+
         // this is a very, very special case! Not only is the determinant zero, but the *minor* determinants are also zero, so without special care we can get 0*(1/det) = 0*Inf = NaN!
         let l3 = LineSegment(p0: CGPoint(x: -5.0, y: -5.0), p1: CGPoint(x: 5.0, y: 5.0))
         let l4 = LineSegment(p0: CGPoint(x: -1.0, y: -1.0), p1: CGPoint(x: 1.0, y: 1.0))
         let i2 = l3.intersections(with: l4)
-        XCTAssertEqual(i2.count, 0)
-        
+        XCTAssertTrue(i2.isEmpty)
+
         // very, very nearly parallel lines
         let l5 = LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0))
         let l6 = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 2.0 + 1.0e-15))
         let i3 = l5.intersections(with: l6)
-        XCTAssertEqual(i3.count, 0)
+        XCTAssertTrue(i3.isEmpty)
     }
     
     // -- MARK: - line-curve intersection tests

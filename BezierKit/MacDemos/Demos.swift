@@ -215,7 +215,7 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 let hull = curve.hull(0.5)
                                 Draw.drawHull(context, hull: hull)
-                                Draw.drawCircle(context, center: hull[hull.count-1], radius: 5)
+                                Draw.drawCircle(context, center: hull.last!, radius: 5)
     })
     static let demo12 = Demo(title: ".project(point)",
                              quadraticControlPoints: quadraticControlPoints,
@@ -258,7 +258,7 @@ class Demos {
                                     let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 }
-                                if reduced.count > 0 {
+                                if !reduced.isEmpty {
                                     for i in 0..<reduced.count {
                                         let c = reduced[i]
                                         Draw.setColor(context, color: Draw.black)
@@ -299,7 +299,7 @@ class Demos {
                                     let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 }
-                                if reduced.count > 0 {
+                                if !reduced.isEmpty {
                                     for i in 0..<reduced.count {
                                         let c = reduced[i]
                                         if i > 0 {

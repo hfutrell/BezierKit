@@ -38,7 +38,7 @@ public extension BezierCurve {
 private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -> [Intersection] {
     let sortedIntersections = intersections.sorted(by: <)
     return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next : Intersection) in
-        return (intersection.count == 0 || intersection[intersection.count-1] != next) ? intersection + [next] : intersection
+        return (intersection.isEmpty || (intersection.last!) != next) ? intersection + [next] : intersection
     }
 }
 

@@ -122,7 +122,7 @@ extension BezierCurve {
         let xyz = self.internalExtrema(includeInflection: true)
         var roots = xyz.flatMap{$0}.sorted() // the roots for each dimension, flattened and sorted
         var values: [CGFloat] = []
-        if roots.count > 0 {
+        if !roots.isEmpty {
             values.reserveCapacity(roots.count)
             var lastInserted: CGFloat = -CGFloat.infinity
             for i in 0..<roots.count { // loop ensures (pre-sorted) roots are unique when added to values
@@ -583,7 +583,7 @@ extension Flatness {
         }
 
         var iterations = 0
-        while list.count > 0, iterations < maxIterations {
+        while !list.isEmpty, iterations < maxIterations {
             var nextList: [Subcurve<Self>] = []
             nextList.reserveCapacity(10)
             // for each item in our list, check the midpoint
