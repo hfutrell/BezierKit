@@ -99,11 +99,11 @@ final internal class BVH {
         return self.boundingBoxes[BVH.elementIndexToNodeIndex(index, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)]
     }
 
-    func intersects(callback: (Int, Int) -> Void) {
-        self.intersects(node: self, callback: callback)
+    func enumerateSelfIntersections(callback: (Int, Int) -> Void) {
+        self.enumerateIntersections(with: self, callback: callback)
     }
     
-    func intersects(node other: BVH, callback: (Int, Int) -> Void) {
+    func enumerateIntersections(with other: BVH, callback: (Int, Int) -> Void) {
         let elementCount1 = self.elementCount
         let elementCount2 = other.elementCount
         let boxes1 = self.boundingBoxes

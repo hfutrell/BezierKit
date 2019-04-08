@@ -135,7 +135,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(r[0].curve, l)
     }
     
-    func testIntersects() {
+    func testSelfIntersections() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let i = l.selfIntersections()
         XCTAssert(i.count == 0) // lines never self-intersect
@@ -144,7 +144,7 @@ class LineSegmentTests: XCTestCase {
     
     // -- MARK: - line-line intersection tests
     
-    func testIntersectsLineYesInsideInterval() {
+    func testIntersectionsLineYesInsideInterval() {
         // a normal line-line intersection that happens in the middle of a line
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 7.0, y: 8.0))
         let l2 = LineSegment(p0: CGPoint(x: 1.0, y: 4.0), p1: CGPoint(x: 5.0, y: 0.0))
@@ -154,7 +154,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[0].t2, 1.0 / 4.0)
     }
     
-    func testIntersectsLineNoOutsideInterval1() {
+    func testIntersectionsLineNoOutsideInterval1() {
         // two lines that do not intersect because the intersection happens outside the line-segment
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 1.0, y: 2.0))
         let l2 = LineSegment(p0: CGPoint(x: 0.0, y: 2.001), p1: CGPoint(x: 2.0, y: 2.001))
@@ -162,7 +162,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(i.isEmpty)
     }
     
-    func testIntersectsLineNoOutsideInterval2() {
+    func testIntersectionsLineNoOutsideInterval2() {
         // two lines that do not intersect because the intersection happens outside the *other* line segment
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 1.0, y: 2.0))
         let l2 = LineSegment(p0: CGPoint(x: 2.0, y: 1.0), p1: CGPoint(x: 1.001, y: 1.0))
@@ -170,7 +170,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(i.isEmpty)
     }
     
-    func testIntersectsLineYesEdge1() {
+    func testIntersectionsLineYesEdge1() {
         // two lines that intersect on the 1st line's edge
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 1.0, y: 2.0))
         let l2 = LineSegment(p0: CGPoint(x: 2.0, y: 1.0), p1: CGPoint(x: 1.0, y: 1.0))
@@ -180,7 +180,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[0].t2, 1.0)
     }
     
-    func testIntersectsLineYesEdge2() {
+    func testIntersectionsLineYesEdge2() {
         // two lines that intersect on the 2nd line's edge
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 1.0, y: 2.0))
         let l2 = LineSegment(p0: CGPoint(x: 0.0, y: 2.0), p1: CGPoint(x: 2.0, y: 2.0))
@@ -190,7 +190,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[0].t2, 0.5)
     }
 
-    func testIntersectsLineYesLineStart() {
+    func testIntersectionsLineYesLineStart() {
         // two lines that intersect at the start of the first line
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 2.0, y: 1.0))
         let l2 = LineSegment(p0: CGPoint(x: -2.0, y: 2.0), p1: CGPoint(x: 1.0, y: 0.0))
@@ -200,7 +200,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[0].t2, 1.0)
     }
     
-    func testIntersectsLineYesLineEnd() {
+    func testIntersectionsLineYesLineEnd() {
         // two lines that intersect at the end of the first line
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 0.0), p1: CGPoint(x: 2.0, y: 1.0))
         let l2 = LineSegment(p0: CGPoint(x: 2.0, y: 1.0), p1: CGPoint(x: -2.0, y: 2.0))
@@ -210,7 +210,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[0].t2, 0.0)
     }
     
-    func testIntersectsLineAsCurve() {
+    func testIntersectionsLineAsCurve() {
         // ensure that intersects(curve:) calls into the proper implementation
         let l1: LineSegment = LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0))
         let l2: BezierCurve = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 0.0)) as BezierCurve
@@ -225,7 +225,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i2[0].t2, 0.5)
     }
     
-    func testIntersectsLineNoParallel() {
+    func testIntersectionsLineNoParallel() {
         
         // this is a special case where determinant is zero
         let l1 = LineSegment(p0: CGPoint(x: -2.0, y: -1.0), p1: CGPoint(x: 2.0, y: 1.0))
@@ -248,7 +248,7 @@ class LineSegmentTests: XCTestCase {
     
     // -- MARK: - line-curve intersection tests
     
-    func testIntersectsQuadratic() {
+    func testIntersectionsQuadratic() {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         // q is a quadratic where y(x) = 2 - 2(x-1)^2
         let epsilon: CGFloat = 0.00001
@@ -280,7 +280,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssert((l2.compute(i2[1].t1) - q.compute(i2[1].t2)).length < epsilon)
     }
     
-    func testIntersectsQuadraticSpecialCase() {
+    func testIntersectionsQuadraticSpecialCase() {
         // this is case that failed in the real-world
         let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
         let q = QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1))
@@ -290,7 +290,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i.first?.t2, 0)
     }
     
-    func testIntersectsCubic() {
+    func testIntersectionsCubic() {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         let epsilon: CGFloat = 0.00001
         let c: CubicBezierCurve = CubicBezierCurve(p0: CGPoint(x: -1, y: 0),
@@ -320,7 +320,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i2[2].t2, 0.0, accuracy: epsilon)
     }
         
-    func testIntersectsDegenerateCubic1() {
+    func testIntersectionsDegenerateCubic1() {
         // a special case where the cubic is degenerate (it can actually be described as a quadratic)
         let epsilon: CGFloat = 0.00001
         let fiveThirds: CGFloat = 5.0 / 3.0
@@ -335,7 +335,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
     
-    func testIntersectsDegenerateCubic2() {
+    func testIntersectionsDegenerateCubic2() {
         // a special case where the cubic is degenerate (it can actually be described as a line)
         let epsilon: CGFloat = 0.00001
         let c: CubicBezierCurve = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0),
@@ -348,7 +348,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
-    func testIntersectsCubicSpecialCase() {
+    func testIntersectionsCubicSpecialCase() {
         // this is case that failed in the real-world
         let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
         let q = CubicBezierCurve(quadratic: QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
@@ -358,7 +358,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i.first?.t2, 0)
     }
     
-    func testIntersectsCubicRootsEdgeCase() {
+    func testIntersectionsCubicRootsEdgeCase() {
         // this data caused issues in practice because because 'd' in the roots calculation is very near, but not exactly, zero.
         let c = CubicBezierCurve(p0: CGPoint(x: 201.48419096574196, y: 570.7720830272123),
                                  p1: CGPoint(x: 202.27135851996428, y: 570.7720830272123),

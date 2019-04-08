@@ -116,7 +116,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path4.components[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
     
-    func testIntersects() {
+    func testIntersections() {
         let circleCGPath = CGPath(ellipseIn: CGRect(x: 2.0, y: 3.0, width: 2.0, height: 2.0), transform: nil)
         let circlePath = Path(cgPath: circleCGPath) // a circle centered at (3, 4) with radius 2
         
@@ -136,7 +136,7 @@ class PathTests: XCTestCase {
         XCTAssertFalse(emptyPath.selfIntersects())
     }
     
-    func testSelfIntersectsSingleComponentPath() {
+    func testSelfIntersectionsSingleComponentPath() {
         let singleComponentPath = { () -> Path in
             let points: [CGPoint] = [
                 CGPoint(x: -1, y: 0),

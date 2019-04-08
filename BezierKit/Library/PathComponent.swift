@@ -254,7 +254,7 @@ public final class PathComponent: NSObject, NSCoding {
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects(node: other.bvh) { i1, i2 in
+        self.bvh.enumerateIntersections(with: other.bvh) { i1, i2 in
             let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, accuracy: accuracy)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
@@ -289,7 +289,7 @@ public final class PathComponent: NSObject, NSCoding {
     
     public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
-        self.bvh.intersects() { i1, i2 in
+        self.bvh.enumerateSelfIntersections() { i1, i2 in
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
             /*if i1 == i2 {
