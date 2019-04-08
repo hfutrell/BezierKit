@@ -193,7 +193,7 @@ public final class PathComponent: NSObject, NSCoding {
         return PathComponent(curves: offsetCurves)
     }
     
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, errorThreshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> Bool {
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, errorThreshold: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         var found = false
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
@@ -211,14 +211,14 @@ public final class PathComponent: NSObject, NSCoding {
         return found
     }
     
-    private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
+    private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
         switch p2.order(at: i2) {
         case 1:
             return helperIntersectsCurveLine(curve, p2.line(at: i2))
         case 2:
-            return helperIntersectsCurveCurve(Subcurve(curve: curve), Subcurve(curve: p2.quadratic(at: i2)), threshold: threshold)
+            return helperIntersectsCurveCurve(Subcurve(curve: curve), Subcurve(curve: p2.quadratic(at: i2)), accuracy: accuracy)
         case 3:
-            return helperIntersectsCurveCurve(Subcurve(curve: curve), Subcurve(curve: p2.cubic(at: i2)), threshold: threshold)
+            return helperIntersectsCurveCurve(Subcurve(curve: curve), Subcurve(curve: p2.cubic(at: i2)), accuracy: accuracy)
         default:
             fatalError("unsupported")
         }
@@ -228,7 +228,7 @@ public final class PathComponent: NSObject, NSCoding {
         switch component.order(at: index) {
         case 1:
             let element = component.line(at: index)
-            return reversed ? line.intersects(curve: element) : element.intersects(line: line)
+            return reversed ? line.intersections(with: component.line(at: index)) : element.intersections(with: line)
         case 2:
             return helperIntersectsCurveLine(component.quadratic(at: index), line, reversed: reversed)
         case 3:
@@ -238,24 +238,24 @@ public final class PathComponent: NSObject, NSCoding {
         }
     }
 
-    private static func intersectionsBetweenElements(_ i1: Int, _ i2: Int, _ p1: PathComponent, _ p2: PathComponent, threshold: CGFloat) -> [Intersection] {
+    private static func intersectionsBetweenElements(_ i1: Int, _ i2: Int, _ p1: PathComponent, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] {
         switch p1.order(at: i1) {
         case 1:
             return PathComponent.intersectionsBetweenElementAndLine(i2, p1.line(at: i1), p2, reversed: true)
         case 2:
-            return PathComponent.intersectionBetween(p1.quadratic(at: i1), i2, p2, threshold: threshold)
+            return PathComponent.intersectionBetween(p1.quadratic(at: i1), i2, p2, accuracy: accuracy)
         case 3:
-            return PathComponent.intersectionBetween(p1.cubic(at: i1), i2, p2, threshold: threshold)
+            return PathComponent.intersectionBetween(p1.cubic(at: i1), i2, p2, accuracy: accuracy)
         default:
             fatalError("unsupported")
         }
     }
     
-    public func intersects(component other: PathComponent, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
-        precondition(other !== self, "use intersects(threshold:) for self intersection testing.")
+    public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
+        precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
         self.bvh.intersects(node: other.bvh) { i1, i2 in
-            let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, threshold: threshold)
+            let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, accuracy: accuracy)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
@@ -287,7 +287,7 @@ public final class PathComponent: NSObject, NSCoding {
         return true
     }
     
-    public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathComponentIntersection] {
+    public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
         self.bvh.intersects() { i1, i2 in
             var elementIntersections: [Intersection] = []
@@ -295,7 +295,7 @@ public final class PathComponent: NSObject, NSCoding {
             /*if i1 == i2 {
                 // we are intersecting a path element against itself
                 if let c = c1 as? CubicBezierCurve {
-                    elementIntersections = c.intersects(threshold: threshold)
+                    elementIntersections = c.selfIntersections(accuracy: accuracy)
                 }
             }
             else*/ if i1 < i2 {
@@ -306,7 +306,7 @@ public final class PathComponent: NSObject, NSCoding {
                     elementIntersections = []
                 }
                 else {
-                    elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, self, threshold: threshold).filter {
+                    elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, self, accuracy: accuracy).filter {
                         if areNeighbors, $0.t1 == 1.0 {
                             return false // exclude intersections of i and i+1 at t=1
                         }

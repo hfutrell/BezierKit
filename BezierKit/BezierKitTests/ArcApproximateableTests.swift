@@ -21,7 +21,7 @@ class ArcApproximateableTests: XCTestCase {
         super.tearDown()
     }
     
-    func isGoodApproximation(arcs: [Arc], curve: BezierCurve, errorThreshold: CGFloat) -> Bool {
+    func isGoodApproximation(arcs: [Arc], curve: BezierCurve, accuracy: CGFloat) -> Bool {
         // we need at least one arc
         if arcs.count == 0 {
             return false
@@ -52,7 +52,7 @@ class ArcApproximateableTests: XCTestCase {
             let d1: CGFloat = distance(a.origin, subCurve.compute(t1))
             let d2: CGFloat = distance(a.origin, subCurve.compute(t2))
             let error = abs(a.radius - d1) + abs(a.radius - d2)
-            if error > errorThreshold {
+            if error > accuracy {
                 return false
             }
         }
@@ -117,7 +117,7 @@ class ArcApproximateableTests: XCTestCase {
         XCTAssertEqual(result[0].endAngle, expectedResult.endAngle, accuracy: epsilon)
         XCTAssertEqual(result[0].interval, expectedResult.interval)
         // just for good measure test that it passes the good approximation test
-        XCTAssert(isGoodApproximation(arcs: result, curve: q, errorThreshold: r))
+        XCTAssert(isGoodApproximation(arcs: result, curve: q, accuracy: r))
     }
     
     func testArcsCubicMultipleArcs() {
@@ -128,7 +128,7 @@ class ArcApproximateableTests: XCTestCase {
                                  p3: CGPoint(x: 4.0, y: 0.0))
         let errorThreshold: CGFloat = 0.01
         let result = c.arcs(errorThreshold: errorThreshold)
-        XCTAssert(isGoodApproximation(arcs: result, curve: c, errorThreshold: errorThreshold))
+        XCTAssert(isGoodApproximation(arcs: result, curve: c, accuracy: errorThreshold))
     }
     
 }

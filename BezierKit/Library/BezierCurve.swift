@@ -382,7 +382,7 @@ extension BezierCurve {
     // MARK: - intersection
 
     public func project(point: CGPoint) -> CGPoint {
-        return self.project(point: point, errorThreshold: BezierKit.defaultIntersectionThreshold)
+        return self.project(point: point, errorThreshold: BezierKit.defaultIntersectionAccuracy)
     }
 
     // MARK: - outlines
@@ -472,11 +472,11 @@ extension BezierCurve {
     
     // MARK: shapes
     
-    public func outlineShapes(distance d1: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
-        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, threshold: threshold)
+    public func outlineShapes(distance d1: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [Shape] {
+        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, accuracy: accuracy)
     }
     
-    public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [Shape] {
         let outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2)
         var shapes: [Shape] = []
         let len = outline.elementCount
@@ -488,7 +488,7 @@ extension BezierCurve {
     }
 }
 
-public let defaultIntersectionThreshold = CGFloat(0.5)
+public let defaultIntersectionAccuracy = CGFloat(0.5)
 
 // MARK: factory
 
@@ -536,9 +536,13 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
     func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint
-    func intersects(threshold: CGFloat) -> [Intersection]
-    func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
-    func intersects(line: LineSegment) -> [Intersection]
+    // intersection routines
+    func selfIntersects(accuracy: CGFloat) -> Bool
+    func selfIntersections(accuracy: CGFloat) -> [Intersection]
+    func intersects(_ line: LineSegment) -> Bool
+    func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool
+    func intersections(with line: LineSegment) -> [Intersection]
+    func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
 internal protocol NonlinearBezierCurve: BezierCurve {

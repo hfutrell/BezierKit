@@ -270,7 +270,7 @@ class Demos {
                                     }
                                 }
     })
-    static let demo15 = Demo(title: ".arcs() and .arcs(threshold)",
+    static let demo15 = Demo(title: ".arcs() and .arcs(accuracy)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -359,14 +359,14 @@ class Demos {
                                     Draw.drawShape(context, shape: shape)
                                 }
     })
-    static let demo20 = Demo(title: ".intersects()",
+    static let demo20 = Demo(title: ".selfIntersections()",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 180), CGPoint(x: 170, y: 165), CGPoint(x: 65, y: 70)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                for intersection in curve.intersects() {
+                                for intersection in curve.selfIntersections() {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
                                 if demoState.quadratic {
@@ -375,7 +375,7 @@ class Demos {
                                                   offset: CGPoint(x: 15, y: 160))
                                 }
     })
-    static let demo21  = Demo(title: ".intersects(line)",
+    static let demo21  = Demo(title: ".intersections(with line: LineSegment)",
                               quadraticControlPoints: [CGPoint(x: 58, y: 173),CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
                               cubicControlPoints: [CGPoint(x: 53, y: 163), CGPoint(x: 27, y: 19), CGPoint(x: 182, y: 176), CGPoint(x: 155, y: 36)],
                               drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -386,11 +386,11 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawLine(context, from: line.p0, to: line.p1)
                                 Draw.setColor(context, color: Draw.black)
-                                for intersection in curve.intersects(line: line) {
+                                for intersection in curve.intersections(with: line) {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
-    static let demo22 = Demo(title: ".intersects(curve)",
+    static let demo22 = Demo(title: ".intersections(with curve: BezierCurve)",
                              quadraticControlPoints: [CGPoint(x: 0, y: 0),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
                              cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -401,7 +401,7 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawCurve(context, curve: curve2)
                                 Draw.setColor(context, color: Draw.black)
-                                for intersection in curve.intersects(curve: curve2) {
+                                for intersection in curve.intersections(with: curve2) {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
@@ -464,7 +464,7 @@ class Demos {
 //                                        v = v.next
 //                                    } while v !== first
                                     
-                                    let subtracted = path1.intersecting(path2) ?? path1
+                                    let subtracted = path1.intersect(path2) ?? path1
                                     Draw.drawPath(context, subtracted)
                                 }
     })
