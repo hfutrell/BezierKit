@@ -549,9 +549,16 @@ internal protocol NonlinearBezierCurve: BezierCurve {
     // intentionally empty, just declare conformance if you're not a line
 }
 
-internal protocol Flatness: BezierCurve {
+public protocol Flatness: BezierCurve {
     // the flatness of a curve is defined as the square of the maximum distance it is from a line connecting its endpoints https://jeremykun.com/2013/05/11/bezier-curves-and-picasso/
+    var flatnessSquared: CGFloat { get }
     var flatness: CGFloat { get }
+}
+
+public extension Flatness {
+    var flatness: CGFloat {
+        return sqrt(flatnessSquared)
+    }
 }
 
 extension Flatness {
@@ -573,7 +580,7 @@ extension Flatness {
 
         func needCheckSubcurve(_ subcurve: Subcurve<Self>) -> Bool {
             let line = LineSegment(p0: subcurve.curve.startingPoint, p1: subcurve.curve.endingPoint)
-            let f = sqrt(subcurve.curve.flatness)
+            let f = subcurve.curve.flatness
             guard 0.5 * line.length() + f > errorThreshold else {
                 return false
             }

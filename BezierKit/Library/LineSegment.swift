@@ -126,5 +126,6 @@ extension LineSegment: Reversible {
 }
 
 extension LineSegment: Flatness {
-    internal var flatness: CGFloat { return 0.0 }
+    public var flatnessSquared: CGFloat { return 0.0 }
+    public var flatness: CGFloat { return 0.0 }
 }
