@@ -170,7 +170,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         
         self.init(components: context.components)
     }
-    
+
+    convenience public init(curve: BezierCurve) {
+        self.init(components: [PathComponent(curves: [curve])])
+    }
+
     // MARK: - NSCoding
     // (cannot be put in extension because init?(coder:) is a designated initializer)
     
@@ -327,10 +331,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 }
 
 @objc(BezierKitPathPosition) public class IndexedPathLocation: NSObject {
-    internal let componentIndex: Int
-    internal let elementIndex: Int
-    internal let t: CGFloat
-    init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
+    public let componentIndex: Int
+    public let elementIndex: Int
+    public let t: CGFloat
+    public init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
         self.componentIndex = componentIndex
         self.elementIndex = elementIndex
         self.t = t

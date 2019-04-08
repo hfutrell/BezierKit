@@ -165,7 +165,7 @@ public final class PathComponent: NSObject {
         return self.bvh.boundingBox
     }
     
-    internal var isClosed: Bool {
+    public var isClosed: Bool {
         return self.startingPoint == self.endingPoint
     }
     
@@ -405,8 +405,8 @@ extension PathComponent: Reversible {
 }
 
 public struct IndexedPathComponentLocation {
-    let elementIndex: Int
-    let t: CGFloat
+    public let elementIndex: Int
+    public let t: CGFloat
 }
 
 public struct PathComponentIntersection {
