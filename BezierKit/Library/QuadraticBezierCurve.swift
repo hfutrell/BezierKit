@@ -180,10 +180,6 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         let temp3 = c * self.p2
         return temp1 + temp2 + temp3
     }
-
-    public func selfIntersects(accuracy: CGFloat) -> Bool {
-        return false
-    }
 }
 
 extension QuadraticBezierCurve: Transformable {

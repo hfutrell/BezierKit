@@ -270,7 +270,7 @@ class Demos {
                                     }
                                 }
     })
-    static let demo15 = Demo(title: ".arcs() and .arcs(accuracy)",
+    static let demo15 = Demo(title: ".arcs()",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
                              drawFunction: {(context: CGContext, demoState: DemoState) in

@@ -248,11 +248,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return augmentedGraph.booleanOperation(operation)
     }
     
-    @objc(subtractWithPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         return self.performBooleanOperation(.subtract, with: other.reversed(), accuracy: accuracy)
     }
     
-    @objc(unionWithPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(unionPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         guard self.isEmpty == false else {
             return other
         }
@@ -262,7 +262,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.performBooleanOperation(.union, with: other, accuracy: accuracy)
     }
     
-    @objc(intersectWithPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(intersectPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         return self.performBooleanOperation(.intersect, with: other, accuracy: accuracy)
     }
     
