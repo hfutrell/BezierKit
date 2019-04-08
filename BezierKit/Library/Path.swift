@@ -175,14 +175,12 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     // (cannot be put in extension because init?(coder:) is a designated initializer)
     
     public func encode(with aCoder: NSCoder) {
-        aCoder.encode(self.components)
+        aCoder.encode(self.data)
     }
     
-    required public init?(coder aDecoder: NSCoder) {
-        guard let array = aDecoder.decodeObject() as? Array<PathComponent> else {
-            return nil
-        }
-        self.components = array
+    required public convenience init?(coder aDecoder: NSCoder) {
+        guard let data = aDecoder.decodeData() else { return nil }
+        self.init(data: data)
     }
     
     // MARK: -

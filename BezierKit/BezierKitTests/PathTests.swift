@@ -884,4 +884,16 @@ class PathTests: XCTestCase {
             let _ = path1.subtract(path2, accuracy: 1.0e-3)
         }
     }
+
+    func testNSCoder() {
+        let l1 = LineSegment(p0: p1, p1: p2)
+        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let l2 = LineSegment(p0: p4, p1: p5)
+        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let path = Path(components: [PathComponent(curves: [l1, q1, l2, c1])])
+
+        let data = NSKeyedArchiver.archivedData(withRootObject: path)
+        let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
+        XCTAssertEqual(path, decodedPath)
+    }
 }

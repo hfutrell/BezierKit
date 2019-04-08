@@ -87,20 +87,5 @@ class PathComponentTests: XCTestCase {
         XCTAssertTrue(pathComponent1.isEqual(pathComponent2))
         XCTAssertFalse(pathComponent1.isEqual(pathComponent3))
     }
-    
-    func testNSCoder() {
-        
-        let l1 = LineSegment(p0: p1, p1: p2)
-        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
-        let l2 = LineSegment(p0: p4, p1: p5)
-        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
-        let pathComponent = PathComponent(curves: [l1, q1, l2, c1])
-
-        let data = NSKeyedArchiver.archivedData(withRootObject: pathComponent)
-        let decodedPathComponent = NSKeyedUnarchiver.unarchiveObject(with: data) as! PathComponent
-        XCTAssertEqual(pathComponent, decodedPathComponent )
-        
-    }
-    
 }
 

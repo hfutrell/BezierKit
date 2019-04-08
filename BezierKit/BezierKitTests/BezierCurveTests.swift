@@ -308,7 +308,6 @@ class BezierCurveTests: XCTestCase {
                                      p3: CGPoint(x: 1.0, y: 0.0))
         let i = curve.selfIntersections(accuracy: epsilon)
         XCTAssertEqual(i.count, 1, "wrong number of intersections!")
-        XCTAssert( (curve.compute(i[0].t1) - curve.compute(i[0].t2)).length < epsilon, "wrong or inaccurate intersection!" )
+        XCTAssert( distance(curve.compute(i[0].t1), curve.compute(i[0].t2)) < epsilon, "wrong or inaccurate intersection!" )
     }
-    
 }

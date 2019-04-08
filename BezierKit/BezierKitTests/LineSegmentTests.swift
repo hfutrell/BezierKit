@@ -134,14 +134,17 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(r[0].t2, 1.0)
         XCTAssertEqual(r[0].curve, l)
     }
-    
+
+    func testSelfIntersects() {
+        let l = LineSegment(p0: CGPoint(x: 3.0, y: 4.0), p1: CGPoint(x: 5.0, y: 6.0))
+        XCTAssertFalse(l.selfIntersects()) // lines never self-intersect
+    }
+
     func testSelfIntersections() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-        let i = l.selfIntersections()
-        XCTAssert(i.count == 0) // lines never self-intersect
-        XCTAssertFalse(l.selfIntersects())
+        XCTAssert(l.selfIntersections().count == 0) // lines never self-intersect
     }
-    
+
     // -- MARK: - line-line intersection tests
     
     func testIntersectionsLineYesInsideInterval() {

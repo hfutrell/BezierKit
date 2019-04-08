@@ -21,7 +21,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 }
 #endif
 
-public final class PathComponent: NSObject, NSCoding {
+public final class PathComponent: NSObject {
     
     private let offsets: [Int]
     internal let points: [CGPoint]
@@ -325,21 +325,7 @@ public final class PathComponent: NSObject, NSCoding {
         }
         return intersections
     }
-    
-    // MARK: - NSCoding
-    // (cannot be put in extension because init?(coder:) is a designated initializer)
-    
-    public func encode(with aCoder: NSCoder) {
-        aCoder.encode(self.orders)
-        aCoder.encode(self.points)
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        self.orders = aDecoder.decodeObject() as! [Int]
-        self.points = aDecoder.decodeObject() as! [CGPoint]
-        self.offsets = PathComponent.computeOffsets(from: self.orders)
-    }
-    
+
     // MARK: -
     
     override public func isEqual(_ object: Any?) -> Bool {
