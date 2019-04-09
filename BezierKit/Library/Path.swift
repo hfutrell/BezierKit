@@ -33,7 +33,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         
         var components: [PathComponent] = []
         func finishUp() {
-            if currentComponentPoints.isEmpty == false {
+            if currentComponentOrders.isEmpty == false {
                 components.append(PathComponent(points: currentComponentPoints, orders: currentComponentOrders))
                 currentComponentPoints = []
                 currentComponentOrders = []
