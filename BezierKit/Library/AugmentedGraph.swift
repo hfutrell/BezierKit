@@ -275,8 +275,8 @@ internal class PathLinkedListRepresentation {
 
 internal enum BooleanPathOperation {
     case union
-    case difference
-    case intersection
+    case subtract
+    case intersect
     case removeCrossings
 }
 
@@ -328,9 +328,9 @@ internal class AugmentedGraph {
             fallthrough
         case .union:
             return v.intersectionInfo.isExit
-        case .difference:
+        case .subtract:
             return isOnFirstCurve ? v.intersectionInfo.isExit : v.intersectionInfo.isEntry
-        case .intersection:
+        case .intersect:
             return v.intersectionInfo.isEntry
         }
     }
@@ -351,10 +351,10 @@ internal class AugmentedGraph {
         case .union:
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
-        case .difference:
+        case .subtract:
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
-        case .intersection:
+        case .intersect:
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
         }

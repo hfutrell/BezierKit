@@ -122,7 +122,7 @@ extension BezierCurve {
         let xyz = self.internalExtrema(includeInflection: true)
         var roots = xyz.flatMap{$0}.sorted() // the roots for each dimension, flattened and sorted
         var values: [CGFloat] = []
-        if roots.count > 0 {
+        if !roots.isEmpty {
             values.reserveCapacity(roots.count)
             var lastInserted: CGFloat = -CGFloat.infinity
             for i in 0..<roots.count { // loop ensures (pre-sorted) roots are unique when added to values
@@ -382,7 +382,7 @@ extension BezierCurve {
     // MARK: - intersection
 
     public func project(point: CGPoint) -> CGPoint {
-        return self.project(point: point, errorThreshold: BezierKit.defaultIntersectionThreshold)
+        return self.project(point: point, errorThreshold: BezierKit.defaultIntersectionAccuracy)
     }
 
     // MARK: - outlines
@@ -472,11 +472,11 @@ extension BezierCurve {
     
     // MARK: shapes
     
-    public func outlineShapes(distance d1: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
-        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, threshold: threshold)
+    public func outlineShapes(distance d1: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [Shape] {
+        return self.outlineShapes(distanceAlongNormal: d1, distanceOppositeNormal: d1, accuracy: accuracy)
     }
     
-    public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [Shape] {
+    public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [Shape] {
         let outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2)
         var shapes: [Shape] = []
         let len = outline.elementCount
@@ -488,7 +488,7 @@ extension BezierCurve {
     }
 }
 
-public let defaultIntersectionThreshold = CGFloat(0.5)
+public let defaultIntersectionAccuracy = CGFloat(0.5)
 
 // MARK: factory
 
@@ -536,18 +536,29 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
     func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint
-    func intersects(threshold: CGFloat) -> [Intersection]
-    func intersects(curve: BezierCurve, threshold: CGFloat) -> [Intersection]
-    func intersects(line: LineSegment) -> [Intersection]
+    // intersection routines
+    func selfIntersects(accuracy: CGFloat) -> Bool
+    func selfIntersections(accuracy: CGFloat) -> [Intersection]
+    func intersects(_ line: LineSegment) -> Bool
+    func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool
+    func intersections(with line: LineSegment) -> [Intersection]
+    func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
 internal protocol NonlinearBezierCurve: BezierCurve {
     // intentionally empty, just declare conformance if you're not a line
 }
 
-internal protocol Flatness: BezierCurve {
+public protocol Flatness: BezierCurve {
     // the flatness of a curve is defined as the square of the maximum distance it is from a line connecting its endpoints https://jeremykun.com/2013/05/11/bezier-curves-and-picasso/
+    var flatnessSquared: CGFloat { get }
     var flatness: CGFloat { get }
+}
+
+public extension Flatness {
+    var flatness: CGFloat {
+        return sqrt(flatnessSquared)
+    }
 }
 
 extension Flatness {
@@ -569,7 +580,7 @@ extension Flatness {
 
         func needCheckSubcurve(_ subcurve: Subcurve<Self>) -> Bool {
             let line = LineSegment(p0: subcurve.curve.startingPoint, p1: subcurve.curve.endingPoint)
-            let f = sqrt(subcurve.curve.flatness)
+            let f = subcurve.curve.flatness
             guard 0.5 * line.length() + f > errorThreshold else {
                 return false
             }
@@ -579,7 +590,7 @@ extension Flatness {
         }
 
         var iterations = 0
-        while list.count > 0, iterations < maxIterations {
+        while !list.isEmpty, iterations < maxIterations {
             var nextList: [Subcurve<Self>] = []
             nextList.reserveCapacity(10)
             // for each item in our list, check the midpoint

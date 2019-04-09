@@ -63,7 +63,7 @@ public struct Shape {
         return segments
     }
     
-    public func intersects(shape other: Shape, _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [ShapeIntersection] {
+    public func intersects(shape other: Shape, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [ShapeIntersection] {
         if self.boundingBox.overlaps(other.boundingBox) == false {
             return []
         }
@@ -72,8 +72,8 @@ public struct Shape {
         let a2: [BezierCurve] = other.nonvirtualSegments()
         for l1 in a1 {
             for l2 in a2 {
-                let iss = l1.intersects(curve: l2, threshold: threshold)
-                if iss.count > 0 {
+                let iss = l1.intersections(with: l2, accuracy: accuracy)
+                if !iss.isEmpty {
                     intersections.append(ShapeIntersection(curve1: l1, curve2: l2, intersections: iss))
                 }
             }

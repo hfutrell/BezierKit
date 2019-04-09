@@ -61,13 +61,17 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     
     public let components: [PathComponent]
     
-    @objc(point:isWithinDistanceOfBoundary:errorThreshold:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, errorThreshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> Bool {
+    @objc(point:isWithinDistanceOfBoundary:errorThreshold:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, errorThreshold: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return self.components.contains {
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d, errorThreshold: errorThreshold)
         }
     }
-    
-    @objc(intersectsWithThreshold:) public func intersects(threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
+
+    @objc(selfIntersectsWithAccuracy:) public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+        return !self.selfIntersections(accuracy: accuracy).isEmpty
+    }
+
+    @objc(selfIntersectionsWithAccuracy:) public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
         var intersections: [PathIntersection] = []
         for i in 0..<self.components.count {
             for j in i..<self.components.count {
@@ -75,17 +79,21 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                     PathIntersection(componentIntersection: componentIntersection, componentIndex1: i, componentIndex2: j)
                 }
                 if i == j {
-                    intersections += self.components[i].intersects(threshold: threshold).map(componentIntersectionToPathIntersection)
+                    intersections += self.components[i].selfIntersections(accuracy: accuracy).map(componentIntersectionToPathIntersection)
                 }
                 else {
-                    intersections += self.components[i].intersects(component: self.components[j], threshold: threshold).map(componentIntersectionToPathIntersection)
+                    intersections += self.components[i].intersections(with: self.components[j], accuracy: accuracy).map(componentIntersectionToPathIntersection)
                 }
             }
         }
         return intersections
     }
-    
-    @objc(intersectsWithPath:threshold:) public func intersects(path other: Path, threshold: CGFloat = BezierKit.defaultIntersectionThreshold) -> [PathIntersection] {
+
+    @objc(intersectsPath:accuracy:) public func intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+        return !self.intersections(with: other, accuracy: accuracy).isEmpty
+    }
+
+    @objc(intersectionsWithPath:accuracy:) public func intersections(with other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return []
         }
@@ -97,7 +105,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 }
                 let s1 = self.components[i]
                 let s2 = other.components[j]
-                let componentIntersections: [PathComponentIntersection] = s1.intersects(component: s2, threshold: threshold)
+                let componentIntersections: [PathComponentIntersection] = s1.intersections(with: s2, accuracy: accuracy)
                 intersections += componentIntersections.map(componentIntersectionToPathIntersection)
             }
         }
@@ -162,19 +170,21 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         
         self.init(components: context.components)
     }
-    
+
+    convenience public init(curve: BezierCurve) {
+        self.init(components: [PathComponent(curves: [curve])])
+    }
+
     // MARK: - NSCoding
     // (cannot be put in extension because init?(coder:) is a designated initializer)
     
     public func encode(with aCoder: NSCoder) {
-        aCoder.encode(self.components)
+        aCoder.encode(self.data)
     }
     
-    required public init?(coder aDecoder: NSCoder) {
-        guard let array = aDecoder.decodeObject() as? Array<PathComponent> else {
-            return nil
-        }
-        self.components = array
+    required public convenience init?(coder aDecoder: NSCoder) {
+        guard let data = aDecoder.decodeData() else { return nil }
+        self.init(data: data)
     }
     
     // MARK: -
@@ -214,7 +224,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCountImpliesContainment(count, using: rule)
     }
 
-    @objc(containsPath:) public func contains(_ other: Path) -> Bool {
+    @objc(containsPath:accuracy:) public func contains(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         // first, check that each component of `other` starts inside self
         for component in other.components {
             let p = component.startingPoint
@@ -225,7 +235,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         // next, for each intersection (if there are any) check that we stay inside the path
         // TODO: use enumeration over intersections so we don't have to necessarily have to find each one
         // TODO: make this work with winding fill rule and intersections that don't cross (suggestion, use AugmentedGraph)
-        return self.intersects(path: other).isEmpty
+        return !self.intersects(other)
     }
     
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
@@ -234,32 +244,32 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         })
     }
     
-    private func performBooleanOperation(_ operation: BooleanPathOperation, withPath other: Path, threshold: CGFloat) -> Path? {
-        let intersections = self.intersects(path: other, threshold: threshold)
+    private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path? {
+        let intersections = self.intersections(with: other, accuracy: accuracy)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(operation)
     }
     
-    @objc(subtractingPath:threshold:) public func subtracting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
-        return self.performBooleanOperation(.difference, withPath: other.reversed(), threshold: threshold)
+    @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+        return self.performBooleanOperation(.subtract, with: other.reversed(), accuracy: accuracy)
     }
     
-    @objc(unionedWithPath:threshold:) public func `union`(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
+    @objc(unionPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         guard self.isEmpty == false else {
             return other
         }
         guard other.isEmpty == false else {
             return self
         }
-        return self.performBooleanOperation(.union, withPath: other, threshold: threshold)
+        return self.performBooleanOperation(.union, with: other, accuracy: accuracy)
     }
     
-    @objc(intersectedWithPath:threshold:) public func intersecting(_ other: Path, threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
-        return self.performBooleanOperation(.intersection, withPath: other, threshold: threshold)
+    @objc(intersectPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+        return self.performBooleanOperation(.intersect, with: other, accuracy: accuracy)
     }
     
-    @objc(crossingsRemovedWithThreshold:) public func crossingsRemoved(threshold: CGFloat=BezierKit.defaultIntersectionThreshold) -> Path? {
-        let intersections = self.intersects(threshold: threshold)
+    @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+        let intersections = self.selfIntersections(accuracy: accuracy)
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
         return augmentedGraph.booleanOperation(.removeCrossings)
     }
@@ -321,10 +331,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 }
 
 @objc(BezierKitPathPosition) public class IndexedPathLocation: NSObject {
-    internal let componentIndex: Int
-    internal let elementIndex: Int
-    internal let t: CGFloat
-    init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
+    public let componentIndex: Int
+    public let elementIndex: Int
+    public let t: CGFloat
+    public init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
         self.componentIndex = componentIndex
         self.elementIndex = elementIndex
         self.t = t

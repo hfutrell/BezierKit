@@ -49,7 +49,7 @@ final internal class BVH {
     }
     
     init(boxes elementBoxes: [BoundingBox]) {
-        assert(elementBoxes.count > 0)
+        assert(!elementBoxes.isEmpty)
         self.elementCount = elementBoxes.count
         let inodeCount = self.elementCount-1 // in complete binary tree the number of inodes (internal nodes) is one fewer than the leafs
         // compute `lastRowIndex` the index of the first leaf node in the bottom row of the tree
@@ -99,11 +99,11 @@ final internal class BVH {
         return self.boundingBoxes[BVH.elementIndexToNodeIndex(index, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)]
     }
 
-    func intersects(callback: (Int, Int) -> Void) {
-        self.intersects(node: self, callback: callback)
+    func enumerateSelfIntersections(callback: (Int, Int) -> Void) {
+        self.enumerateIntersections(with: self, callback: callback)
     }
     
-    func intersects(node other: BVH, callback: (Int, Int) -> Void) {
+    func enumerateIntersections(with other: BVH, callback: (Int, Int) -> Void) {
         let elementCount1 = self.elementCount
         let elementCount2 = other.elementCount
         let boxes1 = self.boundingBoxes

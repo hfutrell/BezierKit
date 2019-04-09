@@ -59,7 +59,7 @@ class ShapeTests: XCTestCase {
         let back2 = line2.offset(distance: -0.5)[0].reversed()
         let s2 = Shape(forward2, back2, false, false)
 
-        let shapeIntersections = s1.intersects(shape: s2, 1.0e-4)
+        let shapeIntersections = s1.intersects(shape: s2, accuracy: 1.0e-4)
         XCTAssertEqual(shapeIntersections.count, 2)
         
         // check the first shape intersection

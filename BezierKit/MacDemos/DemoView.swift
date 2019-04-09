@@ -199,7 +199,6 @@ class DemoView: NSView, DraggableDelegate {
     // MARK:
     
     override func draw(_ dirtyRect: NSRect) {
-        
         let context: CGContext = NSGraphicsContext.current!.cgContext
         
         context.saveGState()
@@ -211,16 +210,12 @@ class DemoView: NSView, DraggableDelegate {
         Draw.reset(context)
         if let demo = currentDemo {
             var curve: BezierCurve? = nil
-            if self.draggables.count > 0 {
+            if !self.draggables.isEmpty {
                 curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
             }
             let demoState: DemoState = DemoState(quadratic: self.useQuadratic, lastInputLocation: self.lastMouseLocation?.applying(self.affineTransform.inverted()), curve: curve)
             demo.drawFunction(context, demoState)
         }
-        
         context.restoreGState()
-        
     }
-    
- 
 }

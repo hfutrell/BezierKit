@@ -363,7 +363,7 @@ internal class Utils {
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],
-                                      _ threshold: CGFloat = BezierKit.defaultIntersectionThreshold) {
+                                      _ accuracy: CGFloat) {
         
         if results.count > 20 {
             // TODO: better bailout conditions
@@ -376,14 +376,14 @@ internal class Utils {
 
         let canSplit1 = c1.canSplit
         let canSplit2 = c2.canSplit
-        let shouldRecurse1 = canSplit1 && ((c1b.size.x + c1b.size.y) >= threshold)
-        let shouldRecurse2 = canSplit2 && ((c2b.size.x + c2b.size.y) >= threshold)
+        let shouldRecurse1 = canSplit1 && ((c1b.size.x + c1b.size.y) >= accuracy)
+        let shouldRecurse2 = canSplit2 && ((c2b.size.x + c2b.size.y) >= accuracy)
 
         if shouldRecurse1 == false, shouldRecurse2 == false {
             // subcurves are small enough or we simply cannot recurse any more
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-            guard let intersection = l1.intersects(line: l2).first else {
+            guard let intersection = l1.intersections(with: l2).first else {
                 return
             }
             let t1 = intersection.t1
@@ -398,24 +398,24 @@ internal class Utils {
             let cc1rb = cc1.right.curve.boundingBox
             let cc2lb = cc2.left.curve.boundingBox
             let cc2rb = cc2.right.curve.boundingBox
-            Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, threshold)
-            Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, threshold)
-            Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, threshold)
-            Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, threshold)
+            Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy)
+            Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy)
+            Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy)
+            Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy)
         }
         else if shouldRecurse1 {
             let cc1 = c1.split(at: 0.5)
             let cc1lb = cc1.left.curve.boundingBox
             let cc1rb = cc1.right.curve.boundingBox
-            Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, threshold)
-            Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, threshold)
+            Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy)
+            Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy)
         }
         else if shouldRecurse2 {
             let cc2 = c2.split(at: 0.5)
             let cc2lb = cc2.left.curve.boundingBox
             let cc2rb = cc2.right.curve.boundingBox
-            Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, threshold)
-            Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, threshold)
+            Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy)
+            Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy)
         }
     }
             

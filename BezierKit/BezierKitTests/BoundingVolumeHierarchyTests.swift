@@ -29,7 +29,7 @@ class BoundingVolumeHierarchyTests: XCTestCase {
                               p2: CGPoint(x: 4, y: 5))
         let bvh = BVH(boxes: [BoundingBox](repeating: box, count: 5))
         var visitedSet = Set<Tuple>()
-        bvh.intersects { i, j in
+        bvh.enumerateSelfIntersections { i, j in
             let tuple = Tuple(first: i, second: j)
             XCTAssertFalse(visitedSet.contains(tuple), "we already visited (\(i), \(j))!")
             visitedSet.insert(tuple)

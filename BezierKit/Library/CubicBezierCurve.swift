@@ -269,7 +269,7 @@ extension CubicBezierCurve: Reversible {
 }
 
 extension CubicBezierCurve: Flatness {
-    internal var flatness: CGFloat {
+    public var flatnessSquared: CGFloat {
         let a: CGPoint = 3.0 * self.p1 - 2.0 * self.p0 - self.p3
         let b: CGPoint = 3.0 * self.p2 - self.p0 - 2.0 * self.p3
         let temp1 = max(a.x * a.x, b.x * b.x)

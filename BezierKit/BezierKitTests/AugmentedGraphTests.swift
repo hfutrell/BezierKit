@@ -52,7 +52,7 @@ class AugmentedGraphTests: XCTestCase {
         let square1 = Path(cgPath: CGPath(rect: CGRect(origin: origin1, size: size), transform: nil))
         let square2 = Path(cgPath: CGPath(rect: CGRect(origin: origin2, size: size), transform: nil))
 
-        let intersections = square1.intersects(path: square2)
+        let intersections = square1.intersections(with: square2)
         
         let augmentedGraph = AugmentedGraph(path1: square1, path2: square2, intersections: intersections)
 
@@ -108,7 +108,7 @@ class AugmentedGraphTests: XCTestCase {
         
         let square2 = Path(cgPath: square2CGPath)
 
-        let intersections = square1.intersects(path: square2)
+        let intersections = square1.intersections(with: square2)
         let augmentedGraph = AugmentedGraph(path1: square1, path2: square2, intersections: intersections)
         
         // check that there are two intersections
@@ -174,7 +174,7 @@ class AugmentedGraphTests: XCTestCase {
         let square1 = Path(cgPath: CGPath(rect: CGRect(origin: origin1, size: size1), transform: nil))
         let square2 = Path(cgPath: CGPath(rect: CGRect(origin: origin2, size: size2), transform: nil))
         
-        let intersections = square1.intersects(path: square2)
+        let intersections = square1.intersections(with: square2)
         let augmentedGraph = AugmentedGraph(path1: square1, path2: square2, intersections: intersections)
 
         XCTAssertEqual(crossingCountOnLinkedList(augmentedGraph.list1), 2)

@@ -54,7 +54,7 @@ fileprivate extension InputStream {
         static let startComponentCommand: SerializationTypes.Command = 0
     }
 
-    @objc(initWithData:) public convenience init?(data: Data) {
+    @objc(initWithData:) convenience init?(data: Data) {
 
         var components: [PathComponent] = []
 
@@ -105,7 +105,7 @@ fileprivate extension InputStream {
         self.init(components: components)
     }
 
-    @objc public var data: Data {
+    @objc var data: Data {
 
         let expectedCoordinatesCount = 2 * self.components.reduce(0) { $0 + $1.points.count }
         let expectedCommandsCount = self.components.reduce(0) { $0 + $1.elementCount } + self.components.count

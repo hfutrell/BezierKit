@@ -45,7 +45,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.2.1'
+    pod 'BezierKit', '>= 0.3.0'
 end
 ```
 
@@ -80,14 +80,14 @@ let curve = CubicBezierCurve(
 
 ### Intersecting Curves
 
-The `intersects(curve:)` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `compute(_:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
+The `intersections(with curve: BezierCurve) -> [Intersection]` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `compute(_:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
 
-Cubic curves may self-intersect which can be determined by calling `intersects()` with no curve parameter.
+Cubic curves may self-intersect which can be determined by calling the `selfIntersections()` method.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-intersects.png" width="256" height="256">
 
 ```swift
-let intersections: [Intersection] = curve1.intersects(curve2)
+let intersections: [Intersection] = curve1.intersections(with: curve2)
 let points: [CGPoint] = intersections.map { curve1.compute($0.t1) }
 
 Draw.drawCurve(context, curve: curve1)

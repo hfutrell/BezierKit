@@ -116,14 +116,14 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path4.components[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
     
-    func testIntersects() {
+    func testIntersections() {
         let circleCGPath = CGPath(ellipseIn: CGRect(x: 2.0, y: 3.0, width: 2.0, height: 2.0), transform: nil)
         let circlePath = Path(cgPath: circleCGPath) // a circle centered at (3, 4) with radius 2
         
         let rectangleCGPath = CGPath(rect: CGRect(x: 3.0, y: 4.0, width: 2.0, height: 2.0), transform: nil)
         let rectanglePath = Path(cgPath: rectangleCGPath)
         
-        let intersections = rectanglePath.intersects(path: circlePath).map { rectanglePath.point(at: $0.indexedPathLocation1 ) }
+        let intersections = rectanglePath.intersections(with: circlePath).map { rectanglePath.point(at: $0.indexedPathLocation1 ) }
         
         XCTAssertEqual(intersections.count, 2)
         XCTAssert(intersections.contains(CGPoint(x: 4.0, y: 4.0)))
@@ -132,10 +132,11 @@ class PathTests: XCTestCase {
     
     func testSelfIntersectsEmptyPath() {
         let emptyPath = Path()
-        XCTAssertEqual(emptyPath.intersects(), [])
+        XCTAssertEqual(emptyPath.selfIntersections(), [])
+        XCTAssertFalse(emptyPath.selfIntersects())
     }
     
-    func testSelfIntersectsSingleComponentPath() {
+    func testSelfIntersectionsSingleComponentPath() {
         let singleComponentPath = { () -> Path in
             let points: [CGPoint] = [
                 CGPoint(x: -1, y: 0),
@@ -152,7 +153,7 @@ class PathTests: XCTestCase {
         }()
         let expectedIntersection = PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0.5),
                                                     indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 3, t: 0.5))
-        XCTAssertEqual(singleComponentPath.intersects(), [expectedIntersection])
+        XCTAssertEqual(singleComponentPath.selfIntersections(), [expectedIntersection])
     }
     
     func testSelfIntersectsMultiComponentPath() {
@@ -166,7 +167,7 @@ class PathTests: XCTestCase {
                                                      indexedPathLocation2: IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.5))
         let expectedIntersection2 = PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.75),
                                                      indexedPathLocation2: IndexedPathLocation(componentIndex: 1, elementIndex: 2, t: 0.5))
-        XCTAssertEqual(multiComponentPath.intersects(), [expectedIntersection1, expectedIntersection2])
+        XCTAssertEqual(multiComponentPath.selfIntersections(), [expectedIntersection1, expectedIntersection2])
     }
     
     func testPointIsWithinDistanceOfBoundary() {
@@ -444,7 +445,7 @@ class PathTests: XCTestCase {
         )])
         let square1 = createSquare1()
         let square2 = createSquare2()
-        let subtracted = square1.subtracting(square2)!
+        let subtracted = square1.subtract(square2)!
         XCTAssertEqual(subtracted.components.count, 1)
         XCTAssert(
             componentsEqualAsideFromElementOrdering(subtracted.components[0], expectedResult.components[0])
@@ -484,7 +485,7 @@ class PathTests: XCTestCase {
         )])
         let square1 = createSquare1()
         let square2 = createSquare2()
-        let intersected = square1.intersecting(square2)!
+        let intersected = square1.intersect(square2)!
         XCTAssertEqual(intersected.components.count, 1)
         XCTAssert(
             componentsEqualAsideFromElementOrdering(intersected.components[0], expectedResult.components[0])
@@ -496,7 +497,7 @@ class PathTests: XCTestCase {
         // the order of the hole is reversed so that it is not contained in the shape when using .winding fill rule
         let circle   = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
         let hole     = Path(cgPath: CGPath(ellipseIn: CGRect(x: 1, y: 1, width: 1, height: 1), transform: nil))
-        let donut    = circle.subtracting(hole)!
+        let donut    = circle.subtract(hole)!
         XCTAssertTrue(donut.contains(CGPoint(x: 0.5, y: 0.5), using: .winding))  // inside the donut (but not the hole)
         XCTAssertFalse(donut.contains(CGPoint(x: 1.5, y: 1.5), using: .winding)) // center of donut hole
     }
@@ -505,7 +506,7 @@ class PathTests: XCTestCase {
         // this is a specific test of `subtracting` to ensure that if a path component is entirely contained in the subtracting path that it gets removed
         let circle       = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil))
         let biggerCircle = Path(cgPath: CGPath(ellipseIn: CGRect(x: -2, y: -2, width: 4, height: 4), transform: nil))
-        XCTAssertEqual(circle.subtracting(biggerCircle)!.components.count, 0)
+        XCTAssert(circle.subtract(biggerCircle)!.isEmpty)
     }
     
     func testSubtractingEdgeCase1() {
@@ -517,7 +518,7 @@ class PathTests: XCTestCase {
         let circle    = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 4, height: 4), transform: nil))
         
         // the circle intersects the rect at (0,2) and (3, 0.26792) ... the last number being exactly 2 - sqrt(3)
-        let difference = rectangle.subtracting(circle)!
+        let difference = rectangle.subtract(circle)!
         XCTAssertEqual(difference.components.count, 1)
         XCTAssertFalse(difference.contains(CGPoint(x: 2.0, y: 2.0)))
     }
@@ -536,7 +537,7 @@ class PathTests: XCTestCase {
         square2CGPath.closeSubpath()
     
         let square2 = Path(cgPath: square2CGPath)
-        let result = square1.subtracting(square2)!
+        let result = square1.subtract(square2)!
         
         let expectedResultCGPath = CGMutablePath()
         expectedResultCGPath.move(to: CGPoint.zero)
@@ -661,7 +662,7 @@ class PathTests: XCTestCase {
         }.filter { $0.length() > 0.0 }
         let cleanPath = Path(components: [PathComponent(curves: curves2)])
         
-        let result = cleanPath.crossingsRemoved(threshold: 1.0e-4)!
+        let result = cleanPath.crossingsRemoved(accuracy: 1.0e-4)!
 
         // check that the inner loop was eliminated by checking the winding count in the middle
         XCTAssertEqual(result.windingCount(CGPoint(x: 0.5, y: 1)), 1)
@@ -682,7 +683,7 @@ class PathTests: XCTestCase {
         cgPath.addCurve(to: CGPoint(x:82.52067606376023, y:711.9415914596509), control1: CGPoint(x:74.98976785362623, y:688.1175842583111), control2: CGPoint(x:83.96319344816517, y:699.4297926341243))
         cgPath.addCurve(to: start, control1: CGPoint(x:82.51999960076027, y:706.7206820370851), control2: CGPoint(x:80.65889482357387, y:699.9715389099819))
         let path = Path(cgPath: cgPath)
-        let result = path.crossingsRemoved(threshold: 0.01)
+        let result = path.crossingsRemoved(accuracy: 0.01)
          // in practice .crossingsRemoved was cutting off most of the shape
         XCTAssertNotNil(result)
         if let result = result {
@@ -707,7 +708,7 @@ class PathTests: XCTestCase {
         cgPath.addCurve(to: CGPoint(x:505.16132944417086, y:779.6305912206088), control1: CGPoint(x:516.3099083864128, y:784.001207896023), control2: CGPoint(x:509.3901506003072, y:783.9377238796366))
         cgPath.addCurve(to: start, control1: CGPoint(x:503.19076843492786, y:767.0872665416827), control2: CGPoint(x:503.3761460381431, y:766.7563954079359))
         let path = Path(cgPath: cgPath)
-        let result = path.crossingsRemoved(threshold: 0.01)
+        let result = path.crossingsRemoved(accuracy: 0.01)
         // in practice .crossingsRemoved was cutting off most of the shape
         XCTAssertNotNil(result)
         if let result = result {
@@ -784,7 +785,7 @@ class PathTests: XCTestCase {
         cgPath.closeSubpath()
 
         let path = Path(cgPath: cgPath)
-        let _ = path.crossingsRemoved(threshold: 0.01)
+        let _ = path.crossingsRemoved(accuracy: 0.01)
         
         // for now the test's only expectation is that we do not go into an infinite loop
         // TODO: make test stricter
@@ -880,7 +881,19 @@ class PathTests: XCTestCase {
         let path2 = circlePath(origin: CGPoint(x: 1, y: 0), radius: 100, numPoints: numPoints)
 
         self.measure { // roughly 0.018s in debug mode
-            let _ = path1.subtracting(path2, threshold: 1.0e-3)
+            let _ = path1.subtract(path2, accuracy: 1.0e-3)
         }
+    }
+
+    func testNSCoder() {
+        let l1 = LineSegment(p0: p1, p1: p2)
+        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let l2 = LineSegment(p0: p4, p1: p5)
+        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let path = Path(components: [PathComponent(curves: [l1, q1, l2, c1])])
+
+        let data = NSKeyedArchiver.archivedData(withRootObject: path)
+        let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
+        XCTAssertEqual(path, decodedPath)
     }
 }

@@ -354,7 +354,7 @@ class CubicBezierCurveTests: XCTestCase {
                                                    p2: CGPoint(x:  1, y: -1),
                                                    p3: CGPoint(x:  1, y: 0))
         let l: BezierCurve = LineSegment(p0: CGPoint(x: -2.0, y: 0.0), p1: CGPoint(x: 2.0, y: 0.0))
-        let i = c.intersects(curve: l)
+        let i = c.intersections(with: l)
         
         XCTAssertEqual(i.count, 3)
         XCTAssertEqual(i[0].t2, 0.25, accuracy: epsilon)
@@ -372,7 +372,7 @@ class CubicBezierCurveTests: XCTestCase {
                                  p2: CGPoint(x: 2.5522847498307932, y: 2),
                                  p3: CGPoint(x: 2, y: 2))
         let l = LineSegment(p0: CGPoint(x: 2, y: 2), p1: CGPoint(x: 0, y: 2))
-        let i = c.intersects(curve: l)
+        let i = c.intersections(with: l)
         XCTAssertEqual(i.count, 1)
         XCTAssertEqual(i[0].t1, 1)
         XCTAssertEqual(i[0].t2, 0)

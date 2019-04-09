@@ -36,7 +36,7 @@ fileprivate extension CGPath {
     private class ElementGetterContext {
         var elements: [CGPathElementRecord] = []
     }
-    fileprivate var elements: [CGPathElementRecord] {
+    var elements: [CGPathElementRecord] {
         func elementGetterApplierFunction(_ info: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) -> Void {
             let context = info!.assumingMemoryBound(to: ElementGetterContext.self).pointee
             context.elements.append(CGPathElementRecord(element.pointee))
