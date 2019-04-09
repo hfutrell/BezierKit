@@ -114,15 +114,14 @@ public final class PathComponent: NSObject {
         return mutablePath.copy()!
     }()
     
-    internal init(points: [CGPoint], orders: [Int]) {
+    public init(points: [CGPoint], orders: [Int]) {
+        // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
         self.points = points
         self.orders = orders
-        
         let expectedPointsCount = orders.reduce(1) { result, value in
             return result + value
         }
         assert(points.count == expectedPointsCount)
-        
         self.offsets = PathComponent.computeOffsets(from: self.orders)
     }
     
@@ -389,12 +388,11 @@ public final class PathComponent: NSObject {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
     }
-    
 }
 
 extension PathComponent: Transformable {
     public func copy(using t: CGAffineTransform) -> PathComponent {
-        return PathComponent(points: self.points.map { $0.applying(t)}, orders: self.orders )
+        return PathComponent(points: self.points.map { $0.applying(t) }, orders: self.orders )
     }
 }
 
