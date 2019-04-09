@@ -126,7 +126,13 @@ class PathDataTests: XCTestCase {
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
-    func testUnsupportedPathDoesNotCrash() {
+    func testUnsupportedPathDoesNotCrash1() {
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 3, y: 4))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), CGMutablePath()))
+    }
+
+    func testUnsupportedPathDoesNotCrash2() {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
         cgPath.closeSubpath()
