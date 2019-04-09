@@ -82,7 +82,7 @@ let curve = CubicBezierCurve(
 
 The `intersections(with curve: BezierCurve) -> [Intersection]` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `compute(_:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
 
-Cubic curves may self-intersect which can be determined by calling the `self.intersections()` method.
+Cubic curves may self-intersect which can be determined by calling the `selfIntersections()` method.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-intersects.png" width="256" height="256">
 
