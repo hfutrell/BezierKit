@@ -32,6 +32,10 @@ public func distance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
     return (p1 - p2).length
 }
 
+public func distanceSquared(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
+    return (p1 - p2).lengthSquared
+}
+
 private let badSubscriptError = "bad subscript (out of bounds)"
 
 public extension CGPoint {
