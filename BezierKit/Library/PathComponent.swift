@@ -121,7 +121,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             }
             switch order {
             case 0:
-                mutablePath.move(to: points[offset])
+                break // do nothing: we already did the move(to:) at the top of the method
             case 1:
                 mutablePath.addLine(to: points[offset+1])
             case 2:

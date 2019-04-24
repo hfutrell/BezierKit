@@ -76,18 +76,24 @@ fileprivate extension InputStream {
         // read the commands and coordinates
         var currentPoints: [CGPoint] = []
         var currentOrders: [Int] = []
-        for command in commands {
-            var pointsToRead = 0
+        for i in 0..<commands.count {
+            let command = commands[i]
+            var pointsToRead = Int(command)
             if command == SerializationConstants.startComponentCommand {
+                if currentPoints.isEmpty || currentOrders.isEmpty == false {
+                    pointsToRead = 1
+                }
                 if currentPoints.isEmpty == false {
+                    if currentOrders.isEmpty {
+                        assert(currentPoints.count == 1)
+                        currentOrders.append(0)
+                    }
                     components.append(PathComponent(points: currentPoints, orders: currentOrders))
                     currentPoints = []
                     currentOrders = []
                 }
-                pointsToRead = 1
             }
             else {
-                pointsToRead = Int(command)
                 currentOrders.append(pointsToRead)
             }
             for _ in 0..<pointsToRead {

@@ -32,12 +32,18 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         var currentComponentOrders: [Int] = []
         
         var components: [PathComponent] = []
-        func finishUp() {
-            if currentComponentOrders.isEmpty == false {
+        func completeComponentIfNeededAndClearPointsAndOrders() {
+            if currentComponentPoints.isEmpty == false {
+                if currentComponentOrders.isEmpty == true {
+                    currentComponentOrders.append(0)
+                }
                 components.append(PathComponent(points: currentComponentPoints, orders: currentComponentOrders))
-                currentComponentPoints = []
-                currentComponentOrders = []
             }
+            currentComponentPoints = []
+            currentComponentOrders = []
+        }
+        func finishUp() {
+            self.completeComponentIfNeededAndClearPointsAndOrders()
         }
     }
     
@@ -129,9 +135,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             let points: UnsafeMutablePointer<CGPoint> = element.pointee.points
             switch element.pointee.type {
             case .moveToPoint:
-                if context.currentComponentOrders.isEmpty == false {
-                    context.components.append(PathComponent(points: context.currentComponentPoints, orders: context.currentComponentOrders))
-                }
+                context.completeComponentIfNeededAndClearPointsAndOrders()
                 context.componentStartPoint = points[0]
                 context.currentComponentOrders = []
                 context.currentComponentPoints = [points[0]]
@@ -156,17 +160,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                     context.currentComponentOrders.append(1)
                     context.currentComponentPoints.append(context.componentStartPoint!)
                 }
-                if context.currentComponentOrders.isEmpty == false {
-                    context.components.append(PathComponent(points: context.currentComponentPoints, orders: context.currentComponentOrders))
-                }
+                context.completeComponentIfNeededAndClearPointsAndOrders()
                 context.currentPoint = context.componentStartPoint!
-                context.currentComponentPoints = []
-                context.currentComponentOrders = []
             }
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
         cgPath.apply(info: rawContextPointer, function: applierFunction)
-        context.finishUp()
+        context.completeComponentIfNeededAndClearPointsAndOrders()
         
         self.init(components: context.components)
     }
