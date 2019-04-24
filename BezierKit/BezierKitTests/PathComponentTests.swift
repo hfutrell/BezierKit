@@ -98,13 +98,13 @@ class PathComponentTests: XCTestCase {
         XCTAssertFalse(location2 < location1)
     }
 
+    let pointPathComponent = PathComponent(points: [CGPoint(x: 3.145, y: -8.34)], orders: [0]) // just a single point
+    let circlePathComponent = Path(cgPath: CGPath.init(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
+
     func testSplitFromTo() {
         // corner case, check that splitting a point always yields the same thin
-        let pointPathComponent = PathComponent(points: [CGPoint.zero], orders: [0]) // just a single point at the origin
         XCTAssertEqual(pointPathComponent, pointPathComponent.split(from: IndexedPathComponentLocation(elementIndex: 0, t: 0.2),
                                                                       to: IndexedPathComponentLocation(elementIndex: 0, t: 0.8)))
-
-        let circlePathComponent = Path(cgPath: CGPath.init(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
 
         XCTAssertEqual(circlePathComponent.startingIndexedLocation, IndexedPathComponentLocation(elementIndex: 0, t: 0))
         XCTAssertEqual(circlePathComponent.endingIndexedLocation, IndexedPathComponentLocation(elementIndex: 3, t: 1.0))
@@ -151,9 +151,28 @@ class PathComponentTests: XCTestCase {
         let split5alt = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 0, t: 1.0), to: IndexedPathComponentLocation(elementIndex: 2, t: 0.5))
         XCTAssertEqual(split5alt, expectedValue5)
 
-        // check that if the ending location is at t=0 wwe do not create degenerate curves of length zero
+        // check that if the ending location is at t=0 we do not create degenerate curves of length zero
         let split6alt = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0.5), to: IndexedPathComponentLocation(elementIndex: 3, t: 0))
         XCTAssertEqual(split6alt, expectedValue6)
+    }
+
+    func testEnumeratePoints() {
+        func arrayByEnumerating(component: PathComponent, includeControlPoints: Bool) -> [CGPoint] {
+            var points: [CGPoint] = []
+            component.enumeratePoints(includeControlPoints: includeControlPoints) { points.append($0) }
+            return points
+        }
+        XCTAssertEqual(arrayByEnumerating(component: pointPathComponent, includeControlPoints: true), [pointPathComponent.startingPoint])
+        XCTAssertEqual(arrayByEnumerating(component: pointPathComponent, includeControlPoints: false), [pointPathComponent.startingPoint])
+
+        let expectedCirclePoints = [CGPoint(x: 1, y: 0),
+                                    CGPoint(x: 0, y: 1),
+                                    CGPoint(x: -1, y: 0),
+                                    CGPoint(x: 0, y: -1),
+                                    CGPoint(x: 1, y: 0)]
+
+        XCTAssertEqual(arrayByEnumerating(component: circlePathComponent, includeControlPoints: false), expectedCirclePoints)
+        XCTAssertEqual(arrayByEnumerating(component: circlePathComponent, includeControlPoints: true), circlePathComponent.points)
     }
 }
 

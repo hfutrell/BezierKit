@@ -431,13 +431,12 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         guard end >= start else { return self.split(from: end, to: start).reversed() }
         guard self.points.count > 1 else { return self }
         guard start != self.startingIndexedLocation || end != self.endingIndexedLocation else { return self }
-
         guard end.t != 0.0 || end.elementIndex == start.elementIndex else {
-            // avoid degenerate (zero length) curve at end of component
+            // avoids degenerate (zero length) curve at end of component
             return self.split(from: start, to: IndexedPathComponentLocation(elementIndex: end.elementIndex-1, t: 1.0))
         }
         guard start.t != 1.0 || start.elementIndex == end.elementIndex else {
-            // avoid degenerate (zero length) curve at start of component
+            // avoids degenerate (zero length) curve at start of component
             return self.split(from: IndexedPathComponentLocation(elementIndex: start.elementIndex+1, t: 0.0), to: end)
         }
 
