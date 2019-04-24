@@ -129,7 +129,7 @@ class PathTests: XCTestCase {
         XCTAssert(intersections.contains(CGPoint(x: 4.0, y: 4.0)))
         XCTAssert(intersections.contains(CGPoint(x: 3.0, y: 5.0)))
     }
-    
+
     func testSelfIntersectsEmptyPath() {
         let emptyPath = Path()
         XCTAssertEqual(emptyPath.selfIntersections(), [])

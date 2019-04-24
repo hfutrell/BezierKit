@@ -54,7 +54,12 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     public var endingIndexedLocation: IndexedPathComponentLocation {
         return IndexedPathComponentLocation(elementIndex: self.elementCount-1, t: 1.0)
     }
-    
+
+    /// if the path component represents a single point
+    public var isPoint: Bool {
+        return self.points.count == 1
+    }
+
     public func element(at index: Int) -> BezierCurve {
         assert(index >= 0 && index < self.elementCount)
         let order = self.orders[index]
@@ -421,32 +426,20 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             }
         }
     }
-    
-    @objc(pointCountIncludingControlPoints:) public func pointCount(includeControlPoints: Bool) -> Int {
-        if includeControlPoints {
-            return self.points.count
-        } else if self.points.count == 1 {
-            return 1
-        } else {
-            return self.orders.count + 1
-        }
-    }
-    
-    @objc (pointAtIndex:includingControlPoints:) public func point(at index: Int, includeControlPoints: Bool) -> CGPoint {
-        assert(index >= 0 && index < self.pointCount(includeControlPoints: includeControlPoints))
-        if includeControlPoints {
-            return self.points[index]
-        } else if index < self.orders.count {
-            return self.points[self.offsets[index]]
-        } else {
-            return self.points.last!
-        }
-    }
 
     open func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
         guard end >= start else { return self.split(from: end, to: start).reversed() }
         guard self.points.count > 1 else { return self }
         guard start != self.startingIndexedLocation || end != self.endingIndexedLocation else { return self }
+
+        guard end.t != 0.0 || end.elementIndex == start.elementIndex else {
+            // avoid degenerate (zero length) curve at end of component
+            return self.split(from: start, to: IndexedPathComponentLocation(elementIndex: end.elementIndex-1, t: 1.0))
+        }
+        guard start.t != 1.0 || start.elementIndex == end.elementIndex else {
+            // avoid degenerate (zero length) curve at start of component
+            return self.split(from: IndexedPathComponentLocation(elementIndex: start.elementIndex+1, t: 0.0), to: end)
+        }
 
         var resultPoints = [CGPoint]()
         var resultOrders = [Int]()

@@ -146,6 +146,14 @@ class PathComponentTests: XCTestCase {
         // check that splitting over the entire curve gives the same curve back
         let split7 = circlePathComponent.split(from: circlePathComponent.startingIndexedLocation, to: circlePathComponent.endingIndexedLocation)
         XCTAssertEqual(split7, circlePathComponent)
+
+        // check that if the starting location is at t=1 we do not create degenerate curves of length zero
+        let split5alt = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 0, t: 1.0), to: IndexedPathComponentLocation(elementIndex: 2, t: 0.5))
+        XCTAssertEqual(split5alt, expectedValue5)
+
+        // check that if the ending location is at t=0 wwe do not create degenerate curves of length zero
+        let split6alt = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0.5), to: IndexedPathComponentLocation(elementIndex: 3, t: 0))
+        XCTAssertEqual(split6alt, expectedValue6)
     }
 }
 
