@@ -98,5 +98,54 @@ class PathComponentTests: XCTestCase {
         XCTAssertFalse(location2 < location1)
     }
 
+    func testSplitFromTo() {
+        // corner case, check that splitting a point always yields the same thin
+        let pointPathComponent = PathComponent(points: [CGPoint.zero], orders: [0]) // just a single point at the origin
+        XCTAssertEqual(pointPathComponent, pointPathComponent.split(from: IndexedPathComponentLocation(elementIndex: 0, t: 0.2),
+                                                                      to: IndexedPathComponentLocation(elementIndex: 0, t: 0.8)))
+
+        let circlePathComponent = Path(cgPath: CGPath.init(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
+
+        XCTAssertEqual(circlePathComponent.startingIndexedLocation, IndexedPathComponentLocation(elementIndex: 0, t: 0))
+        XCTAssertEqual(circlePathComponent.endingIndexedLocation, IndexedPathComponentLocation(elementIndex: 3, t: 1.0))
+
+        // check case of splitting a single path element
+        let split1 = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0.3), to: IndexedPathComponentLocation(elementIndex: 1, t: 0.6))
+        let expectedValue1 = PathComponent(curves: [circlePathComponent.element(at: 1).split(from: 0.3, to: 0.6)])
+        XCTAssertEqual(split1, expectedValue1)
+
+        // check case of splitting two path elements where neither is the complete element
+        let split2 = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0.3), to: IndexedPathComponentLocation(elementIndex: 2, t: 0.6))
+        let expectedValue2 = PathComponent(curves: [circlePathComponent.element(at: 1).split(from: 0.3, to: 1.0), circlePathComponent.element(at: 2).split(from: 0.0, to: 0.6)])
+        XCTAssertEqual(split2, expectedValue2)
+
+        // check case of splitting where there is a full element in the middle
+        let split3StartIndexedLocation = IndexedPathComponentLocation(elementIndex: 1, t: 0.3)
+        let split3EndIndexedLocation = IndexedPathComponentLocation(elementIndex: 3, t: 0.6)
+        let split3 = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0.3), to: IndexedPathComponentLocation(elementIndex: 3, t: 0.6))
+        let expectedValue3 = PathComponent(curves: [circlePathComponent.element(at: 1).split(from: 0.3, to: 1.0), circlePathComponent.element(at: 2), circlePathComponent.element(at: 3).split(from: 0.0, to: 0.6)])
+        XCTAssertEqual(split3, expectedValue3)
+
+        // misc cases for all code paths
+        let split4 = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 3, t: 0), to: IndexedPathComponentLocation(elementIndex: 3, t: 1))
+        let expectedValue4 = PathComponent(curves: [circlePathComponent.element(at: 3)])
+        XCTAssertEqual(split4, expectedValue4)
+
+        let split5 = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0), to: IndexedPathComponentLocation(elementIndex: 2, t: 0.5))
+        let expectedValue5 = PathComponent(curves: [circlePathComponent.element(at: 1), circlePathComponent.element(at: 2).split(from: 0, to: 0.5)])
+        XCTAssertEqual(split5, expectedValue5)
+
+        let split6 = circlePathComponent.split(from: IndexedPathComponentLocation(elementIndex: 1, t: 0.5), to: IndexedPathComponentLocation(elementIndex: 2, t: 1))
+        let expectedValue6 = PathComponent(curves: [circlePathComponent.element(at: 1).split(from: 0.5, to: 1), circlePathComponent.element(at: 2)])
+        XCTAssertEqual(split6, expectedValue6)
+
+        // check that reversing the order of start and end reverses the split curve
+        let split3alt = circlePathComponent.split(from: split3EndIndexedLocation, to: split3StartIndexedLocation)
+        XCTAssertEqual(split3alt, expectedValue3.reversed())
+
+        // check that splitting over the entire curve gives the same curve back
+        let split7 = circlePathComponent.split(from: circlePathComponent.startingIndexedLocation, to: circlePathComponent.endingIndexedLocation)
+        XCTAssertEqual(split7, circlePathComponent)
+    }
 }
 

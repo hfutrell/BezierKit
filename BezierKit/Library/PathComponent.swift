@@ -444,7 +444,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     }
 
     open func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
-        // TODO: what if end < start?
+        guard end >= start else { return self.split(from: end, to: start).reversed() }
         guard self.points.count > 1 else { return self }
         guard start != self.startingIndexedLocation || end != self.endingIndexedLocation else { return self }
 
