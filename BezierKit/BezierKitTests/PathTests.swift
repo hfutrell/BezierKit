@@ -896,4 +896,17 @@ class PathTests: XCTestCase {
         let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
         XCTAssertEqual(path, decodedPath)
     }
+
+    func testIndexedPathLocation() {
+        let location1 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.5)
+        let location2 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 1.0)
+        let location3 = IndexedPathLocation(componentIndex: 0, elementIndex: 2, t: 0.0)
+        let location4 = IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.0)
+        XCTAssert(location1 < location2)
+        XCTAssert(location1 < location3)
+        XCTAssert(location1 < location4)
+        XCTAssertFalse(location2 < location1) // no! t is greater
+        XCTAssertFalse(location3 < location1) // no! element index is greater
+        XCTAssertFalse(location4 < location1) // no! component index is greater
+    }
 }

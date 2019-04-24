@@ -87,5 +87,16 @@ class PathComponentTests: XCTestCase {
         XCTAssertTrue(pathComponent1.isEqual(pathComponent2))
         XCTAssertFalse(pathComponent1.isEqual(pathComponent3))
     }
+
+    func testIndexedPathComponentLocation() {
+        let location1 = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
+        let location2 = IndexedPathComponentLocation(elementIndex: 0, t: 1.0)
+        let location3 = IndexedPathComponentLocation(elementIndex: 1, t: 0.0)
+        XCTAssert(location1 < location2)
+        XCTAssert(location1 < location3)
+        XCTAssertFalse(location3 < location1)
+        XCTAssertFalse(location2 < location1)
+    }
+
 }
 
