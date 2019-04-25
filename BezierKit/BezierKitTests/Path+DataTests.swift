@@ -126,11 +126,28 @@ class PathDataTests: XCTestCase {
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
-    func testUnsupportedPathDoesNotCrash() {
+    func testSinglePointMoveTo() {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
+    }
+
+    func testSinglePointMoveToCloseSubpath() {
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 3, y: 4))
+        let beforeClosing = Path(cgPath: cgPath)
         cgPath.closeSubpath()
-        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), CGMutablePath()))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), beforeClosing.cgPath))
+    }
+
+    func testMultipleSinglePoints() {
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 1, y: 2))
+        cgPath.move(to: CGPoint(x: 2, y: 3))
+        cgPath.move(to: CGPoint(x: 3, y: 4))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
+        cgPath.addLine(to: CGPoint(x: 4, y: 5))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
     func testMultipleClosedPaths() {

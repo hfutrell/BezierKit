@@ -90,13 +90,7 @@ public struct LineSegment: BezierCurve, Equatable {
     }
     
     public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
-        // for a line segment the extrema are trivially just the start and end points
-        // which have t = 0.0 and 1.0
-        var xyz: [[CGFloat]] = []
-        for _ in 0..<CGPoint.dimensions {
-            xyz.append([0.0, 1.0])
-        }
-        return (xyz: xyz, [0.0, 1.0])
+        return (xyz: [], [])
     }
             
     public func project(point: CGPoint) -> CGPoint {

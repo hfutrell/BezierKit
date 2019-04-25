@@ -253,8 +253,9 @@ internal class PathLinkedListRepresentation {
     private func forEachVertexStartingFrom(_ v: Vertex, _ callback: (Vertex) -> Void) {
         var current = v
         repeat {
+            let next = current.next!
             callback(current)
-            current = current.next
+            current = next
         } while current !== v
     }
     
@@ -395,6 +396,13 @@ internal class AugmentedGraph {
         }
         return Path(components: pathComponents)
     }
+
+    deinit {
+        self.list1.forEachVertex { $0.tearDown() }
+        if list1 !== list2 {
+            self.list2.forEachVertex { $0.tearDown() }
+        }
+    }
 }
 
 internal enum VertexTransition {
@@ -475,6 +483,12 @@ internal class Vertex {
     
     public func emitPrevious() -> BezierCurve {
         return self.previous.emitNext().reversed()
+    }
+
+    fileprivate func tearDown() {
+        self.next = nil
+        self.previous = nil
+        self.intersectionInfo.neighbor = nil
     }
 }
 

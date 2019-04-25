@@ -95,16 +95,8 @@ class LineSegmentTests: XCTestCase {
     func testExtrema() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
         let (xyz, values) = l.extrema()
-        XCTAssert(xyz.count == 2) // one array for each dimension
-        XCTAssertEqual(xyz[0].count, 2)
-        XCTAssertEqual(xyz[1].count, 2)
-        XCTAssertEqual(values.count, 2) // two extrema total
-        XCTAssertEqual(values[0], 0.0)
-        XCTAssertEqual(values[1], 1.0)
-        XCTAssertEqual(xyz[0][0], 0.0)
-        XCTAssertEqual(xyz[0][1], 1.0)
-        XCTAssertEqual(xyz[1][0], 0.0)
-        XCTAssertEqual(xyz[1][1], 1.0)
+        XCTAssertTrue(xyz.isEmpty)
+        XCTAssertTrue(values.isEmpty)
     }
     
     func testHull() {

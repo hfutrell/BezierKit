@@ -21,11 +21,11 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
 }
 #endif
 
-public final class PathComponent: NSObject {
+@objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
     
     private let offsets: [Int]
-    internal let points: [CGPoint]
-    internal let orders: [Int]
+    public let points: [CGPoint]
+    public let orders: [Int]
     
     public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {
@@ -39,14 +39,27 @@ public final class PathComponent: NSObject {
         return self.orders.count
     }
     
-    public var startingPoint: CGPoint {
+    @objc public var startingPoint: CGPoint {
         return self.points[0]
     }
     
-    public var endingPoint: CGPoint {
+    @objc public var endingPoint: CGPoint {
         return self.points.last!
     }
-    
+
+    public var startingIndexedLocation: IndexedPathComponentLocation {
+        return IndexedPathComponentLocation(elementIndex: 0, t: 0.0)
+    }
+
+    public var endingIndexedLocation: IndexedPathComponentLocation {
+        return IndexedPathComponentLocation(elementIndex: self.elementCount-1, t: 1.0)
+    }
+
+    /// if the path component represents a single point
+    public var isPoint: Bool {
+        return self.points.count == 1
+    }
+
     public func element(at index: Int) -> BezierCurve {
         assert(index >= 0 && index < self.elementCount)
         let order = self.orders[index]
@@ -56,8 +69,14 @@ public final class PathComponent: NSObject {
         else if order == 2 {
             return quadratic(at: index)
         }
-        else {
+        else if order == 1 {
             return line(at: index)
+        }
+        else {
+            // TODO: add Point:BezierCurve
+            // for now just return a degenerate line
+            let p = self.points[self.offsets[index]]
+            return LineSegment(p0: p, p1: p)
         }
     }
     
@@ -101,6 +120,8 @@ public final class PathComponent: NSObject {
                 break
             }
             switch order {
+            case 0:
+                break // do nothing: we already did the move(to:) at the top of the method
             case 1:
                 mutablePath.addLine(to: points[offset+1])
             case 2:
@@ -114,7 +135,7 @@ public final class PathComponent: NSObject {
         return mutablePath.copy()!
     }()
     
-    public init(points: [CGPoint], orders: [Int]) {
+    required public init(points: [CGPoint], orders: [Int]) {
         // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
         self.points = points
         self.orders = orders
@@ -139,21 +160,17 @@ public final class PathComponent: NSObject {
     
     public init(curves: [BezierCurve]) {
         precondition(curves.isEmpty == false, "Path components are by definition non-empty.")
-        
-        self.points = curves.reduce([CGPoint]()) { result, value in
-            var temp = result
-            if temp.isEmpty {
-                temp.append(contentsOf: value.points)
-            }
-            else {
-                assert(temp.last! == value.startingPoint)
-                temp.append(contentsOf: value.points[1...value.order])
-            }
-            return temp
-        }
-        
+
         self.orders = curves.map { $0.order }
         self.offsets = PathComponent.computeOffsets(from: self.orders)
+
+        var temp: [CGPoint] = [curves.first!.startingPoint]
+        temp.reserveCapacity(self.offsets.last! + self.orders.last! + 1)
+        curves.forEach {
+            assert($0.startingPoint == temp.last!, "curves are not contiguous.")
+            temp += $0.points[1...]
+        }
+        self.points = temp
     }
     
     public var length: CGFloat {
@@ -212,6 +229,8 @@ public final class PathComponent: NSObject {
     
     private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
         switch p2.order(at: i2) {
+        case 0:
+            return []
         case 1:
             return helperIntersectsCurveLine(curve, p2.line(at: i2))
         case 2:
@@ -225,6 +244,8 @@ public final class PathComponent: NSObject {
 
     private static func intersectionsBetweenElementAndLine(_ index: Int, _ line: LineSegment, _ component: PathComponent, reversed: Bool = false) -> [Intersection] {
         switch component.order(at: index) {
+        case 0:
+            return []
         case 1:
             let element = component.line(at: index)
             return reversed ? line.intersections(with: component.line(at: index)) : element.intersections(with: line)
@@ -239,6 +260,8 @@ public final class PathComponent: NSObject {
 
     private static func intersectionsBetweenElements(_ i1: Int, _ i2: Int, _ p1: PathComponent, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] {
         switch p1.order(at: i1) {
+        case 0:
+            return []
         case 1:
             return PathComponent.intersectionsBetweenElementAndLine(i2, p1.line(at: i1), p2, reversed: true)
         case 2:
@@ -327,7 +350,7 @@ public final class PathComponent: NSObject {
 
     // MARK: -
     
-    override public func isEqual(_ object: Any?) -> Bool {
+    override open func isEqual(_ object: Any?) -> Bool {
         // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
         guard let otherPathComponent = object as? PathComponent else {
             return false
@@ -388,23 +411,100 @@ public final class PathComponent: NSObject {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
     }
-}
+    
+    @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+        if includeControlPoints {
+            for p in points {
+                block(p)
+            }
+        } else {
+            for o in self.offsets {
+                block(points[o])
+            }
+            if points.count > 1 {
+                block(points.last!)
+            }
+        }
+    }
 
-extension PathComponent: Transformable {
-    public func copy(using t: CGAffineTransform) -> PathComponent {
-        return PathComponent(points: self.points.map { $0.applying(t) }, orders: self.orders )
+    open func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
+        guard end >= start else { return self.split(from: end, to: start).reversed() }
+        guard self.points.count > 1 else { return self }
+        guard start != self.startingIndexedLocation || end != self.endingIndexedLocation else { return self }
+        guard end.t != 0.0 || end.elementIndex == start.elementIndex else {
+            // avoids degenerate (zero length) curve at end of component
+            return self.split(from: start, to: IndexedPathComponentLocation(elementIndex: end.elementIndex-1, t: 1.0))
+        }
+        guard start.t != 1.0 || start.elementIndex == end.elementIndex else {
+            // avoids degenerate (zero length) curve at start of component
+            return self.split(from: IndexedPathComponentLocation(elementIndex: start.elementIndex+1, t: 0.0), to: end)
+        }
+
+        var resultPoints = [CGPoint]()
+        var resultOrders = [Int]()
+
+        func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
+            let element = self.element(at: index).split(from: start, to: end)
+            assert(includeStart || includeEnd)
+            if !includeStart {
+                resultPoints += element.points[1...element.order]
+            } else if !includeEnd {
+                resultPoints += element.points[0..<element.order]
+            } else {
+                resultPoints += element.points[0...element.order]
+            }
+            resultOrders.append(self.orders[index])
+        }
+
+        if start.elementIndex == end.elementIndex {
+            // we just need to go from start.t to end.t
+            appendElement(start.elementIndex, start.t, end.t, includeStart: true, includeEnd: true)
+        } else {
+            // if end.t = 1, append from start.elementIndex+1 through end.elementIndex, otherwise to end.elementIndex
+            let lastFullElementIndex = end.t != 1.0 ? (end.elementIndex-1) : end.elementIndex
+            let firstFullElementIndex = start.t != 0.0 ? (start.elementIndex+1) : start.elementIndex
+            // if needed, append start.elementIndex from t=start.t to t=1
+            if firstFullElementIndex != start.elementIndex {
+                appendElement(start.elementIndex, start.t, 1.0, includeStart: true, includeEnd: false)
+            }
+            // if there exist full elements to copy, use the fast path to get them all in one fell swoop
+            let hasFullElements = firstFullElementIndex <= lastFullElementIndex
+            if hasFullElements {
+                resultPoints        += self.points[self.offsets[firstFullElementIndex] ... self.offsets[lastFullElementIndex] + self.orders[lastFullElementIndex]]
+                resultOrders        += self.orders[firstFullElementIndex ... lastFullElementIndex]
+            }
+            // if needed, append from end.elementIndex from t=0, to t=end.t
+            if lastFullElementIndex != end.elementIndex {
+                appendElement(end.elementIndex, 0.0, end.t, includeStart: !hasFullElements, includeEnd: true)
+            }
+        }
+        return type(of: self).init(points: resultPoints, orders: resultOrders)
+    }
+
+    open func reversed() -> Self {
+        return type(of: self).init(points: self.points.reversed(), orders: self.orders.reversed())
+    }
+
+    open func copy(using t: CGAffineTransform) -> Self {
+        return type(of: self).init(points: self.points.map { $0.applying(t) }, orders: self.orders )
     }
 }
 
-extension PathComponent: Reversible {
-    public func reversed() -> PathComponent {
-        return PathComponent(points: self.points.reversed(), orders: self.orders.reversed())
-    }
-}
-
-public struct IndexedPathComponentLocation {
+public struct IndexedPathComponentLocation: Equatable, Comparable {
     public let elementIndex: Int
     public let t: CGFloat
+    public init(elementIndex: Int, t: CGFloat) {
+        self.elementIndex = elementIndex
+        self.t = t
+    }
+    public static func < (lhs: IndexedPathComponentLocation, rhs: IndexedPathComponentLocation) -> Bool {
+        if lhs.elementIndex < rhs.elementIndex {
+            return true
+        } else if lhs.elementIndex > rhs.elementIndex {
+            return false
+        }
+        return lhs.t < rhs.t
+    }
 }
 
 public struct PathComponentIntersection {

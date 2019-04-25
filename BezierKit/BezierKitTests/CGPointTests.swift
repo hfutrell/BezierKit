@@ -46,5 +46,6 @@ class CGPointTests: XCTestCase {
         XCTAssertEqual(a.lengthSquared, 25)
         XCTAssertEqual(a.normalize(), CGPoint(x: 3.0 / 5.0, y: 4.0 / 5.0))
         XCTAssertEqual(distance(a, b), sqrt(17.0))
+        XCTAssertEqual(distanceSquared(a, b), 17.0)
     }
 }
