@@ -42,6 +42,9 @@
                <Test
                   Identifier = "PathTests/testCrossingsRemovedAnotherRealWorldCase()">
                </Test>
+               <Test
+                  Identifier = "PathTests/testSubtractionPerformance()">
+               </Test>
             </SkippedTests>
          </TestableReference>
       </Testables>

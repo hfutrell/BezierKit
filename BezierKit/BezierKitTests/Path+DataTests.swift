@@ -26,6 +26,8 @@ private struct CGPathElementRecord: Equatable {
                 return 3
             case .closeSubpath:
                 return 0
+            @unknown default:
+                fatalError("unexpected unknown path element type: \(pathElement.type)")
             }
         }()
         self.pointsArray = [CGPoint](UnsafeBufferPointer(start: pathElement.points, count: count))
@@ -172,7 +174,7 @@ class PathDataTests: XCTestCase {
     func testWrongMagicNumber() {
         var data = simpleRectangle.data
         XCTAssertNotEqual(Path(data: data), nil)
-        data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) in
+        data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
             bytes[0] = ~bytes[0]
         }
         XCTAssertEqual(Path(data: data), nil)
