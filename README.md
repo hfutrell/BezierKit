@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/BezierKit.svg)](https://img.shields.io/cocoapods/v/BezierKit.svg)
 
-BezierKit is a library for Bezier curves written in Swift and based on the popular JavaScript library [Bezier.js](https://pomax.github.io/bezierjs/).
+BezierKit is a comprehensive Bezier Path library written in Swift.
 
 - [Warning! Prerelease software!](#warning-prerelease-software)
 - [Features](#features)
@@ -45,7 +45,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.4.0'
+    pod 'BezierKit', '>= 0.5.0'
 end
 ```
 
