@@ -93,17 +93,17 @@ public struct LineSegment: BezierCurve, Equatable {
         return (xyz: [], [])
     }
             
-    public func project(point: CGPoint) -> CGPoint {
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         // optimized implementation for line segments can be directly computed
         // default project implementation is found in BezierCurve protocol extension
         let relativePoint    = point - self.p0
         let delta            = self.p1 - self.p0
-        let t                = relativePoint.dot(delta) / delta.dot(delta)
-        return self.compute(Utils.clamp(t, 0.0, 1.0))
+        let t                = Utils.clamp(relativePoint.dot(delta) / delta.dot(delta), 0.0, 1.0)
+        return (point: self.compute(t), t: t)
     }
 
-    public func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint {
-        return self.project(point: point)
+    public func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat) {
+        return self.project(point)
     }
 }
 

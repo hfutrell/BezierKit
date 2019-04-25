@@ -226,7 +226,7 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.pinkish)
                                 if let mouse = demoState.lastInputLocation {
-                                    let p = curve.project(point: mouse)
+                                    let p = curve.project(mouse).point
                                     Draw.drawLine(context, from: mouse, to: p)
                                 }
     })

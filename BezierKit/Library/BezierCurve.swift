@@ -381,8 +381,8 @@ extension BezierCurve {
     
     // MARK: - intersection
 
-    public func project(point: CGPoint) -> CGPoint {
-        return self.project(point: point, errorThreshold: BezierKit.defaultIntersectionAccuracy)
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
+        return self.project(point, accuracy: BezierKit.defaultIntersectionAccuracy)
     }
 
     // MARK: - outlines
@@ -535,7 +535,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func length() -> CGFloat
     func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
     func generateLookupTable(withSteps steps: Int) -> [CGPoint]
-    func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint
+    func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat)
     // intersection routines
     func selfIntersects(accuracy: CGFloat) -> Bool
     func selfIntersections(accuracy: CGFloat) -> [Intersection]
@@ -562,7 +562,7 @@ public extension Flatness {
 }
 
 extension Flatness {
-    public func project(point: CGPoint, errorThreshold: CGFloat) -> CGPoint {
+    public func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat) {
 
         let maxIterations = 1000
 
@@ -571,20 +571,22 @@ extension Flatness {
         let distanceStartingPoint = distance(self.startingPoint, point)
         var bestMax = distanceStartingPoint
         var bestPoint = self.startingPoint
+        var bestT: CGFloat = 0.0
 
         let distanceEndingPoint = distance(self.endingPoint, point)
         if distanceEndingPoint < bestMax {
             bestMax = distanceEndingPoint
             bestPoint = self.endingPoint
+            bestT = 1.0
         }
 
         func needCheckSubcurve(_ subcurve: Subcurve<Self>) -> Bool {
             let line = LineSegment(p0: subcurve.curve.startingPoint, p1: subcurve.curve.endingPoint)
             let f = subcurve.curve.flatness
-            guard 0.5 * line.length() + f > errorThreshold else {
+            guard 0.5 * line.length() + f > accuracy else {
                 return false
             }
-            var lowerBoundOfDistance = distance(point, line.project(point: point)) - f
+            var lowerBoundOfDistance = distance(point, line.project(point).point) - f
             if lowerBoundOfDistance < 0 { lowerBoundOfDistance = 0 }
             return lowerBoundOfDistance < bestMax
         }
@@ -596,11 +598,13 @@ extension Flatness {
             // for each item in our list, check the midpoint
             // to try and find a new best
             list.forEach {
-                let curvePoint = $0.curve.compute(0.5)
+                let sampleT: CGFloat = 0.5
+                let curvePoint = $0.curve.compute(sampleT)
                 let mmax = distance(point, curvePoint)
                 if mmax < bestMax {
                     bestMax = mmax
                     bestPoint = curvePoint
+                    bestT = (1.0 - sampleT) * $0.t1 + sampleT * $0.t2
                 }
             }
             iterations += list.count
@@ -622,6 +626,6 @@ extension Flatness {
             }
             list = nextList
         }
-        return bestPoint
+        return (point: bestPoint, t: bestT)
     }
 }

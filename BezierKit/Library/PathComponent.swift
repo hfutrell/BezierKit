@@ -209,7 +209,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         return PathComponent(curves: offsetCurves)
     }
     
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, errorThreshold: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         var found = false
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
@@ -218,7 +218,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             }
             else if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
-                if distance(p, curve.project(point: p, errorThreshold: errorThreshold)) < d {
+                if distance(p, curve.project(p, accuracy: accuracy).point) < d {
                     found = true
                 }
             }
