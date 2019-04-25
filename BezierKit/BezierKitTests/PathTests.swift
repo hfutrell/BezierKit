@@ -384,7 +384,7 @@ class PathTests: XCTestCase {
         if curves1.isEmpty {
             return true
         }
-        guard let offset = curves2.index(where: { $0 == curves1.first! }) else {
+        guard let offset = curves2.firstIndex(where: { $0 == curves1.first! }) else {
             return false
         }
         let count = curves1.count

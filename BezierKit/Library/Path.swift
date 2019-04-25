@@ -162,6 +162,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 }
                 context.completeComponentIfNeededAndClearPointsAndOrders()
                 context.currentPoint = context.componentStartPoint!
+            @unknown default:
+                fatalError("unexpected unknown path element type \(element.pointee.type)")
             }
         }
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
