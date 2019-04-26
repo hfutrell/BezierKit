@@ -427,32 +427,23 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
     }
 
-    open func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
-        guard end >= start else { return self.split(from: end, to: start).reversed() }
-        guard self.points.count > 1 else { return self }
-        guard start != self.startingIndexedLocation || end != self.endingIndexedLocation else { return self }
-        guard end.t != 0.0 || end.elementIndex == start.elementIndex else {
-            // avoids degenerate (zero length) curve at end of component
-            return self.split(from: start, to: IndexedPathComponentLocation(elementIndex: end.elementIndex-1, t: 1.0))
-        }
-        guard start.t != 1.0 || start.elementIndex == end.elementIndex else {
-            // avoids degenerate (zero length) curve at start of component
-            return self.split(from: IndexedPathComponentLocation(elementIndex: start.elementIndex+1, t: 0.0), to: end)
-        }
+    open func split(standardizedRange range: PathComponentRange) -> Self {
+        assert(range.isStandardized)
+
+        guard !self.isPoint else { return self }
+
+        let start = range.start
+        let end   = range.end
 
         var resultPoints = [CGPoint]()
         var resultOrders = [Int]()
 
         func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
-            let element = self.element(at: index).split(from: start, to: end)
             assert(includeStart || includeEnd)
-            if !includeStart {
-                resultPoints += element.points[1...element.order]
-            } else if !includeEnd {
-                resultPoints += element.points[0..<element.order]
-            } else {
-                resultPoints += element.points[0...element.order]
-            }
+            let element = self.element(at: index).split(from: start, to: end)
+            let startIndex  = includeStart ? 0 : 1
+            let endIndex    = includeEnd ? element.order : element.order - 1
+            resultPoints    += element.points[startIndex...endIndex]
             resultOrders.append(self.orders[index])
         }
 
@@ -479,6 +470,16 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             }
         }
         return type(of: self).init(points: resultPoints, orders: resultOrders)
+    }
+
+    public func split(range: PathComponentRange) -> Self {
+        let reverse = range.end < range.start
+        let result = self.split(standardizedRange: range.standardized)
+        return reverse ? result.reversed() : result
+    }
+
+    public func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
+        return self.split(range: PathComponentRange(start: start, end: end))
     }
 
     open func reversed() -> Self {
@@ -509,4 +510,35 @@ public struct IndexedPathComponentLocation: Equatable, Comparable {
 
 public struct PathComponentIntersection {
     let indexedComponentLocation1, indexedComponentLocation2: IndexedPathComponentLocation
+}
+
+public struct PathComponentRange: Equatable {
+    public let start: IndexedPathComponentLocation
+    public let end: IndexedPathComponentLocation
+    var isStandardized: Bool {
+        return self == self.standardized
+    }
+    /// the range standardized so that end >= start and adjusted to avoid possible degeneracies when splitting components
+    public var standardized: PathComponentRange {
+        var start = self.start
+        var end = self.end
+        if end < start {
+            swap(&start, &end)
+        }
+        if start.elementIndex < end.elementIndex {
+            if start.t == 1.0 {
+                let candidate = IndexedPathComponentLocation(elementIndex: start.elementIndex+1, t: 0.0)
+                if candidate <= end {
+                    start = candidate
+                }
+            }
+            if end.t == 0.0 {
+                let candidate = IndexedPathComponentLocation(elementIndex: end.elementIndex-1, t: 1.0)
+                if candidate >= start {
+                    end = candidate
+                }
+            }
+        }
+        return PathComponentRange(start: start, end: end)
+    }
 }
