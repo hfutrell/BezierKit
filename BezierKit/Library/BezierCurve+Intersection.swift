@@ -74,16 +74,14 @@ extension NonlinearBezierCurve {
         return helperIntersectsCurveLine(self, line)
     }
     public func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
-        if let c = curve as? CubicBezierCurve {
-            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: c), accuracy: accuracy)
-        }
-        if let q = curve as? QuadraticBezierCurve {
-            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: q), accuracy: accuracy)
-        }
-        else if let l = curve as? LineSegment {
-            return helperIntersectsCurveLine(self, l)
-        }
-        else {
+        switch curve.order {
+        case 3:
+            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve as! CubicBezierCurve), accuracy: accuracy)
+        case 2:
+            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve as! QuadraticBezierCurve), accuracy: accuracy)
+        case 1:
+            return helperIntersectsCurveLine(self, curve as! LineSegment)
+        default:
             fatalError("unsupported")
         }
     }
@@ -114,16 +112,14 @@ public extension QuadraticBezierCurve {
 
 public extension LineSegment {
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
-        if let c = curve as? CubicBezierCurve {
-            return helperIntersectsCurveLine(c, self, reversed: true)
-        }
-        if let q = curve as? QuadraticBezierCurve {
-            return helperIntersectsCurveLine(q, self, reversed: true)
-        }
-        else if let l = curve as? LineSegment {
-            return self.intersections(with: l)
-        }
-        else {
+        switch curve.order {
+        case 3:
+            return helperIntersectsCurveLine(curve as! CubicBezierCurve, self, reversed: true)
+        case 2:
+            return helperIntersectsCurveLine(curve as! QuadraticBezierCurve, self, reversed: true)
+        case 1:
+            return self.intersections(with: curve as! LineSegment)
+        default:
             fatalError("unsupported")
         }
     }

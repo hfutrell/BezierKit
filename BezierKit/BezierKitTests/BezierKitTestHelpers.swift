@@ -63,7 +63,7 @@ class BezierKitTestHelpers {
         for i in 0..<numPointsToCheck {
             let t1 = CGFloat(i) / CGFloat(numPointsToCheck-1)
             let t2 = interval.start * (1.0 - t1) + interval.end * t1
-            if (distance(c1.compute(t1), c2.compute(t2)) > tolerance) {
+            if distance(c1.compute(t1), c2.compute(t2)) > tolerance {
                 return false
             }
         }
