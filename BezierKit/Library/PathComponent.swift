@@ -276,14 +276,19 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
+        let isClosed1 = self.isClosed
+        let isClosed2 = other.isClosed
         self.bvh.enumerateIntersections(with: other.bvh) { i1, i2 in
             let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, accuracy: accuracy)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
-                guard i1.t != 0.0 && i2.t != 0.0 else {
-                    // we'll get this intersection at t=1 on the neighboring path element(s) instead
-                    // TODO: in some cases 'see: testContainsEdgeCaseParallelDerivative it's possible to get an intersection at t=0 without an intersection at t=1 of the previous element
+                if i1.t == 0.0 && (isClosed1 || i1.elementIndex > 0) {
+                    // handle this intersection instead at i1.elementIndex-1 w/ t=1
+                    return nil
+                }
+                if i2.t == 0.0 && (isClosed2 || i2.elementIndex > 0) {
+                    // handle this intersection instead at i2.elementIndex-1 w/ t=1
                     return nil
                 }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
