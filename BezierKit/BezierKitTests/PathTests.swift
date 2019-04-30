@@ -186,6 +186,16 @@ class PathTests: XCTestCase {
 
     }
 
+    func testSelfIntersectsOpenPathEdgeCase() {
+
+        let cgPath = CGMutablePath()
+        cgPath.addLines(between: [CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 0), CGPoint(x: 0, y: 1), CGPoint(x: 0, y: -1)])
+        let openPath = Path(cgPath: cgPath)
+        XCTAssertFalse(openPath.components.first!.isClosed)
+        XCTAssertEqual(openPath.selfIntersections(), [PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0),
+                                                                       indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 2, t: 0.5))])
+    }
+
     func testPointIsWithinDistanceOfBoundary() {
         
         let circleCGPath = CGMutablePath()
