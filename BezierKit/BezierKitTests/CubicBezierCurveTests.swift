@@ -152,6 +152,24 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.curve(s, matchesCurve: c, overInterval: Interval(start: t1,end: t2), tolerance: epsilon))
     }
 
+    func testSplitContinuous() {
+        // if I call split(from: a, to: b) and split(from: b, to: c)
+        // then the two subcurves should be continuous. However, from lack of precision that might not happen unless we are careful!
+        let a: CGFloat = 0.65472931005125345
+        let b: CGFloat = 0.73653845530600293
+        let c: CGFloat = 1.0
+        let curve = CubicBezierCurve(p0: CGPoint(x: 286.8966218087201, y : 69.11759651620365),
+                                     p1: CGPoint(x: 285.7845542083973, y: 69.84970485476842),
+                                     p2: CGPoint(x: 284.6698515652002, y: 70.60114443784359),
+                                     p3: CGPoint(x: 283.5560914830615, y: 71.34238971309229))
+        let split1 = curve.split(from: a, to: b)
+        let split2 = curve.split(from: b, to: c)
+        XCTAssertEqual(split1.endingPoint, split2.startingPoint)
+
+        let (left, right) = curve.split(at: b)
+        XCTAssertEqual(left.endingPoint, right.startingPoint)
+    }
+
     func testSplitAt() {
         let epsilon: CGFloat = 0.00001
         let c = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 6.0, y: 1.0))
