@@ -146,7 +146,6 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
     }
     
     public func split(from t1: CGFloat, to t2: CGFloat) -> CubicBezierCurve {
-        
         let h0 = self.p0
         let h1 = self.p1
         let h2 = self.p2
@@ -157,22 +156,11 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let h7 = Utils.lerp(t1, h4, h5)
         let h8 = Utils.lerp(t1, h5, h6)
         let h9 = Utils.lerp(t1, h7, h8)
-        
-        let tr = Utils.map(t2, t1, 1, 0, 1)
-        
-        let i0 = h9
-        let i1 = h8
-        let i2 = h6
-        let i3 = h3
-        let i4 = Utils.lerp(tr, i0, i1)
-        let i5 = Utils.lerp(tr, i1, i2)
-        let i6 = Utils.lerp(tr, i2, i3)
+        let tr = (t2 - t1) / (1.0 - t1)
+        let i4 = Utils.lerp(tr, h9, h8)
+        let i5 = Utils.lerp(tr, h8, h6)
         let i7 = Utils.lerp(tr, i4, i5)
-        let i8 = Utils.lerp(tr, i5, i6)
-        let i9 = Utils.lerp(tr, i7, i8)
-        
-        return CubicBezierCurve(p0: i0, p1: i4, p2: i7, p3: i9)
-        
+        return CubicBezierCurve(p0: self.compute(t1), p1: i4, p2: i7, p3: self.compute(t2))
     }
 
     public func split(at t: CGFloat) -> (left: CubicBezierCurve, right: CubicBezierCurve) {
