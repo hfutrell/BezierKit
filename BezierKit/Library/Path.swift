@@ -42,6 +42,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             currentComponentPoints = []
             currentComponentOrders = []
         }
+        func appendCurrentPointIfEmpty() {
+            if currentComponentPoints.isEmpty {
+                currentComponentPoints = [self.currentPoint!]
+            }
+        }
         func finishUp() {
             self.completeComponentIfNeededAndClearPointsAndOrders()
         }
@@ -141,15 +146,18 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 context.currentComponentPoints = [points[0]]
                 context.currentPoint = points[0]
             case .addLineToPoint:
+                context.appendCurrentPointIfEmpty()
                 context.currentComponentOrders.append(1)
                 context.currentComponentPoints.append(points[0])
                 context.currentPoint = points[0]
             case .addQuadCurveToPoint:
+                context.appendCurrentPointIfEmpty()
                 context.currentComponentOrders.append(2)
                 context.currentComponentPoints.append(points[0])
                 context.currentComponentPoints.append(points[1])
                 context.currentPoint = points[1]
             case .addCurveToPoint:
+                context.appendCurrentPointIfEmpty()
                 context.currentComponentOrders.append(3)
                 context.currentComponentPoints.append(points[0])
                 context.currentComponentPoints.append(points[1])
