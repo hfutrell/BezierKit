@@ -276,14 +276,19 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
+        let isClosed1 = self.isClosed
+        let isClosed2 = other.isClosed
         self.bvh.enumerateIntersections(with: other.bvh) { i1, i2 in
             let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, accuracy: accuracy)
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
-                guard i1.t != 0.0 && i2.t != 0.0 else {
-                    // we'll get this intersection at t=1 on the neighboring path element(s) instead
-                    // TODO: in some cases 'see: testContainsEdgeCaseParallelDerivative it's possible to get an intersection at t=0 without an intersection at t=1 of the previous element
+                if i1.t == 0.0, (isClosed1 || i1.elementIndex > 0) {
+                    // handle this intersection instead at i1.elementIndex-1 w/ t=1
+                    return nil
+                }
+                if i2.t == 0.0, (isClosed2 || i2.elementIndex > 0) {
+                    // handle this intersection instead at i2.elementIndex-1 w/ t=1
                     return nil
                 }
                 return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
@@ -311,9 +316,11 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     
     public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
+        let isClosed = self.isClosed
         self.bvh.enumerateSelfIntersections() { i1, i2 in
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
+            // TODO: unfortunately we badly need more tests for all these obscure codepaths
             /*if i1 == i2 {
                 // we are intersecting a path element against itself
                 if let c = c1 as? CubicBezierCurve {
@@ -322,18 +329,26 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             }
             else*/ if i1 < i2 {
                 // we are intersecting two distinct path elements
-                let areNeighbors = i1 == Utils.mod(i2-1, self.elementCount)
+                let areNeighbors = (i1 == i2-1) || (isClosed && i1 == 0 && i2 == self.elementCount-1)
                 if areNeighbors, neighborsIntersectOnlyTrivially(i1, i2) {
                     // optimize the very common case of element i intersecting i+1 at its endpoint
                     elementIntersections = []
                 }
                 else {
                     elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, self, accuracy: accuracy).filter {
-                        if areNeighbors, $0.t1 == 1.0 {
+                        if i1 == i2-1, $0.t1 == 1.0, $0.t2 == 0.0 {
                             return false // exclude intersections of i and i+1 at t=1
                         }
-                        if $0.t1 == 0.0 || $0.t2 == 0.0 {
-                            // use the intersection with the prior path element at t=1 instead
+                        if i1 == 0, i2 == self.elementCount-1, $0.t1 == 0.0, $0.t2 == 1.0 {
+                            assert(self.isClosed) // how else can that happen?
+                            return false // exclude intersections of endpoint and startpoint
+                        }
+                        if $0.t1 == 0.0, (i1 > 0 || isClosed) {
+                            // handle the intersections instead at i1-1, t=1
+                            return false
+                        }
+                        if $0.t2 == 0.0 {
+                            // handle the intersections instead at i2-1, t=1 (we know i2 > 0 because i2 > i1)
                             return false
                         }
                         return true

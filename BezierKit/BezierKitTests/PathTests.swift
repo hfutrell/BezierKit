@@ -169,7 +169,33 @@ class PathTests: XCTestCase {
                                                      indexedPathLocation2: IndexedPathLocation(componentIndex: 1, elementIndex: 2, t: 0.5))
         XCTAssertEqual(multiComponentPath.selfIntersections(), [expectedIntersection1, expectedIntersection2])
     }
-    
+
+    func testIntersectsOpenPathEdgeCase() {
+
+        let openPath1 = Path(components: [PathComponent(curves: [LineSegment(p0: CGPoint(x: 1, y: 3), p1: CGPoint(x: 2, y: 5))])])
+        let openPath2 = Path(components: [PathComponent(curves: [LineSegment(p0: CGPoint(x: 2, y: 5), p1: CGPoint(x: 9, y: 7))])])
+
+        XCTAssertEqual(openPath1.intersections(with: openPath2), [PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 1),
+                                                                                  indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0))])
+        XCTAssertEqual(openPath2.intersections(with: openPath1), [PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0),
+                                                                                   indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 1))])
+
+        let closedPath1 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 5, width: 1, height: 1), transform: nil))
+        XCTAssertEqual(openPath1.intersections(with: closedPath1), [PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 1),
+                                                                                     indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 3, t: 1))])
+
+    }
+
+    func testSelfIntersectsOpenPathEdgeCase() {
+
+        let cgPath = CGMutablePath()
+        cgPath.addLines(between: [CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 0), CGPoint(x: 0, y: 1), CGPoint(x: 0, y: -1)])
+        let openPath = Path(cgPath: cgPath)
+        XCTAssertFalse(openPath.components.first!.isClosed)
+        XCTAssertEqual(openPath.selfIntersections(), [PathIntersection(indexedPathLocation1: IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0),
+                                                                       indexedPathLocation2: IndexedPathLocation(componentIndex: 0, elementIndex: 2, t: 0.5))])
+    }
+
     func testPointIsWithinDistanceOfBoundary() {
         
         let circleCGPath = CGMutablePath()
