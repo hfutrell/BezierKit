@@ -52,7 +52,7 @@ fileprivate extension CGPath {
 class PathDataTests: XCTestCase {
 
     private func pathHasEqualElementsToCGPath(_ path1: Path, _ path2: CGPath) -> Bool {
-        return cgPathsHaveEqualCGPathElements(Path(data: path1.data)!.cgPath, path2)
+        return cgPathsHaveEqualCGPathElements(path1.cgPath, path2)
     }
         
     private func cgPathsHaveEqualCGPathElements(_ path1: CGPath, _ path2: CGPath) -> Bool {
@@ -150,6 +150,24 @@ class PathDataTests: XCTestCase {
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
         cgPath.addLine(to: CGPoint(x: 4, y: 5))
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
+    }
+
+    func testMultipleComponentsNoMoveto() {
+        // ensure that if the cgPath starts a new component without a move(to:) command that we still work properly
+        let cgPath = CGMutablePath()
+        let firstComponentPoints = [CGPoint(x: 0, y: 0),
+                                    CGPoint(x: 1, y: 0),
+                                    CGPoint(x: 1, y: 1),
+                                    CGPoint(x: 0, y: 1),
+                                    CGPoint(x: 0, y: 0)]
+        let secondComponentPoint = CGPoint(x: -1, y: 0)
+        cgPath.addLines(between: firstComponentPoints)
+        cgPath.closeSubpath()
+        cgPath.addLine(to: secondComponentPoint)
+
+        let path = Path(data: Path(cgPath: cgPath).data)!
+        XCTAssertEqual(path.components[0].points, firstComponentPoints)
+        XCTAssertEqual(path.components[1].points, [firstComponentPoints.last!, secondComponentPoint])
     }
 
     func testMultipleClosedPaths() {
