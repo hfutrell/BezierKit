@@ -59,7 +59,6 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     let intersections = Utils.roots(points: curve.points, line: line).compactMap({t -> Intersection? in
         let p = curve.compute(t) - line.p0
         var t2 = p.dot(lineDirection) / lineLength
-        // this fixes the issue BUT I'd prefer the test not crash even with this disabled!
         if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
             t2 = 0.0
         }

@@ -766,14 +766,7 @@ class PathTests: XCTestCase {
                         control2: CGPoint(x: 130.4334714935808, y: 49.19162153453483))
 
         let p = Path(cgPath: cgPath)
-        let result = p.crossingsRemoved(accuracy: 0.0001)
-
-        // there's a double intersection between component 0 and 1
-        // in component 0 element 4 @ t=1 (the last element) and element 0 @t=4.5641402430763097e-17
-        // -- HOWEVER --
-        // in addition to AVOIDING the bad intersection data
-        // I'd prefer things not to CRASH even WITH the bad data
-
+        let _ = p.crossingsRemoved(accuracy: 0.0001)
     }
     
     func testCrossingsRemovedMulticomponent() {
