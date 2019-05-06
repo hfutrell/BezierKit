@@ -254,11 +254,14 @@ internal class Utils {
                 let v1 = crt(q2+sd)
                 return [u1-v1-a/3].compactMap(clamp)
             }
-            else {
+            else if discriminant.isNaN == false {
                 let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
                 let x1 = 2*u1-a/3
                 let x2 = -u1 - a/3
                 return [x1,x2].compactMap(clamp)
+            }
+            else {
+                return []
             }
         }
         else {
@@ -347,19 +350,16 @@ internal class Utils {
     }
     
     static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
-        let tx = Double(p1.x)
-        let ty = Double(p1.y)
-        let a = -atan2(Double(p2.y)-ty, Double(p2.x)-tx)
-        return points.map { v in
-            let vx = Double(v.x)
-            let vy = Double(v.y)
+        let lineDirection = (p2 - p1).normalize()
+        return points.map {
+            let pointDirection = $0 - p1
             return CGPoint(
-                x: (vx-tx)*cos(a) - (vy-ty)*sin(a),
-                y: (vx-tx)*sin(a) + (vy-ty)*cos(a)
+                x: pointDirection.dot(CGPoint(x: +lineDirection.x, y: +lineDirection.y)),
+                y: pointDirection.dot(CGPoint(x: -lineDirection.y, y: +lineDirection.x))
             )
         }
     }
-        
+
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],

@@ -54,8 +54,8 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     guard line.boundingBox.overlaps(curve.boundingBox) else {
         return []
     }
-    let lineDirection = (line.p1 - line.p0).normalize()
-    let lineLength = (line.p1 - line.p0).length
+    let lineDirection = (line.p1 - line.p0)
+    let lineLength = lineDirection.lengthSquared
     let intersections = Utils.roots(points: curve.points, line: line).compactMap({t -> Intersection? in
         let p = curve.compute(t) - line.p0
         var t2 = p.dot(lineDirection) / lineLength
