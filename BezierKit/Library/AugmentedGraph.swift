@@ -35,6 +35,9 @@ internal class PathLinkedListRepresentation {
         assert(v.isIntersection)
         let r = list[elementIndex]
         // insert v in the list
+        if let neighbor = r.intersectionInfo.neighbor {
+            neighbor.intersectionInfo.neighbor = v
+        }
         v.setPreviousVertex(r.previous)
         v.setNextVertex(r.next, transition: r.nextTransition)
         v.previous.setNextVertex(v, transition: v.previous.nextTransition)

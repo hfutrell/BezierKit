@@ -742,6 +742,32 @@ class PathTests: XCTestCase {
             XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
         }
     }
+
+    func testCrossingsRemovedThirdRealWorldCase() {
+        let cgPath = CGMutablePath()
+        let points = [CGPoint(x: 115.23034681147224, y: 59.327037989273855),
+                      CGPoint(x: 130.4334714935808, y: 59.32703798927386),
+                      CGPoint(x: 130.4334714935808, y: 215.00646454457666),
+                      CGPoint(x: 115.23034681147224, y: 215.00646454457666),
+                      CGPoint(x: 115.23034681147222, y: 82.92265451611944)
+                      ]
+        cgPath.addLines(between: points)
+        cgPath.closeSubpath()
+
+        cgPath.move(to: CGPoint(x: 130.4334714935808, y: 59.32703798927387))
+        cgPath.addLine(to: CGPoint(x: 130.43347149358078, y: 82.92265451611945))
+        cgPath.addLine(to: CGPoint(x: 130.4334714935808, y: 215.00646454457666))
+        cgPath.addCurve(to: CGPoint(x: 115.23034681147224, y: 215.00646454457666),
+                        control1: CGPoint(x: 130.4334714935808, y: 225.1418809993157),
+                        control2: CGPoint(x: 115.23034681147224, y: 225.1418809993157))
+        cgPath.addLine(to: CGPoint(x: 115.23034681147224, y: 59.32703798927386))
+        cgPath.addCurve(to: CGPoint(x: 130.4334714935808, y: 59.32703798927387),
+                        control1: CGPoint(x: 115.23034681147224, y: 49.19162153453482),
+                        control2: CGPoint(x: 130.4334714935808, y: 49.19162153453483))
+
+        let p = Path(cgPath: cgPath)
+        let _ = p.crossingsRemoved(accuracy: 0.0001)
+    }
     
     func testCrossingsRemovedMulticomponent() {
         // this path is a square with a self-intersecting inner region that should form a square shaped hole when crossings

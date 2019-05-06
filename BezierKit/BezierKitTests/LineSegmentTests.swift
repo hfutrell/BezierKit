@@ -363,6 +363,17 @@ class LineSegmentTests: XCTestCase {
         let i = l.intersections(with: c)
         XCTAssertEqual(i, [])
     }
+
+    func testIntersectionsCubicDegenerate() {
+        // this data caused issues in practice because because Utils.align would give an angle of zero for degenerate lines
+        let c = CubicBezierCurve(p0: CGPoint(x: -1, y: 1),
+                                 p1: CGPoint(x: 0, y: -1),
+                                 p2: CGPoint(x: 1, y: -1),
+                                 p3: CGPoint(x: 2, y: 1))
+        let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: -1, y: 0))
+        let i = l.intersections(with: c)
+        XCTAssertEqual(i, [])
+    }
     
     // MARK: -
     
