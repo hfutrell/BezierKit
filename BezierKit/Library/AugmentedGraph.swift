@@ -36,7 +36,7 @@ internal class PathLinkedListRepresentation {
         let r = list[elementIndex]
         // insert v in the list
         if let neighbor = r.intersectionInfo.neighbor {
-            neighbor.intersectionInfo.neighbor = v
+            neighbor.intersectionInfo.neighbor = nil
         }
         v.setPreviousVertex(r.previous)
         v.setNextVertex(r.next, transition: r.nextTransition)
@@ -154,7 +154,7 @@ internal class PathLinkedListRepresentation {
             // determine winding counts relative to the first vertex
             var relativeWindingCount = 0
             self.forEachVertexInComponent(atIndex: i) { v in
-                guard v.isIntersection else {
+                guard v.isIntersection, let neighbor = v.intersectionInfo.neighbor else {
                     return
                 }
                 let previous = v.emitPrevious()
@@ -164,8 +164,8 @@ internal class PathLinkedListRepresentation {
                 // at intersections!
                 let smallNumber: CGFloat = 0.001
                 
-                let n1 = v.intersectionInfo.neighbor!.emitPrevious().compute(smallNumber) - v.location
-                let n2 = v.intersectionInfo.neighbor!.emitNext().compute(smallNumber) - v.location
+                let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
+                let n2 = neighbor.emitNext().compute(smallNumber) - v.location
                 
                 let v1 = previous.compute(smallNumber) - v.location
                 let v2 = next.compute(smallNumber) - v.location
@@ -435,7 +435,7 @@ internal class Vertex {
         public var isEntry: Bool = false
         public var isExit: Bool = false
         public var nextWinding: Int = 0
-        public var neighbor: Vertex? = nil
+        public weak var neighbor: Vertex? = nil
     }
     public var intersectionInfo: IntersectionInfo = IntersectionInfo()
     
