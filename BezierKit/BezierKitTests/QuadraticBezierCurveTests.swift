@@ -112,9 +112,9 @@ class QuadraticBezierCurveTests: XCTestCase {
         let a = CGPoint(x: 2, y: 3)
         let b = CGPoint(x: 3, y: 3)
         let quadratic1 = QuadraticBezierCurve(p0: a, p1: a, p2: b)
-        XCTAssertTrue( distance(quadratic1.normal(0), BezierKitTestHelpers.approximateNormal(for: quadratic1, at: 0)) < maxError )
+        XCTAssertTrue( distance(quadratic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
         let quadratic2 = QuadraticBezierCurve(p0: a, p1: b, p2: b)
-        XCTAssertTrue( distance(quadratic2.normal(1), BezierKitTestHelpers.approximateNormal(for: quadratic1, at: 1)) < maxError )
+        XCTAssertTrue( distance(quadratic2.normal(1), CGPoint(x: 0, y: 1)) < maxError )
     }
 //
 //    func testReduce() {

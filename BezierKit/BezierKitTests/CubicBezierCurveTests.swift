@@ -277,13 +277,13 @@ class CubicBezierCurveTests: XCTestCase {
         let b = CGPoint(x: 3, y: 3)
         let c = CGPoint(x: 4, y: 4)
         let cubic1 = CubicBezierCurve(p0: a, p1: a, p2: b, p3: c)
-        XCTAssertTrue( distance(cubic1.normal(0), BezierKitTestHelpers.approximateNormal(for: cubic1, at: 0)) < maxError )
+        XCTAssertTrue( distance(cubic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
         let cubic2 = CubicBezierCurve(p0: a, p1: b, p2: c, p3: c)
-        XCTAssertTrue( distance(cubic2.normal(1), BezierKitTestHelpers.approximateNormal(for: cubic1, at: 1)) < maxError )
+        XCTAssertTrue( distance(cubic2.normal(1), CGPoint(x: -sqrt(2)/2, y: sqrt(2)/2)) < maxError )
         let cubic3 = CubicBezierCurve(p0: a, p1: a, p2: a, p3: b)
-        XCTAssertTrue( distance(cubic3.normal(0), BezierKitTestHelpers.approximateNormal(for: cubic3, at: 0)) < maxError )
+        XCTAssertTrue( distance(cubic3.normal(0), CGPoint(x: 0, y: 1)) < maxError )
         let cubic4 = CubicBezierCurve(p0: a, p1: b, p2: b, p3: b)
-        XCTAssertTrue( distance(cubic4.normal(1), BezierKitTestHelpers.approximateNormal(for: cubic3, at: 1)) < maxError )
+        XCTAssertTrue( distance(cubic4.normal(1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
 //    
