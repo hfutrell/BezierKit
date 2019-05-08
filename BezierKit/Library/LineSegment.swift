@@ -56,6 +56,10 @@ public struct LineSegment: BezierCurve, Equatable {
     public func derivative(_ t: CGFloat) -> CGPoint {
         return self.p1 - self.p0
     }
+
+    public func normal(_ t: CGFloat) -> CGPoint {
+        return (self.p1 - self.p0).perpendicular.normalize()
+    }
     
     public func split(from t1: CGFloat, to t2: CGFloat) -> LineSegment {
         let p0 = self.p0

@@ -10,7 +10,17 @@ import XCTest
 @testable import BezierKit
 
 class BezierKitTestHelpers {
-    
+
+    static internal func approximateNormal(for curve: BezierCurve, at t: CGFloat) -> CGPoint {
+        let delta: CGFloat = 0.0001
+        if t == 1.0 {
+            return (curve.compute(1.0) - curve.compute(1.0 - delta)).perpendicular.normalize()
+        }
+        else {
+            return (curve.compute(t + delta) - curve.compute(t)).perpendicular.normalize()
+        }
+    }
+
     static internal func intersections(_ intersections: [Intersection], betweenCurve c1: BezierCurve, andOtherCurve c2: BezierCurve, areWithinTolerance epsilon: CGFloat) -> Bool {
         for i in intersections {
             let p1 = c1.compute(i.t1)

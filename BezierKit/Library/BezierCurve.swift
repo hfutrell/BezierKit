@@ -152,43 +152,6 @@ extension BezierCurve {
         return table
     }
     // MARK: -
-
-    public func normal(_ t: CGFloat) -> CGPoint {
-        func normal2(_ t: CGFloat) -> CGPoint {
-            let d = self.derivative(t)
-            let q = d.length
-            return CGPoint( x: -d.y/q, y: d.x/q )
-        }
-        /*func normal3(_ t: CGFloat) -> CGPoint {
-            let r1 = self.derivative(t).normalize()
-            let r2 = self.derivative(t+0.01).normalize()
-            // cross product
-            var c = CGPointZero
-            c[0] = r2[1] * r1[2] - r2[2] * r1[1]
-            c[1] = r2[2] * r1[0] - r2[0] * r1[2]
-            c[2] = r2[0] * r1[1] - r2[1] * r1[0]
-            c = c.normalize()
-            // rotation matrix
-            let R00 = c[0]*c[0]
-            let R01 = c[0]*c[1]-c[2]
-            let R02 = c[0]*c[2]+c[1]
-            let R10 = c[0]*c[1]+c[2]
-            let R11 = c[1]*c[1]
-            let R12 = c[1]*c[2]-c[0]
-            let R20 = c[0]*c[2]-c[1]
-            let R21 = c[1]*c[2]+c[0]
-            let R22 = c[2]*c[2]
-            // normal vector:
-            var n = CGPointZero
-            n[0] = R00 * r1[0] + R01 * r1[1] + R02 * r1[2]
-            n[1] = R10 * r1[0] + R11 * r1[1] + R12 * r1[2]
-            n[2] = R20 * r1[0] + R21 * r1[1] + R22 * r1[2]
-            return n
-        }*/
-        return /*(CGPoint.dimensions == 3) ? normal3(t) : */ normal2(t)
-    }
-    
-    // MARK: -
     
     /*
      Reduces a curve to a collection of "simple" subcurves, where a simpleness is defined as having all control points on the same side of the baseline (cubics having the additional constraint that the control-to-end-point lines may not cross), and an angle between the end point normals no greater than 60 degrees.
@@ -529,6 +492,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var order: Int { get }
     init(points: [CGPoint])
     func derivative(_ t: CGFloat) -> CGPoint
+    func normal(_ t: CGFloat) -> CGPoint
     func split(from t1: CGFloat, to t2: CGFloat) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
     func compute(_ t: CGFloat) -> CGPoint

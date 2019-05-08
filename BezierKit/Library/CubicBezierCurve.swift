@@ -128,7 +128,22 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let angle: CGFloat = CGFloat(abs(acos(Double(s))))
         return angle < (CGFloat.pi / 3.0)
     }
-    
+
+    public func normal(_ t: CGFloat) -> CGPoint {
+        var d = self.derivative(t)
+        if d == CGPoint.zero {
+            if t == 0.0 {
+                d = p2 - p0
+            } else if t == 1.0 {
+                d = p3 - p1
+            }
+        }
+        if d == CGPoint.zero {
+            d = p3 - p0
+        }
+        return d.perpendicular.normalize()
+    }
+
     public func derivative(_ t: CGFloat) -> CGPoint {
         let mt: CGFloat = 1-t
         let k: CGFloat = 3
