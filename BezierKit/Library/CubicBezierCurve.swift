@@ -90,7 +90,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         
         let abc = Utils.getABC(n: 3, S: s, B: b, E: e, t: t)
         
-        let d1 = (d != nil) ? d! : Utils.dist(b, abc.C)
+        let d1 = d ?? Utils.dist(b, abc.C)
         let d2 = d1 * (1.0-t) / t
         
         let selen = Utils.dist(start, end)
