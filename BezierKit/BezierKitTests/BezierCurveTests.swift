@@ -38,7 +38,7 @@ class BezierCurveTests: XCTestCase {
     
     func testScaleDistance() {
         // line segment
-        let epsilon: CGFloat = 1.0e-6
+        let epsilon: CGFloat = 1.0e-5
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let ls = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
         let expectedLine = LineSegment(p0: CGPoint(x: 0.0, y: 3.0), p1: CGPoint(x: 4.0, y: 7.0))
@@ -65,6 +65,18 @@ class BezierCurveTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, tolerance: epsilon))
 
         // TODO: add special case for quadratic and cubic that are actually linear -- can fail if normals are parallel
+    }
+
+    func testScaleDistanceEdgeCase() {
+        let a = CGPoint(x: 0, y: 0)
+        let b = CGPoint(x: 1, y: 0)
+        let cubic = CubicBezierCurve(p0: a, p1: a, p2: b, p3: b)
+        let result = cubic.scale(distance: 1)
+        let offset = CGPoint(x: 0, y: 1)
+        let aOffset = a + offset
+        let bOffset = b + offset
+        let expectedResult = CubicBezierCurve(p0: aOffset , p1: aOffset, p2: bOffset, p3: bOffset)
+        XCTAssertEqual(result, expectedResult)
     }
     
     func testOffsetDistance() {

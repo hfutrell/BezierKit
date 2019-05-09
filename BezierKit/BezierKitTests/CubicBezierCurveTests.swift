@@ -270,6 +270,22 @@ class CubicBezierCurveTests: XCTestCase {
 //        XCTAssertEqual(n1, n2)
 //        XCTAssertEqual(n2, n3)
 //    }
+
+    func testNormalDegenerate() {
+        let maxError: CGFloat = 0.01
+        let a = CGPoint(x: 2, y: 3)
+        let b = CGPoint(x: 3, y: 3)
+        let c = CGPoint(x: 4, y: 4)
+        let cubic1 = CubicBezierCurve(p0: a, p1: a, p2: b, p3: c)
+        XCTAssertTrue( distance(cubic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
+        let cubic2 = CubicBezierCurve(p0: a, p1: b, p2: c, p3: c)
+        XCTAssertTrue( distance(cubic2.normal(1), CGPoint(x: -sqrt(2)/2, y: sqrt(2)/2)) < maxError )
+        let cubic3 = CubicBezierCurve(p0: a, p1: a, p2: a, p3: b)
+        XCTAssertTrue( distance(cubic3.normal(0), CGPoint(x: 0, y: 1)) < maxError )
+        let cubic4 = CubicBezierCurve(p0: a, p1: b, p2: b, p3: b)
+        XCTAssertTrue( distance(cubic4.normal(1), CGPoint(x: 0, y: 1)) < maxError )
+    }
+
 //    
 //    func testReduce() {
 //        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))

@@ -152,43 +152,6 @@ extension BezierCurve {
         return table
     }
     // MARK: -
-
-    public func normal(_ t: CGFloat) -> CGPoint {
-        func normal2(_ t: CGFloat) -> CGPoint {
-            let d = self.derivative(t)
-            let q = d.length
-            return CGPoint( x: -d.y/q, y: d.x/q )
-        }
-        /*func normal3(_ t: CGFloat) -> CGPoint {
-            let r1 = self.derivative(t).normalize()
-            let r2 = self.derivative(t+0.01).normalize()
-            // cross product
-            var c = CGPointZero
-            c[0] = r2[1] * r1[2] - r2[2] * r1[1]
-            c[1] = r2[2] * r1[0] - r2[0] * r1[2]
-            c[2] = r2[0] * r1[1] - r2[1] * r1[0]
-            c = c.normalize()
-            // rotation matrix
-            let R00 = c[0]*c[0]
-            let R01 = c[0]*c[1]-c[2]
-            let R02 = c[0]*c[2]+c[1]
-            let R10 = c[0]*c[1]+c[2]
-            let R11 = c[1]*c[1]
-            let R12 = c[1]*c[2]-c[0]
-            let R20 = c[0]*c[2]-c[1]
-            let R21 = c[1]*c[2]+c[0]
-            let R22 = c[2]*c[2]
-            // normal vector:
-            var n = CGPointZero
-            n[0] = R00 * r1[0] + R01 * r1[1] + R02 * r1[2]
-            n[1] = R10 * r1[0] + R11 * r1[1] + R12 * r1[2]
-            n[2] = R20 * r1[0] + R21 * r1[1] + R22 * r1[2]
-            return n
-        }*/
-        return /*(CGPoint.dimensions == 3) ? normal3(t) : */ normal2(t)
-    }
-    
-    // MARK: -
     
     /*
      Reduces a curve to a collection of "simple" subcurves, where a simpleness is defined as having all control points on the same side of the baseline (cubics having the additional constraint that the control-to-end-point lines may not cross), and an angle between the end point normals no greater than 60 degrees.
@@ -200,17 +163,17 @@ extension BezierCurve {
     public func reduce() -> [Subcurve<Self>] {
         
         // TODO: handle degenerate case of Cubic with all zero points better!
-        
         let step: CGFloat = 0.01
-        var extrema: [CGFloat] = self.extrema().values
-        extrema = extrema.filter {
+        var extrema: [CGFloat] = []
+        self.extrema().values.forEach {
             if $0 < step {
-                return false // filter out extreme points very close to 0.0
+                return // filter out extreme points very close to 0.0
+            } else if (1.0 - $0) < step {
+                return // filter out extreme points very close to 1.0
+            } else if let last = extrema.last, $0 - last < step {
+                return
             }
-            else if (1.0 - $0) < step {
-                return false // filter out extreme points very close to 1.0
-            }
-            return true
+            return extrema.append($0)
         }
         // aritifically add 0.0 and 1.0 to our extreme points
         extrema.insert(0.0, at: 0)
@@ -245,17 +208,18 @@ extension BezierCurve {
         var pass2: [Subcurve<Self>] = []
         pass2.reserveCapacity(pass1.count)
         pass1.forEach({(p1: Subcurve<Self>) in
+            let adjustedStep = step / (p1.t2 - p1.t1)
             var t1: CGFloat = 0.0
             while t1 < 1.0 {
                 let fullSegment = p1.split(from: t1, to: 1.0)
-                if (1.0 - t1) <= step || fullSegment.curve.simple {
+                if (1.0 - t1) <= adjustedStep || fullSegment.curve.simple {
                     // if the step is small or the full segment is simple, use it
                     pass2.append(fullSegment)
                     t1 = 1.0
                 }
                 else {
                     // otherwise use bisection method to find a suitable step size
-                    let t2 = bisectionMethod(min: t1 + step, max: 1.0, tolerance: step) {
+                    let t2 = bisectionMethod(min: t1 + adjustedStep, max: 1.0, tolerance: adjustedStep) {
                         return p1.split(from: t1, to: $0).curve.simple
                     }
                     let partialSegment = p1.split(from: t1, to: t2)
@@ -324,10 +288,11 @@ extension BezierCurve {
                     break
                 }
                 let p = np[t*order] // either the first or last of np
-                let d = self.derivative(CGFloat(t))
+                let d = -self.normal(CGFloat(t)).perpendicular
                 let p2 = p + d
-                let o2 = (o != nil) ? o! : points[t+1] - self.normal(CGFloat(t))
-                np[t+1] = Utils.lli4(p, p2, o2, points[t+1])!
+                let o2 = o ?? (points[t+1] - self.normal(CGFloat(t)))
+                let fallback = points[t+1] + (np[t*order] - points[t*order])
+                np[t+1] = Utils.lli4(p, p2, o2, points[t+1]) ?? fallback
             }
         }
         else {
@@ -529,6 +494,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var order: Int { get }
     init(points: [CGPoint])
     func derivative(_ t: CGFloat) -> CGPoint
+    func normal(_ t: CGFloat) -> CGPoint
     func split(from t1: CGFloat, to t2: CGFloat) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
     func compute(_ t: CGFloat) -> CGPoint

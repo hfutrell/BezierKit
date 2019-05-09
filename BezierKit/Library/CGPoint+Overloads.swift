@@ -26,6 +26,9 @@ public extension CGPoint {
         return CGPoint(x: p1.x > p2.x ? p1.x : p2.x,
                        y: p1.y > p2.y ? p1.y : p2.y)
     }
+    internal var perpendicular: CGPoint {
+        return CGPoint(x: -self.y, y: self.x)
+    }
 }
 
 public func distance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
