@@ -38,7 +38,7 @@ class BezierCurveTests: XCTestCase {
     
     func testScaleDistance() {
         // line segment
-        let epsilon: CGFloat = 1.0e-6
+        let epsilon: CGFloat = 1.0e-5
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let ls = l.scale(distance: sqrt(2)) // (moves line up and left by 1,1)
         let expectedLine = LineSegment(p0: CGPoint(x: 0.0, y: 3.0), p1: CGPoint(x: 4.0, y: 7.0))
