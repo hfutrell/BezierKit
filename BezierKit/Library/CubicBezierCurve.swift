@@ -87,29 +87,26 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let s = start
         let b = mid
         let e = end
-        
+        let oneMinusT = 1.0 - t
+
         let abc = Utils.getABC(n: 3, S: s, B: b, E: e, t: t)
         
         let d1 = d ?? Utils.dist(b, abc.C)
-        let d2 = d1 * (1.0-t) / t
+        let d2 = d1 * oneMinusT / t
         
         let selen = Utils.dist(start, end)
-        let lx = (e.x-s.x) / selen
-        let ly = (e.y-s.y) / selen
-        let bx1 = d1 * lx
-        let by1 = d1 * ly
-        let bx2 = d2 * lx
-        let by2 = d2 * ly
-        
+        let l = (1.0 / selen) * (e - s)
+        let b1 = d1 * l
+        let b2 = d2 * l
+
         // derivation of new hull coordinates
-        let e1  = CGPoint( x: b.x - bx1, y: b.y - by1 )
-        let e2  = CGPoint( x: b.x + bx2, y: b.y + by2 )
+        let e1  = b - b1
+        let e2  = b + b2
         let A   = abc.A
-        let oneMinusT = 1.0 - t
-        let v1  = A + (e1-A) / oneMinusT
-        let v2  = A + (e2-A) / t
-        let nc1 = s + (v1-s) / t
-        let nc2 = e + (v2-e) / oneMinusT
+        let v1  = A + (e1 - A) / oneMinusT
+        let v2  = A + (e2 - A) / t
+        let nc1 = s + (v1 - s) / t
+        let nc2 = e + (v2 - e) / oneMinusT
         // ...done
         self.init(p0:s, p1: nc1, p2: nc2, p3: e)
     }
