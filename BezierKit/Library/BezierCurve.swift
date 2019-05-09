@@ -163,17 +163,17 @@ extension BezierCurve {
     public func reduce() -> [Subcurve<Self>] {
         
         // TODO: handle degenerate case of Cubic with all zero points better!
-        
         let step: CGFloat = 0.01
-        var extrema: [CGFloat] = self.extrema().values
-        extrema = extrema.filter {
+        var extrema: [CGFloat] = []
+        self.extrema().values.forEach {
             if $0 < step {
-                return false // filter out extreme points very close to 0.0
+                return // filter out extreme points very close to 0.0
+            } else if (1.0 - $0) < step {
+                return // filter out extreme points very close to 1.0
+            } else if let last = extrema.last, $0 - last < step {
+                return
             }
-            else if (1.0 - $0) < step {
-                return false // filter out extreme points very close to 1.0
-            }
-            return true
+            return extrema.append($0)
         }
         // aritifically add 0.0 and 1.0 to our extreme points
         extrema.insert(0.0, at: 0)
@@ -208,17 +208,18 @@ extension BezierCurve {
         var pass2: [Subcurve<Self>] = []
         pass2.reserveCapacity(pass1.count)
         pass1.forEach({(p1: Subcurve<Self>) in
+            let adjustedStep = step / (p1.t2 - p1.t1)
             var t1: CGFloat = 0.0
             while t1 < 1.0 {
                 let fullSegment = p1.split(from: t1, to: 1.0)
-                if (1.0 - t1) <= step || fullSegment.curve.simple {
+                if (1.0 - t1) <= adjustedStep || fullSegment.curve.simple {
                     // if the step is small or the full segment is simple, use it
                     pass2.append(fullSegment)
                     t1 = 1.0
                 }
                 else {
                     // otherwise use bisection method to find a suitable step size
-                    let t2 = bisectionMethod(min: t1 + step, max: 1.0, tolerance: step) {
+                    let t2 = bisectionMethod(min: t1 + adjustedStep, max: 1.0, tolerance: adjustedStep) {
                         return p1.split(from: t1, to: $0).curve.simple
                     }
                     let partialSegment = p1.split(from: t1, to: t2)
