@@ -288,10 +288,11 @@ extension BezierCurve {
                     break
                 }
                 let p = np[t*order] // either the first or last of np
-                let d = self.derivative(CGFloat(t))
+                let d = -self.normal(CGFloat(t)).perpendicular
                 let p2 = p + d
-                let o2 = (o != nil) ? o! : points[t+1] - self.normal(CGFloat(t))
-                np[t+1] = Utils.lli4(p, p2, o2, points[t+1])!
+                let o2 = o ?? (points[t+1] - self.normal(CGFloat(t)))
+                let fallback = points[t+1] + (np[t*order] - points[t*order])
+                np[t+1] = Utils.lli4(p, p2, o2, points[t+1]) ?? fallback
             }
         }
         else {

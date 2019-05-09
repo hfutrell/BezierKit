@@ -406,7 +406,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         intersections.forEach {
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
-            assert(element.derivative($0.t).length > 1.0e-3, "possible NaN normal vector. Possible data for unit test?")
+            assert(element.normal($0.t).x.isFinite && element.normal($0.t).y.isFinite, "possible NaN normal vector. Possible data for unit test?")
             let dotProduct = Double(delta.dot(element.normal(t)))
             if dotProduct < -Utils.epsilon {
                 if t != 0 {

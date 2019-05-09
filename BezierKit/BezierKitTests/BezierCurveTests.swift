@@ -66,6 +66,18 @@ class BezierCurveTests: XCTestCase {
 
         // TODO: add special case for quadratic and cubic that are actually linear -- can fail if normals are parallel
     }
+
+    func testScaleDistanceEdgeCase() {
+        let a = CGPoint(x: 0, y: 0)
+        let b = CGPoint(x: 1, y: 0)
+        let cubic = CubicBezierCurve(p0: a, p1: a, p2: b, p3: b)
+        let result = cubic.scale(distance: 1)
+        let offset = CGPoint(x: 0, y: 1)
+        let aOffset = a + offset
+        let bOffset = b + offset
+        let expectedResult = CubicBezierCurve(p0: aOffset , p1: aOffset, p2: bOffset, p3: bOffset)
+        XCTAssertEqual(result, expectedResult)
+    }
     
     func testOffsetDistance() {
         // line segments (or isLinear) have a separate codepath, so be sure to test those
