@@ -17,15 +17,17 @@ public struct ShapeIntersection: Equatable {
     }
 }
 
-public struct Shape {
-    public struct Cap {
+public struct Shape: Equatable {
+    public struct Cap: Equatable {
         let curve: BezierCurve
         let virtual: Bool // a cap is virtual if it is internal (not part of the outline of the boundary)
         init(curve: BezierCurve, virtual: Bool) {
             self.curve = curve
             self.virtual = virtual
         }
-        // TODO: equatable
+        public static func == (lhs: Cap, rhs: Cap) -> Bool {
+            return lhs.curve == rhs.curve && lhs.virtual == rhs.virtual
+        }
     }
     
     public static let defaultShapeIntersectionThreshold: CGFloat = 0.5
@@ -80,5 +82,8 @@ public struct Shape {
         }
         return intersections
     }
-    // TODO: equatable
+    
+    public static func == (lhs: Shape, rhs: Shape) -> Bool {
+        return lhs.startcap == rhs.startcap && lhs.endcap == rhs.endcap && lhs.forward == rhs.forward && lhs.back == rhs.back
+    }
 }
