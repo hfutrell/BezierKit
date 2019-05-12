@@ -379,7 +379,34 @@ class CubicBezierCurveTests: XCTestCase {
 //        XCTAssertEqualWithAccuracy(i2[2].t1, 0.75, accuracy: epsilon)
 //        XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
 //    }
-//    
+//
+    func testIntersectionsCubicMaxIntersections() {
+        let epsilon: CGFloat = 1.0e-5
+        let a = 4.0
+        let c1 = CubicBezierCurve(p0: CGPoint(x: 0, y: 0),
+                                  p1: CGPoint(x: 0.33, y: a),
+                                  p2: CGPoint(x: 0.66, y: 1-a),
+                                  p3: CGPoint(x: 1, y: 1))
+        let c2 = CubicBezierCurve(p0: CGPoint(x: 0, y: 1),
+                                  p1: CGPoint(x: a, y: 0.66),
+                                  p2: CGPoint(x: 1-a, y: 0.33),
+                                  p3: CGPoint(x: 1, y: 0))
+        let intersections = c1.intersections(with: c2, accuracy: epsilon)
+        let expectedResults = [CGPoint(x: 0.009867618966216286, y: 0.11635072599233257),
+                               CGPoint(x: 0.03530531425481719, y: 0.3869680057368261),
+                               CGPoint(x: 0.11629483697722519, y: 0.9898413631716166),
+                               CGPoint(x: 0.38725276058371816, y: 0.9636332023660762),
+                               CGPoint(x: 0.49721796591086287, y: 0.495633320355362),
+                               CGPoint(x: 0.6056909589337255, y: 0.036054034343778435),
+                               CGPoint(x: 0.880590710796587, y: 0.010134637339461294),
+                               CGPoint(x: 0.9628624913661753, y: 0.6053986189382927),
+                               CGPoint(x: 0.9895666738958517, y: 0.8806493722540778)]
+        XCTAssertEqual(intersections.count, 9)
+        for i in 0..<intersections.count {
+            XCTAssertTrue(distance(c1.compute(intersections[i].t1), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(c2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
+        }
+    }
     
     func testCubicIntersectsLine() {
         let epsilon: CGFloat = 0.00001

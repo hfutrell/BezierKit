@@ -365,14 +365,8 @@ internal class Utils {
                                       _ results: inout [Intersection],
                                       _ accuracy: CGFloat) {
         
-        if results.count > 20 {
-            // TODO: better bailout conditions
-            return
-        }
-        
-        guard c1b.overlaps(c2b) else {
-            return
-        }
+        guard results.count < c1.curve.order * c2.curve.order else { return }
+        guard c1b.overlaps(c2b) else { return }
 
         let canSplit1 = c1.canSplit
         let canSplit2 = c2.canSplit
@@ -383,9 +377,7 @@ internal class Utils {
             // subcurves are small enough or we simply cannot recurse any more
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-            guard let intersection = l1.intersections(with: l2).first else {
-                return
-            }
+            guard let intersection = l1.intersections(with: l2).first else { return }
             let t1 = intersection.t1
             let t2 = intersection.t2
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,

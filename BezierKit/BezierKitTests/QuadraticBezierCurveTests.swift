@@ -148,6 +148,28 @@ class QuadraticBezierCurveTests: XCTestCase {
         XCTAssertTrue( distance(q2.compute(i[0].t2), expectedResult1) < epsilon)
         XCTAssertTrue( distance(q2.compute(i[1].t2), expectedResult2) < epsilon)
     }
+    
+    func testIntersectionsQuadraticMaxIntersections() {
+        let epsilon: CGFloat = 1.0e-5
+        let q1: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
+                                                            end: CGPoint(x: 2.0, y: 0.0),
+                                                            mid: CGPoint(x: 1.0, y: 2.0),
+                                                            t: 0.5)
+        let q2: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
+                                                            end: CGPoint(x: 0.0, y: 2.0),
+                                                            mid: CGPoint(x: 2.0, y: 1.0),
+                                                            t: 0.5)
+        let intersections = q1.intersections(with: q2, accuracy: epsilon)
+        let expectedResults = [CGPoint(x: 0.0, y: 0.0),
+                               CGPoint(x: 0.69098300, y: 1.8090170),
+                               CGPoint(x: 1.5, y: 1.5),
+                               CGPoint(x: 1.8090170, y: 0.69098300)]
+        XCTAssertEqual(intersections.count, 4)
+        for i in 0..<intersections.count {
+            XCTAssertTrue(distance(q1.compute(intersections[i].t1), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(q2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
+        }
+    }
 
     // MARK: -
     
