@@ -151,16 +151,12 @@ internal class Utils {
     }
     
     static func clamp(_ x: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
-        // note that if x is NaN all comparisons fail so we return NaN
-        // TODO: this is purposeful behavior, should probably have unit test
         precondition(b >= a)
         if x < a {
             return a
-        }
-        else if x > b {
+        } else if x > b {
             return b
-        }
-        else {
+        } else {
             return x
         }
     }
@@ -198,7 +194,6 @@ internal class Utils {
                 return [v1, v2].compactMap(clamp)
             }
             else if a != b {
-                // TODO: also fix in droots!
                 return [Double(0.5) * a / (a-b)].compactMap(clamp)
             }
             else {
@@ -273,7 +268,7 @@ internal class Utils {
         // quadratic roots are easy
         // do something with each root
         let d: CGFloat = a - 2.0*b + c
-        if d != 0 {
+        if abs(d) > CGFloat(epsilon) {
             let m1 = -sqrt(b*b-a*c)
             let m2 = -a+b
             let v1 = -( m1+m2)/d
@@ -281,8 +276,8 @@ internal class Utils {
             callback(v1)
             callback(v2)
         }
-        else if (b != c) && (d == 0) {
-            callback((2*b-c)/(2*(b-c)))
+        else if a != b {
+            callback(0.5 * a / (a - b))
         }
     }
     
