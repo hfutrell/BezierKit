@@ -227,27 +227,22 @@ class CubicBezierCurveTests: XCTestCase {
 
     func testExtrema() {
         let f: [CGFloat] = [1, -1, 0, 0] // f(t) = t^3 - t^2, which has two local minimum at t=0, t=2/3 and an inflection point t=1/3
-        let g: [CGFloat] = [3, -2, 0, 0] // g(t) = 3t^3 - 2t^2, which has a local minimum at t=0, t=4/9 and an inflection point at t=2/9
+        let g: [CGFloat] = [0, 3, -2, 0] // g(t) = 3t^2 - 2t, which has a local minimum at t=1/3
         let c = BezierKitTestHelpers.cubicBezierCurveFromPolynomials(f, g)
         let (xyz, values) = c.extrema()
         XCTAssert(xyz.count == 2) // one array for each dimension
         XCTAssertEqual(xyz[0].count, 3)
-        XCTAssertEqual(xyz[1].count, 3)
-        XCTAssertEqual(values.count, 5)
+        XCTAssertEqual(xyz[1].count, 1)
+        XCTAssertEqual(values.count, 3)
         XCTAssertEqual(values[0], 0.0)
-        XCTAssertEqual(values[1], 2.0 / 9.0)
-        XCTAssertEqual(values[2], 1.0 / 3.0)
-        XCTAssertEqual(values[3], 4.0 / 9.0)
-        XCTAssertEqual(values[4], 2.0 / 3.0)
+        XCTAssertEqual(values[1], 1.0 / 3.0)
+        XCTAssertEqual(values[2], 2.0 / 3.0)
         XCTAssertEqual(xyz[0].count, 3)
         XCTAssertEqual(xyz[0][0], 0.0)
         XCTAssertEqual(xyz[0][1], 1.0 / 3.0)
         XCTAssertEqual(xyz[0][2], 2.0 / 3.0)
-        XCTAssertEqual(xyz[1].count, 3)
-        XCTAssertEqual(xyz[1][0], 0.0)
-        XCTAssertEqual(xyz[1][1], 2.0 / 9.0)
-        XCTAssertEqual(xyz[1][2], 4.0 / 9.0)
-        // TODO: originally this test used g = [0, 3, -2, 0] but that exposed a flaw in droots because we were passing in a quadratic. We need to fix this in droots
+        XCTAssertEqual(xyz[1].count, 1)
+        XCTAssertEqual(xyz[1][0], 1.0 / 3.0)
     }
     
 // TODO: we still have some missing unit tests for CubicBezierCurve's API entry points
