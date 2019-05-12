@@ -109,7 +109,6 @@ extension BezierCurve {
     internal func internalExtrema(includeInflection: Bool) -> [[CGFloat]] {
         var xyz: [[CGFloat]] = []
         xyz.reserveCapacity(CGPoint.dimensions)
-        // TODO: this code can be made a lot faster through inlining the droots computation such that allocations need not occur
         for d in 0..<CGPoint.dimensions {
             let mfn = {(v: CGPoint) in v[d]}
             var p: [CGFloat] = self.dpoints[0].map(mfn)
