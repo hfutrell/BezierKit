@@ -124,7 +124,7 @@ extension BezierCurve {
 
     public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
         let xyz = self.internalExtrema(includeInflection: true)
-        var roots = xyz.flatMap {$0}.sorted() // the roots for each dimension, flattened and sorted
+        var roots = xyz.joined().sorted() // the roots for each dimension, flattened and sorted
         var values: [CGFloat] = []
         if !roots.isEmpty {
             values.reserveCapacity(roots.count)
