@@ -119,16 +119,20 @@ class CubicBezierCurveTests: XCTestCase {
     func testSimple() {
         // create a simple cubic curve (very simple, because it's equal to a line segment)
         let c1 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 3.0, y: 3.0), p3: CGPoint(x: 4.0, y: 4.0))
-        XCTAssert(c1.simple == true)
+        XCTAssertTrue(c1.simple)
         // a non-trivial example of a simple curve -- almost a straight line
         let c2 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 1.05), p2: CGPoint(x: 3.0, y: 1.05), p3: CGPoint(x: 4.0, y: 1.0))
-        XCTAssert(c2.simple == true)
+        XCTAssertTrue(c2.simple)
         // non-simple curve, control points fall on different sides of the baseline
         let c3 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 1.05), p2: CGPoint(x: 3.0, y: 0.95), p3: CGPoint(x: 4.0, y: 1.0))
-        XCTAssert(c3.simple == false)
+        XCTAssertFalse(c3.simple)
         // non-simple curve, angle between end point normals > 60 degrees (pi/3) -- in this case the angle is 45 degrees (pi/2)
         let c4 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 1.0, y: 2.0), p2: CGPoint(x: 2.0, y: 3.0), p3: CGPoint(x: 3.0, y: 3.0))
-        XCTAssert(c4.simple == false)
+        XCTAssertFalse(c4.simple)
+        // ensure that points-as-cubics pass (otherwise callers might try to subdivide them further)
+        let p = CGPoint(x: 1.234, y: 5.689)
+        let c5 = CubicBezierCurve(p0: p, p1: p, p2: p, p3: p)
+        XCTAssertTrue(c5.simple)
     }
     
     func testDerivative() {
@@ -281,15 +285,29 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertTrue( distance(cubic4.normal(1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
-//    
-//    func testReduce() {
-//        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-//        let r = l.reduce() // reduce should just return the original line back
-//        XCTAssertEqual(r.count, 1)
-//        XCTAssertEqual(r[0].t1, 0.0)
-//        XCTAssertEqual(r[0].t2, 1.0)
-//        XCTAssertEqual(r[0].curve, l)
-//    }
+    func testReduce() {
+        // curve with both tangents above the baseline, difference in angles just under pi / 3
+        let c1 = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),
+                                  p1: CGPoint(x: 1.0, y: 2.0),
+                                  p2: CGPoint(x: 2.0, y: 3.0),
+                                  p3: CGPoint(x: 4.0, y: 4.0))
+        let result1 = c1.reduce()
+        XCTAssertEqual([Subcurve(t1: 0, t2: 1, curve: c1)], result1)
+
+        // angle between vectors is nearly pi / 2, so it must be split
+        let c2 = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),
+                                  p1: CGPoint(x: 0.0, y: 2.0),
+                                  p2: CGPoint(x: 2.0, y: 4.0),
+                                  p3: CGPoint(x: 4.0, y: 4.0))
+        let result2 = c2.reduce()
+        XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(result2, for: c2))
+
+        // ensure it works for degenerate case
+        let p = CGPoint(x: 5.3451, y: -1.2345)
+        let c3 = CubicBezierCurve(p0: p, p1: p, p2: p, p3: p)
+        let result3 = c3.reduce()
+        XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(result3, for: c3))
+    }
 //
 //    //    func testScaleDistanceFunc {
 //    //

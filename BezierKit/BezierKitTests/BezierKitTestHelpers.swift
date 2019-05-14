@@ -98,7 +98,39 @@ class BezierKitTestHelpers {
         }
         return curve
     }
-    
+
+    static func isSatisfactoryReduceResult<A>(_ result: [Subcurve<A>], for curve: A) -> Bool {
+        // ensure full curve represented
+        guard result.count > 0 else { return false }
+        guard result.first!.t1 == 0 else { return false }
+        guard result.last!.t2 == 1 else { return false }
+        // ensure contiguous ranges
+        for i in 0..<result.count-1 {
+            guard result[i].t2 == result[i+1].t1 else { return false }
+        }
+        // ensure that it conains the extrema
+        let extrema = curve.extrema().values
+        for e in extrema {
+            let extremaExistsInSolution = result.contains { subcurve in
+                abs(subcurve.t1 - e) <= reduceStepSize || abs(subcurve.t2 - e) <= reduceStepSize
+            }
+            guard extremaExistsInSolution else { return false }
+        }
+        // ensure that each subcurve is simple
+        guard result.allSatisfy({ $0.curve.simple }) else { return false }
+        // ensure that we haven't divided things into too many curves
+        for subcurve in result {
+            let t = subcurve.t2
+            let isNearExtrema = extrema.contains { abs($0 - t) <= BezierKit.reduceStepSize  }
+            if !isNearExtrema && t != 1.0 {
+                if curve.split(from: subcurve.t1, to: Utils.clamp(t+BezierKit.reduceStepSize, 0, 1)).simple {
+                    return false // we could have expanded subcurve and still had a simple result
+                }
+            }
+        }
+        return true
+    }
+
 //    static func quadraticBezierCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> QuadraticBezierCurve {
 //        precondition(f.count == 3 && g.count == 3)
 //        // create a quadratic bezier curve from two polynomials

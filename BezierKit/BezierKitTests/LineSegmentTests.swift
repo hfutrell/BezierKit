@@ -121,10 +121,7 @@ class LineSegmentTests: XCTestCase {
     func testReduce() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let r = l.reduce() // reduce should just return the original line back
-        XCTAssertEqual(r.count, 1)
-        XCTAssertEqual(r[0].t1, 0.0)
-        XCTAssertEqual(r[0].t2, 1.0)
-        XCTAssertEqual(r[0].curve, l)
+        XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(r, for: l))
     }
 
     func testSelfIntersects() {

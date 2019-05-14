@@ -109,7 +109,6 @@ extension BezierCurve {
     internal func internalExtrema(includeInflection: Bool) -> [[CGFloat]] {
         var xyz: [[CGFloat]] = []
         xyz.reserveCapacity(CGPoint.dimensions)
-        // TODO: this code can be made a lot faster through inlining the droots computation such that allocations need not occur
         for d in 0..<CGPoint.dimensions {
             let mfn = {(v: CGPoint) in v[d]}
             var p: [CGFloat] = self.dpoints[0].map(mfn)
@@ -165,10 +164,10 @@ extension BezierCurve {
      
      
      */
+
     public func reduce() -> [Subcurve<Self>] {
         
-        // TODO: handle degenerate case of Cubic with all zero points better!
-        let step: CGFloat = 0.01
+        let step: CGFloat = BezierKit.reduceStepSize
         var extrema: [CGFloat] = []
         self.extrema().values.forEach {
             if $0 < step {
@@ -452,6 +451,7 @@ extension BezierCurve {
 }
 
 public let defaultIntersectionAccuracy = CGFloat(0.5)
+internal let reduceStepSize: CGFloat = 0.01
 
 // MARK: factory
 

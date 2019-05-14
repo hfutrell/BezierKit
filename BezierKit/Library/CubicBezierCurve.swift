@@ -114,6 +114,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
     // MARK: -
     
     public var simple: Bool {
+        guard p0 != p1 || p1 != p2 || p2 != p3 else { return true }
         let a1 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p1)
         let a2 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p2)
         if a1>0 && a2<0 || a1<0 && a2>0 {
