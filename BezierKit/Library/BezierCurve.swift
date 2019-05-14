@@ -275,7 +275,7 @@ extension BezierCurve {
         
         guard self.order > 1 else { return Self.init(points: np) } // for line segments nothing left to do
         
-        let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
+        let o = Utils.linesIntersection(v[0].p, v[0].c, v[1].p, v[1].c)
         
         switch scaler {
         case .constant(_):
@@ -290,7 +290,7 @@ extension BezierCurve {
                 let p2 = p + d
                 let o2 = o ?? (points[t+1] - self.normal(CGFloat(t)))
                 let fallback = points[t+1] + (np[t*order] - points[t*order])
-                np[t+1] = Utils.lli4(p, p2, o2, points[t+1]) ?? fallback
+                np[t+1] = Utils.linesIntersection(p, p2, o2, points[t+1]) ?? fallback
             }
         case let .function(distanceFunction):
             let clockwise: Bool = {
