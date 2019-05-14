@@ -47,9 +47,6 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 currentComponentPoints = [self.currentPoint!]
             }
         }
-        func finishUp() {
-            self.completeComponentIfNeededAndClearPointsAndOrders()
-        }
     }
     
     @objc(CGPath) public lazy var cgPath: CGPath = {
