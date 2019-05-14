@@ -285,6 +285,17 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertTrue( distance(cubic4.normal(1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
+    func testNormalCusp() {
+        // c has a cusp at t = 0.5, the normal vector *cannot* be defined
+        let c = CubicBezierCurve(p0: CGPoint(x: 1, y: 1),
+                                 p1: CGPoint(x: 2, y: 2),
+                                 p2: CGPoint(x: 1, y: 2),
+                                 p3: CGPoint(x: 2, y: 1))
+        XCTAssertEqual(c.derivative(0.5), CGPoint.zero)
+        XCTAssertTrue(c.normal(0.5).x.isNaN)
+        XCTAssertTrue(c.normal(0.5).y.isNaN)
+    }
+
     func testReduce() {
         // curve with both tangents above the baseline, difference in angles just under pi / 3
         let c1 = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),

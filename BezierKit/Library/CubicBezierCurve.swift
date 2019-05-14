@@ -129,15 +129,15 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
 
     public func normal(_ t: CGFloat) -> CGPoint {
         var d = self.derivative(t)
-        if d == CGPoint.zero {
+        if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p0
-            } else if t == 1.0 {
+            } else {
                 d = p3 - p1
             }
-        }
-        if d == CGPoint.zero {
-            d = p3 - p0
+            if d == CGPoint.zero {
+                d = p3 - p0
+            }
         }
         return d.perpendicular.normalize()
     }

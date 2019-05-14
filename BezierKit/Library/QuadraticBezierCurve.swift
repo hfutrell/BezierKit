@@ -81,10 +81,10 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
 
     public func normal(_ t: CGFloat) -> CGPoint {
         var d = self.derivative(t)
-        if d == CGPoint.zero {
+        if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p1
-            } else if t == 1.0 {
+            } else {
                 d = p1 - p0
             }
         }

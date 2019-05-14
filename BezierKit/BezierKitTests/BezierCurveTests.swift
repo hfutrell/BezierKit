@@ -106,8 +106,6 @@ class BezierCurveTests: XCTestCase {
                 XCTAssert(distance(c.endingPoint, CGPoint(x: 5.0, y: 2.0)) < epsilon)
             }
         }
-        // TODO: fix reduce behavior for cusps (cannot be simplified because derivative is zero so normal is zero at cusp)
-        // let c2 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 1.0, y: 2.0), p3: CGPoint(x: 2.0, y: 1.0))
     }
     
     func testOffsetTimeDistance() {
