@@ -1,0 +1,20 @@
+disabled_rules: # rule identifiers to exclude from running
+  - identifier_name
+  - no_fallthrough_only
+  - type_name
+# configurable rules can be customized from this configuration file
+# binary rules can set their severity level
+force_cast: warning
+type_body_length:
+  - 200  # warning
+  - 1000 # error
+line_length:
+  - 180  # warning
+  - 1000 # error
+large_tuple:
+  - 3    # warning
+  - 6    # error
+excluded:
+    BezierKitTests/
+    BezierKit_iOSTests/
+    BezierKit_MacTests/
