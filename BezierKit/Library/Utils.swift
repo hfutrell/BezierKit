@@ -119,30 +119,24 @@ internal class Utils {
         let r = v2/d1
         return ts + d2*r        
     }
-    
-    static func lli8(_ x1: CGFloat,_ y1: CGFloat,_ x2: CGFloat,_ y2: CGFloat,_ x3:
-        // TODO: implement line primitive (distinct from line segment) to rid of this function
-        CGFloat,_ y3: CGFloat,_ x4: CGFloat,_ y4: CGFloat) -> CGPoint? {
-        let nx = (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
-        let ny = (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)
-        let d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
-        if d == 0 {
-            return nil
-        }
-        return CGPoint( x: nx/d, y: ny/d )
-    }
-    
+
     static func approximately(_ a: Double,_ b: Double, precision: Double) -> Bool {
         return abs(a-b) <= precision
     }
     
-    static func lli4(_ p1: CGPoint,_ p2: CGPoint,_ p3: CGPoint,_ p4: CGPoint) -> CGPoint? {
-        // TODO: implement line primitive (distinct from line segment) to rid of this function
-        let x1 = p1.x; let y1 = p1.y
-        let x2 = p2.x; let y2 = p2.y
-        let x3 = p3.x; let y3 = p3.y
-        let x4 = p4.x; let y4 = p4.y
-        return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
+    static func linesIntersection(_ line1p1: CGPoint,_ line1p2: CGPoint,_ line2p1: CGPoint,_ line2p2: CGPoint) -> CGPoint? {
+        let x1 = line1p1.x; let y1 = line1p1.y
+        let x2 = line1p2.x; let y2 = line1p2.y
+        let x3 = line2p1.x; let y3 = line2p1.y
+        let x4 = line2p2.x; let y4 = line2p2.y
+        let d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+        if d == 0 {
+            return nil
+        }
+        let a = (x1 * y2 - y1 * x2)
+        let b = (x3 * y4 - y3 * x4)
+        let n = a * (line2p1 - line2p2) - b * (line1p1 - line1p2)
+        return (1.0 / d) * n
     }
     
     // cube root function yielding real roots
@@ -420,7 +414,7 @@ internal class Utils {
         let m1n = m1 + d1p
         let m2n = m2 + d2p
         // intersection of these lines:
-        let oo = Utils.lli8(m1.x, m1.y, m1n.x, m1n.y, m2.x, m2.y, m2n.x, m2n.y)
+        let oo = Utils.linesIntersection(m1, m1n, m2, m2n)
         
         assert(oo != nil)
         

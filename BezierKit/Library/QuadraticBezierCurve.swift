@@ -71,6 +71,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
     }
     
     public var simple: Bool {
+        guard p0 != p1 || p1 != p2 else { return true }
         let n1 = self.normal(0)
         let n2 = self.normal(1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
@@ -80,10 +81,10 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
 
     public func normal(_ t: CGFloat) -> CGPoint {
         var d = self.derivative(t)
-        if d == CGPoint.zero {
+        if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p1
-            } else if t == 1.0 {
+            } else {
                 d = p1 - p0
             }
         }
