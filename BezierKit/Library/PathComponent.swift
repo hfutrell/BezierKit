@@ -9,18 +9,6 @@
 import CoreGraphics
 import Foundation
 
-#if os(macOS)
-private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSValue.cgPointValue available
-    var cgPointValue: CGPoint {
-        let pointValue: NSPoint = self.pointValue
-        return CGPoint(x: pointValue.x, y: pointValue.y)
-    }
-    convenience init(cgPoint: CGPoint) {
-        self.init(point: NSPoint(x: cgPoint.x, y: cgPoint.y))
-    }
-}
-#endif
-
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
     
     private let offsets: [Int]
