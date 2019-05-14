@@ -92,8 +92,7 @@ fileprivate extension InputStream {
                     currentPoints = []
                     currentOrders = []
                 }
-            }
-            else {
+            } else {
                 currentOrders.append(pointsToRead)
             }
             for _ in 0..<pointsToRead {
@@ -111,7 +110,7 @@ fileprivate extension InputStream {
         self.init(components: components)
     }
 
-    @objc var data: Data {
+    var data: Data {
 
         let expectedCoordinatesCount = 2 * self.components.reduce(0) { $0 + $1.points.count }
         let expectedCommandsCount = self.components.reduce(0) { $0 + $1.elementCount } + self.components.count

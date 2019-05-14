@@ -39,7 +39,7 @@ fileprivate extension CGPath {
         var elements: [CGPathElementRecord] = []
     }
     var elements: [CGPathElementRecord] {
-        func elementGetterApplierFunction(_ info: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) -> Void {
+        func elementGetterApplierFunction(_ info: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             let context = info!.assumingMemoryBound(to: ElementGetterContext.self).pointee
             context.elements.append(CGPathElementRecord(element.pointee))
         }
@@ -54,7 +54,7 @@ class PathDataTests: XCTestCase {
     private func pathHasEqualElementsToCGPath(_ path1: Path, _ path2: CGPath) -> Bool {
         return cgPathsHaveEqualCGPathElements(path1.cgPath, path2)
     }
-        
+
     private func cgPathsHaveEqualCGPathElements(_ path1: CGPath, _ path2: CGPath) -> Bool {
         // checks that the CGPathElements that make up the paths are exactly equal
         // unfortunately we cannot just check path1 == path2 because CGPath.isRect can differ even if the underlying data is the same

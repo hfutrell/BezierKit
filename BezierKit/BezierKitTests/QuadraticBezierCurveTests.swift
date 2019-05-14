@@ -17,12 +17,12 @@ class QuadraticBezierCurveTests: XCTestCase {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
-    
+
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-    
+
 //    func testInitializerArray() {
 //    }
 //
@@ -41,7 +41,7 @@ class QuadraticBezierCurveTests: XCTestCase {
         let q3 = QuadraticBezierCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 5.0, y: 1.0), t: 1.0)
         XCTAssertEqual(q3, QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 5.0, y: 1.0), p2: CGPoint(x: 5.0, y: 1.0)))
     }
-    
+
     func testBasicProperties() {
         let q = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.5, y: 2.0), p2: CGPoint(x: 6.0, y: 1.0))
         XCTAssert(q.simple)
@@ -49,7 +49,7 @@ class QuadraticBezierCurveTests: XCTestCase {
         XCTAssertEqual(q.startingPoint, CGPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(q.endingPoint, CGPoint(x: 6.0, y: 1.0))
     }
-    
+
     func testSetStartEndPoints() {
         var q = QuadraticBezierCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: CGPoint(x: 6.0, y: 5.0), p2: CGPoint(x: 8.0, y: 7.0))
         q.startingPoint = CGPoint(x: 4.0, y: 5.0)
@@ -78,7 +78,7 @@ class QuadraticBezierCurveTests: XCTestCase {
         let expectedBoundingBox1 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0),
                                                p2: CGPoint(x: 5.0, y: 2.0))
         XCTAssertEqual(q1.boundingBox, expectedBoundingBox1)
-       
+
         // hits codepath where midpoint pushes down x coordinate of bounding box
         let q2 = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: -1.0, y: 2.0), p2: CGPoint(x: 1.0, y: 3.0))
         let expectedBoundingBox2 = BoundingBox(p1: CGPoint(x: 0.0, y: 1.0),
@@ -94,7 +94,7 @@ class QuadraticBezierCurveTests: XCTestCase {
 //
 //    func testCompute() {
 //    }
-    
+
 // -- MARK: - methods for which default implementations provided by protocol
 
 //    func testLength() {
@@ -162,7 +162,7 @@ class QuadraticBezierCurveTests: XCTestCase {
         XCTAssertTrue( distance(q2.compute(i[0].t2), expectedResult1) < epsilon)
         XCTAssertTrue( distance(q2.compute(i[1].t2), expectedResult2) < epsilon)
     }
-    
+
     func testIntersectionsQuadraticMaxIntersections() {
         let epsilon: CGFloat = 1.0e-5
         let q1: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
@@ -186,7 +186,7 @@ class QuadraticBezierCurveTests: XCTestCase {
     }
 
     // MARK: -
-    
+
     func testEquatable() {
         let p0 = CGPoint(x: 1.0, y: 2.0)
         let p1 = CGPoint(x: 2.0, y: 3.0)

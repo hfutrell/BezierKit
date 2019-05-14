@@ -10,17 +10,17 @@ import XCTest
 import BezierKit
 
 class ArcApproximateableTests: XCTestCase {
-    
+
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
-    
+
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-    
+
     func isGoodApproximation(arcs: [Arc], curve: BezierCurve, accuracy: CGFloat) -> Bool {
         // we need at least one arc
         if arcs.count == 0 {
@@ -58,7 +58,7 @@ class ArcApproximateableTests: XCTestCase {
         }
         return true
     }
-    
+
     func testArc() {
         // test the constructor
         let arc = Arc(origin: CGPoint(x: 1.0, y: 1.0), radius: 1.5, startAngle: 0.0, endAngle: CGFloat.pi / 2.0)
@@ -67,12 +67,12 @@ class ArcApproximateableTests: XCTestCase {
         XCTAssertEqual(arc.startAngle, 0.0)
         XCTAssertEqual(arc.endAngle, CGFloat.pi / 2.0)
         XCTAssertEqual(arc.interval, Interval(start: 0.0, end: 1.0))
-        
+
         // test equality
         let arc2 = Arc(origin: CGPoint(x: 1.0, y: 1.0), radius: 1.5, startAngle: 0.0, endAngle: CGFloat.pi / 2.0, interval: Interval(start: 0.0, end: 1.0))
         XCTAssertEqual(arc, arc2)
         var arc3 = arc
-        arc3.origin = arc3.origin + CGPoint(x: 1.0, y: 1.0)
+        arc3.origin += CGPoint(x: 1.0, y: 1.0)
         XCTAssertNotEqual(arc, arc3)
         var arc4 = arc
         arc4.radius = 2
@@ -93,14 +93,14 @@ class ArcApproximateableTests: XCTestCase {
         XCTAssert(distance(arc.compute(0.5), CGPoint(x: 1.0, y: 1.0) + 0.75 * sqrt(2) * CGPoint(x: 1.0, y: 1.0)) < epsilon)
         XCTAssert(distance(arc.compute(1.0), CGPoint(x: 1.0, y: 2.5)) < epsilon)
     }
-    
+
     func testArcsQuadraticSingleArc() {
         let epsilon: CGFloat = 0.001
         let r: CGFloat = 100.0
         // q is close to a quarter circle centered at 0,0
         let q = QuadraticBezierCurve(start: r * CGPoint(x: 1.0, y: 0.0),
-                                     end:   r * CGPoint(x: 0.0, y: 1.0),
-                                     mid:   r * CGPoint(x: sqrt(2) / 2.0, y: sqrt(2) / 2.0),
+                                     end: r * CGPoint(x: 0.0, y: 1.0),
+                                     mid: r * CGPoint(x: sqrt(2) / 2.0, y: sqrt(2) / 2.0),
                                      t: 0.5)
         let result = q.arcs(errorThreshold: r)
         // with a big enough error threshold we should just get back one arc
@@ -119,7 +119,7 @@ class ArcApproximateableTests: XCTestCase {
         // just for good measure test that it passes the good approximation test
         XCTAssert(isGoodApproximation(arcs: result, curve: q, accuracy: r))
     }
-    
+
     func testArcsCubicMultipleArcs() {
         // c is just an arc that goes up and comes down
         let c = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),
@@ -130,5 +130,5 @@ class ArcApproximateableTests: XCTestCase {
         let result = c.arcs(errorThreshold: errorThreshold)
         XCTAssert(isGoodApproximation(arcs: result, curve: c, accuracy: errorThreshold))
     }
-    
+
 }

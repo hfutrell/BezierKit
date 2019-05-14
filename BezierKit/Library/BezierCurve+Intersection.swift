@@ -37,7 +37,7 @@ public extension BezierCurve {
 
 private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -> [Intersection] {
     let sortedIntersections = intersections.sorted(by: <)
-    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next : Intersection) in
+    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next: Intersection) in
         return (intersection.isEmpty || (intersection.last!) != next) ? intersection + [next] : intersection
     }
 }
@@ -136,14 +136,11 @@ public extension LineSegment {
         }
         if self.p0 == line.p0 {
             return [Intersection(t1: 0.0, t2: 0.0)]
-        }
-        else if self.p0 == line.p1 {
+        } else if self.p0 == line.p1 {
             return [Intersection(t1: 0.0, t2: 1.0)]
-        }
-        else if self.p1 == line.p0 {
+        } else if self.p1 == line.p0 {
             return [Intersection(t1: 1.0, t2: 0.0)]
-        }
-        else if self.p1 == line.p1 {
+        } else if self.p1 == line.p1 {
             return [Intersection(t1: 1.0, t2: 1.0)]
         }
 
@@ -187,7 +184,7 @@ public extension LineSegment {
             t2 = 1.0
         }
 
-        if t1 > 1.0 || t1 < 0.0  {
+        if t1 > 1.0 || t1 < 0.0 {
             return [] // t1 out of interval [0, 1]
         }
         if t2 > 1.0 || t2 < 0.0 {

@@ -29,13 +29,13 @@ public struct Shape: Equatable {
             return lhs.curve == rhs.curve && lhs.virtual == rhs.virtual
         }
     }
-    
+
     public static let defaultShapeIntersectionThreshold: CGFloat = 0.5
     public let startcap: Cap
     public let endcap: Cap
     public let forward: BezierCurve
     public let back: BezierCurve
-    
+
     internal init(_ forward: BezierCurve, _ back: BezierCurve, _ startCapVirtual: Bool, _ endCapVirtual: Bool) {
         let start  = LineSegment(p0: back.endingPoint, p1: forward.startingPoint)
         let end    = LineSegment(p0: forward.endingPoint, p1: back.startingPoint)
@@ -44,7 +44,7 @@ public struct Shape: Equatable {
         self.forward = forward
         self.back = back
     }
-    
+
     public var boundingBox: BoundingBox {
         return self.nonvirtualSegments().reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
@@ -64,7 +64,7 @@ public struct Shape: Equatable {
         }
         return segments
     }
-    
+
     public func intersects(shape other: Shape, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [ShapeIntersection] {
         if self.boundingBox.overlaps(other.boundingBox) == false {
             return []
@@ -82,7 +82,7 @@ public struct Shape: Equatable {
         }
         return intersections
     }
-    
+
     public static func == (lhs: Shape, rhs: Shape) -> Bool {
         return lhs.startcap == rhs.startcap && lhs.endcap == rhs.endcap && lhs.forward == rhs.forward && lhs.back == rhs.back
     }

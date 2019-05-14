@@ -33,7 +33,7 @@ class Demos {
     private static let quadraticControlPoints = [CGPoint(x: 150, y: 40),
                                          CGPoint(x: 80, y: 30),
                                          CGPoint(x: 105, y: 150)]
-    
+
     static let demo1 = Demo(title: "new Bezier(...)",
                             quadraticControlPoints: quadraticControlPoints,
                             cubicControlPoints: cubicControlPoints,
@@ -41,7 +41,7 @@ class Demos {
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                
+
     })
     static let demo2 = Demo(title: "Bezier.quadraticFromPoints",
                             quadraticControlPoints: [],
@@ -51,12 +51,12 @@ class Demos {
                                     let B = CGPoint(x: 100, y: 50)
                                     let tvalues: [CGFloat] = [0.2, 0.3, 0.4, 0.5]
                                     let curves: [QuadraticBezierCurve] = tvalues.map({(t: CGFloat) -> QuadraticBezierCurve in
-                                        return QuadraticBezierCurve(start: CGPoint(x:150, y: 40),
-                                                                    end: CGPoint(x:35, y:160),
+                                        return QuadraticBezierCurve(start: CGPoint(x: 150, y: 40),
+                                                                    end: CGPoint(x: 35, y: 160),
                                                                     mid: B,
                                                                     t: t)
                                     })
-                                    let offset = CGPoint(x:45,y:30)
+                                    let offset = CGPoint(x: 45, y: 30)
                                     for (i, b) in curves.enumerated() {
                                         Draw.drawSkeleton(context, curve: b, offset: offset, coords: true)
                                         Draw.setColor(context, color: Draw.transparentBlack)
@@ -69,20 +69,15 @@ class Demos {
                                         Draw.drawCurve(context, curve: b, offset: offset)
                                     }
                                     Draw.setColor(context, color: Draw.black)
-                                    Draw.drawCircle(context, center: curves[0].points[0], radius:3, offset: offset)
-                                    Draw.drawCircle(context, center: curves[0].points[2], radius:3, offset: offset)
+                                    Draw.drawCircle(context, center: curves[0].points[0], radius: 3, offset: offset)
+                                    Draw.drawCircle(context, center: curves[0].points[2], radius: 3, offset: offset)
                                     Draw.drawCircle(context, center: B, radius: 3, offset: offset)
-                                }
-                                else {
+                                } else {
                                     let p1 = CGPoint(x: 110, y: 50)
                                     let B = CGPoint(x: 50, y: 80)
-                                    let p3 = CGPoint(x:135, y:100)
+                                    let p3 = CGPoint(x: 135, y: 100)
                                     let tvalues: [CGFloat] = [0.2, 0.3, 0.4, 0.5]
-                                    let curves: [CubicBezierCurve] = tvalues.map({
-                                        (t: CGFloat) -> (CubicBezierCurve) in
-                                        return CubicBezierCurve(start: p1, end: p3, mid: B, t: t)
-                                        }
-                                    )
+                                    let curves = tvalues.map { CubicBezierCurve(start: p1, end: p3, mid: B, t: $0) }
                                     let offset = CGPoint(x: 0.0, y: 0.0)
                                     for curve in curves {
                                         Draw.setRandomColor(context)
@@ -119,7 +114,7 @@ class Demos {
                                 for idx in 0 ..< offset.count {
                                     let c = offset[idx]
                                     Draw.drawCurve(context, curve: c)
-                                    if(idx==last) {
+                                    if idx == last {
                                         let p1 = curve.offset(t: 0.95, distance: -15)
                                         let p2 = c.compute(1)
                                         let p3 = curve.offset(t: 0.95, distance: -5)
@@ -242,7 +237,7 @@ class Demos {
                                     Draw.drawCurve(context, curve: c)
                                 }
                                 Draw.drawPoint(context, origin: curve.offset(t: 0.5, distance: 25))
-                                
+
     })
     static let demo14 = Demo(title: ".reduce(t)",
                              quadraticControlPoints: quadraticControlPoints,
@@ -253,8 +248,7 @@ class Demos {
                                 if demoState.quadratic {
                                     let curve: QuadraticBezierCurve = demoState.curve! as! QuadraticBezierCurve
                                     reduced = curve.reduce().map({s in return s.curve})
-                                }
-                                else {
+                                } else {
                                     let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 }
@@ -294,8 +288,7 @@ class Demos {
                                 if demoState.quadratic {
                                     let curve: QuadraticBezierCurve = demoState.curve! as! QuadraticBezierCurve
                                     reduced = curve.reduce().map({s in return s.curve})
-                                }
-                                else {
+                                } else {
                                     let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 }
@@ -310,8 +303,7 @@ class Demos {
                                     for i in stride(from: -30, through: 30, by: 10) {
                                         Draw.drawCurve(context, curve: reduced[(reduced.count/2)].scale(distance: CGFloat(i)))
                                     }
-                                }
-                                else {
+                                } else {
                                     Draw.drawCurve(context, curve: curve)
                                 }
     })
@@ -333,7 +325,7 @@ class Demos {
                                 outline.offset(distance: 10).curves.forEach(doc)
                                 outline.offset(distance: -10).curves.forEach(doc)
     })
-    
+
     static let demo18 = Demo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: [CGPoint(x: 102, y: 33), CGPoint(x: 16, y: 99), CGPoint(x: 101, y: 129), CGPoint(x: 132, y: 173)],
@@ -376,13 +368,13 @@ class Demos {
                                 }
     })
     static let demo21  = Demo(title: ".intersections(with line: LineSegment)",
-                              quadraticControlPoints: [CGPoint(x: 58, y: 173),CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
+                              quadraticControlPoints: [CGPoint(x: 58, y: 173), CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
                               cubicControlPoints: [CGPoint(x: 53, y: 163), CGPoint(x: 27, y: 19), CGPoint(x: 182, y: 176), CGPoint(x: 155, y: 36)],
                               drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                let line: LineSegment = LineSegment( p0: CGPoint(x:0.0, y:175.0), p1: CGPoint(x:200.0,y:25.0) )
+                                let line: LineSegment = LineSegment( p0: CGPoint(x: 0.0, y: 175.0), p1: CGPoint(x: 200.0, y: 25.0) )
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawLine(context, from: line.p0, to: line.p1)
                                 Draw.setColor(context, color: Draw.black)
@@ -391,7 +383,7 @@ class Demos {
                                 }
     })
     static let demo22 = Demo(title: ".intersections(with curve: BezierCurve)",
-                             quadraticControlPoints: [CGPoint(x: 0, y: 0),CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
+                             quadraticControlPoints: [CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
                              cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
@@ -411,43 +403,43 @@ class Demos {
                              drawFunction: {(context: CGContext, demoState: DemoState) in
 
                                 Draw.reset(context)
-                                
+
                                 var flip = CGAffineTransform.init(scaleX: 1, y: -1)
                                 let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
                                 let height = CTFontGetXHeight(font)
                                 var translate = CGAffineTransform.init(translationX: 0, y: -height + 15)
-                                
+
                                 var unichar1: UniChar = ("B" as NSString).character(at: 0)
                                 var glyph1: CGGlyph = 0
                                 CTFontGetGlyphsForCharacters(font, &unichar1, &glyph1, 1)
-                                
+
                                 var unichar2: UniChar = ("x" as NSString).character(at: 0)
                                 var glyph2: CGGlyph = 0
                                 CTFontGetGlyphsForCharacters(font, &unichar2, &glyph2, 1)
-                                
+
                                 assert(glyph1 != 0 && glyph2 != 0, "couldn't get glyphs")
-                                
+
                                 let cgPath1: CGPath = CTFontCreatePathForGlyph(font, glyph1, nil)!
                                 var path1 = Path(cgPath: cgPath1.copy(using: &translate)!)
-                                
+
                                 if let mouse = demoState.lastInputLocation {
-                                    
+
 //                                    let m2 = CGPoint(x: -21.19140625, y: 131.38671875)
 //                                    let me2 = CGPoint(x: 24.34375, y: 110.703125)
 //
 //                                    let me3 = CGPoint(x: -7.78515625, y: 161.7265625) // seems to cause an issue because intersections[5].t = 0.99999422905833845, clamping the t values when they are appropximately 1 or 0 seems to work (but fix not applied)
 //                                     let me4 = CGPoint(x: 22.41796875, y: 168.48046875) // caused an infinite loop or graphical glitches (increasing precision of boolean operation appears to resolve)
-                                    
+
                                     var translation = CGAffineTransform.init(translationX: mouse.x, y: mouse.y)
                                     let cgPath2: CGPath = CTFontCreatePathForGlyph(font, glyph2, &translation)!
                                     let path2 = Path(cgPath: cgPath2)
-                                    
+
 //                                    Draw.drawPath(context, path2)
 
 //                                    for intersection in path1.intersects(path: path2) {
 //                                        Draw.drawPoint(context, origin: intersection)
 //                                    }
-                                    
+
 //                                    var first: Vertex = augmentedGraph.v1
 //                                    var v = first
 //                                    repeat {
@@ -463,7 +455,7 @@ class Demos {
 //                                        Draw.drawPoint(context, origin: v.location)
 //                                        v = v.next
 //                                    } while v !== first
-                                    
+
                                     let subtracted = path1.intersect(path2) ?? path1
                                     Draw.drawPath(context, subtracted)
                                 }
@@ -471,16 +463,16 @@ class Demos {
     static let demo24 = Demo(title: "BVH",
                              quadraticControlPoints: [],
                              cubicControlPoints: [],
-                             drawFunction: {(context: CGContext, demoState: DemoState) in
-                       
+                             drawFunction: {(context: CGContext, _: DemoState) in
+
                                 func location(_ angle: CGFloat) -> CGPoint {
                                     return 200.0 * CGPoint(x: cos(angle), y: sin(angle))
                                 }
-                                
+
                                 let numPoints = 1000
-                                
+
                                 let radiansPerPoint = 2.0 * CGFloat.pi / CGFloat(numPoints)
-                                
+
                                 let startingAngle: CGFloat = 0
                                 let mutablePath = CGMutablePath()
                                 mutablePath.move(to: location(0.0) )
@@ -489,14 +481,12 @@ class Demos {
                                     mutablePath.addLine(to: location(angle))
                                 }
                                 mutablePath.closeSubpath()
-                                
+
                                 let path = Path(cgPath: mutablePath)
                                 for s in path.components {
                                     Draw.drawPathComponent(context, pathComponent: s, offset: CGPoint(x: 100.0, y: 100.0), includeBoundingVolumeHierarchy: true)
                                 }
 
-                                
-                                
     })
 
     static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23, demo24]

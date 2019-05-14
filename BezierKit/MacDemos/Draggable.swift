@@ -16,12 +16,12 @@ protocol DraggableDelegate: class {
 }
 
 class Draggable {
-    
+
     private(set) public var location: CGPoint
     public weak var delegate: DraggableDelegate?
     private let callback: DraggableCallback
     public let radius: CGFloat
-    
+
     public init(initialLocation location: CGPoint, radius: CGFloat, callback: @escaping DraggableCallback) {
         self.location = location
         self.radius = radius
@@ -50,5 +50,5 @@ class Draggable {
         return CGRect( origin: CGPoint(x: self.location.x - r, y: self.location.y - r),
                        size: CGSize(width: r2, height: r2))
     }
-    
+
 }

@@ -10,45 +10,45 @@ import AppKit
 import BezierKit
 
 class DemoView: NSView, DraggableDelegate {
-    
+
     // MARK: - UI
-    
+
     @IBOutlet var popup: NSPopUpButton!
 
-    @IBAction func popupAction(sender: NSPopUpButton){
+    @IBAction func popupAction(sender: NSPopUpButton) {
         self.currentDemo = self.demos[sender.indexOfSelectedItem]
     }
-    
+
     @IBOutlet var quadraticRadioButton: NSButton!
     @IBOutlet var cubicRadioButton: NSButton!
-    
+
     @IBAction func radioButtonAction(sender: NSButton) {
         self.useQuadratic = (sender == quadraticRadioButton)
     }
-    
+
     // MARK: -
-    
+
     override var intrinsicContentSize: NSSize {
         return NSSize(width: 200, height: 210)
     }
-    
+
     var affineTransform: CGAffineTransform {
         let tx = (self.frame.size.width - self.intrinsicContentSize.width) / 2.0
         let ty = (self.frame.size.height - self.intrinsicContentSize.height) / 2.0
         return CGAffineTransform(translationX: tx, y: ty)
     }
-    
+
     var curve: CubicBezierCurve?
-    
+
     var mouseTrackingArea: NSTrackingArea?
-    
+
     var draggables: [Draggable] = [Draggable]()
     var selectedDraggable: Draggable?
 
     var demos: [Demo] = []
-    
-    var lastMouseLocation: CGPoint? = nil
-    
+
+    var lastMouseLocation: CGPoint?
+
     func resetDemoState() {
         self.clearDraggables()
         let demo = self.currentDemo!
@@ -60,7 +60,7 @@ class DemoView: NSView, DraggableDelegate {
         self.resetTrackingAreas()
         self.setNeedsDisplay(self.bounds)
     }
-    
+
     var useQuadratic: Bool = false {
         didSet {
            self.resetDemoState()
@@ -68,44 +68,43 @@ class DemoView: NSView, DraggableDelegate {
             cubicRadioButton.state = self.useQuadratic ? .off : .on
         }
     }
-    
+
     var currentDemo: Demo? = nil {
         didSet {
             self.resetDemoState()
         }
     }
-    
+
     override var isFlipped: Bool {
         return true
     }
-    
+
     func registerDemo(_ demo: Demo) {
         self.demos.append(demo)
     }
-    
 
     required init?(coder: NSCoder) {
-        
+
         super.init(coder: coder)
-        
+
         self.demos += Demos.all
-                
+
     }
-    
+
     override func awakeFromNib() {
-        
+
         let index: Int = 1
-        
+
         self.currentDemo = self.demos[index]
         self.useQuadratic = false
-        
+
         self.popup.removeAllItems()
         for demo in self.demos {
             self.popup.addItem(withTitle: demo.title)
         }
         self.popup.selectItem(at: index)
     }
-    
+
     func draggableQuadraticCurve() -> QuadraticBezierCurve {
         assert(self.useQuadratic)
         assert(self.draggables.count >= 3, "uh oh, did you set the control points in demo?")
@@ -113,7 +112,7 @@ class DemoView: NSView, DraggableDelegate {
                                      p1: self.draggables[1].location,
                                      p2: self.draggables[2].location)
     }
-    
+
     func draggableCubicCurve() -> CubicBezierCurve {
         assert(self.useQuadratic == false)
         assert(self.draggables.count >= 4, "uh oh, did you set the control points in demo?")
@@ -122,36 +121,36 @@ class DemoView: NSView, DraggableDelegate {
                                  p2: self.draggables[2].location,
                                  p3: self.draggables[3].location )
     }
-    
+
     func clearDraggables() {
         self.selectedDraggable = nil
         self.resetCursorRects()
         self.draggables = []
     }
-    
+
     func draggable(_ draggable: Draggable, didUpdateLocation location: CGPoint) {
         self.resetCursorRects()
         self.setNeedsDisplay(self.bounds)
     }
-    
+
     override func resetCursorRects() {
-        
+
         let cursor: NSCursor = NSCursor.pointingHand
-        
+
         self.discardCursorRects()
         for d: Draggable in self.draggables {
             self.addCursorRect(d.cursorRect.applying(self.affineTransform), cursor: cursor)
         }
     }
-    
+
     func resetTrackingAreas() {
-        
+
         self.mouseTrackingArea = NSTrackingArea(rect: self.bounds, options: [NSTrackingArea.Options.activeInKeyWindow, NSTrackingArea.Options.mouseMoved, NSTrackingArea.Options.mouseEnteredAndExited], owner: self, userInfo: nil)
-        
+
         self.addTrackingArea(self.mouseTrackingArea!)
-        
+
     }
-    
+
     func addDraggable(initialLocation location: CGPoint, radius: CGFloat) {
         let draggable = Draggable(initialLocation: location, radius: radius)
         draggable.delegate = self
@@ -159,7 +158,7 @@ class DemoView: NSView, DraggableDelegate {
     }
 
     // MARK: - mouse functions
-    
+
     override func mouseDown(with event: NSEvent) {
         let location = self.superview!.convert(event.locationInWindow, to: self)
         for d in self.draggables {
@@ -169,47 +168,47 @@ class DemoView: NSView, DraggableDelegate {
             }
         }
     }
-    
+
     override func mouseDragged(with event: NSEvent) {
-        if let draggable : Draggable = self.selectedDraggable {
+        if let draggable: Draggable = self.selectedDraggable {
             let location = self.superview!.convert(event.locationInWindow, to: self)
             draggable.updateLocation(location.applying(self.affineTransform.inverted()))
         }
     }
-    
+
     override func mouseUp(with event: NSEvent) {
         self.selectedDraggable = nil
     }
-    
+
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         return true
     }
-    
+
     override func mouseMoved(with event: NSEvent) {
 //        NSLog("mouse location \(event.locationInWindow)")
         let location = self.superview!.convert(event.locationInWindow, to: self)
         self.lastMouseLocation = location
         self.setNeedsDisplay(self.bounds)
     }
-    
+
     override func mouseExited(with event: NSEvent) {
         self.lastMouseLocation = nil
     }
-    
-    // MARK:
-    
+
+    // MARK: 
+
     override func draw(_ dirtyRect: NSRect) {
         let context: CGContext = NSGraphicsContext.current!.cgContext
-        
+
         context.saveGState()
         context.setFillColor(NSColor.white.cgColor)
         context.fill(self.bounds)
-        
+
         context.concatenate(self.affineTransform)
-        
+
         Draw.reset(context)
         if let demo = currentDemo {
-            var curve: BezierCurve? = nil
+            var curve: BezierCurve?
             if !self.draggables.isEmpty {
                 curve = self.useQuadratic ? self.draggableQuadraticCurve() : self.draggableCubicCurve()
             }

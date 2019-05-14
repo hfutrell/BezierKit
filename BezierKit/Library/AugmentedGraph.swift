@@ -17,20 +17,18 @@ internal func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
     let signedAngleAV = signedAngle(a, v)
     if signedAngleAB > 0 {
         return signedAngleAV > 0 && signedAngleAV < signedAngleAB
-    }
-    else if signedAngleAB < 0 {
+    } else if signedAngleAB < 0 {
         return signedAngleAV < 0 && signedAngleAV > signedAngleAB
-    }
-    else {
+    } else {
         return signedAngleAV == 0
     }
 }
 
 internal class PathLinkedListRepresentation {
-    
+
     private var lists: [[Vertex]] = []
     private let path: Path
-    
+
     private func insertIntersectionVertex(_ v: Vertex, replacingVertexAtStartOfElementIndex elementIndex: Int, inList list: inout [Vertex]) {
         assert(v.isIntersection)
         let r = list[elementIndex]
@@ -45,7 +43,7 @@ internal class PathLinkedListRepresentation {
         // replace the list pointer with v
         list[elementIndex] = v
     }
-    
+
     private func insertIntersectionVertex(_ v: Vertex, between start: Vertex, and end: Vertex, at t: CGFloat, for element: BezierCurve, inList list: inout [Vertex]) {
         assert(start !== end)
         assert(v.isIntersection)
@@ -65,20 +63,19 @@ internal class PathLinkedListRepresentation {
         start.setNextVertex(v, transition: VertexTransition(curve: element1))
         end.setPreviousVertex(v)
     }
-    
+
     internal func insertIntersectionVertex(_ v: Vertex, at location: IndexedPathLocation) {
-        
+
         assert(v.isIntersection)
-        
+
         var list = self.lists[location.componentIndex]
-        
+
         assert(location.t != 0, "intersects are assumed pre-processed to have a t=1 intersection at the previous path element instead!")
-        
+
         if location.t == 1 {
             // this vertex needs to replace the end vertex of the element
             insertIntersectionVertex(v, replacingVertexAtStartOfElementIndex: Utils.mod(location.elementIndex+1, list.count), inList: &list)
-        }
-        else {
+        } else {
             var start = list[location.elementIndex]
             while (start.next.splitInfo != nil) && start.next.splitInfo!.t < location.t {
                 start = start.next
@@ -92,7 +89,7 @@ internal class PathLinkedListRepresentation {
         }
         self.lists[location.componentIndex] = list
     }
-    
+
     private func createListFor(component: PathComponent) -> [Vertex] {
         guard component.elementCount > 0 else {
             return []
@@ -124,12 +121,12 @@ internal class PathLinkedListRepresentation {
         // return list of vertexes that point to the start of each element
         return elements
     }
-    
+
     init(_ p: Path) {
         self.path = p
         self.lists = p.components.map { self.createListFor(component: $0) }
     }
-    
+
     fileprivate func nonCrossingComponents() -> [PathComponent] {
         // returns the components of this path that do not cross the path passed as the argument to markEntryExit(_:)
         var result: [PathComponent] = []
@@ -146,7 +143,7 @@ internal class PathLinkedListRepresentation {
         }
         return result
     }
-    
+
     fileprivate func markEntryExit(_ path: Path, useRelativeWinding: Bool = false) {
         let fillRule: PathFillRule = useRelativeWinding ? .winding : .evenOdd
 
@@ -159,22 +156,22 @@ internal class PathLinkedListRepresentation {
                 }
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
-                
+
                 // we used to use the derivative here but in important cases derivatives can be exactly tangent
                 // at intersections!
                 let smallNumber: CGFloat = 0.001
-                
+
                 let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
                 let n2 = neighbor.emitNext().compute(smallNumber) - v.location
-                
+
                 let v1 = previous.compute(smallNumber) - v.location
                 let v2 = next.compute(smallNumber) - v.location
-                
+
                 let side1 = between(v1, n1, n2)
                 let side2 = between(v2, n1, n2)
-                
+
                 let cross = (side1 != side2)
-                
+
                 if cross {
                     // TODO: there's an issue when corners intersect (try AugmentedGraphTests.testCornersIntersect which has this problem, even though it passes)
                     // the relative winding count can be decremented both for entry and for exit. This is not an issue with the even-odd winding rule, but using
@@ -182,14 +179,13 @@ internal class PathLinkedListRepresentation {
                     let c = v2.cross(n2)
                     if c < 0 {
                         relativeWindingCount += 1
-                    }
-                    else if c > 0 {
+                    } else if c > 0 {
                         relativeWindingCount -= 1
                     }
                 }
                 v.intersectionInfo.nextWinding = relativeWindingCount
             }
-            
+
             // determine the initial winding count (winding count before first vertex)
             var initialWinding = 0
             if useRelativeWinding {
@@ -203,27 +199,26 @@ internal class PathLinkedListRepresentation {
                     }
                 }
                 initialWinding = -minimumWinding
-                
+
                 let prev = lists[i][0].emitPrevious()
                 let a = prev.compute(0.5)
                 // TODO: 1.0e-5 is a magic number (just an arbitrary small value)
                 let b = a + 1.0e-5 * prev.normal(0.5)
                 //let c = a - 1.0e-5 * prev.normal(0.5)
-                
+
                 let w1 = path.windingCount(b)
                 //let w2 = path.windingCount(c)
-                
+
                 // print("w1 = \(w1)")
                 // print("w2 = \(w2)")
-                
+
                 if w1 == initialWinding-1 {
                     initialWinding = w1
                 }
-            }
-            else {
+            } else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
             }
-            
+
             // adjust winding counts based on the initial winding count
             self.forEachVertexInComponent(atIndex: i) { v in
                 guard v.isIntersection else {
@@ -231,7 +226,7 @@ internal class PathLinkedListRepresentation {
                 }
                 v.intersectionInfo.nextWinding += initialWinding
             }
-            
+
             // for each intersection, determine isEntry / isExit based on winding count
             var windingCount: Int = initialWinding
             self.forEachVertexInComponent(atIndex: i) { v in
@@ -261,15 +256,15 @@ internal class PathLinkedListRepresentation {
             current = next
         } while current !== v
     }
-    
+
     private func forEachVertexInComponent(atIndex index: Int, _ callback: (Vertex) -> Void) {
         self.forEachVertexStartingFrom(lists[index].first!, callback)
     }
-    
+
     internal func startingVertex(forComponentIndex componentIndex: Int, elementIndex: Int) -> Vertex {
         return self.lists[componentIndex][elementIndex]
     }
-    
+
     func forEachVertex(_ callback: (Vertex) -> Void) {
         lists.forEach {
             self.forEachVertexStartingFrom($0.first!, callback)
@@ -285,7 +280,7 @@ internal enum BooleanPathOperation {
 }
 
 internal class AugmentedGraph {
-    
+
     func connectNeighbors(_ vertex1: Vertex, _ vertex2: Vertex) {
         vertex1.intersectionInfo.neighbor = vertex2
         vertex2.intersectionInfo.neighbor = vertex1
@@ -293,20 +288,20 @@ internal class AugmentedGraph {
         vertex1.location = location
         vertex2.location = location
     }
-    
+
     internal var list1: PathLinkedListRepresentation
     internal var list2: PathLinkedListRepresentation
-    
+
     private let path1: Path
     private let path2: Path
-    
+
     internal init(path1: Path, path2: Path, intersections: [PathIntersection]) {
-        
+
         func intersectionVertexForPath(_ path: Path, at l: IndexedPathLocation) -> Vertex {
             let v = Vertex(location: path.point(at: l), isIntersection: true)
             return v
         }
-        
+
         self.path1 = path1
         self.path2 = path2
         self.list1 = PathLinkedListRepresentation(path1)
@@ -325,7 +320,7 @@ internal class AugmentedGraph {
             list2.markEntryExit(path1, useRelativeWinding: useRelativeWinding)
         }
     }
-    
+
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
         switch operation {
         case .removeCrossings:
@@ -338,13 +333,13 @@ internal class AugmentedGraph {
             return v.intersectionInfo.isEntry
         }
     }
-    
+
     internal func booleanOperation(_ operation: BooleanPathOperation) -> Path? {
-        
+
         // special cases for components which do not cross
         let nonCrossingComponents1: [PathComponent] = self.list1.nonCrossingComponents()
         let nonCrossingComponents2: [PathComponent] = self.list2.nonCrossingComponents()
-        
+
         func anyPointOnComponent(_ c: PathComponent) -> CGPoint {
             return c.startingPoint
         }
@@ -362,7 +357,7 @@ internal class AugmentedGraph {
             pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
             pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
         }
-        
+
         // handle components that have crossings (the main algorithm)
         var unvisitedCrossings: [Vertex] = []
         list1.forEachVertex {
@@ -386,11 +381,11 @@ internal class AugmentedGraph {
                     curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
                     v = movingForwards ? v.next : v.previous
                 } while v.isCrossing == false
-                
+
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 v = v.intersectionInfo.neighbor!
                 isOnFirstCurve = !isOnFirstCurve
-                
+
                 if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
                     return nil
                 }
@@ -430,45 +425,45 @@ internal class Vertex {
     public var location: CGPoint
     public let isIntersection: Bool
     // pointers must be set after initialization
-    
+
     public struct IntersectionInfo {
         public var isEntry: Bool = false
         public var isExit: Bool = false
         public var nextWinding: Int = 0
-        public weak var neighbor: Vertex? = nil
+        public weak var neighbor: Vertex?
     }
     public var intersectionInfo: IntersectionInfo = IntersectionInfo()
-    
+
     public var isCrossing: Bool {
         guard let neighborInfo = self.intersectionInfo.neighbor?.intersectionInfo else {
             return false
         }
         return self.isIntersection && (self.intersectionInfo.isEntry || self.intersectionInfo.isExit) && (neighborInfo.isEntry || neighborInfo.isExit)
     }
-    
+
     internal struct SplitInfo {
         var t: CGFloat
     }
-    internal var splitInfo: SplitInfo? = nil // non-nil only when vertex is inserted by splitting an element
-    
+    internal var splitInfo: SplitInfo? // non-nil only when vertex is inserted by splitting an element
+
     public private(set) var next: Vertex! = nil
     public private(set) weak var previous: Vertex! = nil
     public private(set) var nextTransition: VertexTransition! = nil
-    
+
     public func setNextVertex(_ vertex: Vertex, transition: VertexTransition) {
         self.next = vertex
         self.nextTransition = transition
     }
-    
+
     public func setPreviousVertex(_ vertex: Vertex) {
         self.previous = vertex
     }
-    
+
     init(location: CGPoint, isIntersection: Bool) {
         self.location = location
         self.isIntersection = isIntersection
     }
-    
+
     internal func emitTo(_ end: CGPoint, using transition: VertexTransition) -> BezierCurve {
         switch transition {
         case .line:
@@ -479,11 +474,11 @@ internal class Vertex {
             return CubicBezierCurve(p0: self.location, p1: c1, p2: c2, p3: end)
         }
     }
-    
+
     public func emitNext() -> BezierCurve {
         return self.emitTo(next.location, using: nextTransition)
     }
-    
+
     public func emitPrevious() -> BezierCurve {
         return self.previous.emitNext().reversed()
     }

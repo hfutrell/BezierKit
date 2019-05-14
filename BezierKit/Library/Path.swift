@@ -23,14 +23,14 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 }
 
 @objc(BezierKitPath) open class Path: NSObject, NSCoding {
-    
+
     private class PathApplierFunctionContext {
-        var currentPoint: CGPoint? = nil
-        var componentStartPoint: CGPoint? = nil
-        
+        var currentPoint: CGPoint?
+        var componentStartPoint: CGPoint?
+
         var currentComponentPoints: [CGPoint] = []
         var currentComponentOrders: [Int] = []
-        
+
         var components: [PathComponent] = []
         func completeComponentIfNeededAndClearPointsAndOrders() {
             if currentComponentPoints.isEmpty == false {
@@ -48,7 +48,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             }
         }
     }
-    
+
     @objc(CGPath) public lazy var cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         self.components.forEach {
@@ -56,19 +56,19 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         return mutablePath.copy()!
     }()
-    
+
     @objc public var isEmpty: Bool {
         return self.components.isEmpty // components are not allowed to be empty
     }
-    
+
     public lazy var boundingBox: BoundingBox = {
         return self.components.reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
         }
     }()
-    
+
     @objc public let components: [PathComponent]
-    
+
     @objc(point:isWithinDistanceOfBoundary:accuracy:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return self.components.contains {
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d, accuracy: accuracy)
@@ -88,8 +88,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 }
                 if i == j {
                     intersections += self.components[i].selfIntersections(accuracy: accuracy).map(componentIntersectionToPathIntersection)
-                }
-                else {
+                } else {
                     intersections += self.components[i].intersections(with: self.components[j], accuracy: accuracy).map(componentIntersectionToPathIntersection)
                 }
             }
@@ -119,15 +118,15 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         return intersections
     }
-    
+
     @objc public convenience override init() {
         self.init(components: [])
     }
-    
+
     @objc required public init(components: [PathComponent]) {
         self.components = components
     }
-    
+
     @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
         var context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
@@ -174,7 +173,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
         cgPath.apply(info: rawContextPointer, function: applierFunction)
         context.completeComponentIfNeededAndClearPointsAndOrders()
-        
+
         self.init(components: context.components)
     }
 
@@ -184,18 +183,18 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     // MARK: - NSCoding
     // (cannot be put in extension because init?(coder:) is a designated initializer)
-    
+
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.data)
     }
-    
+
     required public convenience init?(coder aDecoder: NSCoder) {
         guard let data = aDecoder.decodeData() else { return nil }
         self.init(data: data)
     }
-    
+
     // MARK: -
-    
+
     override open func isEqual(_ object: Any?) -> Bool {
         // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
         guard let otherPath = object as? Path else {
@@ -203,23 +202,22 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         return self.components == otherPath.components
     }
-    
+
     // MARK: - vector boolean operations
-    
+
     public func point(at location: IndexedPathLocation) -> CGPoint {
         return self.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex).compute(location.t)
     }
-    
+
     internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {
         return self.components[componentIndex].element(at: elementIndex)
     }
-    
+
     internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
         let windingCount = self.components.reduce(0) {
             if $1 !== ignoring {
                 return $0 + $1.windingCount(at: point)
-            }
-            else {
+            } else {
                 return $0
             }
         }
@@ -244,23 +242,23 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         // TODO: make this work with winding fill rule and intersections that don't cross (suggestion, use AugmentedGraph)
         return !self.intersects(other)
     }
-    
+
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
         return Path(components: self.components.map {
             $0.offset(distance: d)
         })
     }
-    
+
     private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path? {
         let intersections = self.intersections(with: other, accuracy: accuracy)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
         return augmentedGraph.booleanOperation(operation)
     }
-    
+
     @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         return self.performBooleanOperation(.subtract, with: other.reversed(), accuracy: accuracy)
     }
-    
+
     @objc(unionPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         guard self.isEmpty == false else {
             return other
@@ -270,11 +268,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         return self.performBooleanOperation(.union, with: other, accuracy: accuracy)
     }
-    
+
     @objc(intersectPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         return self.performBooleanOperation(.intersect, with: other, accuracy: accuracy)
     }
-    
+
     @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         let intersections = self.selfIntersections(accuracy: accuracy)
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
@@ -282,7 +280,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     @objc public func disjointComponents() -> [Path] {
-        
+
         var paths: [Path] = []
         var componentWindingCounts: [Path: Int] = [:]
         let componentsAsPaths = self.components.map { Path(components: [$0]) }
@@ -293,17 +291,17 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             }
             componentWindingCounts[component] = windingCount
         }
-        
+
         var pathsWithHoles: [Path: Path] = [:]
         for path in paths {
             pathsWithHoles[path] = path
         }
-        
+
         for component in componentsAsPaths {
             guard componentWindingCounts[component] != 0 else {
                 continue
             }
-            var owner: Path? = nil
+            var owner: Path?
             for path in paths {
                 guard path.contains(component) else {
                     continue
@@ -312,8 +310,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                     if owner!.contains(path) {
                         owner = path
                     }
-                }
-                else {
+                } else {
                     owner = path
                 }
             }

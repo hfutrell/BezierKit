@@ -9,37 +9,35 @@
 import CoreGraphics
 
 public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
-    
+
     public var p0, p1, p2: CGPoint
-    
+
     public init(points: [CGPoint]) {
         precondition(points.count == 3)
         self.p0 = points[0]
         self.p1 = points[1]
         self.p2 = points[2]
     }
-    
+
     public init(p0: CGPoint, p1: CGPoint, p2: CGPoint) {
         self.p0 = p0
         self.p1 = p1
         self.p2 = p2
     }
-    
+
     public init(lineSegment l: LineSegment) {
         self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
     }
-    
+
     public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
             self.init(p0: mid, p1: mid, p2: end)
-        }
-        else if t == 1 {
+        } else if t == 1 {
             self.init(p0: start, p1: mid, p2: mid)
-        }
-        else {
+        } else {
             // real fitting.
-            let abc = Utils.getABC(n:2, S: start, B: mid, E: end, t: t)
+            let abc = Utils.getABC(n: 2, S: start, B: mid, E: end, t: t)
             self.init(p0: start, p1: abc.A, p2: end)
         }
     }
@@ -47,7 +45,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
     public var points: [CGPoint] {
         return [p0, p1, p2]
     }
-    
+
     public var startingPoint: CGPoint {
         get {
             return p0
@@ -56,7 +54,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
             p0 = newValue
         }
     }
-    
+
     public var endingPoint: CGPoint {
         get {
             return p2
@@ -65,11 +63,11 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
             p2 = newValue
         }
     }
-    
+
     public var order: Int {
         return 2
     }
-    
+
     public var simple: Bool {
         guard p0 != p1 || p1 != p2 else { return true }
         let n1 = self.normal(0)
@@ -90,7 +88,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         }
         return d.perpendicular.normalize()
     }
-    
+
     public func derivative(_ t: CGFloat) -> CGPoint {
         let mt: CGFloat = 1-t
         let k: CGFloat = 2
@@ -121,25 +119,25 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         let h3 = Utils.lerp(t, h0, h1)
         let h4 = Utils.lerp(t, h1, h2)
         let h5 = Utils.lerp(t, h3, h4)
-        
+
         let leftCurve = QuadraticBezierCurve(p0: h0, p1: h3, p2: h5)
         let rightCurve = QuadraticBezierCurve(p0: h5, p1: h4, p2: h2)
-    
+
         return (left: leftCurve, right: rightCurve)
     }
 
     public var boundingBox: BoundingBox {
-        
+
         let p0: CGPoint = self.p0
         let p1: CGPoint = self.p1
         let p2: CGPoint = self.p2
-        
+
         var mmin: CGPoint = CGPoint.min(p0, p2)
         var mmax: CGPoint = CGPoint.max(p0, p2)
-        
+
         let d0: CGPoint = p1 - p0
         let d1: CGPoint = p2 - p1
-        
+
         for d in 0..<CGPoint.dimensions {
             Utils.droots(d0[d], d1[d]) {(t: CGFloat) in
                 guard t > 0.0, t < 1.0 else {
@@ -159,8 +157,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
     public func compute(_ t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
-        }
-        else if t == 1 {
+        } else if t == 1 {
             return self.p2
         }
         let mt = 1.0 - t

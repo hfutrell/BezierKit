@@ -14,11 +14,11 @@ import CoreGraphics
 public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
 
     public var p0, p1, p2, p3: CGPoint
-    
+
     public var points: [CGPoint] {
         return [p0, p1, p2, p3]
     }
-    
+
     public var order: Int {
         return 3
     }
@@ -31,7 +31,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
             p0 = newValue
         }
     }
-    
+
     public var endingPoint: CGPoint {
         get {
             return p3
@@ -40,9 +40,9 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
             p3 = newValue
         }
     }
-    
+
     // MARK: - Initializers
-    
+
     public init(points: [CGPoint]) {
         precondition(points.count == 4)
         self.p0 = points[0]
@@ -50,20 +50,20 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         self.p2 = points[2]
         self.p3 = points[3]
     }
-    
+
     public init(p0: CGPoint, p1: CGPoint, p2: CGPoint, p3: CGPoint) {
         self.p0 = p0
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
     }
-    
+
     public init(lineSegment l: LineSegment) {
         let oneThird: CGFloat = 1.0 / 3.0
         let twoThirds: CGFloat = 2.0 / 3.0
         self.init(p0: l.p0, p1: twoThirds * l.p0 + oneThird * l.p1, p2: oneThird * l.p0 + twoThirds * l.p1, p3: l.p1)
     }
-    
+
     public init(quadratic q: QuadraticBezierCurve) {
         let oneThird: CGFloat = 1.0 / 3.0
         let twoThirds: CGFloat = 2.0 / 3.0
@@ -83,17 +83,17 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
 - parameter d: optional strut length with the full strut being length d * (1-t)/t. If omitted or `nil` the distance from `mid` to the baseline (line from `start` to `end`) is used.
 */
     public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5, d: CGFloat? = nil) {
-        
+
         let s = start
         let b = mid
         let e = end
         let oneMinusT = 1.0 - t
 
         let abc = Utils.getABC(n: 3, S: s, B: b, E: e, t: t)
-        
+
         let d1 = d ?? Utils.dist(b, abc.C)
         let d2 = d1 * oneMinusT / t
-        
+
         let selen = Utils.dist(start, end)
         let l = (1.0 / selen) * (e - s)
         let b1 = d1 * l
@@ -108,11 +108,11 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let nc1 = s + (v1 - s) / t
         let nc2 = e + (v2 - e) / oneMinusT
         // ...done
-        self.init(p0:s, p1: nc1, p2: nc2, p3: e)
+        self.init(p0: s, p1: nc1, p2: nc2, p3: e)
     }
-    
+
     // MARK: -
-    
+
     public var simple: Bool {
         guard p0 != p1 || p1 != p2 || p2 != p3 else { return true }
         let a1 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p1)
@@ -157,7 +157,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let temp3 = c*p2
         return temp1 + temp2 + temp3
     }
-    
+
     public func split(from t1: CGFloat, to t2: CGFloat) -> CubicBezierCurve {
         let h0 = self.p0
         let h1 = self.p1
@@ -177,7 +177,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
     }
 
     public func split(at t: CGFloat) -> (left: CubicBezierCurve, right: CubicBezierCurve) {
-        
+
         let h0 = self.p0
         let h1 = self.p1
         let h2 = self.p2
@@ -188,28 +188,28 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let h7 = Utils.lerp(t, h4, h5)
         let h8 = Utils.lerp(t, h5, h6)
         let h9 = Utils.lerp(t, h7, h8)
-        
+
         let leftCurve  = CubicBezierCurve(p0: h0, p1: h4, p2: h7, p3: h9)
         let rightCurve = CubicBezierCurve(p0: h9, p1: h8, p2: h6, p3: h3)
-        
+
         return (left: leftCurve, right: rightCurve)
 
     }
-    
+
     public var boundingBox: BoundingBox {
 
         let p0: CGPoint = self.p0
         let p1: CGPoint = self.p1
         let p2: CGPoint = self.p2
         let p3: CGPoint = self.p3
-        
+
         var mmin = CGPoint.min(p0, p3)
         var mmax = CGPoint.max(p0, p3)
-        
+
         let d0 = p1 - p0
         let d1 = p2 - p1
         let d2 = p3 - p2
-        
+
         for d in 0..<CGPoint.dimensions {
             let mmind = mmin[d]
             let mmaxd = mmax[d]
@@ -230,12 +230,11 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         }
         return BoundingBox(min: mmin, max: mmax)
     }
-    
+
     public func compute(_ t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
-        }
-        else if t == 1 {
+        } else if t == 1 {
             return self.p3
         }
         let mt = 1.0 - t
@@ -259,7 +258,7 @@ extension CubicBezierCurve: Transformable {
         return CubicBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t), p3: self.p3.applying(t))
     }
 }
-    
+
 extension CubicBezierCurve: Reversible {
     public func reversed() -> CubicBezierCurve {
         return CubicBezierCurve(p0: self.p3, p1: self.p2, p2: self.p1, p3: self.p0)
