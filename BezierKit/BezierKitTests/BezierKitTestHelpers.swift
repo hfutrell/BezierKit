@@ -26,7 +26,7 @@ class BezierKitTestHelpers {
         if c1.order != c2.order {
             return false
         }
-        guard zip(c1.points, c2.points).contains(where: { distance($0, $1) > epsilon }) == false else {
+        guard zip(c1.points, c2.points).allSatisfy({ distance($0, $1) <= epsilon }) else {
             return false
         }
         return true
