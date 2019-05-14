@@ -71,6 +71,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
     }
     
     public var simple: Bool {
+        guard p0 != p1 || p1 != p2 else { return true }
         let n1 = self.normal(0)
         let n2 = self.normal(1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
@@ -80,10 +81,10 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
 
     public func normal(_ t: CGFloat) -> CGPoint {
         var d = self.derivative(t)
-        if d == CGPoint.zero {
+        if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p1
-            } else if t == 1.0 {
+            } else {
                 d = p1 - p0
             }
         }
@@ -141,22 +142,13 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         
         for d in 0..<CGPoint.dimensions {
             Utils.droots(d0[d], d1[d]) {(t: CGFloat) in
-                if t <= 0.0 || t >= 1.0 {
+                guard t > 0.0, t < 1.0 else {
                     return
                 }
-
-                // eval the curve
-                // TODO: replacing this code with self.compute(t)[d] crashes in profile mode
-                let mt = 1.0 - t
-                let a = mt * mt
-                let b = mt * t * 2.0
-                let c = t * t
-                let value = a * p0[d] + b * p1[d] + c * p2[d]
-                
+                let value = self.compute(t)[d]
                 if value < mmin[d] {
                     mmin[d] = value
-                }
-                else if value > mmax[d] {
+                } else if value > mmax[d] {
                     mmax[d] = value
                 }
             }

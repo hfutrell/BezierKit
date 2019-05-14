@@ -84,8 +84,26 @@ class ShapeTests: XCTestCase {
         // test a non-intersecting case where bounding boxes do not overlap
         let s4 = LineSegment(p0: CGPoint(x: -6, y: -6), p1: CGPoint(x: -4, y: -4)).outlineShapes(distance: sqrt(2))
         XCTAssertEqual(s1.intersects(shape: s4[0]), [])
-
     }
     
+    func testEquatable() {
+        let a = CGPoint(x: -1, y: 1)
+        let b = CGPoint(x: 1, y: 1)
+        let c = CGPoint(x: -1, y: -1)
+        let d = CGPoint(x: 1, y: -1)
+        let cap1 = Shape.Cap(curve: LineSegment(p0: a, p1: b), virtual: true)
+        let cap2 = Shape.Cap(curve: LineSegment(p0: a, p1: b), virtual: false)
+        let cap3 = Shape.Cap(curve: LineSegment(p0: b, p1: a), virtual: true)
+        XCTAssertNotEqual(cap1, cap2)
+        XCTAssertNotEqual(cap1, cap3)
+        XCTAssertEqual(cap1, cap1)
+        let shape1 = Shape(LineSegment(p0: a, p1: b), LineSegment(p0: d, p1: c), true, true)
+        let shape2 = Shape(LineSegment(p0: a, p1: b), LineSegment(p0: d, p1: c), false, true)
+        let shape3 = Shape(LineSegment(p0: a, p1: b), LineSegment(p0: d, p1: c), true, false)
+        let shape4 = Shape(LineSegment(p0: d, p1: c), LineSegment(p0: a, p1: b), true, true)
+        XCTAssertEqual(shape1, shape1)
+        XCTAssertNotEqual(shape1, shape2)
+        XCTAssertNotEqual(shape1, shape3)
+        XCTAssertNotEqual(shape1, shape4)
+    }
 }
-

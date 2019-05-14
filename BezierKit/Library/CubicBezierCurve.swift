@@ -114,6 +114,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
     // MARK: -
     
     public var simple: Bool {
+        guard p0 != p1 || p1 != p2 || p2 != p3 else { return true }
         let a1 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p1)
         let a2 = Utils.angle(o: self.p0, v1: self.p3, v2: self.p2)
         if a1>0 && a2<0 || a1<0 && a2>0 {
@@ -128,15 +129,15 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
 
     public func normal(_ t: CGFloat) -> CGPoint {
         var d = self.derivative(t)
-        if d == CGPoint.zero {
+        if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p0
-            } else if t == 1.0 {
+            } else {
                 d = p3 - p1
             }
-        }
-        if d == CGPoint.zero {
-            d = p3 - p0
+            if d == CGPoint.zero {
+                d = p3 - p0
+            }
         }
         return d.perpendicular.normalize()
     }
@@ -217,15 +218,12 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
             guard value1 < mmind || value1 > mmaxd || value2 < mmind || value2 > mmaxd else {
                 continue
             }
-            Utils.droots(d0[d], d1[d], d2[d]) {(r: CGFloat) in
-                if r <= 0.0 || r >= 1.0 {
-                    return
-                }
-                let value = self.compute(r)[d]
+            Utils.droots(d0[d], d1[d], d2[d]) {(t: CGFloat) in
+                guard t > 0.0, t < 1.0 else { return }
+                let value = self.compute(t)[d]
                 if value < mmind {
                     mmin[d] = value
-                }
-                else if value > mmaxd {
+                } else if value > mmaxd {
                     mmax[d] = value
                 }
             }

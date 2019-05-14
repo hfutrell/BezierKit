@@ -64,7 +64,13 @@ class BezierCurveTests: XCTestCase {
                                 p3: CGPoint(x: +6.0, y: +2.0))
         XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, tolerance: epsilon))
 
-        // TODO: add special case for quadratic and cubic that are actually linear -- can fail if normals are parallel
+        // ensure that scaling a cubic initialized from a line yields the same thing as the line
+        let cFromLine = CubicBezierCurve(lineSegment: l)
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cFromLine.scale(distance: sqrt(2)), curve2: CubicBezierCurve(lineSegment: expectedLine), tolerance: epsilon))
+
+        // ensure scaling a quadratic from a line yields the same thing as the line
+        let qFromLine = QuadraticBezierCurve(lineSegment: l)
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: qFromLine.scale(distance: sqrt(2)), curve2: QuadraticBezierCurve(lineSegment: expectedLine), tolerance: epsilon))
     }
 
     func testScaleDistanceEdgeCase() {
@@ -106,8 +112,6 @@ class BezierCurveTests: XCTestCase {
                 XCTAssert(distance(c.endingPoint, CGPoint(x: 5.0, y: 2.0)) < epsilon)
             }
         }
-        // TODO: fix reduce behavior for cusps (cannot be simplified because derivative is zero so normal is zero at cusp)
-        // let c2 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 1.0, y: 2.0), p3: CGPoint(x: 2.0, y: 1.0))
     }
     
     func testOffsetTimeDistance() {

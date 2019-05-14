@@ -119,30 +119,24 @@ internal class Utils {
         let r = v2/d1
         return ts + d2*r        
     }
-    
-    static func lli8(_ x1: CGFloat,_ y1: CGFloat,_ x2: CGFloat,_ y2: CGFloat,_ x3:
-        // TODO: implement line primitive (distinct from line segment) to rid of this function
-        CGFloat,_ y3: CGFloat,_ x4: CGFloat,_ y4: CGFloat) -> CGPoint? {
-        let nx = (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
-        let ny = (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)
-        let d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
-        if d == 0 {
-            return nil
-        }
-        return CGPoint( x: nx/d, y: ny/d )
-    }
-    
+
     static func approximately(_ a: Double,_ b: Double, precision: Double) -> Bool {
         return abs(a-b) <= precision
     }
     
-    static func lli4(_ p1: CGPoint,_ p2: CGPoint,_ p3: CGPoint,_ p4: CGPoint) -> CGPoint? {
-        // TODO: implement line primitive (distinct from line segment) to rid of this function
-        let x1 = p1.x; let y1 = p1.y
-        let x2 = p2.x; let y2 = p2.y
-        let x3 = p3.x; let y3 = p3.y
-        let x4 = p4.x; let y4 = p4.y
-        return Utils.lli8(x1,y1,x2,y2,x3,y3,x4,y4)
+    static func linesIntersection(_ line1p1: CGPoint,_ line1p2: CGPoint,_ line2p1: CGPoint,_ line2p2: CGPoint) -> CGPoint? {
+        let x1 = line1p1.x; let y1 = line1p1.y
+        let x2 = line1p2.x; let y2 = line1p2.y
+        let x3 = line2p1.x; let y3 = line2p1.y
+        let x4 = line2p2.x; let y4 = line2p2.y
+        let d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+        if d == 0 {
+            return nil
+        }
+        let a = (x1 * y2 - y1 * x2)
+        let b = (x3 * y4 - y3 * x4)
+        let n = a * (line2p1 - line2p2) - b * (line1p1 - line1p2)
+        return (1.0 / d) * n
     }
     
     // cube root function yielding real roots
@@ -151,16 +145,12 @@ internal class Utils {
     }
     
     static func clamp(_ x: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
-        // note that if x is NaN all comparisons fail so we return NaN
-        // TODO: this is purposeful behavior, should probably have unit test
         precondition(b >= a)
         if x < a {
             return a
-        }
-        else if x > b {
+        } else if x > b {
             return b
-        }
-        else {
+        } else {
             return x
         }
     }
@@ -198,7 +188,6 @@ internal class Utils {
                 return [v1, v2].compactMap(clamp)
             }
             else if a != b {
-                // TODO: also fix in droots!
                 return [Double(0.5) * a / (a-b)].compactMap(clamp)
             }
             else {
@@ -273,7 +262,7 @@ internal class Utils {
         // quadratic roots are easy
         // do something with each root
         let d: CGFloat = a - 2.0*b + c
-        if d != 0 {
+        if abs(d) > CGFloat(epsilon) {
             let m1 = -sqrt(b*b-a*c)
             let m2 = -a+b
             let v1 = -( m1+m2)/d
@@ -281,8 +270,8 @@ internal class Utils {
             callback(v1)
             callback(v2)
         }
-        else if (b != c) && (d == 0) {
-            callback((2*b-c)/(2*(b-c)))
+        else if a != b {
+            callback(0.5 * a / (a - b))
         }
     }
     
@@ -365,14 +354,8 @@ internal class Utils {
                                       _ results: inout [Intersection],
                                       _ accuracy: CGFloat) {
         
-        if results.count > 20 {
-            // TODO: better bailout conditions
-            return
-        }
-        
-        guard c1b.overlaps(c2b) else {
-            return
-        }
+        guard results.count < c1.curve.order * c2.curve.order else { return }
+        guard c1b.overlaps(c2b) else { return }
 
         let canSplit1 = c1.canSplit
         let canSplit2 = c2.canSplit
@@ -383,9 +366,7 @@ internal class Utils {
             // subcurves are small enough or we simply cannot recurse any more
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-            guard let intersection = l1.intersections(with: l2).first else {
-                return
-            }
+            guard let intersection = l1.intersections(with: l2).first else { return }
             let t1 = intersection.t1
             let t2 = intersection.t2
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
@@ -433,7 +414,7 @@ internal class Utils {
         let m1n = m1 + d1p
         let m2n = m2 + d2p
         // intersection of these lines:
-        let oo = Utils.lli8(m1.x, m1.y, m1n.x, m1n.y, m2.x, m2.y, m2n.x, m2n.y)
+        let oo = Utils.linesIntersection(m1, m1n, m2, m2n)
         
         assert(oo != nil)
         

@@ -11,6 +11,8 @@
 		FD05111920153EAE000D035E /* BoundingBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoundingBoxTests.swift */; };
 		FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
 		FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
+		FD12F1E22288CF6900404CE1 /* UtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD12F1E12288CF6900404CE1 /* UtilsTests.swift */; };
+		FD12F1E32288CF6900404CE1 /* UtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD12F1E12288CF6900404CE1 /* UtilsTests.swift */; };
 		FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
 		FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
 		FD26253F1EAC7B9A00C64652 /* BezierKit_iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -133,6 +135,7 @@
 		FD0F54F51DC43FFB0084CDCD /* MacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTestHelpers.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FD12F1E12288CF6900404CE1 /* UtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilsTests.swift; sourceTree = "<group>"; };
 		FD149EB92135CBFF009E791D /* AugmentedGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AugmentedGraph.swift; sourceTree = "<group>"; };
 		FD26253B1EAC7B9A00C64652 /* BezierKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BezierKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD26253D1EAC7B9A00C64652 /* BezierKit_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BezierKit_iOS.h; sourceTree = "<group>"; };
@@ -273,6 +276,7 @@
 				FDDEB240224AD8CB0028DD79 /* FlatnessTests.swift */,
 				FD06332221E03A58001181B6 /* CGPointTests.swift */,
 				FDEF4C6021FBD75A00DCC5C2 /* BoundingVolumeHierarchyTests.swift */,
+				FD12F1E12288CF6900404CE1 /* UtilsTests.swift */,
 			);
 			path = BezierKitTests;
 			sourceTree = "<group>";
@@ -631,6 +635,7 @@
 				FDF0664E1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
 				FDEB70A41F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
 				FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */,
+				FD12F1E22288CF6900404CE1 /* UtilsTests.swift in Sources */,
 				FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
 				FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
@@ -656,6 +661,7 @@
 				FDF0664F1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
 				FDEB70A51F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
 				FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */,
+				FD12F1E32288CF6900404CE1 /* UtilsTests.swift in Sources */,
 				FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */,
 				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
 				FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */,
@@ -991,7 +997,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-MacTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -1006,7 +1012,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-MacTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

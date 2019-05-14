@@ -10,6 +10,11 @@ import CoreGraphics
 
 public typealias DistanceFunction = (_ v: CGFloat) -> CGFloat
 
+private enum ScaleEnum {
+    case constant(CGFloat)
+    case function(DistanceFunction)
+}
+
 public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t1: CGFloat
     public let t2: CGFloat
@@ -104,7 +109,6 @@ extension BezierCurve {
     internal func internalExtrema(includeInflection: Bool) -> [[CGFloat]] {
         var xyz: [[CGFloat]] = []
         xyz.reserveCapacity(CGPoint.dimensions)
-        // TODO: this code can be made a lot faster through inlining the droots computation such that allocations need not occur
         for d in 0..<CGPoint.dimensions {
             let mfn = {(v: CGPoint) in v[d]}
             var p: [CGFloat] = self.dpoints[0].map(mfn)
@@ -160,10 +164,10 @@ extension BezierCurve {
      
      
      */
+
     public func reduce() -> [Subcurve<Self>] {
         
-        // TODO: handle degenerate case of Cubic with all zero points better!
-        let step: CGFloat = 0.01
+        let step: CGFloat = BezierKit.reduceStepSize
         var extrema: [CGFloat] = []
         self.extrema().values.forEach {
             if $0 < step {
@@ -237,50 +241,44 @@ extension BezierCurve {
      Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
      */
     public func scale(distance d: CGFloat) -> Self {
-        return internalScale(distance: d, distanceFunction: nil)
+        return internalScale(scaler: .constant(d))
     }
     
     private func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> Self {
-        return internalScale(distance: nil, distanceFunction: distanceFn)
+        return internalScale(scaler: .function(distanceFn))
     }
     
-//    private enum ScaleEnum {
-//        case d(CGFloat)
-//        case distanceFunction(DistanceFunction)
-//    }
-    
-    private func internalScale(distance d: CGFloat?, distanceFunction distanceFn: DistanceFunction?) -> Self {
-        // TODO: this is a good candidate for enum, d is EITHER constant or a function
-        precondition((d != nil && distanceFn == nil) || (d == nil && distanceFn != nil))
+    private func internalScale(scaler: ScaleEnum) -> Self {
         
         let order = self.order
+        guard self.order > 0 else { return self } // undefined behavior for points
         
-//        if distanceFn != nil && self.order == 2 {
-//            // for quadratics we must raise to cubics prior to scaling
-//            //    return self.raise().scale(distance: nil, distanceFunction: distanceFn);
-//        }
+        let r1: CGFloat
+        let r2: CGFloat
+        switch scaler {
+        case let .constant(distance):
+            r1 = distance
+            r2 = distance
+        case let .function(distanceFunction):
+            r1 = distanceFunction(0)
+            r2 = distanceFunction(1)
+        }
         
-        let r1 = (distanceFn != nil) ? distanceFn!(0) : d!
-        let r2 = (distanceFn != nil) ? distanceFn!(1) : d!
         var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
         // move all points by distance 'd' wrt the origin 'o'
         var points: [CGPoint] = self.points
         var np: [CGPoint] = [CGPoint](repeating: .zero, count: self.order + 1)
         
         // move end points by fixed distance along normal.
-        for t in [0,1] {
-            let p: CGPoint = points[t*order]
-            np[t*order] = p + ((t != 0) ? r2 : r1) * v[t].n
-        }
+        np[0]       = points[0]     + r1 * v[0].n
+        np[order]   = points[order] + r2 * v[1].n
         
-        if self.order < 2 {
-            // for offsetting line segments, we are done
-            return Self.init(points: np)
-        }
+        guard self.order > 1 else { return Self.init(points: np) } // for line segments nothing left to do
         
-        let o = Utils.lli4(v[0].p, v[0].c, v[1].p, v[1].c)
+        let o = Utils.linesIntersection(v[0].p, v[0].c, v[1].p, v[1].c)
         
-        if d != nil {
+        switch scaler {
+        case .constant(_):
             // move control points to lie on the intersection of the offset
             // derivative vector, and the origin-through-control vector
             for t in [0,1] {
@@ -292,10 +290,9 @@ extension BezierCurve {
                 let p2 = p + d
                 let o2 = o ?? (points[t+1] - self.normal(CGFloat(t)))
                 let fallback = points[t+1] + (np[t*order] - points[t*order])
-                np[t+1] = Utils.lli4(p, p2, o2, points[t+1]) ?? fallback
+                np[t+1] = Utils.linesIntersection(p, p2, o2, points[t+1]) ?? fallback
             }
-        }
-        else {
+        case let .function(distanceFunction):
             let clockwise: Bool = {
                 let points = self.points
                 let angle = Utils.angle(o: points[0], v1: points[self.order], v2: points[1])
@@ -307,7 +304,7 @@ extension BezierCurve {
                 }
                 let p = self.points[t+1]
                 let ov = (o != nil) ? (p - o!).normalize() : -self.normal(CGFloat(t))
-                var rc: CGFloat = distanceFn!(CGFloat(t+1) / CGFloat(self.order))
+                var rc: CGFloat = distanceFunction(CGFloat(t+1) / CGFloat(self.order))
                 if !clockwise {
                     rc = -rc
                 }
@@ -454,6 +451,7 @@ extension BezierCurve {
 }
 
 public let defaultIntersectionAccuracy = CGFloat(0.5)
+internal let reduceStepSize: CGFloat = 0.01
 
 // MARK: factory
 
