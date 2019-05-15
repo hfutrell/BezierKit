@@ -381,7 +381,7 @@ import Foundation
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
-        // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
+        // TODO: it's frustrating that this winding count uses a different logic than the one in augmented graph
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
         let delta = (line.p0 - line.p1).normalize()
         let intersections = self.intersects(line: line)
@@ -389,7 +389,6 @@ import Foundation
         intersections.forEach {
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
-            assert(element.normal($0.t).x.isFinite && element.normal($0.t).y.isFinite, "possible NaN normal vector. Possible data for unit test?")
             let dotProduct = Double(delta.dot(element.normal(t)))
             if dotProduct < -Utils.epsilon {
                 if t != 0 {

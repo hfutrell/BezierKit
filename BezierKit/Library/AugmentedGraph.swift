@@ -25,18 +25,18 @@ private func signOrZero<A: FloatingPoint>(_ x: A) -> Int {
     } else if x < 0 {
         return -1
     } else {
-        return 0 // NaN returns 0 as well because comparisons false
+        return 0 // signOrZero(NaN) returns 0 as well because comparisons with NaN always false
     }
 }
 
-/// compute winding count adjustment for an incoming/outgoing direction (v) at an intersection to a surface (s)
+/// evaluates and returns the amount to increment the winding count when passing through an intersection with a path
 ///
 /// - Parameters:
-///   - v1: incoming direction vector
-///   - v2: outgoing direction vector
-///   - s1: incoming surface vector
-///   - s2: outgoing surface vector
-/// - Returns: the amount to increment the winding count (may be negative or zero)
+///   - v1: incoming direction vector passing through path
+///   - v2: outgoing direction vector passing through path
+///   - s1: incoming direction of path
+///   - s2: outgoing direction of path
+/// - Returns: the amount to increment the winding count, either +1, 0, or -1
 internal func windingCountAdjustment(_ v1: CGPoint, _ v2: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Int {
     let side1 = between(v1, s1, s2)
     let side2 = between(v2, s1, s2)
@@ -177,13 +177,13 @@ internal class PathLinkedListRepresentation {
                 let prev = lists[i][0].emitPrevious()
                 let p = prev.compute(0.5)
                 let n = prev.normal(0.5)
-                var smallDistance: CGFloat = 1.0
                 #warning("you need to add an API for this one!")
-                let i = path.intersections(with: Path(curve: LineSegment(p0: p, p1: p + smallDistance * n)))
-                if let q = i.first(where: { $0.indexedPathLocation2.t != 0 }) {
-                    smallDistance = 0.5 * q.indexedPathLocation2.t
+                let intersections = path.intersections(with: Path(curve: LineSegment(p0: p, p1: p + n)))
+                var s: CGFloat = 0.5
+                if let i = intersections.first(where: { $0.indexedPathLocation2.t != 0 }) {
+                    s = 0.5 * i.indexedPathLocation2.t
                 }
-                initialWinding = path.windingCount(p + smallDistance * n)
+                initialWinding = path.windingCount(p + s * n)
             } else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
             }
@@ -215,7 +215,9 @@ internal class PathLinkedListRepresentation {
                     v.intersectionInfo.isExit = wasInside == true && isInside == false
                 }
             }
-            assert(initialWinding == windingCount)
+            if initialWinding != windingCount {
+                print("warning: winding count found in .crossingsRemoved() not consistent")
+            }
         }
     }
 
