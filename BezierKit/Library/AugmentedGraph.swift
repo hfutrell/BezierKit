@@ -8,19 +8,43 @@
 
 import CoreGraphics
 
-internal func signedAngle(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
-    return atan2(a.cross(b), a.dot(b))
+/// - Returns: true if the vector v falls inside the (smaller of the two) angles formed by vectors a and b
+internal func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
+    if a.cross(b) > 0 {
+        // smaller angle from a to b goes clockwise from a to b
+        return a.cross(v) > 0 && b.cross(v) < 0
+    } else {
+        // smaller angle from a to b goes counter-clockwise from a to b
+        return b.cross(v) > 0 && a.cross(v) < 0
+    }
 }
 
-internal func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
-    let signedAngleAB = signedAngle(a, b)
-    let signedAngleAV = signedAngle(a, v)
-    if signedAngleAB > 0 {
-        return signedAngleAV > 0 && signedAngleAV < signedAngleAB
-    } else if signedAngleAB < 0 {
-        return signedAngleAV < 0 && signedAngleAV > signedAngleAB
+private func signOrZero<A: FloatingPoint>(_ x: A) -> Int {
+    if x > 0 {
+        return 1
+    } else if x < 0 {
+        return -1
     } else {
-        return signedAngleAV == 0
+        return 0 // NaN returns 0 as well because comparisons false
+    }
+}
+
+/// compute winding count adjustment for an incoming/outgoing direction (v) at an intersection to a surface (s)
+///
+/// - Parameters:
+///   - v1: incoming direction vector
+///   - v2: outgoing direction vector
+///   - s1: incoming surface vector
+///   - s2: outgoing surface vector
+/// - Returns: the amount to increment the winding count (may be negative or zero)
+internal func windingCountAdjustment(_ v1: CGPoint, _ v2: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Int {
+    let side1 = between(v1, s1, s2)
+    let side2 = between(v2, s1, s2)
+    guard side1 != side2 else { return 0 }
+    if side1 {
+        return signOrZero(v1.cross(s2))
+    } else {
+        return signOrZero(v2.cross(s1))
     }
 }
 
@@ -146,105 +170,52 @@ internal class PathLinkedListRepresentation {
 
     fileprivate func markEntryExit(_ path: Path, useRelativeWinding: Bool = false) {
         let fillRule: PathFillRule = useRelativeWinding ? .winding : .evenOdd
-
         for i in 0..<lists.count {
-            // determine winding counts relative to the first vertex
-            var relativeWindingCount = 0
-            self.forEachVertexInComponent(atIndex: i) { v in
-                guard v.isIntersection, let neighbor = v.intersectionInfo.neighbor else {
-                    return
-                }
-                let previous = v.emitPrevious()
-                let next = v.emitNext()
-
-                // we used to use the derivative here but in important cases derivatives can be exactly tangent
-                // at intersections!
-                let smallNumber: CGFloat = 0.001
-
-                let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
-                let n2 = neighbor.emitNext().compute(smallNumber) - v.location
-
-                let v1 = previous.compute(smallNumber) - v.location
-                let v2 = next.compute(smallNumber) - v.location
-
-                let side1 = between(v1, n1, n2)
-                let side2 = between(v2, n1, n2)
-
-                let cross = (side1 != side2)
-
-                if cross {
-                    // TODO: there's an issue when corners intersect (try AugmentedGraphTests.testCornersIntersect which has this problem, even though it passes)
-                    // the relative winding count can be decremented both for entry and for exit. This is not an issue with the even-odd winding rule, but using
-                    // winding it can be an issue
-                    let c = v2.cross(n2)
-                    if c < 0 {
-                        relativeWindingCount += 1
-                    } else if c > 0 {
-                        relativeWindingCount -= 1
-                    }
-                }
-                v.intersectionInfo.nextWinding = relativeWindingCount
-            }
-
             // determine the initial winding count (winding count before first vertex)
             var initialWinding = 0
             if useRelativeWinding {
-                var minimumWinding = Int.max
-                self.forEachVertexInComponent(atIndex: i) { v in
-                    guard v.isIntersection else {
-                        return
-                    }
-                    if v.intersectionInfo.nextWinding < minimumWinding {
-                        minimumWinding = v.intersectionInfo.nextWinding
-                    }
-                }
-                initialWinding = -minimumWinding
-
                 let prev = lists[i][0].emitPrevious()
-                let a = prev.compute(0.5)
-                // TODO: 1.0e-5 is a magic number (just an arbitrary small value)
-                let b = a + 1.0e-5 * prev.normal(0.5)
-                //let c = a - 1.0e-5 * prev.normal(0.5)
-
-                let w1 = path.windingCount(b)
-                //let w2 = path.windingCount(c)
-
-                // print("w1 = \(w1)")
-                // print("w2 = \(w2)")
-
-                if w1 == initialWinding-1 {
-                    initialWinding = w1
+                let p = prev.compute(0.5)
+                let n = prev.normal(0.5)
+                var smallDistance: CGFloat = 1.0
+                #warning("you need to add an API for this one!")
+                let i = path.intersections(with: Path(curve: LineSegment(p0: p, p1: p + smallDistance * n)))
+                if let q = i.first(where: { $0.indexedPathLocation2.t != 0 }) {
+                    smallDistance = 0.5 * q.indexedPathLocation2.t
                 }
+                initialWinding = path.windingCount(p + smallDistance * n)
             } else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
             }
-
-            // adjust winding counts based on the initial winding count
+            // determine entries / exists based on winding counts around component
+            var windingCount = initialWinding
             self.forEachVertexInComponent(atIndex: i) { v in
-                guard v.isIntersection else {
-                    return
+                guard v.isIntersection, let neighbor = v.intersectionInfo.neighbor else { return }
+                let previous = v.emitPrevious()
+                let next = v.emitNext()
+                // we used to use the derivative here but in important cases derivatives can be exactly tangent
+                // at intersections!
+                let smallNumber: CGFloat = 0.001
+                let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
+                let n2 = neighbor.emitNext().compute(smallNumber) - v.location
+                let v1 = previous.compute(smallNumber) - v.location
+                let v2 = next.compute(smallNumber) - v.location
+                let windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
+                if windingCountChange != 0 {
+                    var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                    if useRelativeWinding {
+                        wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                    }
+                    windingCount += windingCountChange
+                    var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                    if useRelativeWinding {
+                        isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                    }
+                    v.intersectionInfo.isEntry = wasInside == false && isInside == true
+                    v.intersectionInfo.isExit = wasInside == true && isInside == false
                 }
-                v.intersectionInfo.nextWinding += initialWinding
             }
-
-            // for each intersection, determine isEntry / isExit based on winding count
-            var windingCount: Int = initialWinding
-            self.forEachVertexInComponent(atIndex: i) { v in
-                guard v.isIntersection else {
-                    return
-                }
-                var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
-                if useRelativeWinding {
-                    wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
-                }
-                windingCount = v.intersectionInfo.nextWinding
-                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
-                if useRelativeWinding {
-                    isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
-                }
-                v.intersectionInfo.isEntry = wasInside == false && isInside == true
-                v.intersectionInfo.isExit = wasInside == true && isInside == false
-            }
+            assert(initialWinding == windingCount)
         }
     }
 
@@ -429,7 +400,6 @@ internal class Vertex {
     public struct IntersectionInfo {
         public var isEntry: Bool = false
         public var isExit: Bool = false
-        public var nextWinding: Int = 0
         public weak var neighbor: Vertex?
     }
     public var intersectionInfo: IntersectionInfo = IntersectionInfo()

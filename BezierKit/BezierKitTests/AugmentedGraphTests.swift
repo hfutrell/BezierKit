@@ -148,17 +148,60 @@ class AugmentedGraphTests: XCTestCase {
     }
 
     func testBetween() {
+        // v1 -> v2 is clockwise
         let v1 = CGPoint(x: 2, y: -1)
         let v2 = CGPoint(x: 1, y: 3)
+        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2))
+        XCTAssertTrue( between(CGPoint(x: 1, y: 2), v1, v2))
+        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2))
+        XCTAssertFalse( between(CGPoint(x: -1, y: 1), v1, v2))
+        XCTAssertFalse( between(CGPoint(x: 1, y: 5), v1, v2))
+        XCTAssertFalse( between(CGPoint(x: 1, y: -1), v1, v2))
+        // v3 -> v4 is counter clockwise
+        let v3 = CGPoint(x: -3, y: -1)
+        let v4 = CGPoint(x: 1, y: 1)
+        XCTAssertTrue(between(CGPoint(x: -1, y: 0), v3, v4))
+        XCTAssertTrue(between(CGPoint(x: -4, y: -1), v3, v4))
+        XCTAssertTrue(between(CGPoint(x: 1, y: 2), v3, v4))
+        XCTAssertFalse(between(CGPoint(x: 1, y: -1), v3, v4))
+        XCTAssertFalse(between(CGPoint(x: 2, y: 1), v3, v4))
+        XCTAssertFalse(between(CGPoint(x: -1, y: -1), v3, v4))
+    }
 
-        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2)    )
-        XCTAssertTrue( between(CGPoint(x: 1, y: 2), v1, v2)    )
-        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2)    )
+    func testWindingCountAdjustment() {
+        // the simplest case: a vector headed in the +x direction against a surface in the -y direction should increment the winding count
+        let plusX = CGPoint(x: 1, y: 0)
+        let plusY = CGPoint(x: 0, y: 1)
+        XCTAssertEqual(windingCountAdjustment(-plusX, plusX, plusY, -plusY), 1)
+        // a few other simple tests: reversing the directions should flip the signs
+        XCTAssertEqual(windingCountAdjustment(plusX, -plusX, plusY, -plusY), -1)
+        XCTAssertEqual(windingCountAdjustment(-plusX, plusX, -plusY, plusY), -1)
+        XCTAssertEqual(windingCountAdjustment(plusX, -plusX, -plusY, plusY), 1)
+    }
 
-        XCTAssertFalse( between(CGPoint(x: -1, y: 1), v1, v2)    )
-        XCTAssertFalse( between(CGPoint(x: 1, y: 5), v1, v2)    )
-        XCTAssertFalse( between(CGPoint(x: 1, y: -1), v1, v2)    )
+    func testWindingCountAdjustmentCornerConstantDirection() {
+        // ensure winding count correct when intersecting at a corner in a constant direction
+        let direction1 = CGPoint(x: 1, y: -1)
+        let s1 = CGPoint(x: 3, y: -1)
+        let s2 = CGPoint(x: 1, y: -3)
+        XCTAssertEqual(windingCountAdjustment(-direction1, direction1, s1, s2), 1) // we enter through the corner
+        let direction2 = CGPoint(x: 1, y: 1)
+        XCTAssertEqual(windingCountAdjustment(-direction2, direction2, s1, s2), 0) // we glance the corner but do not enter
+        let direction3 = CGPoint(x: -1, y: 1)
+        XCTAssertEqual(windingCountAdjustment(-direction3, direction3, s1, s2), -1) // we exit through the corner
+    }
 
+    func testWindingCountAdjustmentCornerVariableDirection() {
+        // ensure winding count correct when intersecting at a corner in a constant direction
+        let s1 = CGPoint(x: 1, y: -1)
+        let s2 = CGPoint(x: 1, y: 1)
+        let s3 = CGPoint(x: -1, y: 1)
+        let s4 = CGPoint(x: -1, y: -1)
+        XCTAssertEqual(windingCountAdjustment(CGPoint(x: 0, y: 1), CGPoint(x: 1, y: 0), s1, s2), -1)    // we enter a clockwise shape
+        XCTAssertEqual(windingCountAdjustment(CGPoint(x: -1, y: 0), CGPoint(x: 0, y: 1), s3, s4), 1)    // we exit a clockwise shape
+
+        XCTAssertEqual(windingCountAdjustment(CGPoint(x: 0, y: 1), CGPoint(x: 1, y: 0), s2, s1), 1)   // we enter a ccw shape
+        XCTAssertEqual(windingCountAdjustment(CGPoint(x: -1, y: 0), CGPoint(x: 0, y: 1), s4, s3), -1) // we exit a ccw shape
     }
 
     func testWindingDirection() {
@@ -182,9 +225,4 @@ class AugmentedGraphTests: XCTestCase {
         let intersection2Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 2).next
         XCTAssertTrue(intersection2Path1.intersectionInfo.isEntry)
     }
-
-//    func testMultipleIntersectionsSameElement() {
-//
-//    }
-
 }
