@@ -179,10 +179,7 @@ internal class PathLinkedListRepresentation {
                 let n = prev.normal(0.5)
                 #warning("you need to add an API for this one!")
                 let intersections = path.intersections(with: Path(curve: LineSegment(p0: p, p1: p + n)))
-                var s: CGFloat = 0.5
-                if let i = intersections.first(where: { $0.indexedPathLocation2.t != 0 }) {
-                    s = 0.5 * i.indexedPathLocation2.t
-                }
+                let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation2.t}).first(where: {$0 > 0}) ?? 1.0)
                 initialWinding = path.windingCount(p + s * n)
             } else {
                 initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))

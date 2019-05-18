@@ -391,11 +391,11 @@ import Foundation
             let t = $0.t
             let dotProduct = Double(delta.dot(element.normal(t)))
             if dotProduct < -Utils.epsilon {
-                if t != 0 {
+                if t != 0 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)) {
                     windingCount -= 1
                 }
             } else if dotProduct > Utils.epsilon {
-                if t != 1 {
+                if t != 1 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex+1, self.elementCount), t: 0.0)) {
                     windingCount += 1
                 }
             }
