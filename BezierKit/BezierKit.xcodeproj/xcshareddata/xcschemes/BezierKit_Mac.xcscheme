@@ -44,6 +44,16 @@
                </Test>
             </SkippedTests>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FDB9D72F1EB28CEB00413F0E"
+               BuildableName = "BezierKit_iOSTests.xctest"
+               BlueprintName = "BezierKit_iOSTests"
+               ReferencedContainer = "container:BezierKit.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
