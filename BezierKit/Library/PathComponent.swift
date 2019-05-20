@@ -382,7 +382,6 @@ import Foundation
             return 0
         }
         // TODO: it's frustrating that this winding count uses a different logic than the one in augmented graph
-        // TODO: the test `testContainsRealWorldEdgeCase2` passes with the fix that checks "!intersections.contains" but we likely have the same issue when doing vector boolean ops with path element intersections (we need to ensure that if we filter t=0 intersections that we do actually catch them with the neighboring element!
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
         let delta = (line.p0 - line.p1).normalize()
         let intersections = self.intersects(line: line)
@@ -391,11 +390,11 @@ import Foundation
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
             let dotProduct = Double(delta.dot(element.normal(t)))
-            if dotProduct < -Utils.epsilon {
+            if dotProduct < 0 {
                 if t != 0 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)) {
                     windingCount -= 1
                 }
-            } else if dotProduct > Utils.epsilon {
+            } else if dotProduct > 0 {
                 if t != 1 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex+1, self.elementCount), t: 0.0)) {
                     windingCount += 1
                 }
