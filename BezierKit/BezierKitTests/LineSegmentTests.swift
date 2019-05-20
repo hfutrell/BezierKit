@@ -350,7 +350,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i.first?.t2, 0)
     }
 
-    func testIntersectionsCubicRootsEdgeCase() {
+    func testIntersectionsCubicRootsEdgeCase1() {
         // this data caused issues in practice because because 'd' in the roots calculation is very near, but not exactly, zero.
         let c = CubicBezierCurve(p0: CGPoint(x: 201.48419096574196, y: 570.7720830272123),
                                  p1: CGPoint(x: 202.27135851996428, y: 570.7720830272123),
@@ -359,6 +359,22 @@ class LineSegmentTests: XCTestCase {
         let l = LineSegment(p0: CGPoint(x: 200.05889802679428, y: 572.1973759661599), p1: CGPoint(x: 201.48419096574196, y: 573.6226689051076))
         let i = l.intersections(with: c)
         XCTAssertEqual(i, [])
+    }
+    
+    func testIntersectionsCubicRootsEdgeCase2() {
+        // this data caused issues in practice because because the discriminant in the roots calculation is very near zero
+        let line = LineSegment(p0 : CGPoint(x: 503.31162501468725, y: 766.9016671863201),
+                               p1: CGPoint(x: 504.2124710211739, y: 767.3358059574488))
+        let curve = CubicBezierCurve(p0: CGPoint(x: 505.16132944417086, y: 779.6305912206088),
+                                     p1: CGPoint(x: 503.19076843492786, y: 767.0872665416827),
+                                     p2: CGPoint(x: 503.3761460381431, y: 766.7563954079359),
+                                     p3: CGPoint(x: 503.3060153966664, y: 766.9140612367046))
+        let i = line.intersections(with: curve)
+        XCTAssertEqual(i.count, 2)
+        i.forEach {
+            let d = distance(line.compute($0.t1), curve.compute($0.t2))
+            XCTAssertTrue(d < 1.0e-4, "distance line.compute(\($0.t1)) to curve.compute(\($0.t2)) = \(d)")
+        }
     }
 
     func testIntersectionsCubicDegenerate() {
