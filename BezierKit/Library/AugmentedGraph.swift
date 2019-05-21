@@ -72,8 +72,8 @@ internal class PathLinkedListRepresentation {
         assert(start !== end)
         assert(v.isIntersection)
         v.splitInfo = Vertex.SplitInfo(t: t)
-        let t0: CGFloat = (start.splitInfo != nil) ? start.splitInfo!.t : 0.0
-        let t1: CGFloat = (end.splitInfo != nil) ? end.splitInfo!.t : 1.0
+        let t0: CGFloat = start.splitInfo?.t ?? 0.0
+        let t1: CGFloat = end.splitInfo?.t ?? 1.0
         // locate the element for the vertex transitions
         /*
          TODO: this code assumes t0 < t < t1, which could definitely be false if there are multiple intersections against the same element at the same point
@@ -212,9 +212,16 @@ internal class PathLinkedListRepresentation {
                     v.intersectionInfo.isEntry = wasInside == false && isInside == true
                     v.intersectionInfo.isExit = wasInside == true && isInside == false
                 }
+
+                let altCount = path.windingCount(next.compute(0.5))
+                print("winding count = \(windingCount) vs \(altCount)")
+
             }
+
+            print("done")
+
             if initialWinding != windingCount {
-                print("warning: winding count found in .crossingsRemoved() not consistent")
+                print("warning: winding count found in .markEntryExit() not consistent")
             }
         }
     }
