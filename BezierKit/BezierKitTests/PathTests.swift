@@ -529,7 +529,7 @@ class PathTests: XCTestCase {
     }
 
     func testUnionRealWorldEdgeCase() {
-        let a = { () -> Path in
+        let a = {() -> Path in
             let cgPath = CGMutablePath()
             cgPath.move(to: CGPoint(x: 310.198127403852, y: 190.08736919846973))
             cgPath.addCurve(to: CGPoint(x: 309.1982933716744, y: 195.17240727745877),
@@ -552,8 +552,7 @@ class PathTests: XCTestCase {
                 control2: CGPoint(x: 309.72232986751203, y: 185.6785144367646))
             return Path(cgPath: cgPath)
         }()
-
-        let b = { () -> Path in
+        let b = {() -> Path in
             let cgPath = CGMutablePath()
             cgPath.move(to: CGPoint(x: 309.5688043100249, y: 187.66446326122298))
             cgPath.addCurve(to: CGPoint(x: 304.8877314421214, y: 198.89156106846605),
