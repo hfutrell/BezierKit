@@ -528,6 +528,56 @@ class PathTests: XCTestCase {
         )
     }
 
+    func testUnionRealWorldEdgeCase() {
+        let a = { () -> Path in
+            let cgPath = CGMutablePath()
+            cgPath.move(to: CGPoint(x: 310.198127403852, y: 190.08736919846973))
+            cgPath.addCurve(to: CGPoint(x: 309.1982933716744, y: 195.17240727745877),
+                control1: CGPoint(x: 310.390629965343, y: 191.78584973769978),
+                control2: CGPoint(x: 310.0800866088565, y: 193.5583513843498))
+            cgPath.addCurve(to: CGPoint(x: 297.52638944557776, y: 198.59685279578636),
+                control1: CGPoint(x: 306.9208206199371, y: 199.34114906559483),
+                control2: CGPoint(x: 301.6951312337138, y: 200.87432554752368))
+            cgPath.addCurve(to: CGPoint(x: 293.06807628308206, y: 191.637728075906),
+                control1: CGPoint(x: 294.8541298755864, y: 197.13694026929096),
+                control2: CGPoint(x: 293.26485189217163, y: 194.46557442730858))
+            cgPath.addCurve(to: CGPoint(x: 293.0490061981148, y: 191.24674708897507),
+                control1: CGPoint(x: 293.05884562618036, y: 191.50820426365925),
+                control2: CGPoint(x: 293.0524676850055, y: 191.37785711483136))
+            cgPath.addCurve(to: CGPoint(x: 301.42017404234923, y: 182.42157189005232),
+                control1: CGPoint(x: 292.9236355289621, y: 186.49810808117778),
+                control2: CGPoint(x: 296.67153503455194, y: 182.546942559205))
+            cgPath.addCurve(to: CGPoint(x: 310.198127403852, y: 190.08736919846973),
+                control1: CGPoint(x: 305.9310607601042, y: 182.30247821176928),
+                control2: CGPoint(x: 309.72232986751203, y: 185.6785144367646))
+            return Path(cgPath: cgPath)
+        }()
+
+        let b = { () -> Path in
+            let cgPath = CGMutablePath()
+            cgPath.move(to: CGPoint(x: 309.5688043100249, y: 187.66446326122298))
+            cgPath.addCurve(to: CGPoint(x: 304.8877314421214, y: 198.89156106846605),
+                            control1: CGPoint(x: 311.37643918302956, y: 192.05738329201742),
+                            control2: CGPoint(x: 309.28065147291585, y: 197.0839261954614))
+            cgPath.addCurve(to: CGPoint(x: 293.6606336348783, y: 194.21048820056248),
+                            control1: CGPoint(x: 300.4948114113269, y: 200.6991959414707),
+                            control2: CGPoint(x: 295.46826850788295, y: 198.60340823135695))
+            cgPath.addCurve(to: CGPoint(x: 298.3417065027818, y: 182.98339039331944),
+                            control1: CGPoint(x: 291.85299876187366, y: 189.81756816976807),
+                            control2: CGPoint(x: 293.9487864719874, y: 184.79102526632408))
+            cgPath.addCurve(to: CGPoint(x: 309.5688043100249, y: 187.66446326122298),
+                            control1: CGPoint(x: 302.7346265335763, y: 181.1757555203148),
+                            control2: CGPoint(x: 307.76116943702027, y: 183.2715432304285))
+            return Path(cgPath: cgPath)
+        }()
+        let result = a.union(b, accuracy: 1.0e-4)!
+        let point = CGPoint(x: 302, y: 191)
+        let rule = PathFillRule.evenOdd
+        XCTAssertTrue(a.contains(point, using: rule))
+        XCTAssertTrue(b.contains(point, using: rule))
+        XCTAssertTrue(result.contains(point, using: rule), "a union b should contain point that is in both a and b")
+    }
+
     func testIntersecting() {
         let expectedResult = Path(components: [PathComponent(curves:
             [
