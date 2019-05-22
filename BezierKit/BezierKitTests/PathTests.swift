@@ -529,6 +529,7 @@ class PathTests: XCTestCase {
     }
 
     func testUnionRealWorldEdgeCase() {
+        guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
         let a = {() -> Path in
             let cgPath = CGMutablePath()
             cgPath.move(to: CGPoint(x: 310.198127403852, y: 190.08736919846973))
@@ -734,6 +735,7 @@ class PathTests: XCTestCase {
 
     func testCrossingsRemovedEdgeCaseInnerLoop() {
 
+        // the path is a box with a loop that begins at (2,0), touches the top of the box at (2,2) exactly tangent
         // this tests an edge case of crossingsRemoved() when vertices of the path are exactly equal
         // the path does a complete loop in the middle
 

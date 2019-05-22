@@ -313,6 +313,7 @@ class LineSegmentTests: XCTestCase {
     }
 
     func testIntersectionsCubicRealWorldIssue() {
+        guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
         // this was an issue because if you round t-values that are near zero you will get
         // cubicCurve.compute(intersections[0].t1).x = 309.5496606404184, which corresponds to t = -3.5242468640577755e-06 on the line (negative! outside the line!)
         let cubicCurve = CubicBezierCurve(p0: CGPoint(x: 301.42017404234923, y: 182.42157189005232),
@@ -373,6 +374,7 @@ class LineSegmentTests: XCTestCase {
     }
     
     func testIntersectionsCubicRootsEdgeCase2() {
+        guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
         // this data caused issues in practice because because the discriminant in the roots calculation is very near zero
         let line = LineSegment(p0 : CGPoint(x: 503.31162501468725, y: 766.9016671863201),
                                p1: CGPoint(x: 504.2124710211739, y: 767.3358059574488))
