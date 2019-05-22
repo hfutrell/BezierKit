@@ -313,16 +313,14 @@ class LineSegmentTests: XCTestCase {
     }
 
     func testIntersectionsCubicRealWorldIssue() {
+        // this was an issue because if you round t-values that are near zero you will get
+        // cubicCurve.compute(intersections[0].t1).x = 309.5496606404184, which corresponds to t = -3.5242468640577755e-06 on the line (negative! outside the line!)
         let cubicCurve = CubicBezierCurve(p0: CGPoint(x: 301.42017404234923, y: 182.42157189005232),
                                           p1: CGPoint(x: 305.9310607601042, y: 182.30247821176928),
                                           p2: CGPoint(x: 309.72232986751203, y: 185.6785144367646),
                                           p3: CGPoint(x: 310.198127403852, y: 190.08736919846973))
-
         let line = LineSegment(p0: CGPoint(x: 309.54962994198274, y: 187.61824016482512), p1: CGPoint(x: 275.83899279843945, y: 187.61824016482512))
         XCTAssertFalse(cubicCurve.intersects(line))
-
-        // this was an issue because if you round t-values that are near zero you will get
-        // cubicCurve.compute(intersections[0].t1).x = 309.5496606404184, which corresponds to t = -3.5242468640577755e-06 on the line (negative! outside the line!)
     }
 
     func testIntersectionsDegenerateCubic1() {

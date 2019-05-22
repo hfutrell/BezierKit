@@ -155,22 +155,9 @@ internal class Utils {
         }
     }
 
-    static func roots(points: [CGPoint], line: LineSegment) -> [CGFloat] {
+    static func roots(points: [CGPoint], line: LineSegment) -> [Double] {
         let order = points.count - 1
         let p = Utils.align(points, p1: line.p0, p2: line.p1)
-
-        let clamp: (Double) -> CGFloat? = {
-            if $0 < -epsilon {
-                return nil
-            } else if $0 > 1.0 + epsilon {
-                return nil
-            } else if Utils.approximately($0, 0.0, precision: epsilon) {
-                return CGFloat(0.0)
-            } else if Utils.approximately($0, 1.0, precision: epsilon) {
-                return CGFloat(1.0)
-            }
-            return CGFloat($0)
-        }
 
         if order == 2 {
             let a = Double(p[0].y)
@@ -182,9 +169,9 @@ internal class Utils {
                 let m2 = -a+b
                 let v1: Double = -( m1+m2)/d
                 let v2: Double = -(-m1+m2)/d
-                return [v1, v2].compactMap(clamp)
+                return [v1, v2]
             } else if a != b {
-                return [Double(0.5) * a / (a-b)].compactMap(clamp)
+                return [Double(0.5) * a / (a-b)]
             } else {
                 return []
             }
@@ -230,17 +217,17 @@ internal class Utils {
                 let x1 = t1 * cos(phi/3) - a/3
                 let x2 = t1 * cos((phi+tau)/3) - a/3
                 let x3 = t1 * cos((phi+2*tau)/3) - a/3
-                return [x1, x2, x3].compactMap(clamp)
+                return [x1, x2, x3]
             } else if discriminant > smallValue {
                 let sd = sqrt(discriminant)
                 let u1 = crt(-q2+sd)
                 let v1 = crt(q2+sd)
-                return [u1-v1-a/3].compactMap(clamp)
+                return [u1-v1-a/3]
             } else if discriminant.isNaN == false {
                 let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
                 let x1 = 2*u1-a/3
                 let x2 = -u1 - a/3
-                return [x1, x2].compactMap(clamp)
+                return [x1, x2]
             } else {
                 return []
             }

@@ -173,8 +173,16 @@ internal class PathLinkedListRepresentation {
         for i in 0..<lists.count {
             // determine the initial winding count (winding count before first vertex)
             var initialWinding = 0
+
+            // don't start by computing winding count on a tiny element
+            var b = startingVertex(forComponentIndex: i, elementIndex: 0)
+            while b.previous.emitPrevious().length() > b.emitPrevious().length() {
+                b = b.previous!
+            }
+            let startingVertex = b
+
             if useRelativeWinding {
-                let prev = lists[i][0].emitPrevious()
+                let prev = startingVertex.emitPrevious()
                 let p = prev.compute(0.5)
                 let n = prev.normal(0.5)
                 #warning("you need to add an API for this one!")
@@ -183,22 +191,29 @@ internal class PathLinkedListRepresentation {
                 let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation2.t}).first(where: {$0 > 0}) ?? 1.0)
                 initialWinding = path.windingCount(p + s * n)
             } else {
-                initialWinding = path.windingCount(lists[i][0].emitPrevious().compute(0.5))
+                initialWinding = path.windingCount(startingVertex.emitPrevious().compute(0.5))
             }
             // determine entries / exists based on winding counts around component
             var windingCount = initialWinding
-            self.forEachVertexInComponent(atIndex: i) { v in
+            self.forEachVertexStartingFrom(startingVertex) { v in
                 guard v.isIntersection, let neighbor = v.intersectionInfo.neighbor else { return }
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
-                // we used to use the derivative here but in important cases derivatives can be exactly tangent
-                // at intersections!
-                let smallNumber: CGFloat = 0.001
-                let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
-                let n2 = neighbor.emitNext().compute(smallNumber) - v.location
-                let v1 = previous.compute(smallNumber) - v.location
-                let v2 = next.compute(smallNumber) - v.location
+
+                let n1 = neighbor.emitPrevious().normal(0)
+                let n2 = neighbor.emitNext().normal(0)
+                let v1 = previous.normal(0)
+                let v2 = next.normal(0)
+
                 let windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
+
+//                if useRelativeWinding == false {
+//                    let altChange = path.windingCount(next.compute(0.05)) - path.windingCount(previous.compute(0.05))
+//                    if altChange != windingCountChange {
+//                        print("windingCountChange is wrong?")
+//                    }
+//                }
+
                 if windingCountChange != 0 {
                     var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
                     if useRelativeWinding {
@@ -212,17 +227,10 @@ internal class PathLinkedListRepresentation {
                     v.intersectionInfo.isEntry = wasInside == false && isInside == true
                     v.intersectionInfo.isExit = wasInside == true && isInside == false
                 }
-
-                let altCount = path.windingCount(next.compute(0.5))
-                print("winding count = \(windingCount) vs \(altCount)")
-
             }
-
-            print("done")
-
-            if initialWinding != windingCount {
-                print("warning: winding count found in .markEntryExit() not consistent")
-            }
+//            if initialWinding != windingCount {
+//                print("warning: winding count found in .markEntryExit() not consistent")
+//            }
         }
     }
 

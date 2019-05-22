@@ -390,6 +390,11 @@ import Foundation
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
             let dotProduct = Double(delta.dot(element.normal(t)))
+
+            if (element.compute(t) - point).dot(delta) > 0 {
+                return
+            }
+
             if dotProduct < 0 {
                 if t != 0 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)) {
                     windingCount -= 1

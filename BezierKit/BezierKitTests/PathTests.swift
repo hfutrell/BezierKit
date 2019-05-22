@@ -575,6 +575,8 @@ class PathTests: XCTestCase {
         XCTAssertTrue(a.contains(point, using: rule))
         XCTAssertTrue(b.contains(point, using: rule))
         XCTAssertTrue(result.contains(point, using: rule), "a union b should contain point that is in both a and b")
+        XCTAssertTrue(result.boundingBox.cgRect.insetBy(dx: -1, dy: -1).contains(a.boundingBox.cgRect), "resulting bounding box should contain a.boundingBox")
+        XCTAssertTrue(result.boundingBox.cgRect.insetBy(dx: -1, dy: -1).contains(b.boundingBox.cgRect), "resulting bounding box should contain b.boundingBox")
     }
 
     func testIntersecting() {
