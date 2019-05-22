@@ -117,7 +117,7 @@ extension ArcApproximateable {
 //                    break
 //                }
 
-                prev_arc = prev_arc != nil ? prev_arc : arc
+                prev_arc = prev_arc ?? arc
                 result.append(prev_arc!)
                 s = prev_e
             } while e < 1.0
