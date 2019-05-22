@@ -146,6 +146,9 @@ public extension LineSegment {
     }
     func intersections(with line: LineSegment) -> [Intersection] {
 
+        guard self.p1 != self.p0, line.p1 != line.p0 else {
+            return []
+        }
         guard self.boundingBox.overlaps(line.boundingBox) else {
             return []
         }
