@@ -32,6 +32,7 @@ class FlatnessTests: XCTestCase {
                                   p3: CGPoint(x: 2, y: 4))
     func testLineSegment() {
         XCTAssertEqual(line.flatness, 0)
+        XCTAssertEqual(line.flatnessSquared, 0)
     }
 
     func testQuadraticBezierCurve() {

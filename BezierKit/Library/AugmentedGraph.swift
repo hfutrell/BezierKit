@@ -115,9 +115,6 @@ internal class PathLinkedListRepresentation {
     }
 
     private func createListFor(component: PathComponent) -> [Vertex] {
-        guard component.elementCount > 0 else {
-            return []
-        }
         assert(component.startingPoint == component.endingPoint, "this method assumes component is closed!")
         var elements: [Vertex] = [] // elements[i] is the first vertex of curves[i]
         let firstPoint: CGPoint = component.startingPoint

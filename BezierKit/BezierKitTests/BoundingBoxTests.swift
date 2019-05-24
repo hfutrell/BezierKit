@@ -38,6 +38,11 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertFalse(e.overlaps(infiniteBox))
         XCTAssertFalse(e.overlaps(nanBox))
 
+        XCTAssertFalse(infiniteBox.isEmpty)
+        XCTAssertFalse(zeroBox.isEmpty)
+        XCTAssertFalse(sampleBox.isEmpty)
+        XCTAssertTrue(BoundingBox.empty.isEmpty)
+        XCTAssertTrue(BoundingBox(min: CGPoint(x: 5, y: 3), max: CGPoint(x: 4, y: 4)).isEmpty)
     }
 
     func testLowerAndUpperBounds() {
@@ -53,7 +58,7 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertEqual(box.lowerBoundOfDistance(to: p2), 0.0)    // fully inside
         XCTAssertEqual(box.lowerBoundOfDistance(to: p3), 1.0)    // outside (straight horizontally)
         XCTAssertEqual(box.lowerBoundOfDistance(to: p4), 2.0)    // outside (straight vertically)
-        XCTAssertEqual(box.lowerBoundOfDistance(to: p5), 5.0)  // outside (nearest bottom left corner)
+        XCTAssertEqual(box.lowerBoundOfDistance(to: p5), 5.0)    // outside (nearest bottom left corner)
 
         XCTAssertEqual(box.upperBoundOfDistance(to: p1), sqrt(2.0))
         XCTAssertEqual(box.upperBoundOfDistance(to: p2), sqrt(2.5))
