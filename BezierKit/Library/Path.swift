@@ -24,6 +24,9 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
 @objc(BezierKitPath) open class Path: NSObject, NSCoding {
 
+    /// lock to make external accessing of lazy vars threadsafe
+    private var lock = os_unfair_lock_s()
+
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint?
         var componentStartPoint: CGPoint?
@@ -49,7 +52,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
 
-    @objc(CGPath) public lazy var cgPath: CGPath = {
+    @objc(CGPath) public var cgPath: CGPath {
+        return self.lock.sync { self._cgPath }
+    }
+
+    private lazy var _cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         self.components.forEach {
             mutablePath.addPath($0.cgPath)
@@ -61,7 +68,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.components.isEmpty // components are not allowed to be empty
     }
 
-    public lazy var boundingBox: BoundingBox = {
+    public var boundingBox: BoundingBox {
+        return self.lock.sync { self._boundingBox }
+    }
+
+    private lazy var _boundingBox: BoundingBox = {
         return self.components.reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
         }

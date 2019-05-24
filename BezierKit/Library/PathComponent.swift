@@ -14,6 +14,8 @@ import Foundation
     private let offsets: [Int]
     public let points: [CGPoint]
     public let orders: [Int]
+    /// lock to make external accessing of lazy vars threadsafe
+    private var lock = os_unfair_lock_s()
 
     public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {
@@ -21,8 +23,11 @@ import Foundation
         }
     }
 
-    internal lazy var bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
+    private lazy var _bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
 
+    internal var bvh: BVH {
+        return self.lock.sync { self._bvh }
+    }
     public var elementCount: Int {
         return self.orders.count
     }
@@ -93,7 +98,7 @@ import Foundation
         return self.orders[index]
     }
 
-    public lazy var cgPath: CGPath = {
+    private lazy var _cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         mutablePath.move(to: self.startingPoint)
         for i in 0..<self.elementCount {
@@ -119,6 +124,10 @@ import Foundation
         }
         return mutablePath.copy()!
     }()
+
+    public var cgPath: CGPath {
+        return self.lock.sync { self._cgPath }
+    }
 
     required public init(points: [CGPoint], orders: [Int]) {
         // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
