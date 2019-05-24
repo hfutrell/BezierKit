@@ -52,7 +52,7 @@ fileprivate extension CGPath {
 class PathDataTests: XCTestCase {
 
     private func pathHasEqualElementsToCGPath(_ path1: Path, _ path2: CGPath) -> Bool {
-        return cgPathsHaveEqualCGPathElements(path1.cgPath, path2)
+        return cgPathsHaveEqualCGPathElements(Path(data: path1.data)!.cgPath, path2)
     }
 
     private func cgPathsHaveEqualCGPathElements(_ path1: CGPath, _ path2: CGPath) -> Bool {
@@ -147,6 +147,9 @@ class PathDataTests: XCTestCase {
         cgPath.move(to: CGPoint(x: 1, y: 2))
         cgPath.move(to: CGPoint(x: 2, y: 3))
         cgPath.move(to: CGPoint(x: 3, y: 4))
+
+        let what = Path(cgPath: cgPath)
+
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
         cgPath.addLine(to: CGPoint(x: 4, y: 5))
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
