@@ -319,6 +319,16 @@ class CubicBezierCurveTests: XCTestCase {
         let result3 = c3.reduce()
         XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(result3, for: c3))
     }
+
+    func testReduceExtremaCloseby() {
+        // the x coordinates are f(t) = (t-0.5)^2 = t^2 - t + 0.25, which has a minima at t=0.5
+        // the y coordinates are f(t) = 1/3t^3 - 1/2t^2 + 3/16t, which has an inflection at t=0.5
+        // adding `smallValue` to one of the y coordinates gives us two extrema very close to t=0.5
+        let smallValue: CGFloat = 1.0e-3
+        let c = BezierKitTestHelpers.cubicBezierCurveFromPolynomials([0,1,-1,0.25], [CGFloat(1.0 / 3.0), CGFloat(-1.0 / 2.0) + smallValue, CGFloat(3.0 / 16.0),0])
+        let result1 = c.reduce()
+        XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(result1, for: c))
+    }
 //
 //    //    func testScaleDistanceFunc {
 //    //
