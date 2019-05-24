@@ -11,22 +11,22 @@ import CoreGraphics
 public struct LineSegment: BezierCurve, Equatable {
 
     public var p0, p1: CGPoint
-    
+
     public init(points: [CGPoint]) {
         precondition(points.count == 2)
         self.p0 = points[0]
         self.p1 = points[1]
     }
-    
+
     public init(p0: CGPoint, p1: CGPoint) {
         self.p0 = p0
         self.p1 = p1
     }
-    
+
     public var points: [CGPoint] {
         return [p0, p1]
     }
-    
+
     public var startingPoint: CGPoint {
         get {
             return p0
@@ -35,7 +35,7 @@ public struct LineSegment: BezierCurve, Equatable {
             p0 = newValue
         }
     }
-    
+
     public var endingPoint: CGPoint {
         get {
             return p1
@@ -44,15 +44,15 @@ public struct LineSegment: BezierCurve, Equatable {
             p1 = newValue
         }
     }
-    
+
     public var order: Int {
         return 1
     }
-    
+
     public var simple: Bool {
         return true
     }
-    
+
     public func derivative(_ t: CGFloat) -> CGPoint {
         return self.p1 - self.p0
     }
@@ -60,14 +60,14 @@ public struct LineSegment: BezierCurve, Equatable {
     public func normal(_ t: CGFloat) -> CGPoint {
         return (self.p1 - self.p0).perpendicular.normalize()
     }
-    
+
     public func split(from t1: CGFloat, to t2: CGFloat) -> LineSegment {
         let p0 = self.p0
         let p1 = self.p1
         return LineSegment(p0: Utils.lerp(t1, p0, p1),
                            p1: Utils.lerp(t2, p0, p1))
     }
-    
+
     public func split(at t: CGFloat) -> (left: LineSegment, right: LineSegment) {
         let p0  = self.p0
         let p1  = self.p1
@@ -76,27 +76,27 @@ public struct LineSegment: BezierCurve, Equatable {
         let right = LineSegment(p0: mid, p1: p1)
         return (left: left, right: right)
     }
-    
+
     public var boundingBox: BoundingBox {
         let p0: CGPoint = self.p0
         let p1: CGPoint = self.p1
         return BoundingBox(min: CGPoint.min(p0, p1), max: CGPoint.max(p0, p1))
     }
-    
+
     public func compute(_ t: CGFloat) -> CGPoint {
         return Utils.lerp(t, self.p0, self.p1)
     }
-    
+
     // -- MARK: - overrides
-    
+
     public func length() -> CGFloat {
         return (self.p1 - self.p0).length
     }
-    
+
     public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
         return (xyz: [], [])
     }
-            
+
     public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         // optimized implementation for line segments can be directly computed
         // default project implementation is found in BezierCurve protocol extension

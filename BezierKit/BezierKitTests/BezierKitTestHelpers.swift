@@ -21,20 +21,18 @@ class BezierKitTestHelpers {
         }
         return true
     }
-    
+
     static internal func curveControlPointsEqual(curve1 c1: BezierCurve, curve2 c2: BezierCurve, tolerance epsilon: CGFloat) -> Bool {
         if c1.order != c2.order {
             return false
         }
-        for i in 0...c1.order {
-            if (c1.points[i] - c2.points[i]).length > epsilon {
-                return false
-            }
+        guard zip(c1.points, c2.points).allSatisfy({ distance($0, $1) <= epsilon }) else {
+            return false
         }
         return true
     }
-    
-    static internal func shape(_ s: Shape,  matchesShape other: Shape, tolerance: CGFloat = 1.0e-6) -> Bool {
+
+    static internal func shape(_ s: Shape, matchesShape other: Shape, tolerance: CGFloat = 1.0e-6) -> Bool {
         guard BezierKitTestHelpers.curve(s.forward, matchesCurve: other.forward, tolerance: tolerance) else {
             return false
         }
@@ -55,7 +53,7 @@ class BezierKitTestHelpers {
         }
         return true
     }
-    
+
     static internal func curve(_ c1: BezierCurve, matchesCurve c2: BezierCurve, overInterval interval: Interval = Interval(start: 0.0, end: 1.0), tolerance: CGFloat = 1.0e-5) -> Bool {
         // checks if c1 over [0, 1] matches c2 over [interval.start, interval.end]
         // useful for checking if splitting a curve over a given interval worked correctly
@@ -69,7 +67,7 @@ class BezierKitTestHelpers {
         }
         return true
     }
-    
+
     private static func evaluatePolynomial(_ p: [CGFloat], at t: CGFloat) -> CGFloat {
         var sum: CGFloat = 0.0
         for n in 0..<p.count {
@@ -149,5 +147,5 @@ class BezierKitTestHelpers {
 //        }
 //        return curve
 //    }
-            
+
 }

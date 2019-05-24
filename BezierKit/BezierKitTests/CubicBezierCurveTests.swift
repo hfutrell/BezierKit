@@ -15,12 +15,12 @@ class CubicBezierCurveTests: XCTestCase {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
-    
+
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
-    
+
     func testInitializerArray() {
         let c = CubicBezierCurve(points: [CGPoint(x: 1.0, y: 1.0), CGPoint(x: 3.0, y: 2.0), CGPoint(x: 5.0, y: 3.0), CGPoint(x: 7.0, y: 4.0)])
         XCTAssertEqual(c.p0, CGPoint(x: 1.0, y: 1.0))
@@ -30,7 +30,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.startingPoint, CGPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(c.endingPoint, CGPoint(x: 7.0, y: 4.0))
     }
-    
+
     func testInitializerIndividualPoints() {
         let c = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0), p2: CGPoint(x: 5.0, y: 3.0), p3: CGPoint(x: 7.0, y: 4.0))
         XCTAssertEqual(c.p0, CGPoint(x: 1.0, y: 1.0))
@@ -40,7 +40,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.startingPoint, CGPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(c.endingPoint, CGPoint(x: 7.0, y: 4.0))
     }
-    
+
     func testInitializerLineSegment() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 2.0, y: 3.0))
         let c = CubicBezierCurve(lineSegment: l)
@@ -51,7 +51,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.p2, oneThird * l.p0 + twoThirds * l.p1)
         XCTAssertEqual(c.p3, l.p1)
     }
-    
+
     func testInitializerQuadratic() {
         let q = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 3.0, y: 1.0))
         let c = CubicBezierCurve(quadratic: q)
@@ -69,21 +69,21 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssert((c.p2 - CGPoint(x: sevenThirds, y: fiveThirds)).length < epsilon)
         XCTAssert((c.p3 - CGPoint(x: 3.0, y: 1.0)).length < epsilon)
     }
-    
+
     func testInitializerStartEndMidTStrutLength() {
-        
+
         let epsilon: CGFloat = 0.00001
-        
+
         let start = CGPoint(x: 1.0, y: 1.0)
         let mid = CGPoint(x: 2.0, y: 2.0)
         let end = CGPoint(x: 4.0, y: 0.0)
-        
+
         // first test passing without passing a t or d paramter
         var c = CubicBezierCurve(start: start, end: end, mid: mid)
         XCTAssertEqual(c.compute(0.0), start)
         XCTAssert((c.compute(0.5) - mid).length < epsilon)
         XCTAssertEqual(c.compute(1.0), end)
-       
+
         // now test passing in a manual t and length d
         let t: CGFloat = 7.0 / 9.0
         let d: CGFloat = 1.5
@@ -97,7 +97,7 @@ class CubicBezierCurveTests: XCTestCase {
         let l = (e2 - e1).length
         XCTAssertEqual(l, d * 1.0 / t, accuracy: epsilon)
     }
-    
+
     func testBasicProperties() {
         let c = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 6.0, y: 1.0))
         XCTAssert(c.simple)
@@ -115,7 +115,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.p3, c.endingPoint)
         XCTAssertEqual(c.endingPoint, CGPoint(x: 9.0, y: 8.0))
     }
-    
+
     func testSimple() {
         // create a simple cubic curve (very simple, because it's equal to a line segment)
         let c1 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 3.0, y: 3.0), p3: CGPoint(x: 4.0, y: 4.0))
@@ -134,7 +134,7 @@ class CubicBezierCurveTests: XCTestCase {
         let c5 = CubicBezierCurve(p0: p, p1: p, p2: p, p3: p)
         XCTAssertTrue(c5.simple)
     }
-    
+
     func testDerivative() {
         let epsilon: CGFloat = 0.00001
         let p0 = CGPoint(x: 1.0, y: 1.0)
@@ -153,7 +153,7 @@ class CubicBezierCurveTests: XCTestCase {
         let t1: CGFloat = 1.0 / 3.0
         let t2: CGFloat = 2.0 / 3.0
         let s = c.split(from: t1, to: t2)
-        XCTAssert(BezierKitTestHelpers.curve(s, matchesCurve: c, overInterval: Interval(start: t1,end: t2), tolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.curve(s, matchesCurve: c, overInterval: Interval(start: t1, end: t2), tolerance: epsilon))
     }
 
     func testSplitContinuous() {
@@ -162,7 +162,7 @@ class CubicBezierCurveTests: XCTestCase {
         let a: CGFloat = 0.65472931005125345
         let b: CGFloat = 0.73653845530600293
         let c: CGFloat = 1.0
-        let curve = CubicBezierCurve(p0: CGPoint(x: 286.8966218087201, y : 69.11759651620365),
+        let curve = CubicBezierCurve(p0: CGPoint(x: 286.8966218087201, y: 69.11759651620365),
                                      p1: CGPoint(x: 285.7845542083973, y: 69.84970485476842),
                                      p2: CGPoint(x: 284.6698515652002, y: 70.60114443784359),
                                      p3: CGPoint(x: 283.5560914830615, y: 71.34238971309229))
@@ -179,10 +179,10 @@ class CubicBezierCurveTests: XCTestCase {
         let c = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 6.0, y: 1.0))
         let t: CGFloat = 0.25
         let (left, right) = c.split(at: t)
-        XCTAssert(BezierKitTestHelpers.curve(left, matchesCurve: c, overInterval: Interval(start: 0,end: t), tolerance: epsilon))
-        XCTAssert(BezierKitTestHelpers.curve(right, matchesCurve: c, overInterval: Interval(start: t,end: 1), tolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.curve(left, matchesCurve: c, overInterval: Interval(start: 0, end: t), tolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.curve(right, matchesCurve: c, overInterval: Interval(start: t, end: 1), tolerance: epsilon))
     }
-    
+
     func testBoundingBox() {
         // hits codepath where midpoint pushes up y coordinate of bounding box
         let c1 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0), p2: CGPoint(x: 5.0, y: 2.0), p3: CGPoint(x: 7.0, y: 1.0))
@@ -200,7 +200,7 @@ class CubicBezierCurveTests: XCTestCase {
         let expectedBoundingBox3 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0),
                                                p2: CGPoint(x: 2.5, y: 1.5625))
         XCTAssertEqual(c3.boundingBox, expectedBoundingBox3)
-        
+
         // bounding box of a degenerate curve made out of a single point
         let p = CGPoint(x: 1.234, y: 2.394)
         let degenerate = CubicBezierCurve(p0: p, p1: p, p2: p, p3: p)
@@ -216,7 +216,7 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(c.compute(0.5), CGPoint(x: 5.0, y: 5.75))
         XCTAssertEqual(c.compute(1.0), CGPoint(x: 7.0, y: 5.0))
     }
-    
+
 // -- MARK: - methods for which default implementations provided by protocol
 
     func testLength() {
@@ -248,9 +248,9 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(xyz[1].count, 1)
         XCTAssertEqual(xyz[1][0], 1.0 / 3.0)
     }
-    
+
 // TODO: we still have some missing unit tests for CubicBezierCurve's API entry points
-    
+
 //    func testHull() {
 //        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 3.0, y: 4.0))
 //        let h = l.hull(0.5)
@@ -318,6 +318,16 @@ class CubicBezierCurveTests: XCTestCase {
         let c3 = CubicBezierCurve(p0: p, p1: p, p2: p, p3: p)
         let result3 = c3.reduce()
         XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(result3, for: c3))
+    }
+
+    func testReduceExtremaCloseby() {
+        // the x coordinates are f(t) = (t-0.5)^2 = t^2 - t + 0.25, which has a minima at t=0.5
+        // the y coordinates are f(t) = 1/3t^3 - 1/2t^2 + 3/16t, which has an inflection at t=0.5
+        // adding `smallValue` to one of the y coordinates gives us two extrema very close to t=0.5
+        let smallValue: CGFloat = 1.0e-3
+        let c = BezierKitTestHelpers.cubicBezierCurveFromPolynomials([0,1,-1,0.25], [CGFloat(1.0 / 3.0), CGFloat(-1.0 / 2.0) + smallValue, CGFloat(3.0 / 16.0),0])
+        let result1 = c.reduce()
+        XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(result1, for: c))
     }
 //
 //    //    func testScaleDistanceFunc {
@@ -431,16 +441,16 @@ class CubicBezierCurveTests: XCTestCase {
             XCTAssertTrue(distance(c2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
         }
     }
-    
+
     func testCubicIntersectsLine() {
         let epsilon: CGFloat = 0.00001
         let c: CubicBezierCurve = CubicBezierCurve(p0: CGPoint(x: -1, y: 0),
                                                    p1: CGPoint(x: -1, y: 1),
-                                                   p2: CGPoint(x:  1, y: -1),
-                                                   p3: CGPoint(x:  1, y: 0))
+                                                   p2: CGPoint(x: 1, y: -1),
+                                                   p3: CGPoint(x: 1, y: 0))
         let l: BezierCurve = LineSegment(p0: CGPoint(x: -2.0, y: 0.0), p1: CGPoint(x: 2.0, y: 0.0))
         let i = c.intersections(with: l)
-        
+
         XCTAssertEqual(i.count, 3)
         XCTAssertEqual(i[0].t2, 0.25, accuracy: epsilon)
         XCTAssertEqual(i[0].t1, 0.0, accuracy: epsilon)
@@ -462,9 +472,9 @@ class CubicBezierCurveTests: XCTestCase {
         XCTAssertEqual(i[0].t1, 1)
         XCTAssertEqual(i[0].t2, 0)
     }
-    
+
     // MARK: -
-    
+
     func testEquatable() {
         let p0 = CGPoint(x: 1.0, y: 2.0)
         let p1 = CGPoint(x: 2.0, y: 3.0)

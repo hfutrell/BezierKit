@@ -12,7 +12,7 @@ import BezierKit
 class BezierKit_MacTests: XCTestCase {
 
 //    you can put Mac specific tests here (empty for now)
-    
+
 //    override func setUp() {
 //        super.setUp()
 //        // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -22,5 +22,5 @@ class BezierKit_MacTests: XCTestCase {
 //        // Put teardown code here. This method is called after the invocation of each test method in the class.
 //        super.tearDown()
 //    }
-    
+
 }

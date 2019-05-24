@@ -17,11 +17,11 @@ private func right(_ index: Int) -> Int {
 }
 
 final internal class BVH {
-    
+
     private let boundingBoxes: UnsafePointer<BoundingBox>
     private let lastRowIndex: Int
     private let elementCount: Int
-    
+
     internal static func leafNodeIndexToElementIndex(_ nodeIndex: Int, elementCount: Int, lastRowIndex: Int) -> Int {
         assert(isLeaf(nodeIndex, elementCount: elementCount))
         var elementIndex = nodeIndex - lastRowIndex
@@ -39,15 +39,15 @@ final internal class BVH {
         }
         return nodeIndex
     }
-    
+
     private static func isLeaf(_ index: Int, elementCount: Int) -> Bool {
         return index >= elementCount-1
     }
-    
+
     var boundingBox: BoundingBox {
         return self.boundingBoxes[0]
     }
-    
+
     init(boxes elementBoxes: [BoundingBox]) {
         assert(!elementBoxes.isEmpty)
         self.elementCount = elementBoxes.count
@@ -70,11 +70,11 @@ final internal class BVH {
         }
         self.boundingBoxes = UnsafePointer<BoundingBox>(boxes)
     }
-    
+
     deinit {
         self.boundingBoxes.deallocate()
     }
-    
+
     func visit(callback: (BVHNode, Int) -> Bool) {
         let elementCount = self.elementCount
         let lastRowIdnex = self.lastRowIndex
@@ -102,7 +102,7 @@ final internal class BVH {
     func enumerateSelfIntersections(callback: (Int, Int) -> Void) {
         self.enumerateIntersections(with: self, callback: callback)
     }
-    
+
     func enumerateIntersections(with other: BVH, callback: (Int, Int) -> Void) {
         let elementCount1 = self.elementCount
         let elementCount2 = other.elementCount
@@ -114,8 +114,7 @@ final internal class BVH {
             if BVH.isLeaf(index, elementCount: elementCount1) { // if it's a leaf node
                 let elementIndex = BVH.leafNodeIndexToElementIndex(index, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
                 callback(elementIndex, elementIndex)
-            }
-            else {
+            } else {
                 let l = left(index)
                 let r = right(index)
                 intersects(index: l, callback: callback)
@@ -133,26 +132,22 @@ final internal class BVH {
                 let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
                 let elementIndex2 = BVH.leafNodeIndexToElementIndex(index2, elementCount: elementCount2, lastRowIndex: lastRowIndex2)
                 callback(elementIndex1, elementIndex2)
-            }
-            else if leaf1 {
+            } else if leaf1 {
                 intersects(index1: index1, index2: left(index2), callback: callback)
                 intersects(index1: index1, index2: right(index2), callback: callback)
-            }
-            else if leaf2 {
+            } else if leaf2 {
                 intersects(index1: left(index1), index2: index2, callback: callback)
                 intersects(index1: right(index1), index2: index2, callback: callback)
-            }
-            else {
+            } else {
                 intersects(index1: left(index1), index2: left(index2), callback: callback)
                 intersects(index1: left(index1), index2: right(index2), callback: callback)
                 intersects(index1: right(index1), index2: left(index2), callback: callback)
                 intersects(index1: right(index1), index2: right(index2), callback: callback)
             }
         }
-        if (other === self) {
+        if other === self {
             intersects(index: 0, callback: callback)
-        }
-        else {
+        } else {
             intersects(index1: 0, index2: 0, callback: callback)
         }
     }

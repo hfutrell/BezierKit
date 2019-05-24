@@ -14,9 +14,9 @@ import UIKit
 
 // should Draw just be an extension of CGContext, or have a CGContext instead of passing it in to all these functions?
 public class Draw {
-    
+
     private static let deviceColorspace = CGColorSpaceCreateDeviceRGB()
-    
+
     // MARK: - helpers
     private static func Color(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> CGColor {
         // have to use this initializer because simpler one is MacOS 10.5+ (not iOS)
@@ -28,7 +28,7 @@ public class Draw {
      * Adapted from: https://github.com/alessani/ColorConverter
      */
     internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
-        
+
         // Check for saturation. If there isn't any just return the luminance value for each, which results in gray.
         if s == 0.0 {
             outR = l
@@ -43,36 +43,31 @@ public class Draw {
         // Test for luminance and compute temporary values based on luminance and saturation
         if l < 0.5 {
             temp2 = l * (1.0 + s)
-        }
-        else {
+        } else {
             temp2 = l + s - l * s
         }
         temp1 = 2.0 * l - temp2
-        
+
         // Compute intermediate values based on hue
         temp[0] = h + 1.0 / 3.0
         temp[1] = h
         temp[2] = h - 1.0 / 3.0
-        
+
         for i in 0..<3 {
             // Adjust the range
             if temp[i] < 0.0 {
                 temp[i] += 1.0
-            }
-            else if temp[i] > 1.0 {
+            } else if temp[i] > 1.0 {
                 temp[i] -= 1.0
             }
-            
+
             if (6.0 * temp[i]) < 1.0 {
                 temp[i] = temp1 + (temp2 - temp1) * 6.0 * temp[i]
-            }
-            else if (2.0 * temp[i]) < 1.0 {
+            } else if (2.0 * temp[i]) < 1.0 {
                 temp[i] = temp2
-            }
-            else if (3.0 * temp[i]) < 2.0 {
+            } else if (3.0 * temp[i]) < 2.0 {
                 temp[i] = temp1 + (temp2 - temp1) * ((2.0 / 3.0) - temp[i]) * 6.0
-            }
-            else {
+            } else {
                 temp[i] = temp1
             }
         }
@@ -101,94 +96,91 @@ public class Draw {
             var g: CGFloat = 0.0
             var b: CGFloat = 0.0
             HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5, outR: &r, outG: &g, outB: &b)
-            
+
             temp.append(Draw.Color(red: r, green: g, blue: b, alpha: 1.0))
         }
         return temp
     }()
-    
+
     // MARK: -
-    
+
     public static func reset(_ context: CGContext) {
         context.setStrokeColor(black)
         randomIndex = 0
     }
-    
+
     // MARK: - setting colors
-    
+
     public static func setRandomColor(_ context: CGContext) {
         randomIndex = (randomIndex+1) % randomColors.count
         let c = randomColors[randomIndex]
         context.setStrokeColor(c)
     }
-    
+
     public static func setRandomFill(_ context: CGContext, alpha a: CGFloat = 1.0) {
         randomIndex = (randomIndex+1) % randomColors.count
         let c = randomColors[randomIndex]
         let c2 = c.copy(alpha: a)
         context.setFillColor(c2!)
     }
-    
+
     public static func setColor(_ context: CGContext, color: CGColor) {
         context.setStrokeColor(color)
     }
-    
+
     // MARK: - drawing various geometry
-    
+
     public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint.zero) {
         context.beginPath()
         if let quadraticCurve = curve as? QuadraticBezierCurve {
             context.move(to: quadraticCurve.p0 + offset)
             context.addQuadCurve(to: quadraticCurve.p2 + offset,
                                  control: quadraticCurve.p1 + offset)
-        }
-        else if let cubicCurve = curve as? CubicBezierCurve {
+        } else if let cubicCurve = curve as? CubicBezierCurve {
             context.move(to: cubicCurve.p0 + offset)
             context.addCurve(to: cubicCurve.p3 + offset,
                              control1: cubicCurve.p1 + offset,
                              control2: cubicCurve.p2 + offset)
-        }
-        else if let lineSegment = curve as? LineSegment {
+        } else if let lineSegment = curve as? LineSegment {
             context.move(to: lineSegment.p0 + offset)
             context.addLine(to: lineSegment.p1 + offset)
-        }
-        else {
+        } else {
             fatalError("unsupported curve type")
         }
         context.strokePath()
     }
-    
-    public static func drawCircle(_ context: CGContext, center: CGPoint, radius r : CGFloat, offset: CGPoint = .zero) {
+
+    public static func drawCircle(_ context: CGContext, center: CGPoint, radius r: CGFloat, offset: CGPoint = .zero) {
         context.beginPath()
         context.addEllipse(in: CGRect(origin: CGPoint(x: center.x - r + offset.x, y: center.y - r + offset.y),
                             size: CGSize(width: 2.0 * r, height: 2.0 * r))
                             )
         context.strokePath()
     }
-    
+
     public static func drawPoint(_ context: CGContext, origin o: CGPoint, offset: CGPoint = .zero) {
         self.drawCircle(context, center: o, radius: 5.0, offset: offset)
-        
+
     }
-    
+
     public static func drawPoints(_ context: CGContext,
-                    points: [CGPoint],
-                    offset: CGPoint=CGPoint(x: 0.0, y: 0.0)) {
+                                  points: [CGPoint],
+                                  offset: CGPoint=CGPoint(x: 0.0, y: 0.0)) {
         for p in points {
             self.drawCircle(context, center: p, radius: 3.0, offset: offset)
         }
     }
-    
+
     public static func drawLine(_ context: CGContext,
-                  from p0: CGPoint,
-                  to p1: CGPoint,
-                  offset: CGPoint=CGPoint(x: 0.0, y: 0.0)) {
+                                from p0: CGPoint,
+                                to p1: CGPoint,
+                                offset: CGPoint=CGPoint(x: 0.0, y: 0.0)) {
         context.beginPath()
         context.move(to: p0 + offset)
         context.addLine(to: p1 + offset)
         context.strokePath()
     }
-    
+
     public static func drawText(_ context: CGContext, text: String, offset: CGPoint = .zero) {
     #if os(macOS)
         (text as NSString).draw(at: NSPoint(x: offset.x, y: offset.y), withAttributes: [:])
@@ -196,30 +188,29 @@ public class Draw {
         (text as NSString).draw(at: CGPoint(x: offset.x, y: offset.y), withAttributes: [:])
     #endif
     }
- 
+
     public static func drawSkeleton(_ context: CGContext,
-                             curve: BezierCurve,
-                             offset: CGPoint=CGPoint(x: 0.0, y: 0.0),
-                             coords: Bool=true) {
-        
+                                    curve: BezierCurve,
+                                    offset: CGPoint=CGPoint(x: 0.0, y: 0.0),
+                                    coords: Bool=true) {
+
         context.setStrokeColor(lightGrey)
-        
+
         if let cubicCurve = curve as? CubicBezierCurve {
             self.drawLine(context, from: cubicCurve.p0, to: cubicCurve.p1, offset: offset)
             self.drawLine(context, from: cubicCurve.p2, to: cubicCurve.p3, offset: offset)
-        }
-        else if let quadraticCurve = curve as? QuadraticBezierCurve {
+        } else if let quadraticCurve = curve as? QuadraticBezierCurve {
             self.drawLine(context, from: quadraticCurve.p0, to: quadraticCurve.p1, offset: offset)
             self.drawLine(context, from: quadraticCurve.p1, to: quadraticCurve.p2, offset: offset)
         }
-        
-        if (coords == true) {
+
+        if coords == true {
             context.setStrokeColor(black)
             self.drawPoints(context, points: curve.points, offset: offset)
         }
-        
+
     }
-    
+
     public static func draw(_ context: CGContext, arc: Arc, offset: CGPoint = .zero) {
         let o = offset
         context.beginPath()
@@ -232,8 +223,8 @@ public class Draw {
         context.addLine(to: arc.origin + o)
         context.drawPath(using: .fillStroke)
     }
-    
-    public static func drawHull(_ context: CGContext, hull: [CGPoint], offset : CGPoint = .zero) {
+
+    public static func drawHull(_ context: CGContext, hull: [CGPoint], offset: CGPoint = .zero) {
         context.beginPath()
         if hull.count == 6 {
             context.move(to: hull[0])
@@ -241,8 +232,7 @@ public class Draw {
             context.addLine(to: hull[2])
             context.move(to: hull[3])
             context.addLine(to: hull[4])
-        }
-        else {
+        } else {
             context.move(to: hull[0])
             context.addLine(to: hull[1])
             context.addLine(to: hull[2])
@@ -272,10 +262,9 @@ public class Draw {
             context.addCurve(to: offset + shape.forward.points[3],
                              control1: offset + shape.forward.points[1],
                              control2: offset + shape.forward.points[2]
-                             
+
             )
-        }
-        else {
+        } else {
             context.addQuadCurve(to: offset + shape.forward.points[2],
                                  control: offset + shape.forward.points[1]
             )
@@ -286,17 +275,16 @@ public class Draw {
                 control1: offset + shape.back.points[1],
                 control2: offset + shape.back.points[2]
             )
-        }
-        else {
+        } else {
             context.addQuadCurve(to: offset + shape.back.points[2],
                                  control: offset + shape.back.points[1]
             )
         }
         context.closePath()
         context.drawPath(using: .fillStroke)
-    
+
     }
-    
+
     public static func drawPathComponent(_ context: CGContext, pathComponent: PathComponent, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
         if includeBoundingVolumeHierarchy {
             pathComponent.bvh.visit { node, depth in
@@ -312,7 +300,7 @@ public class Draw {
         context.addPath(pathComponent.cgPath)
         context.drawPath(using: .fillStroke)
     }
-    
+
     public static func drawPath(_ context: CGContext, _ path: Path, offset: CGPoint = .zero) {
         Draw.setRandomFill(context, alpha: 0.2)
         context.addPath(path.cgPath)

@@ -16,11 +16,11 @@ private struct Tuple: Equatable, Hashable {
 }
 
 class BoundingVolumeHierarchyTests: XCTestCase {
-    
+
     // initializer
     // intersects()
     // intersects(node:)
-    
+
     func testIntersectsVisitsEachOnce() {
         // in this test each bounding box is identical and therefore
         // each bounding box overlaps. What we are testing here is that

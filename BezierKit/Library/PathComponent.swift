@@ -9,40 +9,33 @@
 import CoreGraphics
 import Foundation
 
-#if os(macOS)
-private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSValue.cgPointValue available
-    var cgPointValue: CGPoint {
-        let pointValue: NSPoint = self.pointValue
-        return CGPoint(x: pointValue.x, y: pointValue.y)
-    }
-    convenience init(cgPoint: CGPoint) {
-        self.init(point: NSPoint(x: cgPoint.x, y: cgPoint.y))
-    }
-}
-#endif
-
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
-    
+
     private let offsets: [Int]
     public let points: [CGPoint]
     public let orders: [Int]
-    
+    /// lock to make external accessing of lazy vars threadsafe
+    private var lock = os_unfair_lock_s()
+
     public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {
             self.element(at: $0)
         }
     }
-    
-    internal lazy var bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
-    
+
+    private lazy var _bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
+
+    internal var bvh: BVH {
+        return self.lock.sync { self._bvh }
+    }
     public var elementCount: Int {
         return self.orders.count
     }
-    
+
     @objc public var startingPoint: CGPoint {
         return self.points[0]
     }
-    
+
     @objc public var endingPoint: CGPoint {
         return self.points.last!
     }
@@ -65,21 +58,18 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         let order = self.orders[index]
         if order == 3 {
             return cubic(at: index)
-        }
-        else if order == 2 {
+        } else if order == 2 {
             return quadratic(at: index)
-        }
-        else if order == 1 {
+        } else if order == 1 {
             return line(at: index)
-        }
-        else {
+        } else {
             // TODO: add Point:BezierCurve
             // for now just return a degenerate line
             let p = self.points[self.offsets[index]]
             return LineSegment(p0: p, p1: p)
         }
     }
-    
+
     internal func cubic(at index: Int) -> CubicBezierCurve {
         assert(self.order(at: index) == 3)
         let offset = self.offsets[index]
@@ -87,7 +77,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             CubicBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
         }
     }
-    
+
     internal func quadratic(at index: Int) -> QuadraticBezierCurve {
         assert(self.order(at: index) == 2)
         let offset = self.offsets[index]
@@ -95,7 +85,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             return QuadraticBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2])
         }
     }
-    
+
     internal func line(at index: Int) -> LineSegment {
         assert(self.order(at: index) == 1)
         let offset = self.offsets[index]
@@ -103,12 +93,12 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             return LineSegment(p0: p[offset], p1: p[offset+1])
         }
     }
-    
+
     internal func order(at index: Int) -> Int {
         return self.orders[index]
     }
-    
-    public lazy var cgPath: CGPath = {
+
+    private lazy var _cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         mutablePath.move(to: self.startingPoint)
         for i in 0..<self.elementCount {
@@ -134,7 +124,11 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return mutablePath.copy()!
     }()
-    
+
+    public var cgPath: CGPath {
+        return self.lock.sync { self._cgPath }
+    }
+
     required public init(points: [CGPoint], orders: [Int]) {
         // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
         self.points = points
@@ -145,7 +139,11 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         assert(points.count == expectedPointsCount)
         self.offsets = PathComponent.computeOffsets(from: self.orders)
     }
-    
+
+    convenience public init(curve: BezierCurve) {
+        self.init(curves: [curve])
+    }
+
     private static func computeOffsets(from orders: [Int]) -> [Int] {
         var offsets = [Int]()
         offsets.reserveCapacity(orders.count)
@@ -157,7 +155,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return offsets
     }
-    
+
     public init(curves: [BezierCurve]) {
         precondition(curves.isEmpty == false, "Path components are by definition non-empty.")
 
@@ -172,19 +170,19 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         self.points = temp
     }
-    
+
     public var length: CGFloat {
         return self.curves.reduce(0.0) { $0 + $1.length() }
     }
-    
+
     public var boundingBox: BoundingBox {
         return self.bvh.boundingBox
     }
-    
+
     public var isClosed: Bool {
         return self.startingPoint == self.endingPoint
     }
-    
+
     public func offset(distance d: CGFloat) -> PathComponent {
         var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
@@ -208,15 +206,14 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return PathComponent(curves: offsetCurves)
     }
-    
+
     public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         var found = false
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
             if boundingBox.upperBoundOfDistance(to: p) <= d {
                 found = true
-            }
-            else if case let .leaf(elementIndex) = node.type {
+            } else if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
                 if distance(p, curve.project(p, accuracy: accuracy).point) < d {
                     found = true
@@ -226,7 +223,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return found
     }
-    
+
     private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
         switch p2.order(at: i2) {
         case 0:
@@ -272,7 +269,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
             fatalError("unsupported")
         }
     }
-    
+
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
@@ -297,7 +294,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return intersections
     }
-    
+
     private func neighborsIntersectOnlyTrivially(_ i1: Int, _ i2: Int) -> Bool {
         let b1 = self.bvh.boundingBox(forElementIndex: i1)
         let b2 = self.bvh.boundingBox(forElementIndex: i2)
@@ -313,11 +310,11 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return true
     }
-    
+
     public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
         var intersections: [PathComponentIntersection] = []
         let isClosed = self.isClosed
-        self.bvh.enumerateSelfIntersections() { i1, i2 in
+        self.bvh.enumerateSelfIntersections { i1, i2 in
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
             // TODO: unfortunately we badly need more tests for all these obscure codepaths
@@ -333,8 +330,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
                 if areNeighbors, neighborsIntersectOnlyTrivially(i1, i2) {
                     // optimize the very common case of element i intersecting i+1 at its endpoint
                     elementIntersections = []
-                }
-                else {
+                } else {
                     elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, self, accuracy: accuracy).filter {
                         if i1 == i2-1, $0.t1 == 1.0, $0.t2 == 0.0 {
                             return false // exclude intersections of i and i+1 at t=1
@@ -364,7 +360,7 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     }
 
     // MARK: -
-    
+
     override open func isEqual(_ object: Any?) -> Bool {
         // override is needed because NSObject implementation of isEqual(_:) uses pointer equality
         guard let otherPathComponent = object as? PathComponent else {
@@ -372,9 +368,9 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         }
         return self.orders == otherPathComponent.orders && self.points == otherPathComponent.points
     }
-    
+
     // MARK: -
-    
+
     internal func intersects(line: LineSegment) -> [IndexedPathComponentLocation] {
         let lineBoundingBox = line.boundingBox
         var results: [IndexedPathComponentLocation] = []
@@ -393,12 +389,12 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         return self.element(at: location.elementIndex).compute(location.t)
     }
-    
+
     internal func windingCount(at point: CGPoint) -> Int {
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
-        // TODO: assumes element.normal() is always defined, which unfortunately it's not (eg degenerate curves as points, cusps, zero derivatives at the end of curves)
+        // TODO: it's frustrating that this winding count uses a different logic than the one in augmented graph
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
         let delta = (line.p0 - line.p1).normalize()
         let intersections = self.intersects(line: line)
@@ -406,27 +402,30 @@ private extension NSValue { // annoying but MacOS (unlike iOS) doesn't have NSVa
         intersections.forEach {
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
-            assert(element.normal($0.t).x.isFinite && element.normal($0.t).y.isFinite, "possible NaN normal vector. Possible data for unit test?")
             let dotProduct = Double(delta.dot(element.normal(t)))
-            if dotProduct < -Utils.epsilon {
-                if t != 0 {
+
+            if (element.compute(t) - point).dot(delta) > 0 {
+                return
+            }
+
+            if dotProduct < 0 {
+                if t != 0 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)) {
                     windingCount -= 1
                 }
-            }
-            else if dotProduct > Utils.epsilon {
-                if t != 1 {
+            } else if dotProduct > 0 {
+                if t != 1 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex+1, self.elementCount), t: 0.0)) {
                     windingCount += 1
                 }
             }
         }
         return windingCount
     }
-    
+
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
     }
-    
+
     @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
         if includeControlPoints {
             for p in points {

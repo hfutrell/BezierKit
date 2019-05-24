@@ -18,11 +18,9 @@ public struct Intersection: Equatable, Comparable {
     public static func < (lhs: Intersection, rhs: Intersection ) -> Bool {
         if lhs.t1 < rhs.t1 {
             return true
-        }
-        else if lhs.t1 == rhs.t1 {
+        } else if lhs.t1 == rhs.t1 {
             return lhs.t2 < rhs.t2
-        }
-        else {
+        } else {
             return false
         }
     }

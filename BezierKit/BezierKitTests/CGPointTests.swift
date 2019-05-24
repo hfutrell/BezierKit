@@ -25,7 +25,7 @@ class CGPointTests: XCTestCase {
         var p3 = CGPoint(x: 5.0, y: 3.0)
         p3 += CGPoint(x: 1.0, y: -2.0)
         XCTAssertEqual(p3, CGPoint(x: 6.0, y: 1.0))
-        
+
         var p4 = CGPoint(x: 2.0, y: 9.0)
         p4 -= CGPoint(x: 2.0, y: 8.0)
         XCTAssertEqual(p4, CGPoint(x: 0.0, y: 1.0))
@@ -36,7 +36,7 @@ class CGPointTests: XCTestCase {
         XCTAssertEqual(p5[0], 1.25)
         XCTAssertEqual(p5[1], 6.25)
     }
-    
+
     func testFunctions() {
         let a = CGPoint(x: 3, y: 4)
         let b = CGPoint(x: -1, y: 5)

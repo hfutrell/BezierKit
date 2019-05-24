@@ -8,6 +8,8 @@
 
 import CoreGraphics
 
+// swiftlint:disable shorthand_operator
+
 public extension CGPoint {
     var length: CGFloat {
         return sqrt(self.lengthSquared)
@@ -43,7 +45,7 @@ private let badSubscriptError = "bad subscript (out of bounds)"
 
 public extension CGPoint {
     static internal let infinity: CGPoint = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)
-    
+
     static internal var dimensions: Int {
         return 2
     }
@@ -58,8 +60,7 @@ public extension CGPoint {
             assert(index == 0 || index == 1)
             if index == 0 {
                 return self.x
-            }
-            else {
+            } else {
                 return self.y
             }
         }
@@ -67,8 +68,7 @@ public extension CGPoint {
             assert(index == 0 || index == 1)
             if index == 0 {
                 self.x = newValue
-            }
-            else {
+            } else {
                 self.y = newValue
             }
         }

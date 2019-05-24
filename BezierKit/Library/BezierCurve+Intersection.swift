@@ -37,7 +37,7 @@ public extension BezierCurve {
 
 private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -> [Intersection] {
     let sortedIntersections = intersections.sorted(by: <)
-    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next : Intersection) in
+    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next: Intersection) in
         return (intersection.isEmpty || (intersection.last!) != next) ? intersection + [next] : intersection
     }
 }
@@ -57,18 +57,33 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
     let intersections = Utils.roots(points: curve.points, line: line).compactMap({t -> Intersection? in
-        let p = curve.compute(t) - line.p0
+
+        var t1 = CGFloat(t)
+        let smallValue: CGFloat = 1.0e-8
+        assert(smallValue < CGFloat(Utils.epsilon))
+
+        guard t1 >= -smallValue, t1 <= 1.0+smallValue else {
+            return nil
+        }
+
+        let p = curve.compute(t1) - line.p0
         var t2 = p.dot(lineDirection) / lineLength
+        guard t2 >= -smallValue, t2 <= 1.0+smallValue else {
+            return nil
+        }
+        if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
+            t1 = 0.0
+        }
+        if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
+            t1 = 1.0
+        }
         if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
             t2 = 0.0
         }
         if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
             t2 = 1.0
         }
-        guard t2 >= 0.0, t2 <= 1.0 else {
-            return nil
-        }
-        return reversed ? Intersection(t1: t2, t2: t) : Intersection(t1: t, t2: t2)
+        return reversed ? Intersection(t1: t2, t2: t1) : Intersection(t1: t1, t2: t2)
     })
     return sortedAndUniquifiedIntersections(intersections)
 }
@@ -131,19 +146,19 @@ public extension LineSegment {
     }
     func intersections(with line: LineSegment) -> [Intersection] {
 
+        guard self.p1 != self.p0, line.p1 != line.p0 else {
+            return []
+        }
         guard self.boundingBox.overlaps(line.boundingBox) else {
             return []
         }
         if self.p0 == line.p0 {
             return [Intersection(t1: 0.0, t2: 0.0)]
-        }
-        else if self.p0 == line.p1 {
+        } else if self.p0 == line.p1 {
             return [Intersection(t1: 0.0, t2: 1.0)]
-        }
-        else if self.p1 == line.p0 {
+        } else if self.p1 == line.p0 {
             return [Intersection(t1: 1.0, t2: 0.0)]
-        }
-        else if self.p1 == line.p1 {
+        } else if self.p1 == line.p1 {
             return [Intersection(t1: 1.0, t2: 1.0)]
         }
 
@@ -187,7 +202,7 @@ public extension LineSegment {
             t2 = 1.0
         }
 
-        if t1 > 1.0 || t1 < 0.0  {
+        if t1 > 1.0 || t1 < 0.0 {
             return [] // t1 out of interval [0, 1]
         }
         if t2 > 1.0 || t2 < 0.0 {
