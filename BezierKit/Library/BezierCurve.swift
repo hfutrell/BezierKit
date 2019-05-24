@@ -450,21 +450,6 @@ extension BezierCurve {
 public let defaultIntersectionAccuracy = CGFloat(0.5)
 internal let reduceStepSize: CGFloat = 0.01
 
-// MARK: factory
-
-internal func createCurve(from points: [CGPoint]) -> BezierCurve? {
-    switch points.count {
-    case 2:
-        return LineSegment(points: points)
-    case 3:
-        return QuadraticBezierCurve(points: points)
-    case 4:
-        return CubicBezierCurve(points: points)
-    default:
-        return nil
-    }
-}
-
 public func == (left: BezierCurve, right: BezierCurve) -> Bool {
     return left.points == right.points
 }

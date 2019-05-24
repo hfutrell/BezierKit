@@ -762,10 +762,10 @@ class PathTests: XCTestCase {
         // Quartz 'addArc' function creates some terrible near-zero length line segments
         // let's eliminate those
         let curves2 = path.components[0].curves.map {
-            return BezierKit.createCurve(from: $0.points.map { point in
+            return type(of: $0).init(points: $0.points.map { point in
                 let rounded = CGPoint(x: round(point.x), y: round(point.y))
                 return distance(point, rounded) < 1.0e-3 ? rounded : point
-            })!
+            })
         }.filter { $0.length() > 0.0 }
         let cleanPath = Path(components: [PathComponent(curves: curves2)])
 
