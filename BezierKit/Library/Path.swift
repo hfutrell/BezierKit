@@ -189,7 +189,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     convenience public init(curve: BezierCurve) {
-        self.init(components: [PathComponent(curves: [curve])])
+        self.init(components: [PathComponent(curve: curve)])
     }
 
     // MARK: - NSCoding

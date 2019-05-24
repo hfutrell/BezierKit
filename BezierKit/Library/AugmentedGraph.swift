@@ -182,7 +182,6 @@ internal class PathLinkedListRepresentation {
                 let prev = startingVertex.emitPrevious()
                 let p = prev.compute(0.5)
                 let n = prev.normal(0.5)
-                #warning("you need to add an API for this one!")
                 let line = LineSegment(p0: p, p1: p + n)
                 let intersections = path.intersections(with: Path(curve: line))
                 let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation2.t}).first(where: {$0 > 0}) ?? 1.0)

@@ -140,6 +140,10 @@ import Foundation
         self.offsets = PathComponent.computeOffsets(from: self.orders)
     }
 
+    convenience public init(curve: BezierCurve) {
+        self.init(curves: [curve])
+    }
+
     private static func computeOffsets(from orders: [Int]) -> [Int] {
         var offsets = [Int]()
         offsets.reserveCapacity(orders.count)
