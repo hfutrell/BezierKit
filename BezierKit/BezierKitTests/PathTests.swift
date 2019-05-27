@@ -942,7 +942,7 @@ class PathTests: XCTestCase {
             }
         }
     }
-
+    
     func testDisjointcomponentsNesting() {
         XCTAssertEqual(Path().disjointComponents(), [])
         // test that a simple square just gives the same square back

@@ -318,8 +318,8 @@ internal class Utils {
         return points.map {
             let pointDirection = $0 - p1
             return CGPoint(
-                x: pointDirection.dot(CGPoint(x: +lineDirection.x, y: +lineDirection.y)),
-                y: pointDirection.dot(CGPoint(x: -lineDirection.y, y: +lineDirection.x))
+                x: pointDirection.dot(lineDirection),
+                y: pointDirection.dot(lineDirection.perpendicular)
             )
         }
     }

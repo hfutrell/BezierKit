@@ -63,8 +63,6 @@ extension Subcurve: Equatable where CurveType: Equatable {
 
 extension BezierCurve {
 
-    // MARK: -
-
     private var dpoints: [[CGPoint]] {
         var ret: [[CGPoint]] = []
         var p: [CGPoint] = self.points
@@ -83,17 +81,10 @@ extension BezierCurve {
         return ret
     }
 
+    /// a curve is considered linear if its control points are all a small distance from its baseline
     private var linear: Bool {
-        let order = self.order
-        let points = self.points
-        var a = Utils.align(points, p1: points[0], p2: points[order])
-        for i in 0..<a.count {
-            // TODO: investigate horrible magic number usage
-            if abs(a[i].y) > 0.0001 {
-                return false
-            }
-        }
-        return true
+        let a = Utils.align(points, p1: self.startingPoint, p2: self.endingPoint)
+        return a.allSatisfy { abs($0.y) <= CGFloat(Utils.epsilon) }
     }
 
     /*
@@ -102,8 +93,6 @@ extension BezierCurve {
     public func length() -> CGFloat {
         return Utils.length({(_ t: CGFloat) in self.derivative(t)})
     }
-
-    // MARK: 
 
     // computes the extrema for each dimension
     internal func internalExtrema(includeInflection: Bool) -> [[CGFloat]] {
@@ -262,7 +251,7 @@ extension BezierCurve {
             r2 = distanceFunction(1)
         }
 
-        var v = [ self.internalOffset(t: 0, distance: 10), self.internalOffset(t: 1, distance: 10) ]
+        var v = [ self.internalOffset(t: 0, distance: 1), self.internalOffset(t: 1, distance: 1) ]
         // move all points by distance 'd' wrt the origin 'o'
         var points: [CGPoint] = self.points
         var np: [CGPoint] = [CGPoint](repeating: .zero, count: self.order + 1)
@@ -317,16 +306,12 @@ extension BezierCurve {
     public func offset(distance d: CGFloat) -> [BezierCurve] {
         if self.linear {
             let n = self.normal(0)
-            let coords: [CGPoint] = self.points.map({(p: CGPoint) -> CGPoint in
-                return p + d * n
-            })
-            return [Self.init(points: coords)]
+            return [Self.init(points: self.points.map { $0 + d * n })]
         }
         // for non-linear curves we need to create a set of curves
-        let reduced: [Subcurve<Self>] = self.reduce()
-        return reduced.map({
-            return $0.curve.scale(distance: d)
-        })
+        var result: [BezierCurve] = self.reduce().map { $0.curve.scale(distance: d) }
+        ensureContinuous(&result)
+        return result
     }
 
     public func offset(t: CGFloat, distance d: CGFloat) -> CGPoint {
@@ -360,6 +345,17 @@ extension BezierCurve {
                         distanceAlongNormalEnd d3: CGFloat,
                         distanceOppositeNormalEnd d4: CGFloat) -> PathComponent {
         return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
+    }
+    
+    private func ensureContinuous(_ curves: inout [BezierCurve]) {
+        for i in 0..<curves.count {
+            if i > 0 {
+                curves[i].startingPoint = curves[i-1].endingPoint
+            }
+            if i < curves.count-1 {
+                curves[i].endingPoint = 0.5 * ( curves[i].endingPoint + curves[i+1].startingPoint )
+            }
+        }
     }
 
     private func internalOutline(d1: CGFloat, d2: CGFloat, d3: CGFloat, d4: CGFloat, graduated: Bool) -> PathComponent {
@@ -395,25 +391,11 @@ extension BezierCurve {
             alen += slen
         }
 
-        func cleanupCurves(_ curves: inout [BezierCurve]) {
-            // ensures the curves are contiguous
-            for i in 0..<curves.count {
-                if i > 0 {
-                    curves[i].startingPoint = curves[i-1].endingPoint
-                }
-                if i < curves.count-1 {
-                    curves[i].endingPoint = 0.5 * ( curves[i].endingPoint + curves[i+1].startingPoint )
-                }
-            }
-        }
-
-        cleanupCurves(&fcurves)
-        cleanupCurves(&bcurves)
+        ensureContinuous(&fcurves)
+        ensureContinuous(&bcurves)
 
         // reverse the "return" outline
-        bcurves = bcurves.map({(s: BezierCurve) in
-            return s.reversed()
-        }).reversed()
+        bcurves = bcurves.reversed().map { $0.reversed() }
 
         // form the endcaps as lines
         let fs = fcurves[0].points[0]
@@ -423,10 +405,8 @@ extension BezierCurve {
         let ls = LineSegment(p0: bs, p1: fs)
         let le = LineSegment(p0: fe, p1: be)
         let segments = [ls] + fcurves + [le] + bcurves
-        //        let slen = segments.count
 
         return PathComponent(curves: segments)
-
     }
 
     // MARK: shapes
