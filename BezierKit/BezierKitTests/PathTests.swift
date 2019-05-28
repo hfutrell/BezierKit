@@ -506,6 +506,21 @@ class PathTests: XCTestCase {
         )
     }
 
+    func testSubtractingWinding() {
+        // subtracting should use .evenOdd fill, if it doesn't this test can *add* an inner square instead of doing nothing
+        let path = Path(cgPath: {
+            let cgPath = CGMutablePath()
+            cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
+            cgPath.addRect(CGRect(x: 1, y: 1, width: 3, height: 3))
+            return cgPath
+        }())
+        let subtractionPath = Path(cgPath: CGPath(rect: CGRect(x: 3, y: 3, width: 1, height: 1), transform: nil))
+        XCTAssertFalse(path.contains(subtractionPath, using: .evenOdd)) // subtractionPath exists in the path's hole, path doesn't contain it
+        XCTAssertFalse(path.contains(subtractionPath, using: .winding)) // but it *does* contain it using .winding rule
+        let result = path.subtract(subtractionPath) // since `subtract` uses .evenOdd rule it does nothing
+        XCTAssertEqual(result, path)
+    }
+
     func testUnion() {
         let expectedResult = Path(components: [PathComponent(curves:
             [
@@ -942,7 +957,7 @@ class PathTests: XCTestCase {
             }
         }
     }
-
+    
     func testDisjointcomponentsNesting() {
         XCTAssertEqual(Path().disjointComponents(), [])
         // test that a simple square just gives the same square back
