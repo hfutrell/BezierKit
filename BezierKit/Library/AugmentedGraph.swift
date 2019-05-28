@@ -331,14 +331,14 @@ internal class AugmentedGraph {
         case .removeCrossings:
             pathComponents += nonCrossingComponents1
         case .union:
-            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
-            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == false }
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0), using: .evenOdd) == false }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0), using: .evenOdd) == false }
         case .subtract:
-            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == false }
-            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0), using: .evenOdd) == false }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0), using: .evenOdd) == true }
         case .intersect:
-            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0)) == true }
-            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0)) == true }
+            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0), using: .evenOdd) == true }
+            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0), using: .evenOdd) == true }
         }
 
         // handle components that have crossings (the main algorithm)
