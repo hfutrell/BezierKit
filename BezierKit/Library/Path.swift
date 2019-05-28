@@ -240,11 +240,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCountImpliesContainment(count, using: rule)
     }
 
-    @objc(containsPath:accuracy:) public func contains(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    @objc(containsPath:usingRule:accuracy:) public func contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         // first, check that each component of `other` starts inside self
         for component in other.components {
             let p = component.startingPoint
-            guard self.contains(p) else {
+            guard self.contains(p, using: rule) else {
                 return false
             }
         }
@@ -295,6 +295,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         var paths: [Path] = []
         var componentWindingCounts: [Path: Int] = [:]
         let componentsAsPaths = self.components.map { Path(components: [$0]) }
+        let rule: PathFillRule = .evenOdd
         for component in componentsAsPaths {
             let windingCount = self.windingCount(component.components[0].startingPoint, ignoring: component.components[0])
             if windingCount == 0 {
@@ -314,11 +315,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             }
             var owner: Path?
             for path in paths {
-                guard path.contains(component) else {
+                guard path.contains(component, using: rule) else {
                     continue
                 }
                 if owner != nil {
-                    if owner!.contains(path) {
+                    if owner!.contains(path, using: rule) {
                         owner = path
                     }
                 } else {
