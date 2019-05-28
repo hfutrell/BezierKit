@@ -183,8 +183,8 @@ internal class PathLinkedListRepresentation {
                 let p = prev.compute(0.5)
                 let n = prev.normal(0.5)
                 let line = LineSegment(p0: p, p1: p + n)
-                let intersections = path.intersections(with: Path(curve: line))
-                let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation2.t}).first(where: {$0 > 0}) ?? 1.0)
+                let intersections = Path(curve: line).intersections(with: path)
+                let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation1.t}).sorted().first(where: {$0 > CGFloat(Utils.epsilon) }) ?? 1.0)
                 initialWinding = path.windingCount(p + s * n)
             } else {
                 initialWinding = path.windingCount(startingVertex.emitPrevious().compute(0.5))
