@@ -24,10 +24,10 @@ class AugmentedGraphTests: XCTestCase {
     }
 
     func intersectionsAreMutuallyLinked(_ vertex1: Vertex, _ vertex2: Vertex) -> Bool {
-        if vertex1.intersectionInfo.neighbor !== vertex2 {
+        if vertex1.intersectionInfo!.neighbor !== vertex2 {
             return false
         }
-        if vertex2.intersectionInfo.neighbor !== vertex1 {
+        if vertex2.intersectionInfo!.neighbor !== vertex1 {
             return false
         }
         return true
@@ -67,13 +67,13 @@ class AugmentedGraphTests: XCTestCase {
         let intersection1Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 0).next
         XCTAssertTrue(intersection1Path1.isCrossing)
         XCTAssertEqual(intersection1Path1.location, firstIntersectionLocation)
-        XCTAssertTrue(intersection1Path1.intersectionInfo.isExit)
+        XCTAssertTrue(intersection1Path1.intersectionInfo!.isExit)
 
         // find the first intersection on the second path
         let intersection1Path2: Vertex = augmentedGraph.list2.startingVertex(forComponentIndex: 0, elementIndex: 1).next
         XCTAssertTrue(intersection1Path2.isCrossing)
         XCTAssertEqual(intersection1Path2.location, firstIntersectionLocation)
-        XCTAssertTrue(intersection1Path2.intersectionInfo.isEntry)
+        XCTAssertTrue(intersection1Path2.intersectionInfo!.isEntry)
 
         XCTAssertTrue(intersectionsAreMutuallyLinked(intersection1Path1, intersection1Path2))
 
@@ -81,13 +81,13 @@ class AugmentedGraphTests: XCTestCase {
         let intersection2Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 3).next
         XCTAssertTrue(intersection2Path1.isCrossing)
         XCTAssertEqual(intersection2Path1.location, secondIntersectionLocation)
-        XCTAssertTrue(intersection2Path1.intersectionInfo.isEntry)
+        XCTAssertTrue(intersection2Path1.intersectionInfo!.isEntry)
 
         // find the second intersection on the second path
         let intersection2Path2: Vertex = augmentedGraph.list2.startingVertex(forComponentIndex: 0, elementIndex: 2).next
         XCTAssertTrue(intersection2Path2.isCrossing)
         XCTAssertEqual(intersection2Path2.location, secondIntersectionLocation)
-        XCTAssertTrue(intersection2Path2.intersectionInfo.isExit)
+        XCTAssertTrue(intersection2Path2.intersectionInfo!.isExit)
 
         XCTAssertTrue(intersectionsAreMutuallyLinked(intersection1Path1, intersection1Path2))
     }
@@ -122,13 +122,13 @@ class AugmentedGraphTests: XCTestCase {
         let intersection1Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 0)
         XCTAssertTrue(intersection1Path1.isCrossing)
         XCTAssertEqual(intersection1Path1.location, firstIntersectionLocation)
-        XCTAssertTrue(intersection1Path1.intersectionInfo.isEntry)
+        XCTAssertTrue(intersection1Path1.intersectionInfo!.isEntry)
 
         // find the first intersection on the second path
         let intersection1Path2: Vertex = augmentedGraph.list2.startingVertex(forComponentIndex: 0, elementIndex: 0)
         XCTAssertTrue(intersection1Path2.isCrossing)
         XCTAssertEqual(intersection1Path2.location, firstIntersectionLocation)
-        XCTAssertTrue(intersection1Path2.intersectionInfo.isExit)
+        XCTAssertTrue(intersection1Path2.intersectionInfo!.isExit)
 
         XCTAssertTrue(intersectionsAreMutuallyLinked(intersection1Path1, intersection1Path2))
 
@@ -136,13 +136,13 @@ class AugmentedGraphTests: XCTestCase {
         let intersection2Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 1)
         XCTAssertTrue(intersection2Path1.isCrossing)
         XCTAssertEqual(intersection2Path1.location, secondIntersectionLocation)
-        XCTAssertTrue(intersection2Path1.intersectionInfo.isExit)
+        XCTAssertTrue(intersection2Path1.intersectionInfo!.isExit)
 
         // find the second intersection on the second path
         let intersection2Path2: Vertex = augmentedGraph.list2.startingVertex(forComponentIndex: 0, elementIndex: 2)
         XCTAssertTrue(intersection2Path2.isCrossing)
         XCTAssertEqual(intersection2Path2.location, secondIntersectionLocation)
-        XCTAssertTrue(intersection2Path2.intersectionInfo.isEntry)
+        XCTAssertTrue(intersection2Path2.intersectionInfo!.isEntry)
 
         XCTAssertTrue(intersectionsAreMutuallyLinked(intersection1Path1, intersection1Path2))
     }
@@ -221,8 +221,8 @@ class AugmentedGraphTests: XCTestCase {
 
         XCTAssertEqual(crossingCountOnLinkedList(augmentedGraph.list1), 2)
         let intersection1Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 0).next
-        XCTAssertTrue(intersection1Path1.intersectionInfo.isExit)
+        XCTAssertTrue(intersection1Path1.intersectionInfo!.isExit)
         let intersection2Path1: Vertex = augmentedGraph.list1.startingVertex(forComponentIndex: 0, elementIndex: 2).next
-        XCTAssertTrue(intersection2Path1.intersectionInfo.isEntry)
+        XCTAssertTrue(intersection2Path1.intersectionInfo!.isEntry)
     }
 }
