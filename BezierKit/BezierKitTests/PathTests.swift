@@ -301,7 +301,7 @@ class PathTests: XCTestCase {
             return temp
         }())
         XCTAssertEqual(path3.windingCount(CGPoint(x: 3, y: 1)), 1)
-        XCTAssertEqual(path3.reversed().windingCount(CGPoint(x: 1, y: 2)), -1)
+        XCTAssertEqual(path3.reversed().windingCount(CGPoint(x: 3, y: 1)), -1)
         let path4 = Path(cgPath: {
             let temp = CGMutablePath()
             temp.addLines(between: [CGPoint(x: 2, y: 0),
