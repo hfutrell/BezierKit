@@ -402,6 +402,22 @@ class PathTests: XCTestCase {
         XCTAssertTrue(circlePath.contains( CGPoint(x: 369, y: 458.9832416054124), using: .evenOdd))
     }
 
+    func testContainsRealWorldEdgeCase3() {
+        let point = CGPoint(x: 207, y: 60.09055464612847) // point has to be chosen carefully to fall inside path bounding box or else it's excluded trivially
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 156.96601717963904, y: 61.6108671143393))
+        cgPath.addCurve(to: CGPoint(x: 158.48632964784989, y: 60.090554646128446),
+                        control1: CGPoint(x: 156.96601717963904, y: 60.77122172316883),
+                        control2: CGPoint(x: 157.6466842566794, y: 60.090554646128446))
+        cgPath.addLine(to: CGPoint(x: 206.74971723237456, y: 60.09055464612845))
+        cgPath.addCurve(to: CGPoint(x: 207.35854749702355, y: 63.13117958255016),
+                        control1: CGPoint(x: 206.9591702677613, y: 61.099707571074404),
+                        control2: CGPoint(x: 207.16199497250045, y: 62.11301125588949))
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        XCTAssertFalse( path.contains(point, using: .evenOdd) )
+    }
+
     func testContainsEdgeCaseParallelDerivative() {
         // this is a real-world edge case that can happen with round-rects
         let cgPath = CGMutablePath()
