@@ -262,6 +262,59 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path.windingCount(CGPoint(x: 0, y: 0)), 2)
     }
 
+    func testWindingCountCornersNoAdjust() {
+        // test cases where winding count involves corners which should neither increment nor decrement the count
+        let path1 = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.addLines(between: [CGPoint(x: 0, y: 0),
+                                    CGPoint(x: 2, y: 0),
+                                    CGPoint(x: 2, y: 2),
+                                    CGPoint(x: 1, y: 1),
+                                    CGPoint(x: 0, y: 2)])
+            temp.closeSubpath()
+            return temp
+        }())
+        XCTAssertEqual(path1.windingCount(CGPoint(x: 1.5, y: 1)), 1)
+        XCTAssertEqual(path1.reversed().windingCount(CGPoint(x: 1.5, y: 1)), -1)
+        let path2 = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.addLines(between: [CGPoint(x: 0, y: 0),
+                                    CGPoint(x: 2, y: 0),
+                                    CGPoint(x: 2, y: 3),
+                                    CGPoint(x: 1, y: 1),
+                                    CGPoint(x: 0, y: 2)])
+            temp.closeSubpath()
+            return temp
+        }())
+        XCTAssertEqual(path2.windingCount(CGPoint(x: 1, y: 2)), 0)
+        XCTAssertEqual(path2.reversed().windingCount(CGPoint(x: 1, y: 2)), 0)
+        // getting trickier ...
+        let path3 = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.addLines(between: [CGPoint(x: 0, y: 0),
+                                    CGPoint(x: 4, y: 2),
+                                    CGPoint(x: 1, y: 1),
+                                    CGPoint(x: 2, y: 4),
+                                    CGPoint(x: 0, y: 4)])
+            temp.closeSubpath()
+            return temp
+        }())
+        XCTAssertEqual(path3.windingCount(CGPoint(x: 3, y: 1)), 1)
+        XCTAssertEqual(path3.reversed().windingCount(CGPoint(x: 1, y: 2)), -1)
+        let path4 = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.addLines(between: [CGPoint(x: 2, y: 0),
+                                    CGPoint(x: 4, y: 2),
+                                    CGPoint(x: 4, y: 4),
+                                    CGPoint(x: 2, y: 2),
+                                    CGPoint(x: 0, y: 3)])
+            temp.closeSubpath()
+            return temp
+        }())
+        XCTAssertEqual(path4.windingCount(CGPoint(x: 3, y: 2)), 0)
+        XCTAssertEqual(path4.reversed().windingCount(CGPoint(x: 3, y: 2)), 0)
+    }
+
     func testContainsSimple1() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path = Path(cgPath: CGPath(rect: rect, transform: nil))
