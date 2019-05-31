@@ -292,6 +292,7 @@ class PathTests: XCTestCase {
         let path3 = Path(cgPath: {
             let temp = CGMutablePath()
             temp.addLines(between: [CGPoint(x: 0, y: 0),
+                                    CGPoint(x: 4, y: 0),
                                     CGPoint(x: 4, y: 2),
                                     CGPoint(x: 1, y: 1),
                                     CGPoint(x: 2, y: 4),
@@ -304,15 +305,15 @@ class PathTests: XCTestCase {
         let path4 = Path(cgPath: {
             let temp = CGMutablePath()
             temp.addLines(between: [CGPoint(x: 2, y: 0),
-                                    CGPoint(x: 4, y: 2),
+                                    CGPoint(x: 4, y: 0),
                                     CGPoint(x: 4, y: 4),
                                     CGPoint(x: 2, y: 2),
                                     CGPoint(x: 0, y: 3)])
             temp.closeSubpath()
             return temp
         }())
-        XCTAssertEqual(path4.windingCount(CGPoint(x: 3, y: 2)), 0)
-        XCTAssertEqual(path4.reversed().windingCount(CGPoint(x: 3, y: 2)), 0)
+        XCTAssertEqual(path4.windingCount(CGPoint(x: 2, y: 3)), 0)
+        XCTAssertEqual(path4.reversed().windingCount(CGPoint(x: 2, y: 3)), 0)
     }
 
     func testContainsSimple1() {
