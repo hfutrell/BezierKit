@@ -71,16 +71,16 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
         guard t2 >= -smallValue, t2 <= 1.0+smallValue else {
             return nil
         }
-        if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t1), 0.0, precision: 1.0e-6) {
             t1 = 0.0
         }
-        if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t1), 1.0, precision: 1.0e-6) {
             t1 = 1.0
         }
-        if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t2), 0.0, precision: 1.0e-6) {
             t2 = 0.0
         }
-        if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t2), 1.0, precision: 1.0e-6) {
             t2 = 1.0
         }
         return reversed ? Intersection(t1: t2, t2: t1) : Intersection(t1: t1, t2: t2)
@@ -189,16 +189,16 @@ public extension LineSegment {
         var t1 = ( _e * _d - _b * _f ) * inv_det // if inv_det is inf then this is NaN!
         var t2 = ( _a * _f - _e * _c ) * inv_det // if inv_det is inf then this is NaN!
 
-        if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t1), 0.0, precision: 1.0e-6) {
             t1 = 0.0
         }
-        if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t1), 1.0, precision: 1.0e-6) {
             t1 = 1.0
         }
-        if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t2), 0.0, precision: 1.0e-6) {
             t2 = 0.0
         }
-        if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(t2), 1.0, precision: 1.0e-6) {
             t2 = 1.0
         }
 

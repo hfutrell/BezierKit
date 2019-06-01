@@ -394,29 +394,37 @@ import Foundation
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
-        // TODO: it's frustrating that this winding count uses a different logic than the one in augmented graph
+
         let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
         let delta = (line.p0 - line.p1).normalize()
-        let intersections = self.intersects(line: line)
+        var intersections = self.intersects(line: line)
+
+        intersections = intersections.compactMap {
+            // get rid of any intersections at t=0, creating the equivalent ones at t=1 on the previous element if they aren't there
+            if $0.t == 0 {
+                let previousLocation = IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)
+                if intersections.contains(previousLocation) {
+                    return nil
+                } else {
+                    return previousLocation
+                }
+            } else {
+                return $0
+            }
+        }
+
         var windingCount = 0
         intersections.forEach {
             let element = self.element(at: $0.elementIndex)
             let t = $0.t
-            let dotProduct = Double(delta.dot(element.normal(t)))
-
-            if (element.compute(t) - point).dot(delta) > 0 {
-                return
-            }
-
-            if dotProduct < 0 {
-                if t != 0 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)) {
-                    windingCount -= 1
-                }
-            } else if dotProduct > 0 {
-                if t != 1 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex+1, self.elementCount), t: 0.0)) {
-                    windingCount += 1
-                }
-            }
+            let t1 = t
+            let t2 = t == 1.0 ? 0.0 : t
+            let element1 = element
+            let element2 = t == 1 ? self.element(at: Utils.mod($0.elementIndex+1, self.elementCount)) : element
+            let derivative1 = element1.approximateDerivative(t1)
+            let derivative2 = element2.approximateDerivative(t2)
+            let adjustment = windingCountAdjustment(-delta, delta, -derivative1, derivative2)
+            windingCount += adjustment
         }
         return windingCount
     }

@@ -63,6 +63,16 @@ extension Subcurve: Equatable where CurveType: Equatable {
 
 extension BezierCurve {
 
+    internal func approximateDerivative(_ t: CGFloat) -> CGPoint {
+        let smallNumber: CGFloat = 0.001
+        let multiplier = (1.0 / smallNumber)
+        if t > 0.5 {
+            return multiplier * (self.compute(t) - self.compute(t - smallNumber))
+        } else {
+            return multiplier * (self.compute(t + smallNumber) - self.compute(t))
+        }
+    }
+
     private var dpoints: [[CGPoint]] {
         var ret: [[CGPoint]] = []
         var p: [CGPoint] = self.points
