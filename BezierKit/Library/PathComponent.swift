@@ -371,21 +371,6 @@ import Foundation
 
     // MARK: -
 
-    internal func intersects(line: LineSegment) -> [IndexedPathComponentLocation] {
-        let lineBoundingBox = line.boundingBox
-        var results: [IndexedPathComponentLocation] = []
-        self.bvh.visit { node, _ in
-            if case let .leaf(elementIndex) = node.type {
-                results += PathComponent.intersectionsBetweenElementAndLine(elementIndex, line, self).map {
-                    IndexedPathComponentLocation(elementIndex: elementIndex, t: $0.t1)
-                }
-            }
-            // TODO: better line box intersection
-            return node.boundingBox.overlaps(lineBoundingBox)
-        }
-        return results
-    }
-
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         return self.element(at: location.elementIndex).compute(location.t)
     }
@@ -394,29 +379,38 @@ import Foundation
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
-        // TODO: it's frustrating that this winding count uses a different logic than the one in augmented graph
-        let line = LineSegment(p0: point, p1: CGPoint(x: self.boundingBox.min.x - self.boundingBox.size.x, y: point.y)) // horizontal line from point out of bounding box
-        let delta = (line.p0 - line.p1).normalize()
-        let intersections = self.intersects(line: line)
-        var windingCount = 0
-        intersections.forEach {
-            let element = self.element(at: $0.elementIndex)
-            let t = $0.t
-            let dotProduct = Double(delta.dot(element.normal(t)))
-
-            if (element.compute(t) - point).dot(delta) > 0 {
-                return
+        var windingCount: Int = 0
+        self.bvh.visit { node, _ in
+            let boundingBox = node.boundingBox
+            guard boundingBox.min.y <= point.y, boundingBox.max.y >= point.y else {
+                return false
             }
-
-            if dotProduct < 0 {
-                if t != 0 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex-1, self.elementCount), t: 1.0)) {
-                    windingCount -= 1
-                }
-            } else if dotProduct > 0 {
-                if t != 1 || !intersections.contains(IndexedPathComponentLocation(elementIndex: Utils.mod($0.elementIndex+1, self.elementCount), t: 0.0)) {
-                    windingCount += 1
+            guard boundingBox.min.x <= point.x else {
+                return false
+            }
+            guard case let .leaf(elementIndex) = node.type else {
+                return true // recurse
+            }
+            let offset        = offsets[elementIndex]
+            let startingPoint = self.points[offsets[elementIndex]]
+            let endingPoint   = self.points[offset + self.orders[elementIndex]]
+            if node.boundingBox.max.x >= point.x {
+                // slow path: must determine x coord
+                let t = ( point.y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
+                let x = startingPoint.x * (1.0 - t) + endingPoint.x * t
+                guard point.x > x else {
+                    return true
                 }
             }
+            // we include the highest point and exclude the lowest point
+            // that ensures if the juncture between curves changes direction it's counted twice or not at all
+            // and if the juncture between curves does not change direction it's counted exactly once
+            if endingPoint.y < point.y, point.y <= startingPoint.y {
+                windingCount += 1
+            } else if startingPoint.y < point.y, point.y <= endingPoint.y {
+                windingCount -= 1
+            }
+            return true
         }
         return windingCount
     }
