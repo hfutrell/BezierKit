@@ -433,7 +433,7 @@ import Foundation
     }
 
     internal func windingCount(at point: CGPoint) -> Int {
-        guard self.isClosed/*, self.boundingBox.contains(point)*/ else {
+        guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
         var windingCount: Int = 0
