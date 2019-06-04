@@ -147,9 +147,6 @@ class PathDataTests: XCTestCase {
         cgPath.move(to: CGPoint(x: 1, y: 2))
         cgPath.move(to: CGPoint(x: 2, y: 3))
         cgPath.move(to: CGPoint(x: 3, y: 4))
-
-        let what = Path(cgPath: cgPath)
-
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
         cgPath.addLine(to: CGPoint(x: 4, y: 5))
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))

@@ -87,6 +87,14 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(l.compute(1.0), CGPoint(x: 1.0, y: 3.0))
     }
 
+    func testComputeRealWordIssue() {
+        let s = CGPoint(x: 0.30901699437494745, y: 0.9510565162951535)
+        let e = CGPoint(x: 0.30901699437494723, y: -0.9510565162951536)
+        let l = LineSegment(p0: s, p1: e)
+        XCTAssertEqual(l.compute(0), s)
+        XCTAssertEqual(l.compute(1), e) // this failed in practice
+    }
+    
     func testLength() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
         XCTAssertEqual(l.length(), 5.0)
@@ -95,7 +103,10 @@ class LineSegmentTests: XCTestCase {
     func testExtrema() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
         let (xyz, values) = l.extrema()
-        XCTAssertTrue(xyz.isEmpty)
+        XCTAssertEqual(xyz.count, 3)
+        XCTAssertTrue(xyz[0].isEmpty)
+        XCTAssertTrue(xyz[1].isEmpty)
+        XCTAssertTrue(xyz[2].isEmpty)
         XCTAssertTrue(values.isEmpty)
     }
 
