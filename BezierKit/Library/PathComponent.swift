@@ -396,7 +396,7 @@ import Foundation
             if let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) {
                 return curve.compute(CGFloat(t)).x
             } else {
-                // uuuuuh
+                // warning: we haven't hit this code path but it's probably possible due to roundoff: UNIT TESTS
                 return curve.boundingBox.max.x
             }
         }
@@ -446,8 +446,9 @@ import Foundation
                 } else if curveStart < point.y, point.y <= curveEnd {
                     increment = -1
                 }
-                if increment != 0, c.boundingBox.max.x >= point.x {
-                    // slow path: must determine x coord
+                guard increment != 0 else { continue }
+                if c.boundingBox.max.x >= point.x {
+                    // slow path: must determine x intercept and test against it
                     let x = PathComponent.xIntercept(curve: c, y: point.y)
                     guard point.x > x else { continue }
                 }
