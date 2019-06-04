@@ -378,27 +378,19 @@ import Foundation
     private static func xIntercept(curve: BezierCurve, y: CGFloat) -> CGFloat {
         let startingPoint = curve.startingPoint
         let endingPoint   = curve.endingPoint
-        
-        guard y != curve.startingPoint.y else {
-            return curve.startingPoint.x
-        }
-        guard y != curve.endingPoint.y else {
-            return curve.endingPoint.x
-        }
-
-        if curve.order == 1 {
-            let t = ( y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
-            let x = startingPoint.x * (1.0 - t) + endingPoint.x * t
-            return x
-        }
-        else {
+        guard y != curve.startingPoint.y else { return curve.startingPoint.x }
+        guard y != curve.endingPoint.y else { return curve.endingPoint.x }
+        let linearSolutionT = ( y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
+        let linearSolution = LineSegment(p0: startingPoint, p1: endingPoint).compute(linearSolutionT).x
+        if curve.order > 1 {
             let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
-            if let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) {
-                return curve.compute(CGFloat(t)).x
-            } else {
-                // warning: we haven't hit this code path but it's probably possible due to roundoff: UNIT TESTS
-                return curve.boundingBox.max.x
+            guard let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) else {
+                assertionFailure("roots failed. Good test data?")
+                return linearSolution
             }
+            return curve.compute(CGFloat(t)).x
+        } else {
+            return linearSolution
         }
     }
 
@@ -419,6 +411,28 @@ import Foundation
                 return true // recurse
             }
             
+            func adjustment(_ y: CGFloat, _ startY: CGFloat, _ endY: CGFloat) -> Int {
+                if endY < y, y <= startY {
+                    return 1
+                } else if startY < y, y <= endY {
+                    return -1
+                } else {
+                    return 0
+                }
+            }
+            
+            guard point.x <= boundingBox.max.x else {
+                // super-fast code-path
+                // x-coordinate of point outside bounding box
+                // we need only see if we cross up or down
+                let offset           = self.offsets[elementIndex]
+                let order            = self.orders[elementIndex]
+                let startingPoint    = self.points[offset]
+                let endingPoint      = self.points[offset + order]
+                windingCount         += adjustment(point.y, startingPoint.y, endingPoint.y)
+                return true
+            }
+            
             let element = self.element(at: elementIndex)
             var extrema = element.extrema().xyz[1]
             if extrema.contains(0) == false {
@@ -431,23 +445,14 @@ import Foundation
                 let t1 = extrema[i]
                 let t2 = extrema[i+1]
                 let subcurve = element.split(from: t1, to: t2)
-                if subcurve.boundingBox.min.x > point.x {
-                    continue
-                }
+                if subcurve.boundingBox.min.x > point.x { continue }
                 // we include the highest point and exclude the lowest point
                 // that ensures if the juncture between curves changes direction it's counted twice or not at all
                 // and if the juncture between curves does not change direction it's counted exactly once
-                let subcurveStart = subcurve.startingPoint.y
-                let subcurveEnd   = subcurve.endingPoint.y
-                var increment: Int = 0
-                if subcurveEnd < point.y, point.y <= subcurveStart {
-                    increment = 1
-                } else if subcurveStart < point.y, point.y <= subcurveEnd {
-                    increment = -1
-                }
+                let increment = adjustment(point.y, subcurve.startingPoint.y, subcurve.endingPoint.y)
                 guard increment != 0 else { continue }
                 if subcurve.boundingBox.max.x >= point.x {
-                    // slow path: must determine x intercept and test against it
+                    // slowest path: must determine x intercept and test against it
                     let x = PathComponent.xIntercept(curve: subcurve, y: point.y)
                     guard point.x > x else { continue }
                 }
