@@ -385,7 +385,6 @@ import Foundation
         if curve.order > 1 {
             let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
             guard let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) else {
-                assertionFailure("roots failed. Good test data?")
                 return linearSolution
             }
             return curve.compute(CGFloat(t)).x
