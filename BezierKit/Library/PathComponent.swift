@@ -420,7 +420,6 @@ import Foundation
             }
             
             let element = self.element(at: elementIndex)
-            
             var extrema = element.extrema().xyz[1]
             if extrema.contains(0) == false {
                 extrema.insert(0, at: 0)
@@ -431,25 +430,25 @@ import Foundation
             for i in 0..<extrema.count-1 {
                 let t1 = extrema[i]
                 let t2 = extrema[i+1]
-                let c = element.split(from: t1, to: t2)
-                if c.boundingBox.min.x > point.x {
+                let subcurve = element.split(from: t1, to: t2)
+                if subcurve.boundingBox.min.x > point.x {
                     continue
                 }
                 // we include the highest point and exclude the lowest point
                 // that ensures if the juncture between curves changes direction it's counted twice or not at all
                 // and if the juncture between curves does not change direction it's counted exactly once
-                let curveStart = c.startingPoint.y
-                let curveEnd   = c.endingPoint.y
+                let subcurveStart = subcurve.startingPoint.y
+                let subcurveEnd   = subcurve.endingPoint.y
                 var increment: Int = 0
-                if curveEnd < point.y, point.y <= curveStart {
+                if subcurveEnd < point.y, point.y <= subcurveStart {
                     increment = 1
-                } else if curveStart < point.y, point.y <= curveEnd {
+                } else if subcurveStart < point.y, point.y <= subcurveEnd {
                     increment = -1
                 }
                 guard increment != 0 else { continue }
-                if c.boundingBox.max.x >= point.x {
+                if subcurve.boundingBox.max.x >= point.x {
                     // slow path: must determine x intercept and test against it
-                    let x = PathComponent.xIntercept(curve: c, y: point.y)
+                    let x = PathComponent.xIntercept(curve: subcurve, y: point.y)
                     guard point.x > x else { continue }
                 }
                 windingCount += increment
