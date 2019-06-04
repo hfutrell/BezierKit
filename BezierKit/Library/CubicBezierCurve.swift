@@ -159,6 +159,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
     }
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> CubicBezierCurve {
+        guard t1 != 0.0 || t2 != 1.0 else { return self }
         let h0 = self.p0
         let h1 = self.p1
         let h2 = self.p2

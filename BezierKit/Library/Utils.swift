@@ -185,7 +185,7 @@ internal class Utils {
             let temp2 = 3*pb
             let temp3 = -3*pc
             let d = temp1 + temp2 + temp3 + pd
-            let smallValue = 1.0e-10
+            let smallValue = 1.0e-8
             if abs(d) < smallValue {
                 let temp1 = 3*points[0]
                 let temp2 = -6*points[1]

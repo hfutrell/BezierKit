@@ -251,7 +251,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         // next, for each intersection (if there are any) check that we stay inside the path
         // TODO: use enumeration over intersections so we don't have to necessarily have to find each one
         // TODO: make this work with winding fill rule and intersections that don't cross (suggestion, use AugmentedGraph)
-        return !self.intersects(other)
+        return !self.intersects(other, accuracy: accuracy)
     }
 
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {

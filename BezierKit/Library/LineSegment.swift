@@ -62,10 +62,7 @@ public struct LineSegment: BezierCurve, Equatable {
     }
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> LineSegment {
-        let p0 = self.p0
-        let p1 = self.p1
-        return LineSegment(p0: Utils.lerp(t1, p0, p1),
-                           p1: Utils.lerp(t2, p0, p1))
+        return LineSegment(p0: self.compute(t1), p1: self.compute(t2))
     }
 
     public func split(at t: CGFloat) -> (left: LineSegment, right: LineSegment) {
@@ -84,7 +81,13 @@ public struct LineSegment: BezierCurve, Equatable {
     }
 
     public func compute(_ t: CGFloat) -> CGPoint {
-        return Utils.lerp(t, self.p0, self.p1)
+        if t == 0 {
+            return self.p0
+        } else if t == 1 {
+            return self.p1
+        } else {
+            return Utils.lerp(t, self.p0, self.p1)
+        }
     }
 
     // -- MARK: - overrides
@@ -94,7 +97,7 @@ public struct LineSegment: BezierCurve, Equatable {
     }
 
     public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
-        return (xyz: [], [])
+        return (xyz: [[],[],[]], [])
     }
 
     public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
