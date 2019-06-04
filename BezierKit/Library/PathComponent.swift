@@ -374,6 +374,33 @@ import Foundation
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         return self.element(at: location.elementIndex).compute(location.t)
     }
+    
+    private static func xIntercept(curve: BezierCurve, y: CGFloat) -> CGFloat {
+        let startingPoint = curve.startingPoint
+        let endingPoint   = curve.endingPoint
+        
+        guard y != curve.startingPoint.y else {
+            return curve.startingPoint.x
+        }
+        guard y != curve.endingPoint.y else {
+            return curve.endingPoint.x
+        }
+
+        if curve.order == 1 {
+            let t = ( y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
+            let x = startingPoint.x * (1.0 - t) + endingPoint.x * t
+            return x
+        }
+        else {
+            let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
+            if let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) {
+                return curve.compute(CGFloat(t)).x
+            } else {
+                // uuuuuh
+                return curve.boundingBox.max.x
+            }
+        }
+    }
 
     internal func windingCount(at point: CGPoint) -> Int {
         guard self.isClosed, self.boundingBox.contains(point) else {
@@ -391,24 +418,40 @@ import Foundation
             guard case let .leaf(elementIndex) = node.type else {
                 return true // recurse
             }
-            let offset        = offsets[elementIndex]
-            let startingPoint = self.points[offsets[elementIndex]]
-            let endingPoint   = self.points[offset + self.orders[elementIndex]]
-            if node.boundingBox.max.x >= point.x {
-                // slow path: must determine x coord
-                let t = ( point.y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
-                let x = startingPoint.x * (1.0 - t) + endingPoint.x * t
-                guard point.x > x else {
-                    return true
-                }
+            
+            let element = self.element(at: elementIndex)
+            
+            var extrema = element.extrema().xyz[1]
+            if extrema.contains(0) == false {
+                extrema.insert(0, at: 0)
             }
-            // we include the highest point and exclude the lowest point
-            // that ensures if the juncture between curves changes direction it's counted twice or not at all
-            // and if the juncture between curves does not change direction it's counted exactly once
-            if endingPoint.y < point.y, point.y <= startingPoint.y {
-                windingCount += 1
-            } else if startingPoint.y < point.y, point.y <= endingPoint.y {
-                windingCount -= 1
+            if extrema.contains(1) == false {
+                extrema.append(1)
+            }
+            for i in 0..<extrema.count-1 {
+                let t1 = extrema[i]
+                let t2 = extrema[i+1]
+                let c = element.split(from: t1, to: t2)
+                if c.boundingBox.min.x > point.x {
+                    continue
+                }
+                // we include the highest point and exclude the lowest point
+                // that ensures if the juncture between curves changes direction it's counted twice or not at all
+                // and if the juncture between curves does not change direction it's counted exactly once
+                let curveStart = c.startingPoint.y
+                let curveEnd   = c.endingPoint.y
+                var increment: Int = 0
+                if curveEnd < point.y, point.y <= curveStart {
+                    increment = 1
+                } else if curveStart < point.y, point.y <= curveEnd {
+                    increment = -1
+                }
+                if increment != 0, c.boundingBox.max.x >= point.x {
+                    // slow path: must determine x coord
+                    let x = PathComponent.xIntercept(curve: c, y: point.y)
+                    guard point.x > x else { continue }
+                }
+                windingCount += increment
             }
             return true
         }
