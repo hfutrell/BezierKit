@@ -196,10 +196,11 @@ internal class PathLinkedListRepresentation {
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
 
-                let n1 = neighbor.emitPrevious().approximateDerivative(0)
-                let n2 = neighbor.emitNext().approximateDerivative(0)
-                let v1 = previous.approximateDerivative(0)
-                let v2 = next.approximateDerivative(0)
+                let smallNumber: CGFloat = 0.001
+                let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
+                let n2 = neighbor.emitNext().compute(smallNumber) - v.location
+                let v1 = previous.compute(smallNumber) - v.location
+                let v2 = next.compute(smallNumber) - v.location
 
                 let windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
 
