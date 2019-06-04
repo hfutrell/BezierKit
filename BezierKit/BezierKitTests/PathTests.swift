@@ -434,7 +434,24 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path.windingCount(CGPoint(x: 2.123, y: 2.285714)), 0)
         XCTAssertEqual(path.windingCount(CGPoint(x: 2.122449, y: 2.285715)), 0)        
     }
-    
+
+    func testWindingCountCornerCase() {
+        // tests a case where Utils.roots returns a root just slightly out of the range [0, 1]
+        let path = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint(x: 268.44162129797564, y: 24.268753616441533))
+            temp.addCurve(to: CGPoint(x:259.9693035427533, y: 32.74107137166386),
+                          control1: CGPoint(x:268.44162129797564, y: 28.94788550837148),
+                          control2: CGPoint(x:264.6484354346833, y: 32.74107137166386))
+            temp.addLine(to: CGPoint(x: 259.9693035427533, y: 24.268753616441533))
+            temp.closeSubpath()
+            return temp
+        }())
+        let y: CGFloat = 24.268753616441536
+        XCTAssertEqual(path.windingCount(CGPoint(x: 268.5, y: y)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 268.3, y: y)), 1)
+    }
+
     func testContainsSimple1() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path = Path(cgPath: CGPath(rect: rect, transform: nil))
