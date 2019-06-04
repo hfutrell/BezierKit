@@ -402,11 +402,11 @@ import Foundation
         let d0 = p1.y - p0.y
         let d1 = p2.y - p1.y
         var last: CGFloat = 0.0
-        Utils.droots(d0, d1, callback: { t in
+        Utils.droots(d0, d1) { t in
             guard t > 0, t < 1 else { return }
             callback(curve.split(from: last, to: t))
             last = t
-        })
+        }
         if last < 1.0 {
             callback(curve.split(from: last, to: 1.0))
         }
@@ -422,11 +422,11 @@ import Foundation
         let d1 = p2.y - p1.y
         let d2 = p3.y - p2.y
         var last: CGFloat = 0.0
-        Utils.droots(d0, d1, d2, callback: { t in
+        Utils.droots(d0, d1, d2) { t in
             guard t > 0, t < 1 else { return }
             callback(curve.split(from: last, to: t))
             last = t
-        })
+        }
         if last < 1.0 {
             callback(curve.split(from: last, to: 1.0))
         }
