@@ -381,12 +381,13 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.01, y: -0.02)), 0)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.01, y: 0)), -1)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.01, y: 0.02)), 0)
-        // around the self-intersection (0.280, 0.296)
+        // around the self-intersection (0.280, 0.296) t = 0.053589836, 0.74641013
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.279, y: 0.295)), 0)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.280, y: 0.295)), -1)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.281, y: 0.295)), 0)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.279, y: 0.296)), 0)
-        XCTAssertEqual(path1.windingCount(CGPoint(x: 0.280, y: 0.296)), 0)
+        XCTAssertEqual(path1.windingCount(CGPoint(x: 0.280, y: 0.2960002)), 1)
+        XCTAssertEqual(path1.windingCount(CGPoint(x: 0.280, y: 0.2960000)), -1)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.281, y: 0.296)), 0)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.279, y: 0.297)), 0)
         XCTAssertEqual(path1.windingCount(CGPoint(x: 0.280, y: 0.297)), 1)
@@ -404,6 +405,34 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path1.windingCount(yExtrema + CGPoint(x: smallValue, y: 0)), 0)
         XCTAssertEqual(path1.windingCount(yExtrema + CGPoint(x: 4, y: 0)), 0)
         XCTAssertEqual(path1.windingCount(yExtrema + CGPoint(x: 0, y: smallValue)), 0)
+    }
+    
+    func testWindingCountQuadratic() {
+        let path = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint(x: 2, y: 1))
+            temp.addQuadCurve(to: CGPoint(x: 0, y: 0), control: CGPoint(x: 3, y: 4))
+            temp.closeSubpath()
+            return temp
+        }())
+        // curve has an x-extrema at t=0.75 (2.25, 2.0625)
+        // curve has a y-extrema at t=0.5714286 (2.1224489, 2.285714285)
+        // near the ending point
+        XCTAssertEqual(path.windingCount(CGPoint(x: 0.1, y: 0)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 3, y: 0)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 0.99, y: 0.5)), 1)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 1.01, y: 0.5)), 0)
+        // near the starting point
+        XCTAssertEqual(path.windingCount(CGPoint(x: 1.99, y: 1)), 1)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.01, y: 1)), 0)
+        // near the X extrema
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.26, y: 2.0625)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.24, y: 2.0625)), 1)
+        // near the Y extrema
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.122449, y: 2.285713)), 1)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.121, y: 2.285714)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.123, y: 2.285714)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.122449, y: 2.285715)), 0)        
     }
     
     func testContainsSimple1() {
