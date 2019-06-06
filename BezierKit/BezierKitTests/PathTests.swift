@@ -447,7 +447,7 @@ class PathTests: XCTestCase {
             temp.closeSubpath()
             return temp
         }())
-        let y: CGFloat = 24.268753616441536
+        let y = CGFloat(24.268753616441533).nextUp // next higher floating point from bottom of path
         XCTAssertEqual(path.windingCount(CGPoint(x: 268.5, y: y)), 0)
         XCTAssertEqual(path.windingCount(CGPoint(x: 268.3, y: y)), 1)
     }
