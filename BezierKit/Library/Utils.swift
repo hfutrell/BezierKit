@@ -245,8 +245,13 @@ internal class Utils {
             let m2 = -a+b
             let v1 = -( m1+m2)/d
             let v2 = -(-m1+m2)/d
-            callback(v1)
-            callback(v2)
+            if v1 < v2 {
+                callback(v1)
+                callback(v2)
+            } else {
+                callback(v2)
+                callback(v1)
+            }
         } else if a != b {
             callback(0.5 * a / (a - b))
         }
