@@ -452,6 +452,41 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path.windingCount(CGPoint(x: 268.3, y: y)), 1)
     }
 
+    func testWindingCountRealWorldIssue() {
+        // real world data from a failure where droots was returning the roots in the wrong order
+        // one of the curves has multiple y extrema so the ordering was important
+        let path = Path(cgPath: {
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint(x: 605.6715730157109, y: 281.5666590956511))
+            temp.addCurve(to: CGPoint(x: 599.1474827500521, y: 284.46530470516404),
+                          control1: CGPoint(x: 604.6704341182384, y: 284.16867575842156),
+                          control2: CGPoint(x: 601.7494994128225, y: 285.4664436026365))
+            temp.addCurve(to: CGPoint(x: 596.2488371405391, y: 277.9412144395052),
+                          control1: CGPoint(x: 596.5454660872816, y: 283.4641658076916),
+                          control2: CGPoint(x: 595.2476982430667, y: 280.5432311022756))
+            temp.addCurve(to: CGPoint(x: 606.4428758077357, y: 278.5450072177784),
+                          control1: CGPoint(x: 596.0062816538538, y: 278.3028101006893),
+                          control2: CGPoint(x: 598.025956346426, y: 275.00488126164095))
+            temp.addCurve(to: CGPoint(x: 602.1001649013623, y: 284.89151472375136),
+                          control1: CGPoint(x: 606.9962089595965, y: 281.49675337615315),
+                          control2: CGPoint(x:605.051911059737, y: 284.3381815718906))
+            temp.addCurve(to: CGPoint(x: 595.7536573953893, y: 280.5488038173779),
+                          control1: CGPoint(x: 599.1484187429876, y: 285.44484787561214),
+                          control2: CGPoint(x:596.30699054725, y: 283.5005499757526))
+            temp.addCurve(to: CGPoint(x: 605.6715730157109, y: 281.5666590956511),
+                          control1: CGPoint(x: 604.099776075449, y: 283.7112442266403),
+                          control2: CGPoint(x: 606.0305835805212, y: 280.9023900946232))
+            return temp
+        }())
+        let y = 281.4941677630135
+        XCTAssertEqual(path.windingCount(CGPoint(x: 595.8, y: y)), 0)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 596.1, y: y)), 1)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 597, y: y)), 2)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 603.9411804326238, y: y)), 1) // the point that was failing (reported 2 instead of 1)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 606, y: y)), 1)
+        XCTAssertEqual(path.windingCount(CGPoint(x: 607, y: y)), 0)
+    }
+
     func testContainsSimple1() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path = Path(cgPath: CGPath(rect: rect, transform: nil))
