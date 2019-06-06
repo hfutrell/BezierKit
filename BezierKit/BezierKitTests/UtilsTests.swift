@@ -39,4 +39,16 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(curve.compute(CGFloat(filtered[0])).y, y, accuracy: CGFloat(1.0e-5))
     }
 
+    func testdroots() {
+        let a: CGFloat = 0.36159566118413977
+        let b: CGFloat = -3.2979288390483816
+        let c: CGFloat = 3.5401259561374445
+        var roots: [CGFloat] = []
+        Utils.droots(a, b, c) {
+            roots.append($0)
+        }
+        let accuracy: CGFloat = 1.0e-5
+        XCTAssertEqual(roots[0], CGFloat(0.053511820486391165), accuracy: accuracy)
+        XCTAssertEqual(roots[1], CGFloat(0.64370120305889711), accuracy: accuracy)
+    }
 }
