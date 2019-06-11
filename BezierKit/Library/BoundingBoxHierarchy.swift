@@ -1,5 +1,5 @@
 //
-//  BoundingVolumeHierarchy.swift
+//  BoundingBoxHierarchy.swift
 //  BezierKit
 //
 //  Created by Holmes Futrell on 8/6/18.
@@ -16,7 +16,21 @@ private func right(_ index: Int) -> Int {
     return 2 &* index &+ 2 // right child of complete binary tree is always 2*i+2
 }
 
-final internal class BVH {
+final internal class BoundingBoxHierarchy {
+
+    internal enum NodeType: Equatable {
+        case leaf(elementIndex: Int)
+        case `internal`(startingElementIndex: Int, endingElementIndex: Int)
+    }
+
+    internal struct Node: Equatable {
+        let boundingBox: BoundingBox
+        let type: NodeType
+        init(boundingBox: BoundingBox, type: NodeType) {
+            self.type = type
+            self.boundingBox = boundingBox
+        }
+    }
 
     private let boundingBoxes: UnsafePointer<BoundingBox>
     private let lastRowIndex: Int
@@ -62,7 +76,7 @@ final internal class BVH {
         let boxes = UnsafeMutablePointer<BoundingBox>.allocate(capacity: self.elementCount + inodeCount)
         for i in 0..<self.elementCount {
             let nodeIndex = i+inodeCount
-            let elementIndex = BVH.leafNodeIndexToElementIndex(nodeIndex, elementCount: self.elementCount, lastRowIndex: lastRowIndex)
+            let elementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(nodeIndex, elementCount: self.elementCount, lastRowIndex: lastRowIndex)
             boxes[nodeIndex] = elementBoxes[elementIndex]
         }
         for i in stride(from: inodeCount-1, through: 0, by: -1) {
@@ -75,14 +89,14 @@ final internal class BVH {
         self.boundingBoxes.deallocate()
     }
 
-    func visit(callback: (BVHNode, Int) -> Bool) {
+    func visit(callback: (Node, Int) -> Bool) {
         let elementCount = self.elementCount
         let lastRowIdnex = self.lastRowIndex
         let boxes = self.boundingBoxes
-        func visit(index: Int, depth: Int, callback: (BVHNode, Int) -> Bool) {
-            let leaf = BVH.isLeaf(index, elementCount: elementCount)
-            let nodeType: BVHNode.NodeType = leaf ? .leaf(elementIndex: BVH.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex)) : .internal
-            let node = BVHNode(boundingBox: boxes[index], type: nodeType)
+        func visit(index: Int, depth: Int, callback: (Node, Int) -> Bool) {
+            let leaf = BoundingBoxHierarchy.isLeaf(index, elementCount: elementCount)
+            let nodeType: NodeType = leaf ? .leaf(elementIndex: BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex)) : .internal(startingElementIndex: 0, endingElementIndex: 0)
+            let node = Node(boundingBox: boxes[index], type: nodeType)
             guard callback(node, depth) == true else {
                 return
             }
@@ -96,14 +110,14 @@ final internal class BVH {
     }
 
     func boundingBox(forElementIndex index: Int) -> BoundingBox {
-        return self.boundingBoxes[BVH.elementIndexToNodeIndex(index, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)]
+        return self.boundingBoxes[BoundingBoxHierarchy.elementIndexToNodeIndex(index, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)]
     }
 
     func enumerateSelfIntersections(callback: (Int, Int) -> Void) {
         self.enumerateIntersections(with: self, callback: callback)
     }
 
-    func enumerateIntersections(with other: BVH, callback: (Int, Int) -> Void) {
+    func enumerateIntersections(with other: BoundingBoxHierarchy, callback: (Int, Int) -> Void) {
         let elementCount1 = self.elementCount
         let elementCount2 = other.elementCount
         let boxes1 = self.boundingBoxes
@@ -111,8 +125,8 @@ final internal class BVH {
         let lastRowIndex1 = self.lastRowIndex
         let lastRowIndex2 = other.lastRowIndex
         func intersects(index: Int, callback: (Int, Int) -> Void) {
-            if BVH.isLeaf(index, elementCount: elementCount1) { // if it's a leaf node
-                let elementIndex = BVH.leafNodeIndexToElementIndex(index, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
+            if BoundingBoxHierarchy.isLeaf(index, elementCount: elementCount1) { // if it's a leaf node
+                let elementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
                 callback(elementIndex, elementIndex)
             } else {
                 let l = left(index)
@@ -126,11 +140,11 @@ final internal class BVH {
             guard boxes1[index1].overlaps(boxes2[index2]) else {
                 return // nothing to do
             }
-            let leaf1: Bool = BVH.isLeaf(index1, elementCount: elementCount1)
-            let leaf2: Bool = BVH.isLeaf(index2, elementCount: elementCount2)
+            let leaf1: Bool = BoundingBoxHierarchy.isLeaf(index1, elementCount: elementCount1)
+            let leaf2: Bool = BoundingBoxHierarchy.isLeaf(index2, elementCount: elementCount2)
             if leaf1, leaf2 {
-                let elementIndex1 = BVH.leafNodeIndexToElementIndex(index1, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
-                let elementIndex2 = BVH.leafNodeIndexToElementIndex(index2, elementCount: elementCount2, lastRowIndex: lastRowIndex2)
+                let elementIndex1 = BoundingBoxHierarchy.leafNodeIndexToElementIndex(index1, elementCount: elementCount1, lastRowIndex: lastRowIndex1)
+                let elementIndex2 = BoundingBoxHierarchy.leafNodeIndexToElementIndex(index2, elementCount: elementCount2, lastRowIndex: lastRowIndex2)
                 callback(elementIndex1, elementIndex2)
             } else if leaf1 {
                 intersects(index1: index1, index2: left(index2), callback: callback)
@@ -150,18 +164,5 @@ final internal class BVH {
         } else {
             intersects(index1: 0, index2: 0, callback: callback)
         }
-    }
-}
-
-internal struct BVHNode {
-    let boundingBox: BoundingBox
-    let type: NodeType
-    enum NodeType {
-        case leaf(elementIndex: Int)
-        case `internal`
-    }
-    fileprivate init(boundingBox: BoundingBox, type: NodeType) {
-        self.type = type
-        self.boundingBox = boundingBox
     }
 }

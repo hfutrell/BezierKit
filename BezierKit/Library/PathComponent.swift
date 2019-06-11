@@ -23,9 +23,9 @@ import Foundation
         }
     }
 
-    private lazy var _bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
+    private lazy var _bvh: BoundingBoxHierarchy = BoundingBoxHierarchy(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
 
-    internal var bvh: BVH {
+    internal var bvh: BoundingBoxHierarchy {
         return self.lock.sync { self._bvh }
     }
     public var elementCount: Int {

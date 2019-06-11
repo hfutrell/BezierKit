@@ -457,7 +457,7 @@ class Demos {
                                     Draw.drawPath(context, subtracted)
                                 }
     })
-    static let demo24 = Demo(title: "BVH",
+    static let demo24 = Demo(title: "BoundingBoxHierarchy",
                              quadraticControlPoints: [],
                              cubicControlPoints: [],
                              drawFunction: {(context: CGContext, _: DemoState) in
