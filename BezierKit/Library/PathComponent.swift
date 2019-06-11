@@ -69,6 +69,14 @@ import Foundation
             return LineSegment(p0: p, p1: p)
         }
     }
+    
+    public func startingPointForElement(at index: Int) -> CGPoint {
+        return self.points[self.offsets[index]]
+    }
+    
+    public func endingPointForElement(at index: Int) -> CGPoint {
+        return self.points[self.offsets[index] + self.orders[index]]
+    }
 
     internal func cubic(at index: Int) -> CubicBezierCurve {
         assert(self.order(at: index) == 3)
@@ -432,51 +440,57 @@ import Foundation
     }
 
     internal func windingCount(at point: CGPoint) -> Int {
+        func windingCountAdjustment(_ y: CGFloat, _ startY: CGFloat, _ endY: CGFloat) -> Int {
+            if endY < y, y <= startY {
+                return 1
+            } else if startY < y, y <= endY {
+                return -1
+            } else {
+                return 0
+            }
+        }
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
         var windingCount: Int = 0
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
-            guard boundingBox.min.y <= point.y, boundingBox.max.y >= point.y else {
+            guard boundingBox.min.y <= point.y, boundingBox.max.y >= point.y, boundingBox.min.x <= point.x else {
+                // ray cast from point in -x direction does not intersect node's bounding box, nothing to do
                 return false
             }
-            guard boundingBox.min.x <= point.x else {
+            guard boundingBox.max.x >= point.x else {
+                // ray cast from point in -x direction intersects the node's bounding box
+                // but we are outside bounding box in +x direction
+                // as an optimization we can avoid visiting any of node's children
+                // beause we need only adjust the winding count if y coordinate falls between start and end y
+                let startingElementIndex: Int
+                let endingElementIndex: Int
+                switch node.type {
+                    case .leaf(let index):
+                        startingElementIndex = index
+                        endingElementIndex = index
+                    case .internal(let start, let end):
+                        startingElementIndex = start
+                        endingElementIndex = end
+                }
+                let startingPoint    = self.startingPointForElement(at: startingElementIndex)
+                let endingPoint      = self.endingPointForElement(at: endingElementIndex)
+                windingCount         += windingCountAdjustment(point.y, startingPoint.y, endingPoint.y)
                 return false
             }
             guard case let .leaf(elementIndex) = node.type else {
-                return true // recurse
-            }
-            
-            func adjustment(_ y: CGFloat, _ startY: CGFloat, _ endY: CGFloat) -> Int {
-                if endY < y, y <= startY {
-                    return 1
-                } else if startY < y, y <= endY {
-                    return -1
-                } else {
-                    return 0
-                }
-            }
-            
-            let order            = self.orders[elementIndex]
-
-            guard point.x <= boundingBox.max.x else {
-                // super-fast code-path
-                // x-coordinate of point outside bounding box
-                // we need only see if we cross up or down
-                let offset           = self.offsets[elementIndex]
-                let startingPoint    = self.points[offset]
-                let endingPoint      = self.points[offset + order]
-                windingCount         += adjustment(point.y, startingPoint.y, endingPoint.y)
+                // internal node where point falls within bounding box: recursively visit child nodes
                 return true
             }
-            
+            // now we are assured that node is a leaf node and point falls within the node's bounding box
+            let order = self.orders[elementIndex]
             func windingCountIncrementer<A: BezierCurve>(_ curve: A) -> Int {
                 if curve.boundingBox.min.x > point.x { return 0 }
                 // we include the highest point and exclude the lowest point
                 // that ensures if the juncture between curves changes direction it's counted twice or not at all
                 // and if the juncture between curves does not change direction it's counted exactly once
-                let increment = adjustment(point.y, curve.startingPoint.y, curve.endingPoint.y)
+                let increment = windingCountAdjustment(point.y, curve.startingPoint.y, curve.endingPoint.y)
                 guard increment != 0 else { return 0 }
                 if curve.boundingBox.max.x >= point.x {
                     // slowest path: must determine x intercept and test against it
