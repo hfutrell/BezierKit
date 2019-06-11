@@ -89,13 +89,37 @@ final internal class BoundingBoxHierarchy {
         self.boundingBoxes.deallocate()
     }
 
+    var nodeCount: Int {
+        return 2 * self.elementCount - 1
+    }
+
     func visit(callback: (Node, Int) -> Bool) {
         let elementCount = self.elementCount
         let lastRowIdnex = self.lastRowIndex
         let boxes = self.boundingBoxes
         func visit(index: Int, depth: Int, callback: (Node, Int) -> Bool) {
             let leaf = BoundingBoxHierarchy.isLeaf(index, elementCount: elementCount)
-            let nodeType: NodeType = leaf ? .leaf(elementIndex: BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex)) : .internal(startingElementIndex: 0, endingElementIndex: 0)
+            let nodeType: NodeType
+            if leaf {
+                nodeType = .leaf(elementIndex: BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex))
+            } else {
+
+                // UGH, SLOW!
+
+                var startingIndex = index
+                while left(startingIndex) < self.nodeCount {
+                    startingIndex = left(startingIndex)
+                }
+                let startingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(startingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
+
+                var endingIndex = index
+                while right(endingIndex) < self.nodeCount {
+                    endingIndex = right(endingIndex)
+                }
+                let endingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(endingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
+
+                nodeType = .internal(startingElementIndex: startingElementIndex, endingElementIndex: endingElementIndex)
+            }
             let node = Node(boundingBox: boxes[index], type: nodeType)
             guard callback(node, depth) == true else {
                 return
