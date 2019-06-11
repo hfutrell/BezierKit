@@ -8,14 +8,31 @@
 
 import CoreGraphics
 
+/// returns the power of two greater than or equal to a given value
+internal func roundUpPowerOfTwo(_ value: Int) -> Int {
+    var result = 1
+    while result < value {
+        result = result << 1
+    }
+    return result
+}
+
+/// left child node index by the formula 2*index+1
 private func left(_ index: Int) -> Int {
-    return 2 &* index &+ 1 // left child of complete binary tree is always 2*i+1
+    return 2 &* index &+ 1
 }
 
+/// right child node index by the formula 2*index+2
 private func right(_ index: Int) -> Int {
-    return 2 &* index &+ 2 // right child of complete binary tree is always 2*i+2
+    return 2 &* index &+ 2
 }
 
+/// parent node index index by the formula (index-1) / 2
+private func parent(_ index: Int) -> Int {
+    return (index &- 1) / 2
+}
+
+/// a strict (complete and full) binary tree representing a hierarchy of bounding boxes for a list of path elements
 final internal class BoundingBoxHierarchy {
 
     internal enum NodeType: Equatable {
@@ -89,33 +106,27 @@ final internal class BoundingBoxHierarchy {
         self.boundingBoxes.deallocate()
     }
 
-    var nodeCount: Int {
-        return 2 * self.elementCount - 1
-    }
-
     func visit(callback: (Node, Int) -> Bool) {
         let elementCount = self.elementCount
         let lastRowIdnex = self.lastRowIndex
+        let nodeCount    = 2 &* elementCount &- 1
         let boxes = self.boundingBoxes
-        func visit(index: Int, depth: Int, q: Int, callback: (Node, Int) -> Bool) {
+        func visitHelper(index: Int, depth: Int, maxLeafsInSubtree: Int, callback: (Node, Int) -> Bool) {
             let leaf = BoundingBoxHierarchy.isLeaf(index, elementCount: elementCount)
             let nodeType: NodeType
             if leaf {
                 nodeType = .leaf(elementIndex: BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex))
             } else {
-                // UGH, UGLY
-                var startingIndex = q * ( index + 1 ) - 1
-                if startingIndex >= self.nodeCount {
-                    startingIndex -= 1
-                    startingIndex /= 2
+                var startingIndex   = maxLeafsInSubtree * ( index + 1 ) - 1
+                var endingIndex     = startingIndex + maxLeafsInSubtree - 1
+                if endingIndex >= nodeCount {
+                    endingIndex = parent(endingIndex)
                 }
-                var endingIndex = q * ( index + 2 ) - 2
-                if endingIndex >= self.nodeCount {
-                    endingIndex -= 2
-                    endingIndex /= 2
+                if startingIndex >= nodeCount {
+                    startingIndex = parent(startingIndex)
                 }
-                let endingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(endingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
-                let startingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(startingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
+                let endingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(endingIndex, elementCount: elementCount, lastRowIndex: lastRowIndex)
+                let startingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(startingIndex, elementCount: elementCount, lastRowIndex: lastRowIndex)
                 nodeType = .internal(startingElementIndex: startingElementIndex, endingElementIndex: endingElementIndex)
             }
             let node = Node(boundingBox: boxes[index], type: nodeType)
@@ -124,16 +135,13 @@ final internal class BoundingBoxHierarchy {
             }
             if leaf == false {
                 let nextDepth = depth + 1
-                visit(index: left(index), depth: nextDepth, q: q/2, callback: callback)
-                visit(index: right(index), depth: nextDepth, q: q/2, callback: callback)
+                let nextMaxLeafsInSubtree = maxLeafsInSubtree / 2
+                visitHelper(index: left(index), depth: nextDepth, maxLeafsInSubtree: nextMaxLeafsInSubtree, callback: callback)
+                visitHelper(index: right(index), depth: nextDepth, maxLeafsInSubtree: nextMaxLeafsInSubtree, callback: callback)
             }
         }
-        var q = 1
-        while q < self.nodeCount {
-            q *= 2
-        }
-        q /= 2
-        visit(index: 0, depth: 0, q: q, callback: callback)
+        // maxLeafsInSubtree: refers to the number of leaf nodes in the subtree were the bottom level of the tree full
+        visitHelper(index: 0, depth: 0, maxLeafsInSubtree: roundUpPowerOfTwo(elementCount), callback: callback)
     }
 
     func boundingBox(forElementIndex index: Int) -> BoundingBox {
