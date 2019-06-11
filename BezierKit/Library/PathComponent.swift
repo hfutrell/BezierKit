@@ -23,9 +23,9 @@ import Foundation
         }
     }
 
-    private lazy var _bvh: BVH = BVH(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
+    private lazy var _bvh: BoundingBoxHierarchy = BoundingBoxHierarchy(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
 
-    internal var bvh: BVH {
+    internal var bvh: BoundingBoxHierarchy {
         return self.lock.sync { self._bvh }
     }
     public var elementCount: Int {
@@ -68,6 +68,14 @@ import Foundation
             let p = self.points[self.offsets[index]]
             return LineSegment(p0: p, p1: p)
         }
+    }
+    
+    public func startingPointForElement(at index: Int) -> CGPoint {
+        return self.points[self.offsets[index]]
+    }
+    
+    public func endingPointForElement(at index: Int) -> CGPoint {
+        return self.points[self.offsets[index] + self.orders[index]]
     }
 
     internal func cubic(at index: Int) -> CubicBezierCurve {
@@ -375,137 +383,6 @@ import Foundation
         return self.element(at: location.elementIndex).compute(location.t)
     }
     
-    private static func xIntercept<A: BezierCurve>(curve: A, y: CGFloat) -> CGFloat {
-        let startingPoint = curve.startingPoint
-        let endingPoint   = curve.endingPoint
-        guard y != curve.startingPoint.y else { return curve.startingPoint.x }
-        guard y != curve.endingPoint.y else { return curve.endingPoint.x }
-        let linearSolutionT = ( y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
-        let linearSolution = LineSegment(p0: startingPoint, p1: endingPoint).compute(linearSolutionT).x
-        if curve.order > 1 {
-            let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
-            guard let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) else {
-                return linearSolution
-            }
-            return curve.compute(CGFloat(t)).x
-        } else {
-            return linearSolution
-        }
-    }
-    
-    private func enumerateYMonotonicComponentsForQuadratic(at index: Int, callback: (_ curve: QuadraticBezierCurve) -> Void) {
-        let curve = self.quadratic(at: index)
-        let p0 = curve.p0
-        let p1 = curve.p1
-        let p2 = curve.p2
-        let d0 = p1.y - p0.y
-        let d1 = p2.y - p1.y
-        var last: CGFloat = 0.0
-        Utils.droots(d0, d1) { t in
-            guard t > 0, t < 1 else { return }
-            callback(curve.split(from: last, to: t))
-            last = t
-        }
-        if last < 1.0 {
-            callback(curve.split(from: last, to: 1.0))
-        }
-    }
-    
-    private func enumerateYMonotonicComponentsForCubic(at index: Int, callback: (_ curve: CubicBezierCurve) -> Void) {
-        let curve = self.cubic(at: index)
-        let p0 = curve.p0
-        let p1 = curve.p1
-        let p2 = curve.p2
-        let p3 = curve.p3
-        let d0 = p1.y - p0.y
-        let d1 = p2.y - p1.y
-        let d2 = p3.y - p2.y
-        var last: CGFloat = 0.0
-        Utils.droots(d0, d1, d2) { t in
-            guard t > 0, t < 1 else { return }
-            callback(curve.split(from: last, to: t))
-            last = t
-        }
-        if last < 1.0 {
-            callback(curve.split(from: last, to: 1.0))
-        }
-    }
-
-    internal func windingCount(at point: CGPoint) -> Int {
-        guard self.isClosed, self.boundingBox.contains(point) else {
-            return 0
-        }
-        var windingCount: Int = 0
-        self.bvh.visit { node, _ in
-            let boundingBox = node.boundingBox
-            guard boundingBox.min.y <= point.y, boundingBox.max.y >= point.y else {
-                return false
-            }
-            guard boundingBox.min.x <= point.x else {
-                return false
-            }
-            guard case let .leaf(elementIndex) = node.type else {
-                return true // recurse
-            }
-            
-            func adjustment(_ y: CGFloat, _ startY: CGFloat, _ endY: CGFloat) -> Int {
-                if endY < y, y <= startY {
-                    return 1
-                } else if startY < y, y <= endY {
-                    return -1
-                } else {
-                    return 0
-                }
-            }
-            
-            let order            = self.orders[elementIndex]
-
-            guard point.x <= boundingBox.max.x else {
-                // super-fast code-path
-                // x-coordinate of point outside bounding box
-                // we need only see if we cross up or down
-                let offset           = self.offsets[elementIndex]
-                let startingPoint    = self.points[offset]
-                let endingPoint      = self.points[offset + order]
-                windingCount         += adjustment(point.y, startingPoint.y, endingPoint.y)
-                return true
-            }
-            
-            func windingCountIncrementer<A: BezierCurve>(_ curve: A) -> Int {
-                if curve.boundingBox.min.x > point.x { return 0 }
-                // we include the highest point and exclude the lowest point
-                // that ensures if the juncture between curves changes direction it's counted twice or not at all
-                // and if the juncture between curves does not change direction it's counted exactly once
-                let increment = adjustment(point.y, curve.startingPoint.y, curve.endingPoint.y)
-                guard increment != 0 else { return 0 }
-                if curve.boundingBox.max.x >= point.x {
-                    // slowest path: must determine x intercept and test against it
-                    let x = PathComponent.xIntercept(curve: curve, y: point.y)
-                    guard point.x > x else { return 0  }
-                }
-                return increment
-            }
-            switch order {
-                case 0:
-                    windingCount += 0
-                case 1:
-                    windingCount += windingCountIncrementer(line(at: elementIndex))
-                case 2:
-                    self.enumerateYMonotonicComponentsForQuadratic(at: elementIndex) {
-                        windingCount += windingCountIncrementer($0)
-                    }
-                case 3:
-                    self.enumerateYMonotonicComponentsForCubic(at: elementIndex) {
-                        windingCount += windingCountIncrementer($0)
-                    }
-                default:
-                    fatalError("unsupported")
-            }
-            return true
-        }
-        return windingCount
-    }
-
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
