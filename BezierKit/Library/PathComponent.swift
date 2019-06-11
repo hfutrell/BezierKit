@@ -449,6 +449,20 @@ import Foundation
                 return 0
             }
         }
+        func windingCountIncrementer<A: BezierCurve>(_ curve: A) -> Int {
+            if curve.boundingBox.min.x > point.x { return 0 }
+            // we include the highest point and exclude the lowest point
+            // that ensures if the juncture between curves changes direction it's counted twice or not at all
+            // and if the juncture between curves does not change direction it's counted exactly once
+            let increment = windingCountAdjustment(point.y, curve.startingPoint.y, curve.endingPoint.y)
+            guard increment != 0 else { return 0 }
+            if curve.boundingBox.max.x >= point.x {
+                // slowest path: must determine x intercept and test against it
+                let x = PathComponent.xIntercept(curve: curve, y: point.y)
+                guard point.x > x else { return 0  }
+            }
+            return increment
+        }
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0
         }
@@ -485,20 +499,6 @@ import Foundation
             }
             // now we are assured that node is a leaf node and point falls within the node's bounding box
             let order = self.orders[elementIndex]
-            func windingCountIncrementer<A: BezierCurve>(_ curve: A) -> Int {
-                if curve.boundingBox.min.x > point.x { return 0 }
-                // we include the highest point and exclude the lowest point
-                // that ensures if the juncture between curves changes direction it's counted twice or not at all
-                // and if the juncture between curves does not change direction it's counted exactly once
-                let increment = windingCountAdjustment(point.y, curve.startingPoint.y, curve.endingPoint.y)
-                guard increment != 0 else { return 0 }
-                if curve.boundingBox.max.x >= point.x {
-                    // slowest path: must determine x intercept and test against it
-                    let x = PathComponent.xIntercept(curve: curve, y: point.y)
-                    guard point.x > x else { return 0  }
-                }
-                return increment
-            }
             switch order {
                 case 0:
                     windingCount += 0
