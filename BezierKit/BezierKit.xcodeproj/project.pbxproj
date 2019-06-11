@@ -31,6 +31,8 @@
 		FD5CF14D22400FCA00FE15A6 /* BezierCurve+Intersection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5CF14B22400FCA00FE15A6 /* BezierCurve+Intersection.swift */; };
 		FD6D9C9F21BEE75C008652C5 /* TransformableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */; };
 		FD6D9CA021BEE75C008652C5 /* TransformableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */; };
+		FD84360522B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */; };
+		FD84360622B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */; };
 		FDA727591ED5035300011871 /* CubicBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */; };
 		FDA7275A1ED5035300011871 /* CubicBezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */; };
 		FDB512C821373BBD007CBA20 /* AugmentedGraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB512C521373A3D007CBA20 /* AugmentedGraphTests.swift */; };
@@ -151,6 +153,7 @@
 		FD4A6405200B11DA00930E10 /* PathComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathComponentTests.swift; sourceTree = "<group>"; };
 		FD5CF14B22400FCA00FE15A6 /* BezierCurve+Intersection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BezierCurve+Intersection.swift"; sourceTree = "<group>"; };
 		FD6D9C9E21BEE75C008652C5 /* TransformableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformableTests.swift; sourceTree = "<group>"; };
+		FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathComponent+WindingCount.swift"; sourceTree = "<group>"; };
 		FDA727581ED5035300011871 /* CubicBezierCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicBezierCurveTests.swift; sourceTree = "<group>"; };
 		FDB512C521373A3D007CBA20 /* AugmentedGraphTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AugmentedGraphTests.swift; sourceTree = "<group>"; };
 		FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
@@ -319,6 +322,7 @@
 				FDC7D7012111323A00A9EEF0 /* Path.swift */,
 				FDCE99A4223C404E00597989 /* Path+Data.swift */,
 				FDB6B3FD1EAFD6DF00001C61 /* PathComponent.swift */,
+				FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */,
 				FD149EB92135CBFF009E791D /* AugmentedGraph.swift */,
 				FDC859622119274A00AF7642 /* BoundingBoxHierarchy.swift */,
 				FDC2EB492298735C007768FC /* Lock.swift */,
@@ -592,6 +596,7 @@
 				FDC859642119274A00AF7642 /* BoundingBoxHierarchy.swift in Sources */,
 				FD4A63FF200AA50B00930E10 /* Shape.swift in Sources */,
 				FDB6B40D1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
+				FD84360622B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */,
 				FDB6B40F1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
 				FDB6B4151EAFD6DF00001C61 /* Utils.swift in Sources */,
 				FDCE99A6223C404E00597989 /* Path+Data.swift in Sources */,
@@ -616,6 +621,7 @@
 				FDC455EE211D057E00DBF2B2 /* BoundingBoxHierarchy.swift in Sources */,
 				FD4A63FE200AA50B00930E10 /* Shape.swift in Sources */,
 				FDB6B40C1EAFD6DF00001C61 /* CGPoint+Overloads.swift in Sources */,
+				FD84360522B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */,
 				FDB6B40E1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
 				FDB6B4141EAFD6DF00001C61 /* Utils.swift in Sources */,
 				FDCE99A5223C404E00597989 /* Path+Data.swift in Sources */,
