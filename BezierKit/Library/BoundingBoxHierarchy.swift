@@ -97,27 +97,25 @@ final internal class BoundingBoxHierarchy {
         let elementCount = self.elementCount
         let lastRowIdnex = self.lastRowIndex
         let boxes = self.boundingBoxes
-        func visit(index: Int, depth: Int, callback: (Node, Int) -> Bool) {
+        func visit(index: Int, depth: Int, q: Int, callback: (Node, Int) -> Bool) {
             let leaf = BoundingBoxHierarchy.isLeaf(index, elementCount: elementCount)
             let nodeType: NodeType
             if leaf {
                 nodeType = .leaf(elementIndex: BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: elementCount, lastRowIndex: lastRowIndex))
             } else {
-
-                // UGH, SLOW!
-
-                var startingIndex = index
-                while left(startingIndex) < self.nodeCount {
-                    startingIndex = left(startingIndex)
+                // UGH, UGLY
+                var startingIndex = q * ( index + 1 ) - 1
+                if startingIndex >= self.nodeCount {
+                    startingIndex -= 1
+                    startingIndex /= 2
                 }
-                let startingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(startingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
-
-                var endingIndex = index
-                while right(endingIndex) < self.nodeCount {
-                    endingIndex = right(endingIndex)
+                var endingIndex = q * ( index + 2 ) - 2
+                if endingIndex >= self.nodeCount {
+                    endingIndex -= 2
+                    endingIndex /= 2
                 }
                 let endingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(endingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
-
+                let startingElementIndex = BoundingBoxHierarchy.leafNodeIndexToElementIndex(startingIndex, elementCount: self.elementCount, lastRowIndex: self.lastRowIndex)
                 nodeType = .internal(startingElementIndex: startingElementIndex, endingElementIndex: endingElementIndex)
             }
             let node = Node(boundingBox: boxes[index], type: nodeType)
@@ -126,11 +124,16 @@ final internal class BoundingBoxHierarchy {
             }
             if leaf == false {
                 let nextDepth = depth + 1
-                visit(index: left(index), depth: nextDepth, callback: callback)
-                visit(index: right(index), depth: nextDepth, callback: callback)
+                visit(index: left(index), depth: nextDepth, q: q/2, callback: callback)
+                visit(index: right(index), depth: nextDepth, q: q/2, callback: callback)
             }
         }
-        visit(index: 0, depth: 0, callback: callback)
+        var q = 1
+        while q < self.nodeCount {
+            q *= 2
+        }
+        q /= 2
+        visit(index: 0, depth: 0, q: q, callback: callback)
     }
 
     func boundingBox(forElementIndex index: Int) -> BoundingBox {
