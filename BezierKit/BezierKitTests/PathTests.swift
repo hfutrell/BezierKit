@@ -1199,7 +1199,7 @@ class PathTests: XCTestCase {
         }
     }
     
-    func testDisjointcomponentsNesting() {
+    func testDisjointComponentsNesting() {
         XCTAssertEqual(Path().disjointComponents(), [])
         // test that a simple square just gives the same square back
         let squarePath = Path(cgPath: CGPath.init(rect: CGRect(x: 0, y: 0, width: 7, height: 7), transform: nil))
@@ -1237,6 +1237,26 @@ class PathTests: XCTestCase {
         XCTAssertEqual(result4.count, 2)
         XCTAssert(result4.contains(squareWithHolePath))
         XCTAssert(result4.contains(pegWithHolePath))
+    }
+
+    func testDisjointComponentsWindingBackwards() {
+
+        let innerSquare = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 1, height: 1), transform: nil))
+        let hole        = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 1, width: 3, height: 3), transform: nil)).reversed()
+        let outerSquare = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 5, height: 5), transform: nil))
+        let path = Path(components: innerSquare.components + outerSquare.components + hole.components)
+
+        let disjointPaths = path.disjointComponents()
+
+        // it's expected that disjointComponents should separate the path into
+        // the outer square plus hole as one path, and the inner square as another
+        let outerSquareWithHole = Path(components: outerSquare.components + hole.components)
+        let expectedPaths = [outerSquareWithHole, innerSquare]
+
+        XCTAssertEqual(disjointPaths.count, expectedPaths.count)
+        expectedPaths.forEach {
+            XCTAssert(disjointPaths.contains($0))
+        }
     }
 
     func testSubtractionPerformance() {

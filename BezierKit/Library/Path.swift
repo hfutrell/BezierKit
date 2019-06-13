@@ -25,7 +25,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 @objc(BezierKitPath) open class Path: NSObject, NSCoding {
 
     /// lock to make external accessing of lazy vars threadsafe
-    private var lock = os_unfair_lock_s()
+    private var lock = UnfairLock()
 
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint?
@@ -291,46 +291,34 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     @objc public func disjointComponents() -> [Path] {
-
-        var paths: [Path] = []
-        var componentWindingCounts: [Path: Int] = [:]
-        let componentsAsPaths = self.components.map { Path(components: [$0]) }
         let rule: PathFillRule = .evenOdd
-        for component in componentsAsPaths {
-            let windingCount = self.windingCount(component.components[0].startingPoint, ignoring: component.components[0])
-            if windingCount == 0 {
-                paths.append(component)
+        var outerComponents: [PathComponent:[PathComponent]] = [:]
+        var innerComponents: [PathComponent] = []
+        // determine which components are outer and which are inner
+        for component in self.components {
+            let windingCount = self.windingCount(component.startingPoint, ignoring: component)
+            if windingCountImpliesContainment(windingCount, using: rule) {
+                innerComponents.append(component)
+            } else {
+                outerComponents[component] = [component]
             }
-            componentWindingCounts[component] = windingCount
         }
-
-        var pathsWithHoles: [Path: Path] = [:]
-        for path in paths {
-            pathsWithHoles[path] = path
-        }
-
-        for component in componentsAsPaths {
-            guard componentWindingCounts[component] != 0 else {
-                continue
-            }
-            var owner: Path?
-            for path in paths {
-                guard path.contains(component, using: rule) else {
-                    continue
+        // file the inner components into their "owning" outer components
+        for component in innerComponents {
+            var owner: PathComponent? = nil
+            for outer in outerComponents.keys {
+                if let owner = owner {
+                    guard outer.boundingBox.intersection(owner.boundingBox) == outer.boundingBox else { continue }
                 }
-                if owner != nil {
-                    if owner!.contains(path, using: rule) {
-                        owner = path
-                    }
-                } else {
-                    owner = path
+                if outer.contains(component.startingPoint, using: rule) {
+                    owner = outer
                 }
             }
             if let owner = owner {
-                pathsWithHoles[owner] = Path(components: pathsWithHoles[owner]!.components + component.components)
+                outerComponents[owner]?.append(component)
             }
         }
-        return Array(pathsWithHoles.values)
+        return outerComponents.values.map { Path(components: $0) }
     }
 }
 
