@@ -15,7 +15,7 @@ import Foundation
     public let points: [CGPoint]
     public let orders: [Int]
     /// lock to make external accessing of lazy vars threadsafe
-    private var lock = os_unfair_lock_s()
+    private var lock = UnfairLock()
 
     public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {
