@@ -292,7 +292,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc public func disjointComponents() -> [Path] {
         let rule: PathFillRule = .evenOdd
-        var outerComponents: [PathComponent:[PathComponent]] = [:]
+        var outerComponents: [PathComponent: [PathComponent]] = [:]
         var innerComponents: [PathComponent] = []
         // determine which components are outer and which are inner
         for component in self.components {
@@ -305,7 +305,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         // file the inner components into their "owning" outer components
         for component in innerComponents {
-            var owner: PathComponent? = nil
+            var owner: PathComponent?
             for outer in outerComponents.keys {
                 if let owner = owner {
                     guard outer.boundingBox.intersection(owner.boundingBox) == outer.boundingBox else { continue }

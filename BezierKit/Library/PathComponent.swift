@@ -69,11 +69,11 @@ import Foundation
             return LineSegment(p0: p, p1: p)
         }
     }
-    
+
     public func startingPointForElement(at index: Int) -> CGPoint {
         return self.points[self.offsets[index]]
     }
-    
+
     public func endingPointForElement(at index: Int) -> CGPoint {
         return self.points[self.offsets[index] + self.orders[index]]
     }
@@ -382,7 +382,7 @@ import Foundation
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         return self.element(at: location.elementIndex).compute(location.t)
     }
-    
+
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)

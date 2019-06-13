@@ -97,7 +97,7 @@ class PathComponentTests: XCTestCase {
         XCTAssertFalse(location3 < location1)
         XCTAssertFalse(location2 < location1)
     }
-    
+
     let pointPathComponent = PathComponent(points: [CGPoint(x: 3.145, y: -8.34)], orders: [0]) // just a single point
     let circlePathComponent = Path(cgPath: CGPath.init(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
 
@@ -107,7 +107,7 @@ class PathComponentTests: XCTestCase {
         XCTAssertEqual(circlePathComponent.endingPointForElement(at: 0), circlePathComponent.curves[0].endingPoint)
         XCTAssertEqual(circlePathComponent.endingPointForElement(at: 2), circlePathComponent.curves[2].endingPoint)
     }
-    
+
     func testSplitFromTo() {
         // corner case, check that splitting a point always yields the same thin
         XCTAssertEqual(pointPathComponent, pointPathComponent.split(from: IndexedPathComponentLocation(elementIndex: 0, t: 0.2),

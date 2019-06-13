@@ -94,7 +94,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(l.compute(0), s)
         XCTAssertEqual(l.compute(1), e) // this failed in practice
     }
-    
+
     func testLength() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
         XCTAssertEqual(l.length(), 5.0)
@@ -383,11 +383,11 @@ class LineSegmentTests: XCTestCase {
         let i = l.intersections(with: c)
         XCTAssertEqual(i, [])
     }
-    
+
     func testIntersectionsCubicRootsEdgeCase2() {
         guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
         // this data caused issues in practice because because the discriminant in the roots calculation is very near zero
-        let line = LineSegment(p0 : CGPoint(x: 503.31162501468725, y: 766.9016671863201),
+        let line = LineSegment(p0: CGPoint(x: 503.31162501468725, y: 766.9016671863201),
                                p1: CGPoint(x: 504.2124710211739, y: 767.3358059574488))
         let curve = CubicBezierCurve(p0: CGPoint(x: 505.16132944417086, y: 779.6305912206088),
                                      p1: CGPoint(x: 503.19076843492786, y: 767.0872665416827),

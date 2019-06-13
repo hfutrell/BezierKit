@@ -40,14 +40,14 @@ fileprivate extension InputStream {
     }
 }
 
-@objc public extension Path {
+private struct SerializationTypes {
+    typealias MagicNumber   = UInt32
+    typealias CommandCount  = UInt32
+    typealias Command       = UInt8
+    typealias Coordinate    = Float64
+}
 
-    private struct SerializationTypes {
-        typealias MagicNumber   = UInt32
-        typealias CommandCount  = UInt32
-        typealias Command       = UInt8
-        typealias Coordinate    = Float64
-    }
+@objc public extension Path {
 
     private struct SerializationConstants {
         static let magicNumberVersion1: SerializationTypes.MagicNumber = 1223013157 // just a random number that helps us identify if the data is OK and saved in compatible version

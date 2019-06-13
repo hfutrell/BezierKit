@@ -70,7 +70,9 @@ class BezierCurveTests: XCTestCase {
 
         // ensure scaling a quadratic from a line yields the same thing as the line
         let qFromLine = QuadraticBezierCurve(lineSegment: l)
-        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: qFromLine.scale(distance: sqrt(2)), curve2: QuadraticBezierCurve(lineSegment: expectedLine), tolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: qFromLine.scale(distance: sqrt(2)),
+                                                               curve2: QuadraticBezierCurve(lineSegment: expectedLine),
+                                                               tolerance: epsilon))
     }
 
     func testScaleDistanceEdgeCase() {
@@ -231,7 +233,10 @@ class BezierCurveTests: XCTestCase {
         // 2. quadratics are upgrade in the outline function (why?)
 
         let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 9.0, y: 11.0), p2: CGPoint(x: 20.0, y: 20.0))
-        let outline: PathComponent = q.outline(distanceAlongNormalStart: sqrt(2), distanceOppositeNormalStart: sqrt(2), distanceAlongNormalEnd: 2 * sqrt(2), distanceOppositeNormalEnd: 2 * sqrt(2))
+        let outline: PathComponent = q.outline(distanceAlongNormalStart: sqrt(2),
+                                               distanceOppositeNormalStart: sqrt(2),
+                                               distanceAlongNormalEnd: 2 * sqrt(2),
+                                               distanceOppositeNormalEnd: 2 * sqrt(2))
 
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 1, y: -1), p1: CGPoint(x: -1, y: 1))
         let expectedSegment2 = QuadraticBezierCurve(p0: CGPoint(x: -1, y: 1), p1: CGPoint(x: 7.5, y: 12.5), p2: CGPoint(x: 18, y: 22))

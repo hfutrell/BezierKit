@@ -26,10 +26,10 @@ class UtilsTests: XCTestCase {
 
     func testRootsRealWorldIssue() {
         let points: [CGPoint] = [
-            CGPoint(x:523.4257521858988, y: 691.8949684622992),
-            CGPoint(x:523.1393916834338, y: 691.8714265856051),
-            CGPoint(x:522.8595588275791, y: 691.7501129962762),
-            CGPoint(x:522.6404735257349, y: 691.531027694432)
+            CGPoint(x: 523.4257521858988, y: 691.8949684622992),
+            CGPoint(x: 523.1393916834338, y: 691.8714265856051),
+            CGPoint(x: 522.8595588275791, y: 691.7501129962762),
+            CGPoint(x: 522.6404735257349, y: 691.531027694432)
         ]
         let curve = CubicBezierCurve(points: points)
         let y: CGFloat = 691.87778055040201

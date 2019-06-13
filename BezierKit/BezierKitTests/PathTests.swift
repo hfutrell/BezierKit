@@ -357,7 +357,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path2.windingCount(CGPoint(x: 3, y: -1)), 0)
         XCTAssertEqual(path2.windingCount(CGPoint(x: 3, y: -2)), 0)
     }
-    
+
     func testWindingCountCusp() {
         let path1 = Path(cgPath: {
             let temp = CGMutablePath()
@@ -406,7 +406,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path1.windingCount(yExtrema + CGPoint(x: 4, y: 0)), 0)
         XCTAssertEqual(path1.windingCount(yExtrema + CGPoint(x: 0, y: smallValue)), 0)
     }
-    
+
     func testWindingCountQuadratic() {
         let path = Path(cgPath: {
             let temp = CGMutablePath()
@@ -432,7 +432,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path.windingCount(CGPoint(x: 2.122449, y: 2.285713)), 1)
         XCTAssertEqual(path.windingCount(CGPoint(x: 2.121, y: 2.285714)), 0)
         XCTAssertEqual(path.windingCount(CGPoint(x: 2.123, y: 2.285714)), 0)
-        XCTAssertEqual(path.windingCount(CGPoint(x: 2.122449, y: 2.285715)), 0)        
+        XCTAssertEqual(path.windingCount(CGPoint(x: 2.122449, y: 2.285715)), 0)
     }
 
     func testWindingCountCornerCase() {
@@ -440,9 +440,9 @@ class PathTests: XCTestCase {
         let path = Path(cgPath: {
             let temp = CGMutablePath()
             temp.move(to: CGPoint(x: 268.44162129797564, y: 24.268753616441533))
-            temp.addCurve(to: CGPoint(x:259.9693035427533, y: 32.74107137166386),
-                          control1: CGPoint(x:268.44162129797564, y: 28.94788550837148),
-                          control2: CGPoint(x:264.6484354346833, y: 32.74107137166386))
+            temp.addCurve(to: CGPoint(x: 259.9693035427533, y: 32.74107137166386),
+                          control1: CGPoint(x: 268.44162129797564, y: 28.94788550837148),
+                          control2: CGPoint(x: 264.6484354346833, y: 32.74107137166386))
             temp.addLine(to: CGPoint(x: 259.9693035427533, y: 24.268753616441533))
             temp.closeSubpath()
             return temp
@@ -469,10 +469,10 @@ class PathTests: XCTestCase {
                           control2: CGPoint(x: 598.025956346426, y: 275.00488126164095))
             temp.addCurve(to: CGPoint(x: 602.1001649013623, y: 284.89151472375136),
                           control1: CGPoint(x: 606.9962089595965, y: 281.49675337615315),
-                          control2: CGPoint(x:605.051911059737, y: 284.3381815718906))
+                          control2: CGPoint(x: 605.051911059737, y: 284.3381815718906))
             temp.addCurve(to: CGPoint(x: 595.7536573953893, y: 280.5488038173779),
                           control1: CGPoint(x: 599.1484187429876, y: 285.44484787561214),
-                          control2: CGPoint(x:596.30699054725, y: 283.5005499757526))
+                          control2: CGPoint(x: 596.30699054725, y: 283.5005499757526))
             temp.addCurve(to: CGPoint(x: 605.6715730157109, y: 281.5666590956511),
                           control1: CGPoint(x: 604.099776075449, y: 283.7112442266403),
                           control2: CGPoint(x: 606.0305835805212, y: 280.9023900946232))
@@ -588,10 +588,18 @@ class PathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 195.80672765188274, y: 106.4029658046467))
         cgPath.addLine(to: CGPoint(x: 195.80672765188274, y: 221.7262912473492))
         cgPath.addLine(to: CGPoint(x: 273.5510327577471, y: 221.72629124734914)) // !!! precision issues comes from fact line is almost, but not perfectly horizontal
-        cgPath.addCurve(to: CGPoint(x: 271.9933072984535, y: 214.38053683325302), control1: CGPoint(x: 273.05768924540223, y: 219.26088569867528), control2: CGPoint(x: 272.5391291486813, y: 216.81119916319818))
-        cgPath.addCurve(to: CGPoint(x: 252.80681257385964, y: 162.18313232371986), control1: CGPoint(x: 267.39734333475377, y: 195.3589483577662), control2: CGPoint(x: 260.947626989152, y: 177.936810624913))
-        cgPath.addCurve(to: CGPoint(x: 215.4444979991486, y: 111.76311400605556), control1: CGPoint(x: 242.1552743057946, y: 142.6678463672315), control2: CGPoint(x: 229.03183407884012, y: 126.09450622380493))
-        cgPath.addCurve(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467), control1: CGPoint(x: 213.72825408056033, y: 109.93389850557801), control2: CGPoint(x: 212.02163105179878, y: 108.14905966376985))
+        cgPath.addCurve(to: CGPoint(x: 271.9933072984535, y: 214.38053683325302),
+                        control1: CGPoint(x: 273.05768924540223, y: 219.26088569867528),
+                        control2: CGPoint(x: 272.5391291486813, y: 216.81119916319818))
+        cgPath.addCurve(to: CGPoint(x: 252.80681257385964, y: 162.18313232371986),
+                        control1: CGPoint(x: 267.39734333475377, y: 195.3589483577662),
+                        control2: CGPoint(x: 260.947626989152, y: 177.936810624913))
+        cgPath.addCurve(to: CGPoint(x: 215.4444979991486, y: 111.76311400605556),
+                        control1: CGPoint(x: 242.1552743057946, y: 142.6678463672315),
+                        control2: CGPoint(x: 229.03183407884012, y: 126.09450622380493))
+        cgPath.addCurve(to: CGPoint(x: 210.32116840649363, y: 106.4029658046467),
+                        control1: CGPoint(x: 213.72825408056033, y: 109.93389850557801),
+                        control2: CGPoint(x: 212.02163105179878, y: 108.14905966376985))
         let path = Path(cgPath: cgPath)
 
         XCTAssertFalse(path.boundingBox.contains(point)) // the point is not even in the bounding box of the path!
@@ -1060,11 +1068,19 @@ class PathTests: XCTestCase {
         let cgPath = CGMutablePath()
         let start = CGPoint(x: 503.3060153966664, y: 766.9140612367046)
         cgPath.move(to: start)
-        cgPath.addCurve(to: CGPoint(x: 517.9306651149989, y: 762.0523534483476), control1: CGPoint(x: 506.0019772976378, y: 761.5330522602719), control2: CGPoint(x: 512.5496560294043, y: 759.3563914926846))
-        cgPath.addCurve(to: CGPoint(x: 522.7923732205169, y: 776.6770033255823), control1: CGPoint(x: 523.3116744085926, y: 764.7483155082213), control2: CGPoint(x: 525.4883351761798, y: 771.2959942399877))
-        cgPath.addCurve(to: CGPoint(x: 520.758836935199, y: 764.316674774872), control1: CGPoint(x: 522.6619398993569, y: 776.9550303733141), control2: CGPoint(x: 522.7228057838222, y: 776.8532852161298))
-        cgPath.addCurve(to: CGPoint(x: 520.6170414159213, y: 779.7723863761416), control1: CGPoint(x: 524.9876580913353, y: 768.6238074338997), control2: CGPoint(x: 524.9241740749491, y: 775.5435652200052))
-        cgPath.addCurve(to: CGPoint(x: 505.16132944417086, y: 779.6305912206088), control1: CGPoint(x: 516.3099083864128, y: 784.001207896023), control2: CGPoint(x: 509.3901506003072, y: 783.9377238796366))
+        cgPath.addCurve(to: CGPoint(x: 517.9306651149989, y: 762.0523534483476),
+                        control1: CGPoint(x: 506.0019772976378, y: 761.5330522602719),
+                        control2: CGPoint(x: 512.5496560294043, y: 759.3563914926846))
+        cgPath.addCurve(to: CGPoint(x: 522.7923732205169, y: 776.6770033255823),
+                        control1: CGPoint(x: 523.3116744085926, y: 764.7483155082213),
+                        control2: CGPoint(x: 525.4883351761798, y: 771.2959942399877))
+        cgPath.addCurve(to: CGPoint(x: 520.758836935199, y: 764.316674774872),
+                        control1: CGPoint(x: 522.6619398993569, y: 776.9550303733141), control2: CGPoint(x: 522.7228057838222, y: 776.8532852161298))
+        cgPath.addCurve(to: CGPoint(x: 520.6170414159213, y: 779.7723863761416),
+                        control1: CGPoint(x: 524.9876580913353, y: 768.6238074338997), control2: CGPoint(x: 524.9241740749491, y: 775.5435652200052))
+        cgPath.addCurve(to: CGPoint(x: 505.16132944417086, y: 779.6305912206088),
+                        control1: CGPoint(x: 516.3099083864128, y: 784.001207896023),
+                        control2: CGPoint(x: 509.3901506003072, y: 783.9377238796366))
         cgPath.addCurve(to: start, control1: CGPoint(x: 503.19076843492786, y: 767.0872665416827), control2: CGPoint(x: 503.3761460381431, y: 766.7563954079359))
         let path = Path(cgPath: cgPath)
         let result = path.crossingsRemoved(accuracy: 1.0e-5)
@@ -1146,7 +1162,9 @@ class PathTests: XCTestCase {
 
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 431.2394694928875, y: 109.81690300533613))
-        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 110.3870201809152), control1: CGPoint(x: 431.2394694928875, y: 110.13177002702506), control2: CGPoint(x: 430.9842193389974, y: 110.3870201809152))
+        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 110.3870201809152),
+                        control1: CGPoint(x: 431.2394694928875, y: 110.13177002702506),
+                        control2: CGPoint(x: 430.9842193389974, y: 110.3870201809152))
         cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 110.3870201809152))
         cgPath.addLine(to: CGPoint(x: 383.46134494359774, y: 109.81690300533613))
         cgPath.addLine(to: CGPoint(x: 383.46134494359774, y: 125.44498541142156))
@@ -1159,13 +1177,21 @@ class PathTests: XCTestCase {
 
         cgPath.move(to: CGPoint(x: 430.09923514172937, y: 109.81690300533613))
         cgPath.addLine(to: CGPoint(x: 430.09923514172937, y: 99.92396144754883))
-        cgPath.addCurve(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883), control1: CGPoint(x: 430.09923514172937, y: 99.16380521344341), control2: CGPoint(x: 431.2394694928875, y: 99.16380521344341))
+        cgPath.addCurve(to: CGPoint(x: 431.2394694928875, y: 99.92396144754883),
+                        control1: CGPoint(x: 430.09923514172937, y: 99.16380521344341),
+                        control2: CGPoint(x: 431.2394694928875, y: 99.16380521344341))
         cgPath.addLine(to: CGPoint(x: 431.2394694928875, y: 125.44498541142156))
-        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 126.01510258700063), control1: CGPoint(x: 431.2394694928875, y: 125.75985243311048), control2: CGPoint(x: 430.9842193389974, y: 126.01510258700063))
+        cgPath.addCurve(to: CGPoint(x: 430.66935231730844, y: 126.01510258700063),
+                        control1: CGPoint(x: 431.2394694928875, y: 125.75985243311048),
+                        control2: CGPoint(x: 430.9842193389974, y: 126.01510258700063))
         cgPath.addLine(to: CGPoint(x: 382.89122776801867, y: 126.01510258700063))
-        cgPath.addCurve(to: CGPoint(x: 382.3211105924396, y: 125.44498541142156), control1: CGPoint(x: 382.5763607463297, y: 126.01510258700063), control2: CGPoint(x: 382.3211105924396, y: 125.75985243311048))
+        cgPath.addCurve(to: CGPoint(x: 382.3211105924396, y: 125.44498541142156),
+                        control1: CGPoint(x: 382.5763607463297, y: 126.01510258700063),
+                        control2: CGPoint(x: 382.3211105924396, y: 125.75985243311048))
         cgPath.addLine(to: CGPoint(x: 382.3211105924396, y: 109.81690300533613))
-        cgPath.addCurve(to: CGPoint(x: 382.89122776801867, y: 109.24678582975706), control1: CGPoint(x: 382.3211105924396, y: 109.5020359836472), control2: CGPoint(x: 382.5763607463297, y: 109.24678582975706))
+        cgPath.addCurve(to: CGPoint(x: 382.89122776801867, y: 109.24678582975706),
+                        control1: CGPoint(x: 382.3211105924396, y: 109.5020359836472),
+                        control2: CGPoint(x: 382.5763607463297, y: 109.24678582975706))
         cgPath.addLine(to: CGPoint(x: 430.66935231730844, y: 109.24678582975706))
         cgPath.closeSubpath()
 
@@ -1198,7 +1224,7 @@ class PathTests: XCTestCase {
             }
         }
     }
-    
+
     func testDisjointComponentsNesting() {
         XCTAssertEqual(Path().disjointComponents(), [])
         // test that a simple square just gives the same square back

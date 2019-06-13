@@ -97,7 +97,7 @@ public struct LineSegment: BezierCurve, Equatable {
     }
 
     public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
-        return (xyz: [[],[],[]], [])
+        return (xyz: [[], [], []], [])
     }
 
     public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {

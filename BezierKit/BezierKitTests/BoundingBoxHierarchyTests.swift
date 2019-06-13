@@ -106,7 +106,7 @@ class BoundingBoxHierarchyTests: XCTestCase {
         XCTAssertEqual(roundUpPowerOfTwo(65), 128)
         XCTAssertEqual(roundUpPowerOfTwo(128), 128)
     }
-    
+
     /// test that when we visit a bounding volume hierarchy the leaf node elementIndex and internal node start and end element indexes are correct
     func testVisitElementIndexes() {
         let sampleBox = BoundingBox(min: CGPoint.zero, max: CGPoint.zero)

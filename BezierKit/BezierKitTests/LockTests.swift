@@ -19,8 +19,8 @@ class LockTests: XCTestCase {
         let expectation = XCTestExpectation()
         expectation.expectedFulfillmentCount = threadCount
 
-        var cgPaths: [Int:CGPath] = [:]
-        var boundingBoxes: [Int:BoundingBox] = [:]
+        var cgPaths: [Int: CGPath] = [:]
+        var boundingBoxes: [Int: BoundingBox] = [:]
 
         for i in 0..<threadCount {
             let index = i

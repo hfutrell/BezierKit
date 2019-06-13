@@ -90,7 +90,7 @@ internal extension PathComponent {
             callback(curve.split(from: last, to: 1.0))
         }
     }
-    
+
     func windingCount(at point: CGPoint) -> Int {
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0

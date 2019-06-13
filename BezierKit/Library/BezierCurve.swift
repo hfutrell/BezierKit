@@ -346,7 +346,7 @@ extension BezierCurve {
                         distanceOppositeNormalEnd d4: CGFloat) -> PathComponent {
         return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
     }
-    
+
     private func ensureContinuous(_ curves: inout [BezierCurve]) {
         for i in 0..<curves.count {
             if i > 0 {
