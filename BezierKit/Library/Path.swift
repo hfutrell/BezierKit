@@ -25,7 +25,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 @objc(BezierKitPath) open class Path: NSObject, NSCoding {
 
     /// lock to make external accessing of lazy vars threadsafe
-    private var lock = UnfairLock()
+    private let lock = UnfairLock()
 
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint?
