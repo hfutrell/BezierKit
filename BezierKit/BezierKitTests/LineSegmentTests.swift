@@ -102,12 +102,10 @@ class LineSegmentTests: XCTestCase {
 
     func testExtrema() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
-        let (xyz, values) = l.extrema()
-        XCTAssertEqual(xyz.count, 3)
-        XCTAssertTrue(xyz[0].isEmpty)
-        XCTAssertTrue(xyz[1].isEmpty)
-        XCTAssertTrue(xyz[2].isEmpty)
-        XCTAssertTrue(values.isEmpty)
+        let (x, y, all) = l.extrema()
+        XCTAssertTrue(x.isEmpty)
+        XCTAssertTrue(y.isEmpty)
+        XCTAssertTrue(all.isEmpty)
     }
 
     func testHull() {
@@ -255,7 +253,7 @@ class LineSegmentTests: XCTestCase {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         // q is a quadratic where y(x) = 2 - 2(x-1)^2
         let epsilon: CGFloat = 0.00001
-        let q: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
+        let q: QuadraticCurve = QuadraticCurve(start: CGPoint(x: 0.0, y: 0.0),
                                                             end: CGPoint(x: 2.0, y: 0.0),
                                                             mid: CGPoint(x: 1.0, y: 2.0),
                                                                 t: 0.5)
@@ -286,7 +284,7 @@ class LineSegmentTests: XCTestCase {
     func testIntersectionsQuadraticSpecialCase() {
         // this is case that failed in the real-world
         let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1))
+        let q = QuadraticCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1))
         let i = l.intersections(with: q)
         XCTAssertEqual(i.count, 1)
         XCTAssertEqual(i.first?.t1, 0.5)
@@ -296,7 +294,7 @@ class LineSegmentTests: XCTestCase {
     func testIntersectionsCubic() {
         // we mostly just care that we call into the proper implementation and that the results are ordered correctly
         let epsilon: CGFloat = 0.00001
-        let c: CubicBezierCurve = CubicBezierCurve(p0: CGPoint(x: -1, y: 0),
+        let c: CubicCurve = CubicCurve(p0: CGPoint(x: -1, y: 0),
                                                    p1: CGPoint(x: -1, y: 1),
                                                    p2: CGPoint(x: 1, y: -1),
                                                    p3: CGPoint(x: 1, y: 0))
@@ -327,7 +325,7 @@ class LineSegmentTests: XCTestCase {
         guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
         // this was an issue because if you round t-values that are near zero you will get
         // cubicCurve.compute(intersections[0].t1).x = 309.5496606404184, which corresponds to t = -3.5242468640577755e-06 on the line (negative! outside the line!)
-        let cubicCurve = CubicBezierCurve(p0: CGPoint(x: 301.42017404234923, y: 182.42157189005232),
+        let cubicCurve = CubicCurve(p0: CGPoint(x: 301.42017404234923, y: 182.42157189005232),
                                           p1: CGPoint(x: 305.9310607601042, y: 182.30247821176928),
                                           p2: CGPoint(x: 309.72232986751203, y: 185.6785144367646),
                                           p3: CGPoint(x: 310.198127403852, y: 190.08736919846973))
@@ -340,7 +338,7 @@ class LineSegmentTests: XCTestCase {
         let epsilon: CGFloat = 0.00001
         let fiveThirds: CGFloat = 5.0 / 3.0
         let sevenThirds: CGFloat = 7.0 / 3.0
-        let c: CubicBezierCurve = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0),
+        let c: CubicCurve = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0),
                                                    p1: CGPoint(x: fiveThirds, y: fiveThirds),
                                                    p2: CGPoint(x: sevenThirds, y: fiveThirds),
                                                    p3: CGPoint(x: 3.0, y: 1.0))
@@ -353,7 +351,7 @@ class LineSegmentTests: XCTestCase {
     func testIntersectionsDegenerateCubic2() {
         // a special case where the cubic is degenerate (it can actually be described as a line)
         let epsilon: CGFloat = 0.00001
-        let c: CubicBezierCurve = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0),
+        let c: CubicCurve = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0),
                                                    p1: CGPoint(x: 2.0, y: 2.0),
                                                    p2: CGPoint(x: 3.0, y: 3.0),
                                                    p3: CGPoint(x: 4.0, y: 4.0))
@@ -366,7 +364,7 @@ class LineSegmentTests: XCTestCase {
     func testIntersectionsCubicSpecialCase() {
         // this is case that failed in the real-world
         let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
-        let q = CubicBezierCurve(quadratic: QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
+        let q = CubicCurve(quadratic: QuadraticCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
         let i = l.intersections(with: q)
         XCTAssertEqual(i.count, 1)
         XCTAssertEqual(i.first?.t1, 0.5)
@@ -375,7 +373,7 @@ class LineSegmentTests: XCTestCase {
 
     func testIntersectionsCubicRootsEdgeCase1() {
         // this data caused issues in practice because because 'd' in the roots calculation is very near, but not exactly, zero.
-        let c = CubicBezierCurve(p0: CGPoint(x: 201.48419096574196, y: 570.7720830272123),
+        let c = CubicCurve(p0: CGPoint(x: 201.48419096574196, y: 570.7720830272123),
                                  p1: CGPoint(x: 202.27135851996428, y: 570.7720830272123),
                                  p2: CGPoint(x: 202.90948390468964, y: 571.4102084119377),
                                  p3: CGPoint(x: 202.90948390468964, y: 572.1973759661599))
@@ -389,7 +387,7 @@ class LineSegmentTests: XCTestCase {
         // this data caused issues in practice because because the discriminant in the roots calculation is very near zero
         let line = LineSegment(p0: CGPoint(x: 503.31162501468725, y: 766.9016671863201),
                                p1: CGPoint(x: 504.2124710211739, y: 767.3358059574488))
-        let curve = CubicBezierCurve(p0: CGPoint(x: 505.16132944417086, y: 779.6305912206088),
+        let curve = CubicCurve(p0: CGPoint(x: 505.16132944417086, y: 779.6305912206088),
                                      p1: CGPoint(x: 503.19076843492786, y: 767.0872665416827),
                                      p2: CGPoint(x: 503.3761460381431, y: 766.7563954079359),
                                      p3: CGPoint(x: 503.3060153966664, y: 766.9140612367046))
@@ -403,7 +401,7 @@ class LineSegmentTests: XCTestCase {
 
     func testIntersectionsCubicDegenerate() {
         // this data caused issues in practice because because Utils.align would give an angle of zero for degenerate lines
-        let c = CubicBezierCurve(p0: CGPoint(x: -1, y: 1),
+        let c = CubicCurve(p0: CGPoint(x: -1, y: 1),
                                  p1: CGPoint(x: 0, y: -1),
                                  p2: CGPoint(x: 1, y: -1),
                                  p3: CGPoint(x: 2, y: 1))

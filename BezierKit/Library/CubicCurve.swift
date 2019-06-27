@@ -1,5 +1,5 @@
 //
-//  CubicBezierCurve.swift
+//  CubicCurve.swift
 //  BezierKit
 //
 //  Created by Holmes Futrell on 10/28/16.
@@ -11,7 +11,7 @@ import CoreGraphics
 /**
  Cubic Bézier Curve
  */
-public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
+public struct CubicCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
 
     public var p0, p1, p2, p3: CGPoint
 
@@ -58,23 +58,25 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         self.p3 = p3
     }
 
-    public init(lineSegment l: LineSegment) {
+    public init(lineSegment: LineSegment) {
         let oneThird: CGFloat = 1.0 / 3.0
         let twoThirds: CGFloat = 2.0 / 3.0
-        self.init(p0: l.p0, p1: twoThirds * l.p0 + oneThird * l.p1, p2: oneThird * l.p0 + twoThirds * l.p1, p3: l.p1)
+        self.init(p0: lineSegment.p0,
+                  p1: twoThirds * lineSegment.p0 + oneThird * lineSegment.p1,
+                  p2: oneThird * lineSegment.p0 + twoThirds * lineSegment.p1,
+                  p3: lineSegment.p1)
     }
 
-    public init(quadratic q: QuadraticBezierCurve) {
+    public init(quadratic: QuadraticCurve) {
         let oneThird: CGFloat = 1.0 / 3.0
         let twoThirds: CGFloat = 2.0 / 3.0
-        let p0 = q.p0
-        let p1 = twoThirds * q.p1 + oneThird * q.p0
-        let p2 = oneThird * q.p2 + twoThirds * q.p1
-        let p3 = q.p2
-        self.init(p0: p0, p1: p1, p2: p2, p3: p3)
+        self.init(p0: quadratic.p0,
+                  p1: twoThirds * quadratic.p1 + oneThird * quadratic.p0,
+                  p2: oneThird * quadratic.p2 + twoThirds * quadratic.p1,
+                  p3: quadratic.p2)
     }
 /**
-     Returns a CubicBezierCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
+     Returns a CubicCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
      
 - parameter start: the starting point of the curve
 - parameter end: the ending point of the curve
@@ -158,7 +160,7 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         return temp1 + temp2 + temp3
     }
 
-    public func split(from t1: CGFloat, to t2: CGFloat) -> CubicBezierCurve {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let h0 = self.p0
         let h1 = self.p1
@@ -174,10 +176,10 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let i4 = Utils.lerp(tr, h9, h8)
         let i5 = Utils.lerp(tr, h8, h6)
         let i7 = Utils.lerp(tr, i4, i5)
-        return CubicBezierCurve(p0: self.compute(t1), p1: i4, p2: i7, p3: self.compute(t2))
+        return CubicCurve(p0: self.compute(t1), p1: i4, p2: i7, p3: self.compute(t2))
     }
 
-    public func split(at t: CGFloat) -> (left: CubicBezierCurve, right: CubicBezierCurve) {
+    public func split(at t: CGFloat) -> (left: CubicCurve, right: CubicCurve) {
 
         let h0 = self.p0
         let h1 = self.p1
@@ -190,8 +192,8 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
         let h8 = Utils.lerp(t, h5, h6)
         let h9 = Utils.lerp(t, h7, h8)
 
-        let leftCurve  = CubicBezierCurve(p0: h0, p1: h4, p2: h7, p3: h9)
-        let rightCurve = CubicBezierCurve(p0: h9, p1: h8, p2: h6, p3: h3)
+        let leftCurve  = CubicCurve(p0: h0, p1: h4, p2: h7, p3: h9)
+        let rightCurve = CubicCurve(p0: h9, p1: h8, p2: h6, p3: h3)
 
         return (left: leftCurve, right: rightCurve)
 
@@ -254,19 +256,19 @@ public struct CubicBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equata
     }
 }
 
-extension CubicBezierCurve: Transformable {
-    public func copy(using t: CGAffineTransform) -> CubicBezierCurve {
-        return CubicBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t), p3: self.p3.applying(t))
+extension CubicCurve: Transformable {
+    public func copy(using t: CGAffineTransform) -> CubicCurve {
+        return CubicCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t), p3: self.p3.applying(t))
     }
 }
 
-extension CubicBezierCurve: Reversible {
-    public func reversed() -> CubicBezierCurve {
-        return CubicBezierCurve(p0: self.p3, p1: self.p2, p2: self.p1, p3: self.p0)
+extension CubicCurve: Reversible {
+    public func reversed() -> CubicCurve {
+        return CubicCurve(p0: self.p3, p1: self.p2, p2: self.p1, p3: self.p0)
     }
 }
 
-extension CubicBezierCurve: Flatness {
+extension CubicCurve: Flatness {
     public var flatnessSquared: CGFloat {
         let a: CGPoint = 3.0 * self.p1 - 2.0 * self.p0 - self.p3
         let b: CGPoint = 3.0 * self.p2 - self.p0 - 2.0 * self.p3

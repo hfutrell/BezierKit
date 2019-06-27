@@ -91,7 +91,7 @@ class PathTests: XCTestCase {
         let path3 = Path(cgPath: cgPath3)
         XCTAssertEqual(path3.components.count, 1)
         XCTAssertEqual(path3.components[0].elementCount, 4)
-        XCTAssertEqual(path3.components[0].element(at: 1) as! QuadraticBezierCurve, QuadraticBezierCurve(p0: p2, p1: p3, p2: p4))
+        XCTAssertEqual(path3.components[0].element(at: 1) as! QuadraticCurve, QuadraticCurve(p0: p2, p1: p3, p2: p4))
     }
 
     func testInitCGPathMultiplecomponents() {
@@ -1217,7 +1217,7 @@ class PathTests: XCTestCase {
         let expectedCenter = CGPoint(x: 1.0, y: 1.0)
         for i in 0..<offsetCircle.components[0].elementCount {
             let c = offsetCircle.components[0].element(at: i)
-            for p in c.generateLookupTable(withSteps: 10) {
+            for p in c.lookupTable(steps: 10) {
                 let radius = distance(p, expectedCenter)
                 let percentError = 100.0 * abs(radius - expectedRadius) / expectedRadius
                 XCTAssert(percentError < 0.1, "expected offset circle to have radius \(expectedRadius), but there's a point distance \(distance(p, expectedCenter)) from the expected center.")
@@ -1318,9 +1318,9 @@ class PathTests: XCTestCase {
 
     func testNSCoder() {
         let l1 = LineSegment(p0: p1, p1: p2)
-        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
         let l2 = LineSegment(p0: p4, p1: p5)
-        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let c1 = CubicCurve(p0: p5, p1: p6, p2: p7, p3: p8)
         let path = Path(components: [PathComponent(curves: [l1, q1, l2, c1])])
 
         let data = NSKeyedArchiver.archivedData(withRootObject: path)

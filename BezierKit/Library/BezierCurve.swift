@@ -95,38 +95,38 @@ extension BezierCurve {
     }
 
     // computes the extrema for each dimension
-    internal func internalExtrema(includeInflection: Bool) -> [[CGFloat]] {
-        var xyz: [[CGFloat]] = []
-        xyz.reserveCapacity(CGPoint.dimensions)
+    internal func internalExtrema(includeInflection: Bool) -> (x: [CGFloat], y: [CGFloat]) {
+        var xy: [[CGFloat]] = []
+        xy.reserveCapacity(CGPoint.dimensions)
         for d in 0..<CGPoint.dimensions {
             let mfn = {(v: CGPoint) in v[d]}
             var p: [CGFloat] = self.dpoints[0].map(mfn)
-            xyz.append(Utils.droots(p))
+            xy.append(Utils.droots(p))
             if includeInflection && self.order >= 3 {
                 p = self.dpoints[1].map(mfn)
-                xyz[d] += Utils.droots(p)
+                xy[d] += Utils.droots(p)
             }
-            xyz[d] = xyz[d].filter({$0 >= 0 && $0 <= 1}).sorted()
+            xy[d] = xy[d].filter({$0 >= 0 && $0 <= 1}).sorted()
         }
-        return xyz
+        return (x: xy[0], y: xy[1])
     }
 
-    public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
-        let xyz = self.internalExtrema(includeInflection: true)
-        let roots = xyz.joined().sorted() // the roots for each dimension, flattened and sorted
-        var values: [CGFloat] = []
+    public func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat]) {
+        let (x, y) = self.internalExtrema(includeInflection: true)
+        let roots = [x, y].joined().sorted() // the roots for each dimension, flattened and sorted
+        var all: [CGFloat] = []
         if !roots.isEmpty {
-            values.reserveCapacity(roots.count)
+            all.reserveCapacity(roots.count)
             var lastInserted: CGFloat = -CGFloat.infinity
             for i in 0..<roots.count { // loop ensures (pre-sorted) roots are unique when added to values
                 let v = roots[i]
                 if v > lastInserted {
-                    values.append(v)
+                    all.append(v)
                     lastInserted = v
                 }
             }
         }
-        return (xyz: xyz, values: values)
+        return (x: x, y: y, all: all)
     }
 
     // MARK: -
@@ -134,15 +134,12 @@ extension BezierCurve {
         return Utils.hull(self.points, t)
     }
 
-    public func generateLookupTable(withSteps steps: Int = 100) -> [CGPoint] {
+    public func lookupTable(steps: Int = 100) -> [CGPoint] {
         assert(steps >= 0)
-        var table: [CGPoint] = []
-        table.reserveCapacity(steps+1)
-        for i in 0 ... steps {
-            let t = CGFloat(i) / CGFloat(steps)
-            table.append(self.compute(t))
+        return (0 ... steps).map {
+            let t = CGFloat($0) / CGFloat(steps)
+            return self.compute(t)
         }
-        return table
     }
     // MARK: -
 
@@ -158,7 +155,7 @@ extension BezierCurve {
 
         let step: CGFloat = BezierKit.reduceStepSize
         var extrema: [CGFloat] = []
-        self.extrema().values.forEach {
+        self.extrema().all.forEach {
             if $0 < step {
                 return // filter out extreme points very close to 0.0
             } else if (1.0 - $0) < step {
@@ -459,8 +456,8 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func split(at t: CGFloat) -> (left: Self, right: Self)
     func compute(_ t: CGFloat) -> CGPoint
     func length() -> CGFloat
-    func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] )
-    func generateLookupTable(withSteps steps: Int) -> [CGPoint]
+    func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat])
+    func lookupTable(steps: Int) -> [CGPoint]
     func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat)
     // intersection routines
     func selfIntersects(accuracy: CGFloat) -> Bool

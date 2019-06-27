@@ -389,9 +389,9 @@ internal enum VertexTransition {
         switch curve {
         case is LineSegment:
             self = .line
-        case let quadCurve as QuadraticBezierCurve:
+        case let quadCurve as QuadraticCurve:
             self = .quadCurve(control: quadCurve.p1)
-        case let cubicCurve as CubicBezierCurve:
+        case let cubicCurve as CubicCurve:
             self = .curve(control1: cubicCurve.p1, control2: cubicCurve.p2)
         default:
             fatalError("Vertex does not support curve type (\(type(of: curve))")
@@ -447,9 +447,9 @@ internal class Vertex: Equatable {
         case .line:
             return LineSegment(p0: self.location, p1: end)
         case .quadCurve(let c):
-            return QuadraticBezierCurve(p0: self.location, p1: c, p2: end)
+            return QuadraticCurve(p0: self.location, p1: c, p2: end)
         case .curve(let c1, let c2):
-            return CubicBezierCurve(p0: self.location, p1: c1, p2: c2, p3: end)
+            return CubicCurve(p0: self.location, p1: c1, p2: c2, p3: end)
         }
     }
 

@@ -27,9 +27,9 @@ struct DemoState {
 
 class Demos {
     private static let cubicControlPoints = [CGPoint(x: 100, y: 25),
-                                     CGPoint(x: 10, y: 90),
-                                     CGPoint(x: 110, y: 100),
-                                     CGPoint(x: 150, y: 195)]
+                                     CGPoint(x: 200, y: 200),
+                                     CGPoint(x: 100, y: 200),
+                                     CGPoint(x: 200, y: 25)]
     private static let quadraticControlPoints = [CGPoint(x: 150, y: 40),
                                          CGPoint(x: 80, y: 30),
                                          CGPoint(x: 105, y: 150)]
@@ -50,8 +50,8 @@ class Demos {
                                 if demoState.quadratic {
                                     let B = CGPoint(x: 100, y: 50)
                                     let tvalues: [CGFloat] = [0.2, 0.3, 0.4, 0.5]
-                                    let curves: [QuadraticBezierCurve] = tvalues.map({(t: CGFloat) -> QuadraticBezierCurve in
-                                        return QuadraticBezierCurve(start: CGPoint(x: 150, y: 40),
+                                    let curves: [QuadraticCurve] = tvalues.map({(t: CGFloat) -> QuadraticCurve in
+                                        return QuadraticCurve(start: CGPoint(x: 150, y: 40),
                                                                     end: CGPoint(x: 35, y: 160),
                                                                     mid: B,
                                                                     t: t)
@@ -77,7 +77,7 @@ class Demos {
                                     let B = CGPoint(x: 50, y: 80)
                                     let p3 = CGPoint(x: 135, y: 100)
                                     let tvalues: [CGFloat] = [0.2, 0.3, 0.4, 0.5]
-                                    let curves = tvalues.map { CubicBezierCurve(start: p1, end: p3, mid: B, t: $0) }
+                                    let curves = tvalues.map { CubicCurve(start: p1, end: p3, mid: B, t: $0) }
                                     let offset = CGPoint(x: 0.0, y: 0.0)
                                     for curve in curves {
                                         Draw.setRandomColor(context)
@@ -93,10 +93,16 @@ class Demos {
                             quadraticControlPoints: quadraticControlPoints,
                             cubicControlPoints: cubicControlPoints,
                             drawFunction: {(context: CGContext, demoState: DemoState) in
+
+
                                 let curve = demoState.curve!
+                                let points = stride(from: 0, through: 1, by: 1.0 / 7.0).map { curve.compute($0) }
+
+                                
+
                                 Draw.drawSkeleton(context, curve: curve)
-                                let LUT = curve.generateLookupTable(withSteps: 16)
-                                for p in LUT {
+                                let LUT = curve.lookupTable(steps: 16)
+                                for p in points {
                                     Draw.drawCircle(context, center: p, radius: 2)
                                 }
     })
@@ -158,7 +164,7 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
                                 let d: CGFloat = 20.0
-                                for t in stride(from: 0, through: 1, by: 0.1) {
+                                for t in stride(from: 0, through: 1, by: 0.025) {
                                     let pt = curve.compute(CGFloat(t))
                                     let dv = curve.normal(CGFloat(t))
                                     Draw.drawLine(context, from: pt, to: pt + d * dv )
@@ -186,7 +192,7 @@ class Demos {
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
-                                for t in curve.extrema().values {
+                                for t in curve.extrema().all {
                                     Draw.drawCircle(context, center: curve.compute(t), radius: 3)
                                 }
     })
@@ -246,10 +252,10 @@ class Demos {
                                 Draw.drawSkeleton(context, curve: demoState.curve!)
                                 var reduced: [BezierCurve] = []
                                 if demoState.quadratic {
-                                    let curve: QuadraticBezierCurve = demoState.curve! as! QuadraticBezierCurve
+                                    let curve: QuadraticCurve = demoState.curve! as! QuadraticCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 } else {
-                                    let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
+                                    let curve: CubicCurve = demoState.curve! as! CubicCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 }
                                 if !reduced.isEmpty {
@@ -286,10 +292,10 @@ class Demos {
                                 Draw.setColor(context, color: Draw.black)
                                 var reduced: [BezierCurve] = []
                                 if demoState.quadratic {
-                                    let curve: QuadraticBezierCurve = demoState.curve! as! QuadraticBezierCurve
+                                    let curve: QuadraticCurve = demoState.curve! as! QuadraticCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 } else {
-                                    let curve: CubicBezierCurve = demoState.curve! as! CubicBezierCurve
+                                    let curve: CubicCurve = demoState.curve! as! CubicCurve
                                     reduced = curve.reduce().map({s in return s.curve})
                                 }
                                 if !reduced.isEmpty {
@@ -367,6 +373,8 @@ class Demos {
                                                   offset: CGPoint(x: 15, y: 160))
                                 }
     })
+
+    // construct a line segment from start to end
     static let demo21  = Demo(title: ".intersections(with line: LineSegment)",
                               quadraticControlPoints: [CGPoint(x: 58, y: 173), CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
                               cubicControlPoints: [CGPoint(x: 53, y: 163), CGPoint(x: 27, y: 19), CGPoint(x: 182, y: 176), CGPoint(x: 155, y: 36)],
@@ -387,7 +395,7 @@ class Demos {
                              cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
-                                let curve2: BezierCurve = demoState.quadratic ? QuadraticBezierCurve(points: [CGPoint(x: 68.0, y: 150.0), CGPoint(x: 74.0, y: 6.0), CGPoint(x: 143.0, y: 150.0)]) : CubicBezierCurve(points: [CGPoint(x: 68.0, y: 145.0), CGPoint(x: 74.0, y: 6.0), CGPoint(x: 143.0, y: 197.0), CGPoint(x: 138.0, y: 55.0)])
+                                let curve2: BezierCurve = demoState.quadratic ? QuadraticCurve(points: [CGPoint(x: 68.0, y: 150.0), CGPoint(x: 74.0, y: 6.0), CGPoint(x: 143.0, y: 150.0)]) : CubicCurve(points: [CGPoint(x: 68.0, y: 145.0), CGPoint(x: 74.0, y: 6.0), CGPoint(x: 143.0, y: 197.0), CGPoint(x: 138.0, y: 55.0)])
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)

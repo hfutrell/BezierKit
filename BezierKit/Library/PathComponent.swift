@@ -78,19 +78,19 @@ import Foundation
         return self.points[self.offsets[index] + self.orders[index]]
     }
 
-    internal func cubic(at index: Int) -> CubicBezierCurve {
+    internal func cubic(at index: Int) -> CubicCurve {
         assert(self.order(at: index) == 3)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
-            CubicBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
+            CubicCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
         }
     }
 
-    internal func quadratic(at index: Int) -> QuadraticBezierCurve {
+    internal func quadratic(at index: Int) -> QuadraticCurve {
         assert(self.order(at: index) == 2)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
-            return QuadraticBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2])
+            return QuadraticCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2])
         }
     }
 
@@ -328,7 +328,7 @@ import Foundation
             // TODO: unfortunately we badly need more tests for all these obscure codepaths
             /*if i1 == i2 {
                 // we are intersecting a path element against itself
-                if let c = c1 as? CubicBezierCurve {
+                if let c = c1 as? CubicCurve {
                     elementIntersections = c.selfIntersections(accuracy: accuracy)
                 }
             }

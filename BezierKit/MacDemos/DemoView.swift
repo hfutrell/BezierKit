@@ -38,7 +38,7 @@ class DemoView: NSView, DraggableDelegate {
         return CGAffineTransform(translationX: tx, y: ty)
     }
 
-    var curve: CubicBezierCurve?
+    var curve: CubicCurve?
 
     var mouseTrackingArea: NSTrackingArea?
 
@@ -105,18 +105,18 @@ class DemoView: NSView, DraggableDelegate {
         self.popup.selectItem(at: index)
     }
 
-    func draggableQuadraticCurve() -> QuadraticBezierCurve {
+    func draggableQuadraticCurve() -> QuadraticCurve {
         assert(self.useQuadratic)
         assert(self.draggables.count >= 3, "uh oh, did you set the control points in demo?")
-        return QuadraticBezierCurve( p0: self.draggables[0].location,
+        return QuadraticCurve( p0: self.draggables[0].location,
                                      p1: self.draggables[1].location,
                                      p2: self.draggables[2].location)
     }
 
-    func draggableCubicCurve() -> CubicBezierCurve {
+    func draggableCubicCurve() -> CubicCurve {
         assert(self.useQuadratic == false)
         assert(self.draggables.count >= 4, "uh oh, did you set the control points in demo?")
-        return CubicBezierCurve( p0: self.draggables[0].location,
+        return CubicCurve( p0: self.draggables[0].location,
                                  p1: self.draggables[1].location,
                                  p2: self.draggables[2].location,
                                  p3: self.draggables[3].location )

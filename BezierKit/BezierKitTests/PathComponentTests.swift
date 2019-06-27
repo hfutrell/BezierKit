@@ -26,7 +26,7 @@ class PathComponentTests: XCTestCase {
 
     func testOffset() {
         // construct a PathComponent from a split cubic
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 2.0, y: 1.0), p2: CGPoint(x: 4.0, y: 0.0))
+        let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 2.0, y: 1.0), p2: CGPoint(x: 4.0, y: 0.0))
         let (ql, qr) = q.split(at: 0.5)
         let p = PathComponent(curves: [ql, qr])
         // test that offset gives us the same result as offsetting the split segments
@@ -49,9 +49,9 @@ class PathComponentTests: XCTestCase {
     func testEquatable() {
 
         let l1 = LineSegment(p0: p1, p1: p2)
-        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
         let l2 = LineSegment(p0: p4, p1: p5)
-        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let c1 = CubicCurve(p0: p5, p1: p6, p2: p7, p3: p8)
 
         let pathComponent1 = PathComponent(curves: [l1, q1, l2, c1])
         let pathComponent2 = PathComponent(curves: [l1, q1, l2])
@@ -69,9 +69,9 @@ class PathComponentTests: XCTestCase {
     func testIsEqual() {
 
         let l1 = LineSegment(p0: p1, p1: p2)
-        let q1 = QuadraticBezierCurve(p0: p2, p1: p3, p2: p4)
+        let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
         let l2 = LineSegment(p0: p4, p1: p5)
-        let c1 = CubicBezierCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let c1 = CubicCurve(p0: p5, p1: p6, p2: p7, p3: p8)
 
         let pathComponent1 = PathComponent(curves: [l1, q1, l2, c1])
         let pathComponent2 = PathComponent(curves: [l1, q1, l2, c1])

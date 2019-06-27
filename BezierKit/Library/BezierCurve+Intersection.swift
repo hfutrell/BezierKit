@@ -97,9 +97,9 @@ extension NonlinearBezierCurve {
     public func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {
         case 3:
-            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve as! CubicBezierCurve), accuracy: accuracy)
+            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve as! CubicCurve), accuracy: accuracy)
         case 2:
-            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve as! QuadraticBezierCurve), accuracy: accuracy)
+            return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve as! QuadraticCurve), accuracy: accuracy)
         case 1:
             return helperIntersectsCurveLine(self, curve as! LineSegment)
         default:
@@ -125,7 +125,7 @@ extension NonlinearBezierCurve {
     }
 }
 
-public extension QuadraticBezierCurve {
+public extension QuadraticCurve {
     func selfIntersections(accuracy: CGFloat) -> [Intersection] {
         return []
     }
@@ -135,9 +135,9 @@ public extension LineSegment {
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {
         case 3:
-            return helperIntersectsCurveLine(curve as! CubicBezierCurve, self, reversed: true)
+            return helperIntersectsCurveLine(curve as! CubicCurve, self, reversed: true)
         case 2:
-            return helperIntersectsCurveLine(curve as! QuadraticBezierCurve, self, reversed: true)
+            return helperIntersectsCurveLine(curve as! QuadraticCurve, self, reversed: true)
         case 1:
             return self.intersections(with: curve as! LineSegment)
         default:

@@ -32,7 +32,7 @@ class BezierCurveTests: XCTestCase {
         XCTAssertFalse(l1 == l3)
 
         // a quadratic made from l1, different order, not equal!
-        let q1: BezierCurve = QuadraticBezierCurve(lineSegment: l1 as! LineSegment)
+        let q1: BezierCurve = QuadraticCurve(lineSegment: l1 as! LineSegment)
         XCTAssertFalse(l1 == q1)
     }
 
@@ -44,59 +44,59 @@ class BezierCurveTests: XCTestCase {
         let expectedLine = LineSegment(p0: CGPoint(x: 0.0, y: 3.0), p1: CGPoint(x: 4.0, y: 7.0))
         XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: ls, curve2: expectedLine, tolerance: epsilon))
         // quadratic
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0),
+        let q = QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0),
                                      p1: CGPoint(x: 2.0, y: 2.0),
                                      p2: CGPoint(x: 3.0, y: 1.0))
         let qs = q.scale(distance: sqrt(2))
-        let expectedQuadratic = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 2.0),
+        let expectedQuadratic = QuadraticCurve(p0: CGPoint(x: 0.0, y: 2.0),
                                                 p1: CGPoint(x: 2.0, y: 4.0),
                                                 p2: CGPoint(x: 4.0, y: 2.0))
         XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: qs, curve2: expectedQuadratic, tolerance: epsilon))
         // cubic
-        let c = CubicBezierCurve(p0: CGPoint(x: -4.0, y: +0.0),
+        let c = CubicCurve(p0: CGPoint(x: -4.0, y: +0.0),
                                  p1: CGPoint(x: -2.0, y: +2.0),
                                  p2: CGPoint(x: +2.0, y: +2.0),
                                  p3: CGPoint(x: +4.0, y: +0.0))
         let cs = c.scale(distance: 2.0 * sqrt(2))
-        let expectedCubic = CubicBezierCurve(p0: CGPoint(x: -6.0, y: +2.0),
+        let expectedCubic = CubicCurve(p0: CGPoint(x: -6.0, y: +2.0),
                                 p1: CGPoint(x: -3.0, y: +5.0),
                                 p2: CGPoint(x: +3.0, y: +5.0),
                                 p3: CGPoint(x: +6.0, y: +2.0))
         XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cs, curve2: expectedCubic, tolerance: epsilon))
 
         // ensure that scaling a cubic initialized from a line yields the same thing as the line
-        let cFromLine = CubicBezierCurve(lineSegment: l)
-        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cFromLine.scale(distance: sqrt(2)), curve2: CubicBezierCurve(lineSegment: expectedLine), tolerance: epsilon))
+        let cFromLine = CubicCurve(lineSegment: l)
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: cFromLine.scale(distance: sqrt(2)), curve2: CubicCurve(lineSegment: expectedLine), tolerance: epsilon))
 
         // ensure scaling a quadratic from a line yields the same thing as the line
-        let qFromLine = QuadraticBezierCurve(lineSegment: l)
+        let qFromLine = QuadraticCurve(lineSegment: l)
         XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: qFromLine.scale(distance: sqrt(2)),
-                                                               curve2: QuadraticBezierCurve(lineSegment: expectedLine),
+                                                               curve2: QuadraticCurve(lineSegment: expectedLine),
                                                                tolerance: epsilon))
     }
 
     func testScaleDistanceEdgeCase() {
         let a = CGPoint(x: 0, y: 0)
         let b = CGPoint(x: 1, y: 0)
-        let cubic = CubicBezierCurve(p0: a, p1: a, p2: b, p3: b)
+        let cubic = CubicCurve(p0: a, p1: a, p2: b, p3: b)
         let result = cubic.scale(distance: 1)
         let offset = CGPoint(x: 0, y: 1)
         let aOffset = a + offset
         let bOffset = b + offset
-        let expectedResult = CubicBezierCurve(p0: aOffset, p1: aOffset, p2: bOffset, p3: bOffset)
+        let expectedResult = CubicCurve(p0: aOffset, p1: aOffset, p2: bOffset, p3: bOffset)
         XCTAssertEqual(result, expectedResult)
     }
 
     func testOffsetDistance() {
         // line segments (or isLinear) have a separate codepath, so be sure to test those
         let epsilon: CGFloat = 1.0e-6
-        let c1 = CubicBezierCurve(lineSegment: LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0)))
+        let c1 = CubicCurve(lineSegment: LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0)))
         let c1Offset = c1.offset(distance: sqrt(2))
-        let expectedOffset1 = CubicBezierCurve(lineSegment: LineSegment(p0: CGPoint(x: -1.0, y: 1.0), p1: CGPoint(x: 0.0, y: 2.0)))
+        let expectedOffset1 = CubicCurve(lineSegment: LineSegment(p0: CGPoint(x: -1.0, y: 1.0), p1: CGPoint(x: 0.0, y: 2.0)))
         XCTAssertEqual(c1Offset.count, 1)
-        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: c1Offset[0] as! CubicBezierCurve, curve2: expectedOffset1, tolerance: epsilon))
+        XCTAssert(BezierKitTestHelpers.curveControlPointsEqual(curve1: c1Offset[0] as! CubicCurve, curve2: expectedOffset1, tolerance: epsilon))
         // next test a non-simple curve
-        let c2 = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 3.0, y: 2.0), p3: CGPoint(x: 4.0, y: 1.0))
+        let c2 = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 3.0, y: 2.0), p3: CGPoint(x: 4.0, y: 1.0))
         let c2Offset = c2.offset(distance: sqrt(2))
         for i in 0..<c2Offset.count {
             let c = c2Offset[i]
@@ -117,7 +117,7 @@ class BezierCurveTests: XCTestCase {
 
     func testOffsetTimeDistance() {
         let epsilon: CGFloat = 1.0e-6
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0),
+        let q = QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0),
                                      p1: CGPoint(x: 2.0, y: 2.0),
                                      p2: CGPoint(x: 3.0, y: 1.0))
         let p0 = q.offset(t: 0.0, distance: sqrt(2))
@@ -142,7 +142,7 @@ class BezierCurveTests: XCTestCase {
         XCTAssertEqual(p3.point, CGPoint(x: 5.0, y: 6.0)) // should project to p1
         XCTAssertEqual(p3.t, 1.0)
         // test a cubic
-        let c = CubicBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 5.0, y: 1.0))
+        let c = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 5.0, y: 1.0))
         let p4 = c.project(CGPoint(x: 0.95, y: 1.05)) // should project to p0
         XCTAssertEqual(p4.point, CGPoint(x: 1.0, y: 1.0))
         XCTAssertEqual(p4.t, 0.0)
@@ -232,16 +232,16 @@ class BezierCurveTests: XCTestCase {
         // 1. scale has a special case for linear
         // 2. quadratics are upgrade in the outline function (why?)
 
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 9.0, y: 11.0), p2: CGPoint(x: 20.0, y: 20.0))
+        let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 9.0, y: 11.0), p2: CGPoint(x: 20.0, y: 20.0))
         let outline: PathComponent = q.outline(distanceAlongNormalStart: sqrt(2),
                                                distanceOppositeNormalStart: sqrt(2),
                                                distanceAlongNormalEnd: 2 * sqrt(2),
                                                distanceOppositeNormalEnd: 2 * sqrt(2))
 
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 1, y: -1), p1: CGPoint(x: -1, y: 1))
-        let expectedSegment2 = QuadraticBezierCurve(p0: CGPoint(x: -1, y: 1), p1: CGPoint(x: 7.5, y: 12.5), p2: CGPoint(x: 18, y: 22))
+        let expectedSegment2 = QuadraticCurve(p0: CGPoint(x: -1, y: 1), p1: CGPoint(x: 7.5, y: 12.5), p2: CGPoint(x: 18, y: 22))
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 18, y: 22), p1: CGPoint(x: 22, y: 18))
-        let expectedSegment4 = QuadraticBezierCurve(p0: CGPoint(x: 22, y: 18), p1: CGPoint(x: 10.5, y: 9.5), p2: CGPoint(x: 1, y: -1))
+        let expectedSegment4 = QuadraticCurve(p0: CGPoint(x: 22, y: 18), p1: CGPoint(x: 10.5, y: 9.5), p2: CGPoint(x: 1, y: -1))
 
         XCTAssertEqual(outline.elementCount, 4)
         // hard to compute this outline exactly, so just check the computed value roughly equals our estimate of what it should be
@@ -254,7 +254,7 @@ class BezierCurveTests: XCTestCase {
     func testOutlineQuadraticNormalsParallel() {
         // this tests a special corner case of outlines where endpoint normals are parallel
 
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 5.0, y: 0.0), p2: CGPoint(x: 10.0, y: 0.0))
+        let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 5.0, y: 0.0), p2: CGPoint(x: 10.0, y: 0.0))
         let outline: PathComponent = q.outline(distance: 1)
 
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 0, y: -1), p1: CGPoint(x: 0, y: 1))
@@ -272,7 +272,7 @@ class BezierCurveTests: XCTestCase {
     func testOutlineFourArgumentsQuadraticNormalsParallel() {
         // this tests a special corner case of tapered outlines where endpoint normals are parallel
 
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 10.0, y: 0.0), p2: CGPoint(x: 20.0, y: 0.0))
+        let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 10.0, y: 0.0), p2: CGPoint(x: 20.0, y: 0.0))
         let outline: PathComponent = q.outline(distanceAlongNormalStart: 2, distanceOppositeNormalStart: 2, distanceAlongNormalEnd: 1, distanceOppositeNormalEnd: 1)
 
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 0.0, y: -2.0), p1: CGPoint(x: 0.0, y: 2.0))
@@ -311,11 +311,11 @@ class BezierCurveTests: XCTestCase {
     func testCubicCubicIntersectionEndpoints() {
         // these two cubics intersect only at the endpoints
         let epsilon: CGFloat = 1.0e-3
-        let cubic1 = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),
+        let cubic1 = CubicCurve(p0: CGPoint(x: 0.0, y: 0.0),
                                       p1: CGPoint(x: 1.0, y: 1.0),
                                       p2: CGPoint(x: 2.0, y: 1.0),
                                       p3: CGPoint(x: 3.0, y: 0.0))
-        let cubic2 = CubicBezierCurve(p0: CGPoint(x: 3.0, y: 0.0),
+        let cubic2 = CubicCurve(p0: CGPoint(x: 3.0, y: 0.0),
                                       p1: CGPoint(x: 2.0, y: -1.0),
                                       p2: CGPoint(x: 1.0, y: -1.0),
                                       p3: CGPoint(x: 0.0, y: 0.0))
@@ -329,7 +329,7 @@ class BezierCurveTests: XCTestCase {
 
     func testCubicSelfIntersection() {
         let epsilon: CGFloat = 1.0e-3
-        let curve = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),
+        let curve = CubicCurve(p0: CGPoint(x: 0.0, y: 0.0),
                                      p1: CGPoint(x: 2.0, y: 1.0),
                                      p2: CGPoint(x: -1.0, y: 1.0),
                                      p3: CGPoint(x: 1.0, y: 0.0))

@@ -11,7 +11,7 @@ import XCTest
 
 class ShapeTests: XCTestCase {
 
-    let testQuadCurve = QuadraticBezierCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 1.0, y: 2.0))
+    let testQuadCurve = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 1.0, y: 2.0))
 
     func testShapeIntersection() {
         let c1 = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 0.0))

@@ -132,11 +132,11 @@ public class Draw {
 
     public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint.zero) {
         context.beginPath()
-        if let quadraticCurve = curve as? QuadraticBezierCurve {
+        if let quadraticCurve = curve as? QuadraticCurve {
             context.move(to: quadraticCurve.p0 + offset)
             context.addQuadCurve(to: quadraticCurve.p2 + offset,
                                  control: quadraticCurve.p1 + offset)
-        } else if let cubicCurve = curve as? CubicBezierCurve {
+        } else if let cubicCurve = curve as? CubicCurve {
             context.move(to: cubicCurve.p0 + offset)
             context.addCurve(to: cubicCurve.p3 + offset,
                              control1: cubicCurve.p1 + offset,
@@ -196,10 +196,10 @@ public class Draw {
 
         context.setStrokeColor(lightGrey)
 
-        if let cubicCurve = curve as? CubicBezierCurve {
+        if let cubicCurve = curve as? CubicCurve {
             self.drawLine(context, from: cubicCurve.p0, to: cubicCurve.p1, offset: offset)
             self.drawLine(context, from: cubicCurve.p2, to: cubicCurve.p3, offset: offset)
-        } else if let quadraticCurve = curve as? QuadraticBezierCurve {
+        } else if let quadraticCurve = curve as? QuadraticCurve {
             self.drawLine(context, from: quadraticCurve.p0, to: quadraticCurve.p1, offset: offset)
             self.drawLine(context, from: quadraticCurve.p1, to: quadraticCurve.p2, offset: offset)
         }

@@ -98,7 +98,7 @@ class ArcApproximateableTests: XCTestCase {
         let epsilon: CGFloat = 0.001
         let r: CGFloat = 100.0
         // q is close to a quarter circle centered at 0,0
-        let q = QuadraticBezierCurve(start: r * CGPoint(x: 1.0, y: 0.0),
+        let q = QuadraticCurve(start: r * CGPoint(x: 1.0, y: 0.0),
                                      end: r * CGPoint(x: 0.0, y: 1.0),
                                      mid: r * CGPoint(x: sqrt(2) / 2.0, y: sqrt(2) / 2.0),
                                      t: 0.5)
@@ -122,7 +122,7 @@ class ArcApproximateableTests: XCTestCase {
 
     func testArcsCubicMultipleArcs() {
         // c is just an arc that goes up and comes down
-        let c = CubicBezierCurve(p0: CGPoint(x: 0.0, y: 0.0),
+        let c = CubicCurve(p0: CGPoint(x: 0.0, y: 0.0),
                                  p1: CGPoint(x: 0.0, y: 1.0),
                                  p2: CGPoint(x: 4.0, y: 1.0),
                                  p3: CGPoint(x: 4.0, y: 0.0))

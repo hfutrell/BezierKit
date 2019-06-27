@@ -1,5 +1,5 @@
 //
-//  CubicBezierCurveTests.swift
+//  CubicCurveTests.swift
 //  BezierKit
 //
 //  Created by Holmes Futrell on 7/31/18.
@@ -9,9 +9,9 @@
 import XCTest
 @testable import BezierKit
 
-class QuadraticBezierCurveTests: XCTestCase {
+class QuadraticCurveTests: XCTestCase {
 
-    // TODO: we still have a LOT of missing unit tests for QuadraticBezierCurve's API entry points
+    // TODO: we still have a LOT of missing unit tests for QuadraticCurve's API entry points
 
     override func setUp() {
         super.setUp()
@@ -33,17 +33,17 @@ class QuadraticBezierCurveTests: XCTestCase {
 //    }
 //
     func testInitializerStartEndMidT() {
-        let q1 = QuadraticBezierCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 3.0, y: 2.0), t: 0.5)
-        XCTAssertEqual(q1, QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 3.0), p2: CGPoint(x: 5.0, y: 1.0)))
+        let q1 = QuadraticCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 3.0, y: 2.0), t: 0.5)
+        XCTAssertEqual(q1, QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 3.0), p2: CGPoint(x: 5.0, y: 1.0)))
         // degenerate cases
-        let q2 = QuadraticBezierCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 1.0, y: 1.0), t: 0.0)
-        XCTAssertEqual(q2, QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 5.0, y: 1.0)))
-        let q3 = QuadraticBezierCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 5.0, y: 1.0), t: 1.0)
-        XCTAssertEqual(q3, QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 5.0, y: 1.0), p2: CGPoint(x: 5.0, y: 1.0)))
+        let q2 = QuadraticCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 1.0, y: 1.0), t: 0.0)
+        XCTAssertEqual(q2, QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 1.0, y: 1.0), p2: CGPoint(x: 5.0, y: 1.0)))
+        let q3 = QuadraticCurve(start: CGPoint(x: 1.0, y: 1.0), end: CGPoint(x: 5.0, y: 1.0), mid: CGPoint(x: 5.0, y: 1.0), t: 1.0)
+        XCTAssertEqual(q3, QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 5.0, y: 1.0), p2: CGPoint(x: 5.0, y: 1.0)))
     }
 
     func testBasicProperties() {
-        let q = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.5, y: 2.0), p2: CGPoint(x: 6.0, y: 1.0))
+        let q = QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.5, y: 2.0), p2: CGPoint(x: 6.0, y: 1.0))
         XCTAssert(q.simple)
         XCTAssertEqual(q.order, 2)
         XCTAssertEqual(q.startingPoint, CGPoint(x: 1.0, y: 1.0))
@@ -51,7 +51,7 @@ class QuadraticBezierCurveTests: XCTestCase {
     }
 
     func testSetStartEndPoints() {
-        var q = QuadraticBezierCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: CGPoint(x: 6.0, y: 5.0), p2: CGPoint(x: 8.0, y: 7.0))
+        var q = QuadraticCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: CGPoint(x: 6.0, y: 5.0), p2: CGPoint(x: 8.0, y: 7.0))
         q.startingPoint = CGPoint(x: 4.0, y: 5.0)
         XCTAssertEqual(q.p0, q.startingPoint)
         XCTAssertEqual(q.startingPoint, CGPoint(x: 4.0, y: 5.0))
@@ -74,13 +74,13 @@ class QuadraticBezierCurveTests: XCTestCase {
 //
     func testBoundingBox() {
         // hits codepath where midpoint pushes up y coordinate of bounding box
-        let q1 = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 3.0), p2: CGPoint(x: 5.0, y: 1.0))
+        let q1 = QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 3.0), p2: CGPoint(x: 5.0, y: 1.0))
         let expectedBoundingBox1 = BoundingBox(p1: CGPoint(x: 1.0, y: 1.0),
                                                p2: CGPoint(x: 5.0, y: 2.0))
         XCTAssertEqual(q1.boundingBox, expectedBoundingBox1)
 
         // hits codepath where midpoint pushes down x coordinate of bounding box
-        let q2 = QuadraticBezierCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: -1.0, y: 2.0), p2: CGPoint(x: 1.0, y: 3.0))
+        let q2 = QuadraticCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: -1.0, y: 2.0), p2: CGPoint(x: 1.0, y: 3.0))
         let expectedBoundingBox2 = BoundingBox(p1: CGPoint(x: 0.0, y: 1.0),
                                                p2: CGPoint(x: 1.0, y: 3.0))
         XCTAssertEqual(q2.boundingBox, expectedBoundingBox2)
@@ -111,26 +111,26 @@ class QuadraticBezierCurveTests: XCTestCase {
         let maxError: CGFloat = 0.01
         let a = CGPoint(x: 2, y: 3)
         let b = CGPoint(x: 3, y: 3)
-        let quadratic1 = QuadraticBezierCurve(p0: a, p1: a, p2: b)
+        let quadratic1 = QuadraticCurve(p0: a, p1: a, p2: b)
         XCTAssertTrue( distance(quadratic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
-        let quadratic2 = QuadraticBezierCurve(p0: a, p1: b, p2: b)
+        let quadratic2 = QuadraticCurve(p0: a, p1: b, p2: b)
         XCTAssertTrue( distance(quadratic2.normal(1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
     func testReduce() {
         // already simple curve
-        let q1 = QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0),
+        let q1 = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
                                       p1: CGPoint(x: 4, y: 3),
                                       p2: CGPoint(x: 7, y: 7))
         XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(q1.reduce(), for: q1))
         // must remove maxima at 0.5
-        let q2 = QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0),
+        let q2 = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
                                       p1: CGPoint(x: 2, y: 1),
                                       p2: CGPoint(x: 4, y: 0))
         XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(q2.reduce(), for: q2))
         // ensure handles degeneracies ok
         let p = CGPoint(x: 2.17, y: 3.14)
-        let q3 = QuadraticBezierCurve(p0: p, p1: p, p2: p)
+        let q3 = QuadraticCurve(p0: p, p1: p, p2: p)
         XCTAssertTrue(BezierKitTestHelpers.isSatisfactoryReduceResult(q3.reduce(), for: q3))
     }
 //
@@ -143,11 +143,11 @@ class QuadraticBezierCurveTests: XCTestCase {
 //
     func testIntersectionsQuadratic() {
         let epsilon: CGFloat = 1.0e-5
-        let q1: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
+        let q1: QuadraticCurve = QuadraticCurve(start: CGPoint(x: 0.0, y: 0.0),
                                                             end: CGPoint(x: 2.0, y: 0.0),
                                                             mid: CGPoint(x: 1.0, y: 2.0),
                                                             t: 0.5)
-        let q2: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 2.0),
+        let q2: QuadraticCurve = QuadraticCurve(start: CGPoint(x: 0.0, y: 2.0),
                                                             end: CGPoint(x: 2.0, y: 2.0),
                                                             mid: CGPoint(x: 1.0, y: 0.0),
                                                             t: 0.5)
@@ -165,11 +165,11 @@ class QuadraticBezierCurveTests: XCTestCase {
 
     func testIntersectionsQuadraticMaxIntersections() {
         let epsilon: CGFloat = 1.0e-5
-        let q1: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
+        let q1: QuadraticCurve = QuadraticCurve(start: CGPoint(x: 0.0, y: 0.0),
                                                             end: CGPoint(x: 2.0, y: 0.0),
                                                             mid: CGPoint(x: 1.0, y: 2.0),
                                                             t: 0.5)
-        let q2: QuadraticBezierCurve = QuadraticBezierCurve(start: CGPoint(x: 0.0, y: 0.0),
+        let q2: QuadraticCurve = QuadraticCurve(start: CGPoint(x: 0.0, y: 0.0),
                                                             end: CGPoint(x: 0.0, y: 2.0),
                                                             mid: CGPoint(x: 2.0, y: 1.0),
                                                             t: 0.5)
@@ -192,11 +192,11 @@ class QuadraticBezierCurveTests: XCTestCase {
         let p1 = CGPoint(x: 2.0, y: 3.0)
         let p2 = CGPoint(x: 3.0, y: 2.0)
 
-        let c1 = QuadraticBezierCurve(p0: p0, p1: p1, p2: p2)
-        let c2 = QuadraticBezierCurve(p0: p0, p1: p1, p2: p2)
-        let c3 = QuadraticBezierCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: p1, p2: p2)
-        let c4 = QuadraticBezierCurve(p0: p0, p1: CGPoint(x: 1.0, y: 3.0), p2: p2)
-        let c5 = QuadraticBezierCurve(p0: p0, p1: p1, p2: CGPoint(x: 3.0, y: 6.0))
+        let c1 = QuadraticCurve(p0: p0, p1: p1, p2: p2)
+        let c2 = QuadraticCurve(p0: p0, p1: p1, p2: p2)
+        let c3 = QuadraticCurve(p0: CGPoint(x: 5.0, y: 6.0), p1: p1, p2: p2)
+        let c4 = QuadraticCurve(p0: p0, p1: CGPoint(x: 1.0, y: 3.0), p2: p2)
+        let c5 = QuadraticCurve(p0: p0, p1: p1, p2: CGPoint(x: 3.0, y: 6.0))
 
         XCTAssertEqual(c1, c1)
         XCTAssertEqual(c1, c2)

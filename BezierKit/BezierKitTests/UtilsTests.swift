@@ -31,7 +31,7 @@ class UtilsTests: XCTestCase {
             CGPoint(x: 522.8595588275791, y: 691.7501129962762),
             CGPoint(x: 522.6404735257349, y: 691.531027694432)
         ]
-        let curve = CubicBezierCurve(points: points)
+        let curve = CubicCurve(points: points)
         let y: CGFloat = 691.87778055040201
         let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
         let r = Utils.roots(points: points, line: line)
