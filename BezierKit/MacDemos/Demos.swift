@@ -27,9 +27,9 @@ struct DemoState {
 
 class Demos {
     private static let cubicControlPoints = [CGPoint(x: 100, y: 25),
-                                     CGPoint(x: 200, y: 200),
-                                     CGPoint(x: 100, y: 200),
-                                     CGPoint(x: 200, y: 25)]
+                                     CGPoint(x: 10, y: 90),
+                                     CGPoint(x: 110, y: 100),
+                                     CGPoint(x: 150, y: 195)]
     private static let quadraticControlPoints = [CGPoint(x: 150, y: 40),
                                          CGPoint(x: 80, y: 30),
                                          CGPoint(x: 105, y: 150)]
@@ -421,7 +421,7 @@ class Demos {
                                 var glyph1: CGGlyph = 0
                                 CTFontGetGlyphsForCharacters(font, &unichar1, &glyph1, 1)
 
-                                var unichar2: UniChar = ("x" as NSString).character(at: 0)
+                                var unichar2: UniChar = ("K" as NSString).character(at: 0)
                                 var glyph2: CGGlyph = 0
                                 CTFontGetGlyphsForCharacters(font, &unichar2, &glyph2, 1)
 
