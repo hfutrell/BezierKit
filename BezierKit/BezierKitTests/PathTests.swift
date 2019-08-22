@@ -792,6 +792,55 @@ class PathTests: XCTestCase {
         )
     }
 
+    func testUnionCoincidentEdges1() {
+        // a simple test of union'ing two squares where the max/min x edge are coincident
+        let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 1, height: 1), transform: nil))
+        let square2 = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 0, width: 1, height: 1), transform: nil))
+        let expectedUnion = { () -> Path in
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint.zero)
+            temp.addLine(to: CGPoint(x: 1.0, y: 0.0))
+            temp.addLine(to: CGPoint(x: 2.0, y: 0.0))
+            temp.addLine(to: CGPoint(x: 2.0, y: 1.0))
+            temp.addLine(to: CGPoint(x: 1.0, y: 1.0))
+            temp.addLine(to: CGPoint(x: 0.0, y: 1.0))
+            temp.closeSubpath()
+            return Path(cgPath: temp)
+        }()
+        let resultUnion = square1.union(square2)!
+        XCTAssertEqual(resultUnion.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultUnion.components[0], expectedUnion.components[0]))
+    }
+
+//    func testUnionCoincidentEdgesRealWorldTestCase() {
+//        let star = {() -> Path in
+//            let temp = CGMutablePath()
+//            temp.move(to: CGPoint(x: 111.2, y: 90.0))
+//            temp.addLine(to: CGPoint(x: 144.72135954999578, y:137.02282018339787))
+//            temp.addLine(to: CGPoint(x: 89.64133022449836, y: 119.6729633084088))
+//            temp.addLine(to: CGPoint(x: 55.27864045000421, y: 166.0845213036123))
+//            temp.addLine(to: CGPoint(x: 54.758669775501644, y: 108.33889987152517))
+//            temp.addLine(to: CGPoint(x: 0.0, y:  90.00000000000001))
+//            temp.addLine(to: CGPoint(x: 54.75866977550164, y: 71.66110012847484))
+//            temp.addLine(to: CGPoint(x: 55.2786404500042, y: 13.915478696387723))
+//            temp.addLine(to: CGPoint(x: 89.64133022449835, y: 60.3270366915912))
+//            temp.addLine(to: CGPoint(x: 144.72135954999578, y: 42.97717981660214))
+//            temp.closeSubpath()
+//            return Path(cgPath: temp)
+//        }()
+//        let polygon = {() -> Path in
+//            let temp = CGMutablePath()
+//            temp.move(to: CGPoint(x: 89.64133022449836, y: 119.6729633084088))
+//            temp.addLine(to: CGPoint(x: 55.27864045000421, y: 166.0845213036123))
+//            temp.addLine(to: CGPoint(x: 143.9588334407257, y: 125.35115333505796))
+//            temp.addLine(to: CGPoint(x: 160.7501485041311, y: 111.6759272531885))
+//            temp.closeSubpath()
+//            return Path(cgPath: temp)
+//        }()
+////        let unionResult = star.union(polygon)!
+////        XCTAssertEqual(unionResult.components.count, 1)
+//    }
+
     func testUnionRealWorldEdgeCase() {
         guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
         let a = {() -> Path in
