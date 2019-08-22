@@ -147,25 +147,29 @@ class AugmentedGraphTests: XCTestCase {
         XCTAssertTrue(intersectionsAreMutuallyLinked(intersection1Path1, intersection1Path2))
     }
 
-    func testBetween() {
+    func testVectorOnPositiveSide() {
         // v1 -> v2 is clockwise
         let v1 = CGPoint(x: 2, y: -1)
         let v2 = CGPoint(x: 1, y: 3)
-        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2))
-        XCTAssertTrue( between(CGPoint(x: 1, y: 2), v1, v2))
-        XCTAssertTrue( between(CGPoint(x: 3, y: -1), v1, v2))
-        XCTAssertFalse( between(CGPoint(x: -1, y: 1), v1, v2))
-        XCTAssertFalse( between(CGPoint(x: 1, y: 5), v1, v2))
-        XCTAssertFalse( between(CGPoint(x: 1, y: -1), v1, v2))
+        XCTAssertFalse( vectorOnPositiveSide(CGPoint(x: 3, y: -1), v1, v2))
+        XCTAssertFalse( vectorOnPositiveSide(CGPoint(x: 1, y: 2), v1, v2))
+        XCTAssertTrue( vectorOnPositiveSide(CGPoint(x: -1, y: 1), v1, v2))
+        XCTAssertTrue( vectorOnPositiveSide(CGPoint(x: 1, y: 5), v1, v2))
+        XCTAssertTrue( vectorOnPositiveSide(CGPoint(x: 1, y: -1), v1, v2))
         // v3 -> v4 is counter clockwise
         let v3 = CGPoint(x: -3, y: -1)
         let v4 = CGPoint(x: 1, y: 1)
-        XCTAssertTrue(between(CGPoint(x: -1, y: 0), v3, v4))
-        XCTAssertTrue(between(CGPoint(x: -4, y: -1), v3, v4))
-        XCTAssertTrue(between(CGPoint(x: 1, y: 2), v3, v4))
-        XCTAssertFalse(between(CGPoint(x: 1, y: -1), v3, v4))
-        XCTAssertFalse(between(CGPoint(x: 2, y: 1), v3, v4))
-        XCTAssertFalse(between(CGPoint(x: -1, y: -1), v3, v4))
+        XCTAssertTrue(vectorOnPositiveSide(CGPoint(x: -1, y: 0), v3, v4))
+        XCTAssertTrue(vectorOnPositiveSide(CGPoint(x: -4, y: -1), v3, v4))
+        XCTAssertTrue(vectorOnPositiveSide(CGPoint(x: 1, y: 2), v3, v4))
+        XCTAssertFalse(vectorOnPositiveSide(CGPoint(x: 1, y: -1), v3, v4))
+        XCTAssertFalse(vectorOnPositiveSide(CGPoint(x: 2, y: 1), v3, v4))
+        XCTAssertFalse(vectorOnPositiveSide(CGPoint(x: -1, y: -1), v3, v4))
+        // co-incident edges are always considered on the positive side
+        XCTAssertTrue(vectorOnPositiveSide(v1, v1, v2))
+        XCTAssertTrue(vectorOnPositiveSide(v2, v1, v2))
+        XCTAssertTrue(vectorOnPositiveSide(v3, v3, v3))
+        XCTAssertTrue(vectorOnPositiveSide(v4, v4, v4))
     }
 
     func testWindingCountAdjustment() {

@@ -8,27 +8,14 @@
 
 import CoreGraphics
 
-/// - Returns: true if the vector v falls inside the (smaller of the two) angles formed by vectors a and b
-internal func between(_ v: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Bool {
-    if a.cross(b) > 0 {
-        // smaller angle from a to b goes clockwise from a to b
-        return a.cross(v) > 0 && b.cross(v) < 0
+/// - Returns: true if the vector v falls in the positive region of the surface formed by s1 and s2
+internal func vectorOnPositiveSide(_ v: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Bool {
+    if s2.cross(s1) >= 0 {
+        return s2.cross(v) >= 0 && s1.cross(v) <= 0
     } else {
-        // smaller angle from a to b goes counter-clockwise from a to b
-        return b.cross(v) > 0 && a.cross(v) < 0
+        return s2.cross(v) >= 0 || s1.cross(v) <= 0
     }
 }
-
-private func signOrZero<A: FloatingPoint>(_ x: A) -> Int {
-    if x > 0 {
-        return 1
-    } else if x < 0 {
-        return -1
-    } else {
-        return 0 // signOrZero(NaN) returns 0 as well because comparisons with NaN always false
-    }
-}
-
 /// evaluates and returns the amount to increment the winding count when passing through an intersection with a path
 ///
 /// - Parameters:
@@ -38,14 +25,11 @@ private func signOrZero<A: FloatingPoint>(_ x: A) -> Int {
 ///   - s2: outgoing direction of path
 /// - Returns: the amount to increment the winding count, either +1, 0, or -1
 internal func windingCountAdjustment(_ v1: CGPoint, _ v2: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Int {
-    let side1 = between(v1, s1, s2)
-    let side2 = between(v2, s1, s2)
-    guard side1 != side2 else { return 0 }
-    if side1 {
-        return signOrZero(v1.cross(s2))
-    } else {
-        return signOrZero(v2.cross(s1))
-    }
+    let positive1 = vectorOnPositiveSide(v1, s1, s2)
+    let positive2 = vectorOnPositiveSide(v2, s1, s2)
+    // if we go from positive to negative return -1, negative to positive +1, otherwise 0
+    guard positive1 != positive2 else { return 0 }
+    return positive1 ? -1 : 1
 }
 
 internal class PathLinkedListRepresentation {
