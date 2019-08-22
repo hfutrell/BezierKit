@@ -152,14 +152,15 @@ public extension LineSegment {
         guard self.boundingBox.overlaps(line.boundingBox) else {
             return []
         }
-        if self.p0 == line.p0 {
-            return [Intersection(t1: 0.0, t2: 0.0)]
-        } else if self.p0 == line.p1 {
-            return [Intersection(t1: 0.0, t2: 1.0)]
+
+        if self.p1 == line.p1 {
+            return [Intersection(t1: 1.0, t2: 1.0)]
         } else if self.p1 == line.p0 {
             return [Intersection(t1: 1.0, t2: 0.0)]
-        } else if self.p1 == line.p1 {
-            return [Intersection(t1: 1.0, t2: 1.0)]
+        } else if self.p0 == line.p1 {
+            return [Intersection(t1: 0.0, t2: 1.0)]
+        } else if self.p0 == line.p0 {
+            return [Intersection(t1: 0.0, t2: 0.0)]
         }
 
         let a1 = self.p0
