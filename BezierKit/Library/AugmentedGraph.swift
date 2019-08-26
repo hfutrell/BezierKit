@@ -10,10 +10,10 @@ import CoreGraphics
 
 /// - Returns: true if the vector v falls in the positive region of the surface formed by s1 and s2
 internal func vectorOnPositiveSide(_ v: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Bool {
-    if s2.cross(s1) >= 0 {
-        return s2.cross(v) >= 0 && s1.cross(v) <= 0
+    if s2.cross(s1) > 0 {
+        return s2.cross(v) > 0 && s1.cross(v) < 0
     } else {
-        return s2.cross(v) >= 0 || s1.cross(v) <= 0
+        return s2.cross(v) > 0 || s1.cross(v) < 0
     }
 }
 /// evaluates and returns the amount to increment the winding count when passing through an intersection with a path
@@ -162,7 +162,7 @@ internal class PathLinkedListRepresentation {
             }
             let startingVertex = b
 
-            if useRelativeWinding {
+           // if useRelativeWinding {
                 let prev = startingVertex.emitPrevious()
                 let p = prev.compute(0.5)
                 let n = prev.normal(0.5)
@@ -170,11 +170,22 @@ internal class PathLinkedListRepresentation {
                 let intersections = Path(curve: line).intersections(with: path)
                 let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation1.t}).sorted().first(where: {$0 > CGFloat(Utils.epsilon) }) ?? 1.0)
                 initialWinding = path.windingCount(p + s * n)
-            } else {
-                initialWinding = path.windingCount(startingVertex.emitPrevious().compute(0.5))
+                let w1 = path.windingCount(p + s * n)
+            let w2 = path.windingCount(p - 1.0e-4 * n)
+
+            initialWinding = w1
+            if windingCountImpliesContainment(w2, using: fillRule) && useRelativeWinding == false {
+                initialWinding = w2
             }
+
+          //  } else {
+          //      initialWinding = path.windingCount(startingVertex.emitPrevious().compute(0.5))
+          //  }
             // determine entries / exists based on winding counts around component
             var windingCount = initialWinding
+
+            print("initial winding = \(initialWinding)")
+
             self.forEachVertexStartingFrom(startingVertex) { v in
                 guard let neighbor = v.intersectionInfo?.neighbor else { return }
                 let previous = v.emitPrevious()
@@ -186,7 +197,38 @@ internal class PathLinkedListRepresentation {
                 let v1 = previous.compute(smallNumber) - v.location
                 let v2 = next.compute(smallNumber) - v.location
 
-                let windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
+
+                var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                if useRelativeWinding {
+                    wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                }
+
+                var windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
+
+                let wasOnEdge    =  distance(v1.normalize(), n2.normalize()) < 1.0e-3 || distance(v1.normalize(), n1.normalize()) < 1.0e-3
+                let isOnEdge     = distance(v2.normalize(), n2.normalize()) < 1.0e-3 || distance(v2.normalize(), n1.normalize()) < 1.0e-3
+
+                // handle edge changes
+                if isOnEdge != wasOnEdge {
+                    windingCountChange = 0
+                }
+                if wasOnEdge, !isOnEdge {
+                    // moving off an edge only does something if if you're moving outside
+                    if vectorOnPositiveSide(v2, n1, n2) && windingCount < 0 {
+                        windingCountChange = 1
+                    } else if !vectorOnPositiveSide(v2, n1, n2) && windingCount > 0 {
+                        windingCountChange = -1
+                    }
+                }
+                if !wasOnEdge, isOnEdge, !wasInside {
+                    // moving onto an edge should only do something if you weren't inside
+                    print("entering edge")
+                    if vectorOnPositiveSide(v1, n1, n2) {
+                        windingCountChange = -1
+                    } else {
+                        windingCountChange = 1
+                    }
+                }
 
 //                if useRelativeWinding == false {
 //                    let altChange = path.windingCount(next.compute(0.05)) - path.windingCount(previous.compute(0.05))
@@ -195,24 +237,30 @@ internal class PathLinkedListRepresentation {
 //                    }
 //                }
 
-                if windingCountChange != 0 {
-                    var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
-                    if useRelativeWinding {
-                        wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
-                    }
-                    windingCount += windingCountChange
-                    var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                windingCount += windingCountChange
+                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+
+                if windingCountChange != 0 || wasOnEdge != isOnEdge {
+                    print("winding count adjustment = \(windingCountChange)")
+                    print("was inside = \(wasInside), is inside = \(isInside), was on edge = \(wasOnEdge), is on edge = \(isOnEdge)")
                     if useRelativeWinding {
                         isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
                     }
                     if wasInside != isInside {
-                        if isInside {
-                            v.intersectionInfo?.isEntry = true
-                        } else {
-                            v.intersectionInfo?.isExit = true
-                        }
+                        v.intersectionInfo?.isCrossing = true
                     }
                 }
+
+                if isInside && !wasInside{
+                    // move from outside to edge OR interior or from edge to interior
+                    print("found entry at \(v.location)")
+                    v.intersectionInfo?.isEntry = true
+                } else if wasInside && !isInside {
+                    // move from inside to outside or from inside to edge
+                    print("found exit at \(v.location)")
+                    v.intersectionInfo?.isExit = true
+                }
+
             }
 //            if initialWinding != windingCount {
 //                print("warning: winding count found in .markEntryExit() not consistent")
@@ -276,10 +324,20 @@ internal class AugmentedGraph {
         }
         // mark each intersection as either entry or exit
         let useRelativeWinding = (list1 === list2)
+        print("doing first path")
         list1.markEntryExit(path2, useRelativeWinding: useRelativeWinding)
         if useRelativeWinding == false {
+            print("doing second path")
             list2.markEntryExit(path1, useRelativeWinding: useRelativeWinding)
         }
+    }
+
+    private func nextCrossing(_ v: Vertex) -> Vertex? {
+        var temp = v
+        while temp.isCrossing == false {
+            temp = temp.next
+        }
+        return temp
     }
 
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
@@ -288,7 +346,7 @@ internal class AugmentedGraph {
         case .removeCrossings:
             fallthrough
         case .union:
-            return info.isExit
+            return nextCrossing(v)?.isExit == true
         case .subtract:
             return isOnFirstCurve ? info.isExit : info.isEntry
         case .intersect:
@@ -336,21 +394,30 @@ internal class AugmentedGraph {
             var curves: [BezierCurve] = []
             var isOnFirstCurve = true
             var v = start
+            print("at \(v.location)")
             repeat {
                 let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 repeat {
                     curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
                     v = movingForwards ? v.next : v.previous
-                } while v.isCrossing == false
+                    print("at \(v.location)")
+                } while v.isEntry == false && v.isExit == false
 
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
-                v = v.intersectionInfo!.neighbor!
-                isOnFirstCurve = !isOnFirstCurve
 
-                if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
-                    return nil
+                if shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) != movingForwards {
+                    v = v.intersectionInfo!.neighbor!
+                    isOnFirstCurve = !isOnFirstCurve
+                    print("switching side")
+                } else {
+                    print("no switch side")
                 }
+
+
+//                if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
+//                    return nil
+//                }
             } while v !== start
             pathComponents.append(PathComponent(curves: curves))
         }
@@ -390,16 +457,19 @@ internal class Vertex: Equatable {
         var splitT: CGFloat?
         var isEntry: Bool = false
         var isExit: Bool = false
+        var isCrossing: Bool = false
         weak var neighbor: Vertex?
     }
     var intersectionInfo: IntersectionInfo?
 
     var isCrossing: Bool {
-        guard let info = self.intersectionInfo else { return false }
-        guard info.isEntry || info.isExit else { return false }
-        guard let neighborInfo = info.neighbor?.intersectionInfo else { return false }
-        guard neighborInfo.isEntry || neighborInfo.isExit else { return false }
-        return true
+        return self.intersectionInfo?.isCrossing == true
+    }
+    var isEntry: Bool {
+        return self.intersectionInfo?.isEntry == true
+    }
+    var isExit: Bool {
+        return self.intersectionInfo?.isExit == true
     }
 
     var isIntersection: Bool {
