@@ -197,7 +197,6 @@ internal class PathLinkedListRepresentation {
                 let v1 = previous.compute(smallNumber) - v.location
                 let v2 = next.compute(smallNumber) - v.location
 
-
                 var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
                 if useRelativeWinding {
                     wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
@@ -211,56 +210,34 @@ internal class PathLinkedListRepresentation {
                 // handle edge changes
                 if isOnEdge != wasOnEdge {
                     windingCountChange = 0
-                }
-                if wasOnEdge, !isOnEdge {
-                    // moving off an edge only does something if if you're moving outside
-                    if vectorOnPositiveSide(v2, n1, n2) && windingCount < 0 {
-                        windingCountChange = 1
-                    } else if !vectorOnPositiveSide(v2, n1, n2) && windingCount > 0 {
-                        windingCountChange = -1
+                    if wasOnEdge {
+                        let onPositiveSide = vectorOnPositiveSide(v2, n1, n2)
+                        if onPositiveSide == true && windingCount < 0 {
+                            windingCountChange = 1
+                        } else if onPositiveSide == false && windingCount > 0 {
+                            windingCountChange = -1
+                        }
+                    } else if !wasInside {
+                        windingCountChange = vectorOnPositiveSide(v1, n1, n2) ? -1 : 1
                     }
                 }
-                if !wasOnEdge, isOnEdge, !wasInside {
-                    // moving onto an edge should only do something if you weren't inside
-                    print("entering edge")
-                    if vectorOnPositiveSide(v1, n1, n2) {
-                        windingCountChange = -1
-                    } else {
-                        windingCountChange = 1
-                    }
-                }
-
-//                if useRelativeWinding == false {
-//                    let altChange = path.windingCount(next.compute(0.05)) - path.windingCount(previous.compute(0.05))
-//                    if altChange != windingCountChange {
-//                        print("windingCountChange is wrong?")
-//                    }
-//                }
 
                 windingCount += windingCountChange
-                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
 
-                if windingCountChange != 0 || wasOnEdge != isOnEdge {
-                    print("winding count adjustment = \(windingCountChange)")
-                    print("was inside = \(wasInside), is inside = \(isInside), was on edge = \(wasOnEdge), is on edge = \(isOnEdge)")
+                if windingCountChange != 0 {
+                    var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
                     if useRelativeWinding {
                         isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
                     }
                     if wasInside != isInside {
                         v.intersectionInfo?.isCrossing = true
+                        if isInside {
+                            v.intersectionInfo?.isEntry = true
+                        } else {
+                            v.intersectionInfo?.isExit = true
+                        }
                     }
                 }
-
-                if isInside && !wasInside{
-                    // move from outside to edge OR interior or from edge to interior
-                    print("found entry at \(v.location)")
-                    v.intersectionInfo?.isEntry = true
-                } else if wasInside && !isInside {
-                    // move from inside to outside or from inside to edge
-                    print("found exit at \(v.location)")
-                    v.intersectionInfo?.isExit = true
-                }
-
             }
 //            if initialWinding != windingCount {
 //                print("warning: winding count found in .markEntryExit() not consistent")
@@ -394,14 +371,12 @@ internal class AugmentedGraph {
             var curves: [BezierCurve] = []
             var isOnFirstCurve = true
             var v = start
-            print("at \(v.location)")
             repeat {
                 let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 repeat {
                     curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
                     v = movingForwards ? v.next : v.previous
-                    print("at \(v.location)")
                 } while v.isEntry == false && v.isExit == false
 
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
@@ -409,11 +384,7 @@ internal class AugmentedGraph {
                 if shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) != movingForwards {
                     v = v.intersectionInfo!.neighbor!
                     isOnFirstCurve = !isOnFirstCurve
-                    print("switching side")
-                } else {
-                    print("no switch side")
                 }
-
 
 //                if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
 //                    return nil
