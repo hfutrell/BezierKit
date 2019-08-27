@@ -178,16 +178,24 @@ internal class PathLinkedListRepresentation {
                 initialWinding = w2
             }
 
+            #warning("this is wrong")
+            if w1 != w2, useRelativeWinding == false {
+                startingVertex.previous.forwardEdge = .coincident
+            } else {
+                startingVertex.previous.forwardEdge = windingCountImpliesContainment(initialWinding, using: fillRule) ? .internal : .external
+            }
+
           //  } else {
           //      initialWinding = path.windingCount(startingVertex.emitPrevious().compute(0.5))
           //  }
             // determine entries / exists based on winding counts around component
             var windingCount = initialWinding
 
-            print("initial winding = \(initialWinding)")
-
             self.forEachVertexStartingFrom(startingVertex) { v in
-                guard let neighbor = v.intersectionInfo?.neighbor else { return }
+                guard let neighbor = v.intersectionInfo?.neighbor else {
+                    v.forwardEdge = v.previous.forwardEdge
+                    return
+                }
                 let previous = v.emitPrevious()
                 let next = v.emitNext()
 
@@ -204,8 +212,8 @@ internal class PathLinkedListRepresentation {
 
                 var windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
 
-                let wasOnEdge    =  distance(v1.normalize(), n2.normalize()) < 1.0e-3 || distance(v1.normalize(), n1.normalize()) < 1.0e-3
-                let isOnEdge     = distance(v2.normalize(), n2.normalize()) < 1.0e-3 || distance(v2.normalize(), n1.normalize()) < 1.0e-3
+                let wasOnEdge    =  distance(v1.normalize(), n2.normalize()) < 1.0e-5 || distance(v1.normalize(), n1.normalize()) < 1.0e-5
+                let isOnEdge     =  distance(v2.normalize(), n2.normalize()) < 1.0e-5 || distance(v2.normalize(), n1.normalize()) < 1.0e-5
 
                 // handle edge changes
                 if isOnEdge != wasOnEdge {
@@ -224,19 +232,21 @@ internal class PathLinkedListRepresentation {
 
                 windingCount += windingCountChange
 
-                if windingCountChange != 0 {
-                    var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
-                    if useRelativeWinding {
-                        isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
+                if useRelativeWinding {
+                    isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
+                }
+
+                if isOnEdge {
+                    print("coincident at \(v.location)")
+                    v.forwardEdge = .coincident
+                } else {
+                    if isInside {
+                        print("internal at \(v.location)")
+                    } else {
+                        print("external at \(v.location)")
                     }
-                    if wasInside != isInside {
-                        v.intersectionInfo?.isCrossing = true
-                        if isInside {
-                            v.intersectionInfo?.isEntry = true
-                        } else {
-                            v.intersectionInfo?.isExit = true
-                        }
-                    }
+                    v.forwardEdge = isInside ? .internal : .external
                 }
             }
 //            if initialWinding != windingCount {
@@ -309,25 +319,22 @@ internal class AugmentedGraph {
         }
     }
 
-    private func nextCrossing(_ v: Vertex) -> Vertex? {
-        var temp = v
-        while temp.isCrossing == false {
-            temp = temp.next
-        }
-        return temp
-    }
+    // INSTEAD OF THIS WE NEED A PROPERTY ON INTERSECTIONS
+    // CALLED LIKE "DIRECTION TOWARDS INTERIOR IS FORWARDS"
+
+    // WE DON'T START AT "CROSSINGS" but rather "MUST INCLUDE"
+    // EDGES (for union those are EXTERIOR) edges
 
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
-        let info = v.intersectionInfo!
         switch operation {
-        case .removeCrossings:
+        case .removeCrossings: // todo: investigate further coincident behavior
             fallthrough
         case .union:
-            return nextCrossing(v)?.isExit == true
+            return v.forwardEdge == .external || (v.forwardEdge == .coincident && v.backwardEdge == .internal)
         case .subtract:
-            return isOnFirstCurve ? info.isExit : info.isEntry
+            return isOnFirstCurve ? v.isExit : v.isEntry // todo: investigate further coincident behavior
         case .intersect:
-            return info.isEntry
+            return v.isEntry // todo: investigate further coincident behavior
         }
     }
 
@@ -371,25 +378,33 @@ internal class AugmentedGraph {
             var curves: [BezierCurve] = []
             var isOnFirstCurve = true
             var v = start
+            print("started at \(v.location)")
             repeat {
                 let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 repeat {
                     curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
                     v = movingForwards ? v.next : v.previous
-                } while v.isEntry == false && v.isExit == false
+                    print("moved to \(v.location)")
+                } while v.isIntersection == false || shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) == movingForwards
+
+                print("found entry or exit at \(v.location)")
 
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
 
-                if shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) != movingForwards {
+//                if shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) != movingForwards {
                     v = v.intersectionInfo!.neighbor!
                     isOnFirstCurve = !isOnFirstCurve
-                }
-
-//                if isOnFirstCurve && unvisitedCrossings.contains(v) == false && v !== start {
-//                    return nil
+                    print("switched sides")
+//                } else {
+//                    print("no switch sides")
 //                }
-            } while v !== start
+
+                if isOnFirstCurve && v.isCrossing && unvisitedCrossings.contains(v) == false && v !== start {
+                    return nil
+                }
+                
+            } while v !== start && v.intersectionInfo?.neighbor != start
             pathComponents.append(PathComponent(curves: curves))
         }
         return Path(components: pathComponents)
@@ -426,23 +441,32 @@ internal class Vertex: Equatable {
 
     struct IntersectionInfo {
         var splitT: CGFloat?
-        var isEntry: Bool = false
-        var isExit: Bool = false
-        var isCrossing: Bool = false
         weak var neighbor: Vertex?
     }
     var intersectionInfo: IntersectionInfo?
 
-    var isCrossing: Bool {
-        return self.intersectionInfo?.isCrossing == true
-    }
-    var isEntry: Bool {
-        return self.intersectionInfo?.isEntry == true
-    }
-    var isExit: Bool {
-        return self.intersectionInfo?.isExit == true
+    enum EdgeType {
+        case coincident
+        case `internal`
+        case external
     }
 
+    fileprivate(set) var forwardEdge: EdgeType = .external
+    var backwardEdge: EdgeType { return self.previous.forwardEdge }
+
+    var isCrossing: Bool {
+        guard self.isEntry || self.isExit else { return false }
+        guard let neighbor = self.intersectionInfo?.neighbor else { return false }
+        guard neighbor.isEntry || neighbor.isExit else { return false }
+        return true
+    }
+    var isEntry: Bool {
+        return (self.forwardEdge == .internal || self.forwardEdge == .coincident) && backwardEdge == .external
+    }
+    var isExit: Bool {
+        let backwardEdge = self.backwardEdge
+        return self.forwardEdge == .external && (backwardEdge == .internal || backwardEdge == .coincident)
+    }
     var isIntersection: Bool {
         return self.intersectionInfo != nil
     }

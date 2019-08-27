@@ -1201,9 +1201,8 @@ class PathTests: XCTestCase {
                         control1: CGPoint(x: 115.23034681147224, y: 49.19162153453482),
                         control2: CGPoint(x: 130.4334714935808, y: 49.19162153453483))
 
-        #warning("This test effectively disabled")
-//        let p = Path(cgPath: cgPath)
-//        _ = p.crossingsRemoved(accuracy: 0.0001)
+        let p = Path(cgPath: cgPath)
+        _ = p.crossingsRemoved(accuracy: 0.0001)
     }
 
     func testCrossingsRemovedMulticomponent() {
@@ -1283,9 +1282,8 @@ class PathTests: XCTestCase {
         cgPath.addLine(to: CGPoint(x: 430.66935231730844, y: 109.24678582975706))
         cgPath.closeSubpath()
 
-        #warning("this test effectively disabled")
-//        let path = Path(cgPath: cgPath)
-//        _ = path.crossingsRemoved(accuracy: 0.01)
+        let path = Path(cgPath: cgPath)
+        _ = path.crossingsRemoved(accuracy: 0.01)
 
         // for now the test's only expectation is that we do not go into an infinite loop
         // TODO: make test stricter
