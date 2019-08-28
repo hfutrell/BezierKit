@@ -210,10 +210,10 @@ internal class PathLinkedListRepresentation {
                     wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
                 }
 
-                var windingCountChange = windingCountAdjustment(v1, v2, n1, n2)
-
                 let wasOnEdge    =  distance(v1.normalize(), n2.normalize()) < 1.0e-5 || distance(v1.normalize(), n1.normalize()) < 1.0e-5
                 let isOnEdge     =  distance(v2.normalize(), n2.normalize()) < 1.0e-5 || distance(v2.normalize(), n1.normalize()) < 1.0e-5
+
+                var windingCountChange = (isOnEdge && wasOnEdge) ? 0 : windingCountAdjustment(v1, v2, n1, n2)
 
                 // handle edge changes
                 if isOnEdge != wasOnEdge {

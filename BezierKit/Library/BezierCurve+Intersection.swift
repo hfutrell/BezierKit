@@ -153,6 +153,14 @@ public extension LineSegment {
             return []
         }
 
+        func approximateNearEndpointsAndClamp(_ value: CGFloat) -> CGFloat {
+            if Utils.approximately(Double(value), 0, precision: Utils.epsilon) { return 0 }
+            else if Utils.approximately(Double(value), 1, precision: Utils.epsilon) { return 1 }
+            else {
+                return Utils.clamp(value, 0, 1)
+            }
+        }
+
         let a1 = self.p0
         let b1 = self.p1 - self.p0
         let a2 = line.p0
@@ -162,20 +170,18 @@ public extension LineSegment {
         let rlb2 = 1.0 / b2.lengthSquared
         let b = rlb2 * (a1 - a2).dot(b2)
         let m = rlb2 * b1.dot(b2)
-        let t21 = Utils.clamp(b, 0.0, 1.0)
-        let t22 = Utils.clamp(m + b, 0.0, 1.0)
+        let t21 = approximateNearEndpointsAndClamp(b)
+        let t22 = approximateNearEndpointsAndClamp(m + b)
         if t21 != t22 {
             // t2(t1) = m * t1 + b
             // so t1(t2) = (t2 - b) / m
-            let t11 = ( t21 - b ) / m
-            let t12 = ( t22 - b ) / m
+            let t11 = approximateNearEndpointsAndClamp(( t21 - b ) / m)
+            let t12 = approximateNearEndpointsAndClamp(( t22 - b ) / m)
             #warning("todo hardcoded magic number")
-            if t11 != t12, distance(self.compute(t11), line.compute(t21)) < 1.0e-6, distance(self.compute(t12), line.compute(t22)) < 1.0e-5 {
-                if t11 < t12 {
-                    return [Intersection(t1: t11, t2: t21), Intersection(t1: t12, t2: t22)]
-                } else {
-                    return [Intersection(t1: t12, t2: t22), Intersection(t1: t11, t2: t21)]
-                }
+            if t11 != t12, distance(self.compute(t11), line.compute(t21)) < 1.0e-7, distance(self.compute(t12), line.compute(t22)) < 1.0e-7 {
+                let i1 = Intersection(t1: t11, t2: t21)
+                let i2 = Intersection(t1: t12, t2: t22)
+                return t11 < t12 ? [i1, i2] : [i2, i1]
             } // end-coincident line test
         }
 

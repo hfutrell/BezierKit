@@ -241,7 +241,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertTrue(i3.isEmpty)
     }
 
-    func testIntersectionsLineYesCoincident() {
+    func testIntersectionsLineYesCoincidentBasic() {
         // coincident in the middle
         let l1 = LineSegment(p0: CGPoint(x: -5.0, y: -5.0), p1: CGPoint(x: 5.0, y: 5.0))
         let l2 = LineSegment(p0: CGPoint(x: -1.0, y: -1.0), p1: CGPoint(x: 1.0, y: 1.0))
@@ -259,6 +259,16 @@ class LineSegmentTests: XCTestCase {
         let l6 = LineSegment(p0: CGPoint(x: 3, y: -1), p1: CGPoint(x: 2, y: 0))
         let i3 = l5.intersections(with: l6)
         XCTAssertEqual(i3, [Intersection(t1: 0.5, t2: 1) , Intersection(t1: 1, t2: 0)])
+    }
+
+    func testIntersectionsLineYesCoincidentRealWorldData() {
+        let l1 = LineSegment(p0: CGPoint(x: 134.76833383678579, y: 95.05360294098101),
+                             p1: CGPoint(x: 171.33627533401454, y: 102.89462632327792))
+        let l2 = LineSegment(p0: CGPoint(x: 111.2, y: 90.0),
+                             p1: CGPoint(x: 171.33627533401454, y: 102.89462632327792))
+        let i = l1.intersections(with: l2)
+        XCTAssertEqual(i, [Intersection(t1: 0, t2: 0.3919154238582343),
+                           Intersection(t1: 1, t2: 1)])
     }
 
     // -- MARK: - line-curve intersection tests
