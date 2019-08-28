@@ -234,17 +234,31 @@ class LineSegmentTests: XCTestCase {
         let i1 = l1.intersections(with: l2)
         XCTAssertTrue(i1.isEmpty)
 
-        // this is a very, very special case! Not only is the determinant zero, but the *minor* determinants are also zero, so without special care we can get 0*(1/det) = 0*Inf = NaN!
-        let l3 = LineSegment(p0: CGPoint(x: -5.0, y: -5.0), p1: CGPoint(x: 5.0, y: 5.0))
-        let l4 = LineSegment(p0: CGPoint(x: -1.0, y: -1.0), p1: CGPoint(x: 1.0, y: 1.0))
-        let i2 = l3.intersections(with: l4)
-        XCTAssertTrue(i2.isEmpty)
-
         // very, very nearly parallel lines
         let l5 = LineSegment(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 1.0, y: 1.0))
         let l6 = LineSegment(p0: CGPoint(x: 0.0, y: 1.0), p1: CGPoint(x: 1.0, y: 2.0 + 1.0e-15))
         let i3 = l5.intersections(with: l6)
         XCTAssertTrue(i3.isEmpty)
+    }
+
+    func testIntersectionsLineYesCoincident() {
+        // coincident in the middle
+        let l1 = LineSegment(p0: CGPoint(x: -5.0, y: -5.0), p1: CGPoint(x: 5.0, y: 5.0))
+        let l2 = LineSegment(p0: CGPoint(x: -1.0, y: -1.0), p1: CGPoint(x: 1.0, y: 1.0))
+        let i1 = l1.intersections(with: l2)
+        XCTAssertEqual(i1, [Intersection(t1: 0.4, t2: 0) , Intersection(t1: 0.6, t2: 1)])
+
+        // coincident at the start
+        let l3 = LineSegment(p0: CGPoint(x: 1, y: 1), p1: CGPoint(x: 3, y: 3))
+        let l4 = LineSegment(p0: CGPoint(x: 1, y: 1), p1: CGPoint(x: 2, y: 2))
+        let i2 = l3.intersections(with: l4)
+        XCTAssertEqual(i2, [Intersection(t1: 0, t2: 0) , Intersection(t1: 0.5, t2: 1)])
+
+        // coincident but in opposing directions
+        let l5 = LineSegment(p0: CGPoint(x: 1, y: 1), p1: CGPoint(x: 3, y: -1))
+        let l6 = LineSegment(p0: CGPoint(x: 3, y: -1), p1: CGPoint(x: 2, y: 0))
+        let i3 = l5.intersections(with: l6)
+        XCTAssertEqual(i3, [Intersection(t1: 0.5, t2: 1) , Intersection(t1: 1, t2: 0)])
     }
 
     // -- MARK: - line-curve intersection tests

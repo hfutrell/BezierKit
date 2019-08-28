@@ -153,6 +153,32 @@ public extension LineSegment {
             return []
         }
 
+        let a1 = self.p0
+        let b1 = self.p1 - self.p0
+        let a2 = line.p0
+        let b2 = line.p1 - line.p0
+
+        // coincident line test
+        let rlb2 = 1.0 / b2.lengthSquared
+        let b = rlb2 * (a1 - a2).dot(b2)
+        let m = rlb2 * b1.dot(b2)
+        let t21 = Utils.clamp(b, 0.0, 1.0)
+        let t22 = Utils.clamp(m + b, 0.0, 1.0)
+        if t21 != t22 {
+            // t2(t1) = m * t1 + b
+            // so t1(t2) = (t2 - b) / m
+            let t11 = ( t21 - b ) / m
+            let t12 = ( t22 - b ) / m
+            #warning("todo hardcoded magic number")
+            if t11 != t12, distance(self.compute(t11), line.compute(t21)) < 1.0e-6, distance(self.compute(t12), line.compute(t22)) < 1.0e-5 {
+                if t11 < t12 {
+                    return [Intersection(t1: t11, t2: t21), Intersection(t1: t12, t2: t22)]
+                } else {
+                    return [Intersection(t1: t12, t2: t22), Intersection(t1: t11, t2: t21)]
+                }
+            } // end-coincident line test
+        }
+
         if self.p1 == line.p1 {
             return [Intersection(t1: 1.0, t2: 1.0)]
         } else if self.p1 == line.p0 {
@@ -162,11 +188,6 @@ public extension LineSegment {
         } else if self.p0 == line.p0 {
             return [Intersection(t1: 0.0, t2: 0.0)]
         }
-
-        let a1 = self.p0
-        let b1 = self.p1 - self.p0
-        let a2 = line.p0
-        let b2 = line.p1 - line.p0
 
         let _a = b1.x
         let _b = -b2.x
