@@ -94,11 +94,8 @@ class Demos {
                             cubicControlPoints: cubicControlPoints,
                             drawFunction: {(context: CGContext, demoState: DemoState) in
 
-
                                 let curve = demoState.curve!
                                 let points = stride(from: 0, through: 1, by: 1.0 / 7.0).map { curve.compute($0) }
-
-                                
 
                                 Draw.drawSkeleton(context, curve: curve)
                                 let LUT = curve.lookupTable(steps: 16)

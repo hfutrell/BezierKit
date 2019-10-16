@@ -82,7 +82,7 @@ class BoundingBoxHierarchyTests: XCTestCase {
 
     private func createListFromAllNodesVisited(in boundingBoxHierarchy: BoundingBoxHierarchy) -> [BoundingBoxHierarchy.Node] {
         var result: [BoundingBoxHierarchy.Node] = []
-        boundingBoxHierarchy.visit { (node: BoundingBoxHierarchy.Node, depth: Int) -> Bool in
+        boundingBoxHierarchy.visit { node, _ in
             result.append(node)
             return true
         }

@@ -163,6 +163,7 @@ class BezierCurveTests: XCTestCase {
 
     static let lineSegmentForOutlining = LineSegment(p0: CGPoint(x: -10, y: -5), p1: CGPoint(x: 20, y: 10))
 
+    // swiftlint:disable large_tuple
     private func lineOffsets(_ lineSegment: LineSegment, _ d1: CGFloat, _ d2: CGFloat, _ d3: CGFloat, _ d4: CGFloat) -> (CGPoint, CGPoint, CGPoint, CGPoint) {
         let o0 = lineSegment.startingPoint + d1 * lineSegment.normal(0)
         let o1 = lineSegment.endingPoint + d3 * lineSegment.normal(1)
@@ -170,6 +171,7 @@ class BezierCurveTests: XCTestCase {
         let o3 = lineSegment.startingPoint - d2 * lineSegment.normal(0)
         return (o0, o1, o2, o3)
     }
+    // swiftlint:enable large_tuple
 
     func testOutlineDistance() {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal

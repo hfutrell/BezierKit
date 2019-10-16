@@ -27,14 +27,11 @@ public class Draw {
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
      */
-    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
+    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
 
         // Check for saturation. If there isn't any just return the luminance value for each, which results in gray.
         if s == 0.0 {
-            outR = l
-            outG = l
-            outB = l
-            return
+            return (r: l, g: l, b: l)
         }
 
         var temp1, temp2: CGFloat
@@ -72,9 +69,7 @@ public class Draw {
             }
         }
         // Assign temporary values to R, G, B
-        outR = temp[0]
-        outG = temp[1]
-        outB = temp[2]
+        return (r: temp[0], g: temp[1], b: temp[2])
     }
 
     // MARK: - some useful hard-coded colors
@@ -92,11 +87,7 @@ public class Draw {
         var temp: [CGColor] = []
         for i in 0..<360 {
             var j = (i*47) % 360
-            var r: CGFloat = 0.0
-            var g: CGFloat = 0.0
-            var b: CGFloat = 0.0
-            HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5, outR: &r, outG: &g, outB: &b)
-
+            let (r, g, b) = HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5)
             temp.append(Draw.Color(red: r, green: g, blue: b, alpha: 1.0))
         }
         return temp

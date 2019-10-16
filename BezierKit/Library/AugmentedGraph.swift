@@ -327,9 +327,7 @@ internal class AugmentedGraph {
 
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
         switch operation {
-        case .removeCrossings: // todo: investigate further coincident behavior
-            fallthrough
-        case .union:
+        case .union, .removeCrossings: // TODO: investigate further coincident behavior with .removeCrossings
             return v.forwardEdge == .external || (v.forwardEdge == .coincident && v.backwardEdge == .internal)
         case .subtract:
             return isOnFirstCurve ? v.isExit : v.isEntry // todo: investigate further coincident behavior
@@ -394,7 +392,7 @@ internal class AugmentedGraph {
 
 //                if shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) != movingForwards {
                     v = v.intersectionInfo!.neighbor!
-                    isOnFirstCurve = !isOnFirstCurve
+                    isOnFirstCurve.toggle()
                     print("switched sides")
 //                } else {
 //                    print("no switch sides")
@@ -403,7 +401,6 @@ internal class AugmentedGraph {
                 if isOnFirstCurve && v.isCrossing && unvisitedCrossings.contains(v) == false && v !== start {
                     return nil
                 }
-                
             } while v !== start && v.intersectionInfo?.neighbor != start
             pathComponents.append(PathComponent(curves: curves))
         }

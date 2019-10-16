@@ -329,6 +329,9 @@ internal class Utils {
         }
     }
 
+    // disable this SwiftLint warning about function having more than 5 parameters
+    // swiftlint:disable function_parameter_count
+
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],
@@ -376,6 +379,8 @@ internal class Utils {
             Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy)
         }
     }
+
+    // swiftlint:enable function_parameter_count
 
     static func getccenter( _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint, _ interval: Interval) -> Arc {
         let d1 = p2 - p1

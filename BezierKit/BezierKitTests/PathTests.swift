@@ -851,11 +851,11 @@ class PathTests: XCTestCase {
         let star = {() -> Path in
             let temp = CGMutablePath()
             temp.move(to: CGPoint(x: 111.2, y: 90.0))
-            temp.addLine(to: CGPoint(x: 144.72135954999578, y:137.02282018339787))
+            temp.addLine(to: CGPoint(x: 144.72135954999578, y: 137.02282018339787))
             temp.addLine(to: CGPoint(x: 89.64133022449836, y: 119.6729633084088))
             temp.addLine(to: CGPoint(x: 55.27864045000421, y: 166.0845213036123))
             temp.addLine(to: CGPoint(x: 54.758669775501644, y: 108.33889987152517))
-            temp.addLine(to: CGPoint(x: 0.0, y:  90.00000000000001))
+            temp.addLine(to: CGPoint(x: 0.0, y: 90.00000000000001))
             temp.addLine(to: CGPoint(x: 54.75866977550164, y: 71.66110012847484))
             temp.addLine(to: CGPoint(x: 55.2786404500042, y: 13.915478696387723))
             temp.addLine(to: CGPoint(x: 89.64133022449835, y: 60.3270366915912))

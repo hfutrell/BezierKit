@@ -154,9 +154,11 @@ public extension LineSegment {
         }
 
         func approximateNearEndpointsAndClamp(_ value: CGFloat) -> CGFloat {
-            if Utils.approximately(Double(value), 0, precision: Utils.epsilon) { return 0 }
-            else if Utils.approximately(Double(value), 1, precision: Utils.epsilon) { return 1 }
-            else {
+            if Utils.approximately(Double(value), 0, precision: Utils.epsilon) {
+                return 0
+            } else if Utils.approximately(Double(value), 1, precision: Utils.epsilon) {
+                return 1
+            } else {
                 return Utils.clamp(value, 0, 1)
             }
         }
