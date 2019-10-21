@@ -130,11 +130,9 @@ internal class Utils {
         let x3 = line2p1.x; let y3 = line2p1.y
         let x4 = line2p2.x; let y4 = line2p2.y
         let d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-        if d == 0 {
-            return nil
-        }
-        let a = (x1 * y2 - y1 * x2)
-        let b = (x3 * y4 - y3 * x4)
+        guard d != 0, d.isFinite else { return nil }
+        let a = x1 * y2 - y1 * x2
+        let b = x3 * y4 - y3 * x4
         let n = a * (line2p1 - line2p2) - b * (line1p1 - line1p2)
         return (1.0 / d) * n
     }

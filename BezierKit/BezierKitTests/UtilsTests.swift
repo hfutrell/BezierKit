@@ -51,4 +51,19 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(roots[0], CGFloat(0.053511820486391165), accuracy: accuracy)
         XCTAssertEqual(roots[1], CGFloat(0.64370120305889711), accuracy: accuracy)
     }
+
+    func testLinesIntersection() {
+        let p0 = CGPoint(x: 1, y: 2)
+        let p1 = CGPoint(x: 3, y: 4)
+        let p2 = CGPoint(x: 1, y: 4)
+        let p3 = CGPoint(x: 3, y: 2)
+        let p4 = CGPoint(x: 1, y: 3)
+        let p5 = CGPoint(x: 3, y: 5)
+        let nanPoint = CGPoint(x: CGFloat.nan, y: CGFloat.nan)
+        // basic cases
+        XCTAssertEqual(CGPoint(x: 2, y: 3), Utils.linesIntersection(p0, p1, p2, p3), "these lines should intersect.")
+        XCTAssertNil(Utils.linesIntersection(p0, p1, p4, p5), "these lines should NOT intersect.")
+        // degenerate case
+        XCTAssertNil(Utils.linesIntersection(nanPoint, nanPoint, p0, p1), "nothing should intersect a line that includes NaN values.")
+    }
 }
