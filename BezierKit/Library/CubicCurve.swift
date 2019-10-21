@@ -11,7 +11,7 @@ import CoreGraphics
 /**
  Cubic Bézier Curve
  */
-public struct CubicCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
+public struct CubicCurve: NonlinearBezierCurve, Equatable {
 
     public var p0, p1, p2, p3: CGPoint
 
@@ -93,10 +93,10 @@ public struct CubicCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
 
         let abc = Utils.getABC(n: 3, S: s, B: b, E: e, t: t)
 
-        let d1 = d ?? Utils.dist(b, abc.C)
+        let d1 = d ?? distance(b, abc.C)
         let d2 = d1 * oneMinusT / t
 
-        let selen = Utils.dist(start, end)
+        let selen = distance(start, end)
         let l = (1.0 / selen) * (e - s)
         let b1 = d1 * l
         let b2 = d2 * l

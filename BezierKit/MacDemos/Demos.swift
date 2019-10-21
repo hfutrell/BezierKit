@@ -267,20 +267,7 @@ class Demos {
                                     }
                                 }
     })
-    static let demo15 = Demo(title: ".arcs()",
-                             quadraticControlPoints: quadraticControlPoints,
-                             cubicControlPoints: cubicControlPoints,
-                             drawFunction: {(context: CGContext, demoState: DemoState) in
-                                let curve = demoState.curve! as! ArcApproximateable
-                                Draw.drawSkeleton(context, curve: curve)
-                                let arcs = curve.arcs()
-                                Draw.setColor(context, color: Draw.black)
-                                for arc in arcs {
-                                    Draw.setRandomFill(context, alpha: 0.1)
-                                    Draw.draw(context, arc: arc)
-                                }
-    })
-    static let demo16 = Demo(title: ".scale(d)",
+    static let demo15 = Demo(title: ".scale(d)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -310,7 +297,7 @@ class Demos {
                                     Draw.drawCurve(context, curve: curve)
                                 }
     })
-    static let demo17 = Demo(title: ".outline(d)",
+    static let demo16 = Demo(title: ".outline(d)",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: [CGPoint(x: 102, y: 33),
                                                   CGPoint(x: 16, y: 99),
@@ -329,19 +316,7 @@ class Demos {
                                 outline.offset(distance: -10).curves.forEach(doc)
     })
 
-    static let demo18 = Demo(title: "graduated outlines, using .outline(d1,d2,d3,d4)",
-                             quadraticControlPoints: quadraticControlPoints,
-                             cubicControlPoints: [CGPoint(x: 102, y: 33), CGPoint(x: 16, y: 99), CGPoint(x: 101, y: 129), CGPoint(x: 132, y: 173)],
-                             drawFunction: {(context: CGContext, demoState: DemoState) in
-                                let curve = demoState.curve!
-                                Draw.drawSkeleton(context, curve: curve)
-                                Draw.drawCurve(context, curve: curve)
-                                Draw.setColor(context, color: Draw.red)
-                                let doc = {(c: BezierCurve) in Draw.drawCurve(context, curve: c) }
-                                let outline = curve.outline(distanceAlongNormalStart: 5, distanceOppositeNormalStart: 5, distanceAlongNormalEnd: 25, distanceOppositeNormalEnd: 25)
-                                outline.curves.forEach(doc)
-    })
-    static let demo19 = Demo(title: "outlineShapes",
+    static let demo17 = Demo(title: "outlineShapes",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: cubicControlPoints,
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -354,7 +329,7 @@ class Demos {
                                     Draw.drawShape(context, shape: shape)
                                 }
     })
-    static let demo20 = Demo(title: ".selfIntersections()",
+    static let demo18 = Demo(title: ".selfIntersections()",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 180), CGPoint(x: 170, y: 165), CGPoint(x: 65, y: 70)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -372,7 +347,7 @@ class Demos {
     })
 
     // construct a line segment from start to end
-    static let demo21  = Demo(title: ".intersections(with line: LineSegment)",
+    static let demo19  = Demo(title: ".intersections(with line: LineSegment)",
                               quadraticControlPoints: [CGPoint(x: 58, y: 173), CGPoint(x: 26, y: 28), CGPoint(x: 163, y: 104)],
                               cubicControlPoints: [CGPoint(x: 53, y: 163), CGPoint(x: 27, y: 19), CGPoint(x: 182, y: 176), CGPoint(x: 155, y: 36)],
                               drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -387,7 +362,7 @@ class Demos {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
-    static let demo22 = Demo(title: ".intersections(with curve: BezierCurve)",
+    static let demo20 = Demo(title: ".intersections(with curve: BezierCurve)",
                              quadraticControlPoints: [CGPoint(x: 0, y: 0), CGPoint(x: 100, y: 187), CGPoint(x: 166, y: 37)],
                              cubicControlPoints: [CGPoint(x: 48, y: 84), CGPoint(x: 104, y: 176), CGPoint(x: 190, y: 37), CGPoint(x: 121, y: 75)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -402,7 +377,7 @@ class Demos {
                                     Draw.drawPoint(context, origin: curve.compute(intersection.t1))
                                 }
     })
-    static let demo23 = Demo(title: "CGPath interoperability",
+    static let demo21 = Demo(title: "CGPath interoperability",
                              quadraticControlPoints: [],
                              cubicControlPoints: [],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
@@ -462,7 +437,7 @@ class Demos {
                                     Draw.drawPath(context, subtracted)
                                 }
     })
-    static let demo24 = Demo(title: "BoundingBoxHierarchy",
+    static let demo22 = Demo(title: "BoundingBoxHierarchy",
                              quadraticControlPoints: [],
                              cubicControlPoints: [],
                              drawFunction: {(context: CGContext, _: DemoState) in
@@ -491,5 +466,5 @@ class Demos {
 
     })
 
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23, demo24]
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22]
 }

@@ -8,7 +8,7 @@
 
 import CoreGraphics
 
-public struct QuadraticCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
+public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
 
     public var p0, p1, p2: CGPoint
 

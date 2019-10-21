@@ -8,13 +8,6 @@
 
 import CoreGraphics
 
-public typealias DistanceFunction = (_ v: CGFloat) -> CGFloat
-
-private enum ScaleEnum {
-    case constant(CGFloat)
-    case function(DistanceFunction)
-}
-
 public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t1: CGFloat
     public let t2: CGFloat
@@ -221,81 +214,34 @@ extension BezierCurve {
 
     // MARK: -
 
-    /*
-     Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that point exists, which is only guaranteed for simple segments.
-     */
-    public func scale(distance d: CGFloat) -> Self {
-        return internalScale(scaler: .constant(d))
-    }
-
-    private func scale(distanceFunction distanceFn: @escaping DistanceFunction) -> Self {
-        return internalScale(scaler: .function(distanceFn))
-    }
-
-    private func internalScale(scaler: ScaleEnum) -> Self {
-
+    /// Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that intersection point exists, which is only guaranteed for simple segments.
+    /// - Parameter distance: desired distance the resulting curve should fall from the original (in the direction of its normals).
+    public func scale(distance: CGFloat) -> Self {
         let order = self.order
-        guard self.order > 0 else { return self } // undefined behavior for points
-
-        let r1: CGFloat
-        let r2: CGFloat
-        switch scaler {
-        case let .constant(distance):
-            r1 = distance
-            r2 = distance
-        case let .function(distanceFunction):
-            r1 = distanceFunction(0)
-            r2 = distanceFunction(1)
-        }
-
-        let v = [ self.internalOffset(t: 0, distance: 1), self.internalOffset(t: 1, distance: 1) ]
-        // move all points by distance 'd' wrt the origin 'o'
-        let points: [CGPoint] = self.points
-        var np: [CGPoint] = [CGPoint](repeating: .zero, count: self.order + 1)
-
-        // move end points by fixed distance along normal.
-        np[0]       = points[0]     + r1 * v[0].n
-        np[order]   = points[order] + r2 * v[1].n
-
-        guard self.order > 1 else { return Self.init(points: np) } // for line segments nothing left to do
-
-        let o = Utils.linesIntersection(v[0].p, v[0].c, v[1].p, v[1].c)
-
-        switch scaler {
-        case .constant:
-            // move control points to lie on the intersection of the offset
-            // derivative vector, and the origin-through-control vector
-            for t in [0, 1] {
-                if (self.order==2) && (t != 0) {
-                    break
+        assert(order < 4, "only works with cubic or lower order")
+        guard order > 0 else { return self } // points cannot be scaled
+        let points = self.points
+        let origin = Utils.linesIntersection(self.startingPoint, self.startingPoint + self.normal(0), self.endingPoint, self.endingPoint - self.normal(1))
+        func scaledPoint(index: Int) -> CGPoint {
+            let referencePointIsStart = (index < 2 && order > 1) || (index == 0 && order == 1)
+            let referenceT: CGFloat = referencePointIsStart ? 0.0 : 1.0
+            let referenceIndex = referencePointIsStart ? 0 : self.order
+            let referencePoint = self.offset(t: referenceT, distance: distance)
+            switch index {
+            case 0, self.order:
+                return referencePoint
+            default:
+                let tangent = self.normal(referenceT).perpendicular
+                if let origin = origin, let intersection = Utils.linesIntersection(referencePoint, referencePoint + tangent, origin, points[index]) {
+                    return intersection
+                } else {
+                    // no origin to scale control points through, just use start and end points as a reference
+                    return referencePoint + (points[index] - points[referenceIndex])
                 }
-                let p = np[t*order] // either the first or last of np
-                let d = -self.normal(CGFloat(t)).perpendicular
-                let p2 = p + d
-                let o2 = o ?? (points[t+1] - self.normal(CGFloat(t)))
-                let fallback = points[t+1] + (np[t*order] - points[t*order])
-                np[t+1] = Utils.linesIntersection(p, p2, o2, points[t+1]) ?? fallback
-            }
-        case let .function(distanceFunction):
-            let clockwise: Bool = {
-                let points = self.points
-                let angle = Utils.angle(o: points[0], v1: points[self.order], v2: points[1])
-                return angle > 0
-            }()
-            for t in [0, 1] {
-                if (self.order==2) && (t != 0) {
-                    break
-                }
-                let p = self.points[t+1]
-                let ov = (o != nil) ? (p - o!).normalize() : -self.normal(CGFloat(t))
-                var rc: CGFloat = distanceFunction(CGFloat(t+1) / CGFloat(self.order))
-                if !clockwise {
-                    rc = -rc
-                }
-                np[t+1] = p + rc * ov
             }
         }
-        return Self.init(points: np)
+        let scaledPoints = (0..<self.points.count).map(scaledPoint)
+        return Self.init(points: scaledPoints)
     }
 
     // MARK: -
@@ -311,14 +257,8 @@ extension BezierCurve {
         return result
     }
 
-    public func offset(t: CGFloat, distance d: CGFloat) -> CGPoint {
-        return self.internalOffset(t: t, distance: d).p
-    }
-
-    private func internalOffset(t: CGFloat, distance d: CGFloat) -> (c: CGPoint, n: CGPoint, p: CGPoint) {
-        let c = self.compute(t)
-        let n = self.normal(t)
-        return (c: c, n: n, p: c + d * n)
+    public func offset(t: CGFloat, distance: CGFloat) -> CGPoint {
+        return self.compute(t) + distance * self.normal(t)
     }
 
     // MARK: - intersection
@@ -330,18 +270,11 @@ extension BezierCurve {
     // MARK: - outlines
 
     public func outline(distance d1: CGFloat) -> PathComponent {
-        return internalOutline(d1: d1, d2: d1, d3: 0.0, d4: 0.0, graduated: false)
+        return internalOutline(d1: d1, d2: d1)
     }
 
     public func outline(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat) -> PathComponent {
-        return internalOutline(d1: d1, d2: d2, d3: 0.0, d4: 0.0, graduated: false)
-    }
-
-    public func outline(distanceAlongNormalStart d1: CGFloat,
-                        distanceOppositeNormalStart d2: CGFloat,
-                        distanceAlongNormalEnd d3: CGFloat,
-                        distanceOppositeNormalEnd d4: CGFloat) -> PathComponent {
-        return internalOutline(d1: d1, d2: d2, d3: d3, d4: d4, graduated: true)
+        return internalOutline(d1: d1, d2: d2)
     }
 
     private func ensureContinuous(_ curves: inout [BezierCurve]) {
@@ -355,54 +288,23 @@ extension BezierCurve {
         }
     }
 
-    private func internalOutline(d1: CGFloat, d2: CGFloat, d3: CGFloat, d4: CGFloat, graduated: Bool) -> PathComponent {
-
+    private func internalOutline(d1: CGFloat, d2: CGFloat) -> PathComponent {
         let reduced = self.reduce()
-        let len = reduced.count
-        var fcurves: [BezierCurve] = []
-        var bcurves: [BezierCurve] = []
-        //        var p
-        let tlen = self.length()
-
-        let linearDistanceFunction = {(_ s: CGFloat, _ e: CGFloat, _ tlen: CGFloat, _ alen: CGFloat, _ slen: CGFloat) -> DistanceFunction in
-            return { (_ v: CGFloat) -> CGFloat in
-                let f1: CGFloat = alen / tlen
-                let f2: CGFloat = (alen+slen) / tlen
-                let d: CGFloat = e-s
-                return Utils.map(v, 0, 1, s+f1*d, s+f2*d)
-            }
-        }
-
-        // form curve oulines
-        var alen: CGFloat = 0.0
-
-        for segment in reduced {
-            let slen = segment.curve.length()
-            if graduated {
-                fcurves.append(segment.curve.scale(distanceFunction: linearDistanceFunction( d1, d3, tlen, alen, slen)  ))
-                bcurves.append(segment.curve.scale(distanceFunction: linearDistanceFunction(-d2, -d4, tlen, alen, slen)  ))
-            } else {
-                fcurves.append(segment.curve.scale(distance: d1))
-                bcurves.append(segment.curve.scale(distance: -d2))
-            }
-            alen += slen
-        }
-
-        ensureContinuous(&fcurves)
-        ensureContinuous(&bcurves)
-
+        let length = reduced.count
+        var forwardCurves: [BezierCurve] = reduced.map { $0.curve.scale(distance: d1) }
+        var backCurves: [BezierCurve] = reduced.map{ $0.curve.scale(distance: -d2) }
+        ensureContinuous(&forwardCurves)
+        ensureContinuous(&backCurves)
         // reverse the "return" outline
-        bcurves = bcurves.reversed().map { $0.reversed() }
-
+        backCurves = backCurves.reversed().map { $0.reversed() }
         // form the endcaps as lines
-        let fs = fcurves[0].points[0]
-        let fe = fcurves[len-1].points[fcurves[len-1].points.count-1]
-        let bs = bcurves[len-1].points[bcurves[len-1].points.count-1]
-        let be = bcurves[0].points[0]
-        let ls = LineSegment(p0: bs, p1: fs)
-        let le = LineSegment(p0: fe, p1: be)
-        let segments = [ls] + fcurves + [le] + bcurves
-
+        let forwardStart = forwardCurves[0].points[0]
+        let forwardEnd = forwardCurves[length-1].points[forwardCurves[length-1].points.count-1]
+        let backStart = backCurves[length-1].points[backCurves[length-1].points.count-1]
+        let backEnd = backCurves[0].points[0]
+        let lineStart = LineSegment(p0: backStart, p1: forwardStart)
+        let lineEnd = LineSegment(p0: forwardEnd, p1: backEnd)
+        let segments = [lineStart] + forwardCurves + [lineEnd] + backCurves
         return PathComponent(curves: segments)
     }
 

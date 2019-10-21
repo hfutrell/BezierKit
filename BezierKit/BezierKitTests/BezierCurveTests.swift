@@ -206,53 +206,6 @@ class BezierCurveTests: XCTestCase {
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: LineSegment(p0: o2, p1: o3)))
     }
 
-    func testOutlineFourArguments() {
-        // Graduated offsetting is achieved by using four distances measures, where d1 is the initial offset along the normal, d2 the initial distance along the anti-normal, d3 the final offset along the normal, and d4 the final offset along the anti-normal.
-        let lineSegment = BezierCurveTests.lineSegmentForOutlining
-        let distanceAlongNormal1: CGFloat = 2
-        let distanceOppositeNormal1: CGFloat = 4
-        let distanceAlongNormal2: CGFloat = 1
-        let distanceOppositeNormal2: CGFloat = 2
-
-        let outline: PathComponent = lineSegment.outline(distanceAlongNormalStart: distanceAlongNormal1,
-                                                      distanceOppositeNormalStart: distanceOppositeNormal1,
-                                                      distanceAlongNormalEnd: distanceAlongNormal2,
-                                                      distanceOppositeNormalEnd: distanceOppositeNormal2)
-
-        XCTAssertEqual(outline.elementCount, 4)
-
-        let (o0, o1, o2, o3) = lineOffsets(lineSegment, distanceAlongNormal1, distanceOppositeNormal1, distanceAlongNormal2, distanceOppositeNormal2)
-
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: LineSegment(p0: o3, p1: o0)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: LineSegment(p0: o0, p1: o1)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: LineSegment(p0: o1, p1: o2)))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: LineSegment(p0: o2, p1: o3)))
-    }
-
-    func testOutlineFourArgumentsQuadratic() {
-        // we need this special test for quadratics for two reasons:
-        // 1. scale has a special case for linear
-        // 2. quadratics are upgrade in the outline function (why?)
-
-        let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 9.0, y: 11.0), p2: CGPoint(x: 20.0, y: 20.0))
-        let outline: PathComponent = q.outline(distanceAlongNormalStart: sqrt(2),
-                                               distanceOppositeNormalStart: sqrt(2),
-                                               distanceAlongNormalEnd: 2 * sqrt(2),
-                                               distanceOppositeNormalEnd: 2 * sqrt(2))
-
-        let expectedSegment1 = LineSegment(p0: CGPoint(x: 1, y: -1), p1: CGPoint(x: -1, y: 1))
-        let expectedSegment2 = QuadraticCurve(p0: CGPoint(x: -1, y: 1), p1: CGPoint(x: 7.5, y: 12.5), p2: CGPoint(x: 18, y: 22))
-        let expectedSegment3 = LineSegment(p0: CGPoint(x: 18, y: 22), p1: CGPoint(x: 22, y: 18))
-        let expectedSegment4 = QuadraticCurve(p0: CGPoint(x: 22, y: 18), p1: CGPoint(x: 10.5, y: 9.5), p2: CGPoint(x: 1, y: -1))
-
-        XCTAssertEqual(outline.elementCount, 4)
-        // hard to compute this outline exactly, so just check the computed value roughly equals our estimate of what it should be
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1, tolerance: 0.33 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2, tolerance: 0.33 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3, tolerance: 0.33 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: expectedSegment4, tolerance: 0.33 ))
-    }
-
     func testOutlineQuadraticNormalsParallel() {
         // this tests a special corner case of outlines where endpoint normals are parallel
 
@@ -263,24 +216,6 @@ class BezierCurveTests: XCTestCase {
         let expectedSegment2 = LineSegment(p0: CGPoint(x: 0, y: 1), p1: CGPoint(x: 10, y: 1))
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 10, y: 1), p1: CGPoint(x: 10, y: -1))
         let expectedSegment4 = LineSegment(p0: CGPoint(x: 10, y: -1), p1: CGPoint(x: 0, y: -1))
-
-        XCTAssertEqual(outline.elementCount, 4)
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3 ))
-        XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 3), matchesCurve: expectedSegment4 ))
-    }
-
-    func testOutlineFourArgumentsQuadraticNormalsParallel() {
-        // this tests a special corner case of tapered outlines where endpoint normals are parallel
-
-        let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 10.0, y: 0.0), p2: CGPoint(x: 20.0, y: 0.0))
-        let outline: PathComponent = q.outline(distanceAlongNormalStart: 2, distanceOppositeNormalStart: 2, distanceAlongNormalEnd: 1, distanceOppositeNormalEnd: 1)
-
-        let expectedSegment1 = LineSegment(p0: CGPoint(x: 0.0, y: -2.0), p1: CGPoint(x: 0.0, y: 2.0))
-        let expectedSegment2 = LineSegment(p0: CGPoint(x: 0.0, y: 2.0), p1: CGPoint(x: 20.0, y: 1.0))
-        let expectedSegment3 = LineSegment(p0: CGPoint(x: 20.0, y: 1.0), p1: CGPoint(x: 20.0, y: -1.0))
-        let expectedSegment4 = LineSegment(p0: CGPoint(x: 20.0, y: -1.0), p1: CGPoint(x: 0.0, y: -2.0))
 
         XCTAssertEqual(outline.elementCount, 4)
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1 ))

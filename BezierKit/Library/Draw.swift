@@ -199,20 +199,6 @@ public class Draw {
             context.setStrokeColor(black)
             self.drawPoints(context, points: curve.points, offset: offset)
         }
-
-    }
-
-    public static func draw(_ context: CGContext, arc: Arc, offset: CGPoint = .zero) {
-        let o = offset
-        context.beginPath()
-        context.move(to: arc.origin + o)
-        context.addArc(center: arc.origin + o,
-                       radius: arc.radius,
-                       startAngle: arc.startAngle,
-                       endAngle: arc.endAngle,
-                       clockwise: false)
-        context.addLine(to: arc.origin + o)
-        context.drawPath(using: .fillStroke)
     }
 
     public static func drawHull(_ context: CGContext, hull: [CGPoint], offset: CGPoint = .zero) {
