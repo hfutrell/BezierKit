@@ -85,12 +85,8 @@
 		FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */; };
 		FDE6CD8F1EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
 		FDE6CD901EC8F9BD00FAB479 /* LineSegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */; };
-		FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */; };
-		FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */; };
 		FDEB70A11F36568B00539003 /* BezierKitTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTestHelpers.swift */; };
 		FDEB70A21F36568B00539003 /* BezierKitTestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0F55081DC43FFB0084CDCD /* BezierKitTestHelpers.swift */; };
-		FDEB70A41F3674CB00539003 /* ArcApproximateableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */; };
-		FDEB70A51F3674CB00539003 /* ArcApproximateableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */; };
 		FDEF4C6121FBD75A00DCC5C2 /* BoundingBoxHierarchyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEF4C6021FBD75A00DCC5C2 /* BoundingBoxHierarchyTests.swift */; };
 		FDEF4C6221FBD75A00DCC5C2 /* BoundingBoxHierarchyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEF4C6021FBD75A00DCC5C2 /* BoundingBoxHierarchyTests.swift */; };
 		FDF0664E1FFA0C9900123308 /* BezierCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF0664D1FFA0C9900123308 /* BezierCurveTests.swift */; };
@@ -190,8 +186,6 @@
 		FDDEB240224AD8CB0028DD79 /* FlatnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlatnessTests.swift; sourceTree = "<group>"; };
 		FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineSegmentTests.swift; sourceTree = "<group>"; };
-		FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArcApproximateable.swift; sourceTree = "<group>"; };
-		FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArcApproximateableTests.swift; sourceTree = "<group>"; };
 		FDEF4C6021FBD75A00DCC5C2 /* BoundingBoxHierarchyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingBoxHierarchyTests.swift; sourceTree = "<group>"; };
 		FDF0664D1FFA0C9900123308 /* BezierCurveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierCurveTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -273,7 +267,6 @@
 				FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */,
 				FDA727581ED5035300011871 /* CubicCurveTests.swift */,
 				FD40244F2110CF5100FA723C /* QuadraticCurveTests.swift */,
-				FDEB70A31F3674CB00539003 /* ArcApproximateableTests.swift */,
 				FD4A6400200ACB8900930E10 /* ShapeTests.swift */,
 				FD4A6405200B11DA00930E10 /* PathComponentTests.swift */,
 				FD05111720153EAE000D035E /* BoundingBoxTests.swift */,
@@ -317,7 +310,6 @@
 				FDB6B3FE1EAFD6DF00001C61 /* QuadraticCurve.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicCurve.swift */,
 				FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */,
-				FDE6CD911EC92EDF00FAB479 /* ArcApproximateable.swift */,
 				FDB6B3F91EAFD6DF00001C61 /* Draw.swift */,
 				FDB6B3FC1EAFD6DF00001C61 /* CGPoint+Overloads.swift */,
 				FDB6B3FF1EAFD6DF00001C61 /* Types.swift */,
@@ -647,7 +639,6 @@
 				FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
-				FDE6CD931EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 				FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
@@ -672,7 +663,6 @@
 				FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
-				FDE6CD921EC92EDF00FAB479 /* ArcApproximateable.swift in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 				FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
@@ -688,7 +678,6 @@
 				FDCE99A22239806400597989 /* Path+DataTests.swift in Sources */,
 				FD4A6403200ACBD200930E10 /* ShapeTests.swift in Sources */,
 				FDF0664E1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
-				FDEB70A41F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
 				FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */,
 				FD12F1E22288CF6900404CE1 /* UtilsTests.swift in Sources */,
 				FDA727591ED5035300011871 /* CubicCurveTests.swift in Sources */,
@@ -715,7 +704,6 @@
 				FDCE99A32239806400597989 /* Path+DataTests.swift in Sources */,
 				FD4A6404200ACBD200930E10 /* ShapeTests.swift in Sources */,
 				FDF0664F1FFA0C9900123308 /* BezierCurveTests.swift in Sources */,
-				FDEB70A51F3674CB00539003 /* ArcApproximateableTests.swift in Sources */,
 				FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */,
 				FD12F1E32288CF6900404CE1 /* UtilsTests.swift in Sources */,
 				FDA7275A1ED5035300011871 /* CubicCurveTests.swift in Sources */,
@@ -932,6 +920,7 @@
 				PRODUCT_NAME = BezierKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -958,6 +947,7 @@
 				PRODUCT_NAME = BezierKit;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;

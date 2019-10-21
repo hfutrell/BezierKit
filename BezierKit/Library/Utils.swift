@@ -290,10 +290,6 @@ internal class Utils {
         return v1 + r * (v2 - v1)
     }
 
-    static func dist(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
-        return (p1 - p2).length
-    }
-
     static func arcfn(_ t: CGFloat, _ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
         let d = derivativeFn(t)
         return d.length
@@ -379,54 +375,6 @@ internal class Utils {
     }
 
     // swiftlint:enable function_parameter_count
-
-    static func getccenter( _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint, _ interval: Interval) -> Arc {
-        let d1 = p2 - p1
-        let d2 = p3 - p2
-        let d1p = CGPoint(x: d1.x * cos(CGFloat(quart)) - d1.y * sin(CGFloat(quart)),
-                          y: d1.x * sin(CGFloat(quart)) + d1.y * cos(CGFloat(quart)))
-        let d2p = CGPoint(x: d2.x * cos(CGFloat(quart)) - d2.y * sin(CGFloat(quart)),
-                          y: d2.x * sin(CGFloat(quart)) + d2.y * cos(CGFloat(quart)))
-        // chord midpoints
-        let m1 = 0.5 * (p1 + p2)
-        let m2 = 0.5 * (p2 + p3)
-        // midpoint offsets
-        let m1n = m1 + d1p
-        let m2n = m2 + d2p
-        // intersection of these lines:
-        let oo = Utils.linesIntersection(m1, m1n, m2, m2n)
-
-        assert(oo != nil)
-
-        let o: CGPoint = oo!
-        let r = Utils.dist(o, p1)
-        // arc start/end values, over mid point:
-        var s = atan2(p1.y - o.y, p1.x - o.x)
-        let m = atan2(p2.y - o.y, p2.x - o.x)
-        var e = atan2(p3.y - o.y, p3.x - o.x)
-        // determine arc direction (cw/ccw correction)
-        if s<e {
-            // if s<m<e, arc(s, e)
-            // if m<s<e, arc(e, s + tau)
-            // if s<e<m, arc(e, s + tau)
-            if s>m || m>e {
-                s += CGFloat(tau)
-            }
-            if s>e {
-                swap(&s, &e)
-            }
-        } else {
-            // if e<m<s, arc(e, s)
-            // if m<e<s, arc(s, e + tau)
-            // if e<s<m, arc(s, e + tau)
-            if e<m && m<s {
-                swap(&s, &e)
-            } else {
-                e += CGFloat(tau)
-            }
-        }
-        return Arc(origin: o, radius: r, startAngle: s, endAngle: e, interval: interval)
-    }
 
     static func hull(_ p: [CGPoint], _ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count
