@@ -133,7 +133,7 @@ internal class PathLinkedListRepresentation {
     }
 
     fileprivate func nonCrossingComponents() -> [PathComponent] {
-        // returns the components of this path that do not cross the path passed as the argument to markEntryExit(_:)
+        // returns the components of this path that do not cross the path passed as the argument to `classifyEdges`
         var result: [PathComponent] = []
         for i in 0..<lists.count {
             var hasCrossing = false
@@ -149,110 +149,59 @@ internal class PathLinkedListRepresentation {
         return result
     }
 
-    fileprivate func markEntryExit(_ path: Path, useRelativeWinding: Bool = false) {
-        let fillRule: PathFillRule = useRelativeWinding ? .winding : .evenOdd
+    fileprivate func classifyEdges(_ path: Path, comparingAgainstSelf: Bool = false) {
+        let fillRule: PathFillRule = comparingAgainstSelf ? .winding : .evenOdd
+        func vertexIsIntersection(_ v: Vertex) -> Bool {
+            return v.intersectionInfo?.neighbor != nil
+        }
         for i in 0..<lists.count {
-            // determine the initial winding count (winding count before first vertex)
-            var initialWinding = 0
-
-            // don't start by computing winding count on a tiny element
-            var b = startingVertex(forComponentIndex: i, elementIndex: 0)
-            while b.previous.emitPrevious().length() > b.emitPrevious().length() {
-                b = b.previous!
-            }
-            let startingVertex = b
-
-           // if useRelativeWinding {
-                let prev = startingVertex.emitPrevious()
-                let p = prev.compute(0.5)
-                let n = prev.normal(0.5)
-                let line = LineSegment(p0: p, p1: p + n)
-                let intersections = Path(curve: line).intersections(with: path)
-                let s: CGFloat = 0.5 * (intersections.map({$0.indexedPathLocation1.t}).sorted().first(where: {$0 > CGFloat(Utils.epsilon) }) ?? 1.0)
-                initialWinding = path.windingCount(p + s * n)
-                let w1 = path.windingCount(p + s * n)
-            let w2 = path.windingCount(p - 1.0e-4 * n)
-
-            initialWinding = w1
-            if windingCountImpliesContainment(w2, using: fillRule) && useRelativeWinding == false {
-                initialWinding = w2
-            }
-
-            #warning("this is wrong")
-            if w1 != w2, useRelativeWinding == false {
-                startingVertex.previous.forwardEdge = .coincident
+            let startingVertex: Vertex
+            if let firstIntersection = self.firstIntersectionVertex(forComponentindex: i) {
+                startingVertex = firstIntersection
             } else {
-                startingVertex.previous.forwardEdge = windingCountImpliesContainment(initialWinding, using: fillRule) ? .internal : .external
+                // component has no intersections -- we'll classify edges as either all inside or all outside.
+                startingVertex = self.startingVertex(forComponentIndex: i, elementIndex: 0)
+                startingVertex.forwardEdge = path.contains(startingVertex.location, using: fillRule) ? .internal : .external
             }
-
-          //  } else {
-          //      initialWinding = path.windingCount(startingVertex.emitPrevious().compute(0.5))
-          //  }
-            // determine entries / exists based on winding counts around component
-            var windingCount = initialWinding
-
             self.forEachVertexStartingFrom(startingVertex) { v in
-                guard let neighbor = v.intersectionInfo?.neighbor else {
+                guard vertexIsIntersection(v) else {
+                    // until we hit an intersection edges continue with same classification as prior edge
                     v.forwardEdge = v.previous.forwardEdge
                     return
                 }
-                let previous = v.emitPrevious()
-                let next = v.emitNext()
-
-                let smallNumber: CGFloat = 0.001
-                let n1 = neighbor.emitPrevious().compute(smallNumber) - v.location
-                let n2 = neighbor.emitNext().compute(smallNumber) - v.location
-                let v1 = previous.compute(smallNumber) - v.location
-                let v2 = next.compute(smallNumber) - v.location
-
-                var wasInside = windingCountImpliesContainment(windingCount, using: fillRule)
-                if useRelativeWinding {
-                    wasInside = wasInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
-                }
-
-                let wasOnEdge    =  distance(v1.normalize(), n2.normalize()) < 1.0e-5 || distance(v1.normalize(), n1.normalize()) < 1.0e-5
-                let isOnEdge     =  distance(v2.normalize(), n2.normalize()) < 1.0e-5 || distance(v2.normalize(), n1.normalize()) < 1.0e-5
-
-                var windingCountChange = (isOnEdge && wasOnEdge) ? 0 : windingCountAdjustment(v1, v2, n1, n2)
-
-                // handle edge changes
-                if isOnEdge != wasOnEdge {
-                    windingCountChange = 0
-                    if wasOnEdge {
-                        let onPositiveSide = vectorOnPositiveSide(v2, n1, n2)
-                        if onPositiveSide == true && windingCount < 0 {
-                            windingCountChange = 1
-                        } else if onPositiveSide == false && windingCount > 0 {
-                            windingCountChange = -1
-                        }
-                    } else if !wasInside {
-                        windingCountChange = vectorOnPositiveSide(v1, n1, n2) ? -1 : 1
-                    }
-                }
-
-                windingCount += windingCountChange
-
-                var isInside = windingCountImpliesContainment(windingCount, using: fillRule)
-                if useRelativeWinding {
-                    isInside = isInside && windingCountImpliesContainment(windingCount+1, using: fillRule)
-                }
-
-                if isOnEdge {
-                    print("coincident at \(v.location)")
-                    v.forwardEdge = .coincident
-                } else {
-                    if isInside {
-                        print("internal at \(v.location)")
+                let nextEdge = v.emitNext()
+                let point = nextEdge.compute(0.5)
+                let normal = nextEdge.normal(0.5)
+                let smallDistance: CGFloat = CGFloat(Utils.epsilon)
+                let windingCount1 = path.windingCount(point + smallDistance * normal)
+                let windingCount2 = path.windingCount(point - smallDistance * normal)
+                let contained1 = windingCountImpliesContainment(windingCount1, using: fillRule)
+                let contained2 = windingCountImpliesContainment(windingCount2, using: fillRule)
+                if comparingAgainstSelf {
+                    if contained1, contained2 {
+                        v.forwardEdge = .internal
                     } else {
-                        print("external at \(v.location)")
+                        v.forwardEdge = .external
                     }
-                    v.forwardEdge = isInside ? .internal : .external
+                } else {
+                    if windingCount1 == windingCount2 {
+                        v.forwardEdge = contained1 ? .internal : .external
+                    } else {
+                        v.forwardEdge = .coincident
+                    }
                 }
             }
-//            if initialWinding != windingCount {
-//                print("warning: winding count found in .markEntryExit() not consistent")
-//            }
         }
+    }
+
+    private func firstIntersectionVertex(forComponentindex i: Int) -> Vertex? {
+        let startingVertex = self.startingVertex(forComponentIndex: i, elementIndex: 0)
+        var v = startingVertex
+        repeat {
+            if v.intersectionInfo?.neighbor != nil { return v }
+            v = v.next!
+        } while v != startingVertex
+        return nil
     }
 
     private func forEachVertexStartingFrom(_ v: Vertex, _ callback: (Vertex) -> Void) {
@@ -310,12 +259,10 @@ internal class AugmentedGraph {
             list2.insertIntersectionVertex(vertex2, at: location2)
         }
         // mark each intersection as either entry or exit
-        let useRelativeWinding = (list1 === list2)
-        print("doing first path")
-        list1.markEntryExit(path2, useRelativeWinding: useRelativeWinding)
-        if useRelativeWinding == false {
-            print("doing second path")
-            list2.markEntryExit(path1, useRelativeWinding: useRelativeWinding)
+        let isComparingAgainstSelf = (list1 === list2)
+        list1.classifyEdges(path2, comparingAgainstSelf: isComparingAgainstSelf)
+        if isComparingAgainstSelf == false {
+            list2.classifyEdges(path1, comparingAgainstSelf: isComparingAgainstSelf)
         }
     }
 
@@ -326,13 +273,14 @@ internal class AugmentedGraph {
     // EDGES (for union those are EXTERIOR) edges
 
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
+        // TODO: investigate coincident behavior with operation types besides `.union`
         switch operation {
-        case .union, .removeCrossings: // TODO: investigate further coincident behavior with .removeCrossings
+        case .union, .removeCrossings:
             return v.forwardEdge == .external || (v.forwardEdge == .coincident && v.backwardEdge == .internal)
         case .subtract:
-            return isOnFirstCurve ? v.isExit : v.isEntry // todo: investigate further coincident behavior
+            return isOnFirstCurve ? v.isExit : v.isEntry
         case .intersect:
-            return v.isEntry // todo: investigate further coincident behavior
+            return v.isEntry
         }
     }
 
@@ -376,28 +324,16 @@ internal class AugmentedGraph {
             var curves: [BezierCurve] = []
             var isOnFirstCurve = true
             var v = start
-            print("started at \(v.location)")
             repeat {
                 let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
                 repeat {
                     curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
                     v = movingForwards ? v.next : v.previous
-                    print("moved to \(v.location)")
                 } while v.isIntersection == false || shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) == movingForwards
-
-                print("found entry or exit at \(v.location)")
-
                 unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
-
-//                if shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) != movingForwards {
-                    v = v.intersectionInfo!.neighbor!
-                    isOnFirstCurve.toggle()
-                    print("switched sides")
-//                } else {
-//                    print("no switch sides")
-//                }
-
+                v = v.intersectionInfo!.neighbor!
+                isOnFirstCurve.toggle()
                 if isOnFirstCurve && v.isCrossing && unvisitedCrossings.contains(v) == false && v !== start {
                     return nil
                 }
@@ -454,15 +390,14 @@ internal class Vertex: Equatable {
     var isCrossing: Bool {
         guard self.isEntry || self.isExit else { return false }
         guard let neighbor = self.intersectionInfo?.neighbor else { return false }
-        guard neighbor.isEntry || neighbor.isExit else { return false }
-        return true
+        return neighbor.isEntry || neighbor.isExit
     }
     var isEntry: Bool {
-        return (self.forwardEdge == .internal || self.forwardEdge == .coincident) && backwardEdge == .external
+        return self.forwardEdge != .external && backwardEdge == .external
     }
     var isExit: Bool {
         let backwardEdge = self.backwardEdge
-        return self.forwardEdge == .external && (backwardEdge == .internal || backwardEdge == .coincident)
+        return self.forwardEdge == .external && backwardEdge != .external
     }
     var isIntersection: Bool {
         return self.intersectionInfo != nil
