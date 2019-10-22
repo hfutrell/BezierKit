@@ -292,7 +292,7 @@ extension BezierCurve {
         let reduced = self.reduce()
         let length = reduced.count
         var forwardCurves: [BezierCurve] = reduced.map { $0.curve.scale(distance: d1) }
-        var backCurves: [BezierCurve] = reduced.map{ $0.curve.scale(distance: -d2) }
+        var backCurves: [BezierCurve] = reduced.map { $0.curve.scale(distance: -d2) }
         ensureContinuous(&forwardCurves)
         ensureContinuous(&backCurves)
         // reverse the "return" outline
