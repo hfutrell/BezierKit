@@ -161,7 +161,7 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
                                 let d: CGFloat = 20.0
-                                for t in stride(from: 0, through: 1, by: 0.025) {
+                                for t in stride(from: 0, through: 1, by: 0.1) {
                                     let pt = curve.compute(CGFloat(t))
                                     let dv = curve.normal(CGFloat(t))
                                     Draw.drawLine(context, from: pt, to: pt + d * dv )
