@@ -8,30 +8,6 @@
 
 import CoreGraphics
 
-/// - Returns: true if the vector v falls in the positive region of the surface formed by s1 and s2
-internal func vectorOnPositiveSide(_ v: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Bool {
-    if s2.cross(s1) > 0 {
-        return s2.cross(v) > 0 && s1.cross(v) < 0
-    } else {
-        return s2.cross(v) > 0 || s1.cross(v) < 0
-    }
-}
-/// evaluates and returns the amount to increment the winding count when passing through an intersection with a path
-///
-/// - Parameters:
-///   - v1: incoming direction vector passing through path
-///   - v2: outgoing direction vector passing through path
-///   - s1: incoming direction of path
-///   - s2: outgoing direction of path
-/// - Returns: the amount to increment the winding count, either +1, 0, or -1
-internal func windingCountAdjustment(_ v1: CGPoint, _ v2: CGPoint, _ s1: CGPoint, _ s2: CGPoint) -> Int {
-    let positive1 = vectorOnPositiveSide(v1, s1, s2)
-    let positive2 = vectorOnPositiveSide(v2, s1, s2)
-    // if we go from positive to negative return -1, negative to positive +1, otherwise 0
-    guard positive1 != positive2 else { return 0 }
-    return positive1 ? -1 : 1
-}
-
 internal class PathLinkedListRepresentation {
 
     private var lists: [[Vertex]] = []
@@ -265,12 +241,6 @@ internal class AugmentedGraph {
             list2.classifyEdges(path1, comparingAgainstSelf: isComparingAgainstSelf)
         }
     }
-
-    // INSTEAD OF THIS WE NEED A PROPERTY ON INTERSECTIONS
-    // CALLED LIKE "DIRECTION TOWARDS INTERIOR IS FORWARDS"
-
-    // WE DON'T START AT "CROSSINGS" but rather "MUST INCLUDE"
-    // EDGES (for union those are EXTERIOR) edges
 
     private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
         // TODO: investigate coincident behavior with operation types besides `.union`
