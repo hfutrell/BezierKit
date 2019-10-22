@@ -132,6 +132,44 @@ public extension QuadraticCurve {
 }
 
 public extension LineSegment {
+    /// check if two line segments are coincident, and if so return intersections representing the range over which they are coincident, otherwise nil
+    /// - Parameter line1: the first line to check for coincidence
+    /// - Parameter line2: the second line to check for coincidence
+    static func coincidentLineCheck(_ line1: LineSegment, _ line2: LineSegment) -> [Intersection]? {
+        func approximateNearEndpointsAndClamp(_ value: CGFloat) -> CGFloat {
+            if Utils.approximately(Double(value), 0, precision: Utils.epsilon) {
+                return 0
+            } else if Utils.approximately(Double(value), 1, precision: Utils.epsilon) {
+                return 1
+            } else {
+                return Utils.clamp(value, 0, 1)
+            }
+        }
+        let a1 = line1.p0
+        let b1 = line1.p1 - line1.p0
+        let a2 = line2.p0
+        let b2 = line2.p1 - line2.p0
+        // coincident line test
+        let rlb2 = 1.0 / b2.lengthSquared
+        let b = rlb2 * (a1 - a2).dot(b2)
+        let m = rlb2 * b1.dot(b2)
+        let t21 = approximateNearEndpointsAndClamp(b)
+        let t22 = approximateNearEndpointsAndClamp(m + b)
+        guard t21 != t22 else { return nil }
+        // t2(t1) = m * t1 + b
+        // so t1(t2) = (t2 - b) / m
+        let t11 = approximateNearEndpointsAndClamp(( t21 - b ) / m)
+        let t12 = approximateNearEndpointsAndClamp(( t22 - b ) / m)
+        #warning("todo hardcoded magic number")
+        let smallValue: CGFloat = 1.0e-7
+        guard t11 != t12 else { return nil }
+        guard distance(line1.compute(t11), line2.compute(t21)) < smallValue else { return nil }
+        guard distance(line1.compute(t12), line2.compute(t22)) < smallValue else { return nil }
+        let i1 = Intersection(t1: t11, t2: t21)
+        let i2 = Intersection(t1: t12, t2: t22)
+        // compare the t-values to ensure intersections are properly sorted
+        return t11 < t12 ? [i1, i2] : [i2, i1]
+    }
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {
         case 3:
@@ -153,39 +191,14 @@ public extension LineSegment {
             return []
         }
 
-        func approximateNearEndpointsAndClamp(_ value: CGFloat) -> CGFloat {
-            if Utils.approximately(Double(value), 0, precision: Utils.epsilon) {
-                return 0
-            } else if Utils.approximately(Double(value), 1, precision: Utils.epsilon) {
-                return 1
-            } else {
-                return Utils.clamp(value, 0, 1)
-            }
+        if let intersections = LineSegment.coincidentLineCheck(self, line) {
+            return intersections
         }
 
         let a1 = self.p0
         let b1 = self.p1 - self.p0
         let a2 = line.p0
         let b2 = line.p1 - line.p0
-
-        // coincident line test
-        let rlb2 = 1.0 / b2.lengthSquared
-        let b = rlb2 * (a1 - a2).dot(b2)
-        let m = rlb2 * b1.dot(b2)
-        let t21 = approximateNearEndpointsAndClamp(b)
-        let t22 = approximateNearEndpointsAndClamp(m + b)
-        if t21 != t22 {
-            // t2(t1) = m * t1 + b
-            // so t1(t2) = (t2 - b) / m
-            let t11 = approximateNearEndpointsAndClamp(( t21 - b ) / m)
-            let t12 = approximateNearEndpointsAndClamp(( t22 - b ) / m)
-            #warning("todo hardcoded magic number")
-            if t11 != t12, distance(self.compute(t11), line.compute(t21)) < 1.0e-7, distance(self.compute(t12), line.compute(t22)) < 1.0e-7 {
-                let i1 = Intersection(t1: t11, t2: t21)
-                let i2 = Intersection(t1: t12, t2: t22)
-                return t11 < t12 ? [i1, i2] : [i2, i1]
-            } // end-coincident line test
-        }
 
         if self.p1 == line.p1 {
             return [Intersection(t1: 1.0, t2: 1.0)]
