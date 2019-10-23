@@ -286,7 +286,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         let intersections = self.selfIntersections(accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections, forCrossingsRemoved: true)
         return augmentedGraph.booleanOperation(.removeCrossings)
     }
 

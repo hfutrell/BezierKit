@@ -108,25 +108,37 @@ internal class PathLinkedListRepresentation {
         self.lists = p.components.map { self.createListFor(component: $0) }
     }
 
-    fileprivate func nonCrossingComponents() -> [PathComponent] {
-        // returns the components of this path that do not cross the path passed as the argument to `classifyEdges`
-        var result: [PathComponent] = []
-        for i in 0..<lists.count {
-            var hasCrossing = false
-            self.forEachVertexInComponent(atIndex: i) { v in
-                if v.isCrossing {
-                    hasCrossing = true
-                }
-            }
-            if hasCrossing == false {
-                result.append(self.path.components[i])
+    fileprivate var coincidentComponents: [PathComponent] {
+        return self.componentsWhereAllVerticesSatisfy { $0.forwardEdge == .coincident }
+    }
+
+    fileprivate var internalComponents: [PathComponent] {
+        return self.componentsWhereAllVerticesSatisfy { $0.forwardEdge == .internal }
+    }
+
+    fileprivate var externalComponents: [PathComponent] {
+        return self.componentsWhereAllVerticesSatisfy { $0.forwardEdge == .external }
+    }
+
+    private func componentsWhereAllVerticesSatisfy(_ satisfy: (Vertex) -> Bool) -> [PathComponent] {
+        return (0..<lists.count).compactMap { (i: Int) -> PathComponent? in
+            self.allVerticesInComponent(atIndex: i, satisfy: satisfy) ? self.path.components[i] : nil
+        }
+    }
+
+    private func allVerticesInComponent(atIndex i: Int, satisfy: (Vertex) -> Bool) -> Bool {
+        var result = true
+        self.forEachVertexInComponent(atIndex: i) {
+            if !satisfy($0) {
+                result = false
             }
         }
         return result
     }
 
-    fileprivate func classifyEdges(_ path: Path, comparingAgainstSelf: Bool = false) {
-        let fillRule: PathFillRule = comparingAgainstSelf ? .winding : .evenOdd
+    /// traverses the list of edges and marks each edge as either .internal, .external, or .coincident with respect to `path`
+    fileprivate func classifyEdges(_ path: Path, forCrossingsRemoved: Bool) {
+        let fillRule: PathFillRule = forCrossingsRemoved ? .winding : .evenOdd
         func vertexIsIntersection(_ v: Vertex) -> Bool {
             return v.intersectionInfo?.neighbor != nil
         }
@@ -137,7 +149,7 @@ internal class PathLinkedListRepresentation {
             } else {
                 // component has no intersections -- we'll classify edges as either all inside or all outside.
                 startingVertex = self.startingVertex(forComponentIndex: i, elementIndex: 0)
-                startingVertex.forwardEdge = path.contains(startingVertex.location, using: fillRule) ? .internal : .external
+                startingVertex.previous.forwardEdge = path.contains(startingVertex.location, using: fillRule) ? .internal : .external
             }
             self.forEachVertexStartingFrom(startingVertex) { v in
                 guard vertexIsIntersection(v) else {
@@ -153,7 +165,7 @@ internal class PathLinkedListRepresentation {
                 let windingCount2 = path.windingCount(point - smallDistance * normal)
                 let contained1 = windingCountImpliesContainment(windingCount1, using: fillRule)
                 let contained2 = windingCountImpliesContainment(windingCount2, using: fillRule)
-                if comparingAgainstSelf {
+                if forCrossingsRemoved {
                     if contained1, contained2 {
                         v.forwardEdge = .internal
                     } else {
@@ -218,11 +230,11 @@ internal class AugmentedGraph {
     private let path1: Path
     private let path2: Path
 
-    internal init(path1: Path, path2: Path, intersections: [PathIntersection]) {
+    internal init(path1: Path, path2: Path, intersections: [PathIntersection], forCrossingsRemoved: Bool = false) {
         self.path1 = path1
         self.path2 = path2
         self.list1 = PathLinkedListRepresentation(path1)
-        self.list2 = path1 !== path2 ? PathLinkedListRepresentation(path2) : self.list1
+        self.list2 = forCrossingsRemoved ? self.list1 : PathLinkedListRepresentation(path2)
         intersections.forEach {
             let location1 = $0.indexedPathLocation1
             let location2 = $0.indexedPathLocation2
@@ -235,10 +247,9 @@ internal class AugmentedGraph {
             list2.insertIntersectionVertex(vertex2, at: location2)
         }
         // mark each intersection as either entry or exit
-        let isComparingAgainstSelf = (list1 === list2)
-        list1.classifyEdges(path2, comparingAgainstSelf: isComparingAgainstSelf)
-        if isComparingAgainstSelf == false {
-            list2.classifyEdges(path1, comparingAgainstSelf: isComparingAgainstSelf)
+        list1.classifyEdges(path2, forCrossingsRemoved: forCrossingsRemoved)
+        if forCrossingsRemoved == false {
+            list2.classifyEdges(path1, forCrossingsRemoved: forCrossingsRemoved)
         }
     }
 
@@ -257,25 +268,26 @@ internal class AugmentedGraph {
     internal func booleanOperation(_ operation: BooleanPathOperation) -> Path? {
 
         // special cases for components which do not cross
-        let nonCrossingComponents1: [PathComponent] = self.list1.nonCrossingComponents()
-        let nonCrossingComponents2: [PathComponent] = self.list2.nonCrossingComponents()
-
         func anyPointOnComponent(_ c: PathComponent) -> CGPoint {
             return c.startingPoint
         }
         var pathComponents: [PathComponent] = []
         switch operation {
         case .removeCrossings:
-            pathComponents += nonCrossingComponents1
+            pathComponents += self.list1.internalComponents
+            pathComponents += self.list1.externalComponents
+            pathComponents += self.list1.coincidentComponents
         case .union:
-            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0), using: .evenOdd) == false }
-            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0), using: .evenOdd) == false }
+            pathComponents += self.list1.coincidentComponents
+            pathComponents += self.list1.externalComponents
+            pathComponents += self.list2.externalComponents
         case .subtract:
-            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0), using: .evenOdd) == false }
-            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0), using: .evenOdd) == true }
+            pathComponents += self.list1.externalComponents
+            pathComponents += self.list2.internalComponents
         case .intersect:
-            pathComponents += nonCrossingComponents1.filter { path2.contains(anyPointOnComponent($0), using: .evenOdd) == true }
-            pathComponents += nonCrossingComponents2.filter { path1.contains(anyPointOnComponent($0), using: .evenOdd) == true }
+            pathComponents += self.list1.coincidentComponents
+            pathComponents += self.list1.internalComponents
+            pathComponents += self.list2.internalComponents
         }
 
         // handle components that have crossings (the main algorithm)
@@ -347,6 +359,16 @@ internal class Vertex: Equatable {
         weak var neighbor: Vertex?
     }
     var intersectionInfo: IntersectionInfo?
+
+    func checkCoincidenceDirection(_ forwards: Bool) -> Bool {
+        guard let vertexNeighbor = self.intersectionInfo?.neighbor else { return false }
+        guard let nextVertexNeighbor = self.next.intersectionInfo?.neighbor else { return false }
+        if forwards {
+            return vertexNeighbor.next === nextVertexNeighbor
+        } else {
+            return vertexNeighbor.previous === nextVertexNeighbor
+        }
+    }
 
     enum EdgeType {
         case coincident

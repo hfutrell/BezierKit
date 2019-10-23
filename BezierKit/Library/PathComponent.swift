@@ -279,7 +279,6 @@ import Foundation
     }
 
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
-        precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
         let isClosed1 = self.isClosed
         let isClosed2 = other.isClosed
