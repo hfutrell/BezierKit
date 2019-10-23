@@ -10,6 +10,13 @@ import XCTest
 import CoreGraphics
 @testable import BezierKit
 
+private extension Path {
+    /// copies the path in such a way that it's impossible that optimizations would allow the copy to share the same underlying storage
+    func independentCopy() -> Path {
+        return self.copy(using: CGAffineTransform(translationX: 1, y: 0)).copy(using: CGAffineTransform(translationX: -1, y: 0))
+    }
+}
+
 class PathTests: XCTestCase {
 
     override func setUp() {
@@ -792,6 +799,13 @@ class PathTests: XCTestCase {
         )
     }
 
+    func testUnionSelf() {
+        let square = createSquare1()
+        let copy = square.independentCopy()
+        XCTAssertEqual(square.union(square), square)
+        XCTAssertEqual(square.union(copy), square)
+    }
+
     func testUnionCoincidentEdges1() {
         // a simple test of union'ing two squares where the max/min x edge are coincident
         let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 1, height: 1), transform: nil))
@@ -947,6 +961,19 @@ class PathTests: XCTestCase {
         XCTAssert(
             componentsEqualAsideFromElementOrdering(intersected.components[0], expectedResult.components[0])
         )
+    }
+
+    func testIntersectingSelf() {
+        let square = createSquare1()
+        XCTAssertEqual(square.intersect(square), square)
+        XCTAssertEqual(square.intersect(square.independentCopy()), square)
+    }
+
+    func testSubtractingSelf() {
+        let square = createSquare1()
+        let expectedResult = Path()
+        XCTAssertEqual(square.subtract(square), expectedResult)
+        XCTAssertEqual(square.subtract(square.independentCopy()), expectedResult)
     }
 
     func testSubtractingWindingDirection() {
