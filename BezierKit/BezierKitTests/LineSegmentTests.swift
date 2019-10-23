@@ -259,6 +259,11 @@ class LineSegmentTests: XCTestCase {
         let l6 = LineSegment(p0: CGPoint(x: 3, y: -1), p1: CGPoint(x: 2, y: 0))
         let i3 = l5.intersections(with: l6)
         XCTAssertEqual(i3, [Intersection(t1: 0.5, t2: 1), Intersection(t1: 1, t2: 0)])
+
+        // lines should be fully coincident with themselves
+        let l7 = LineSegment(p0: CGPoint(x: 1.863, y: 23.812), p1: CGPoint(x: -4.876, y: 3.652))
+        let i4 = l7.intersections(with: l7)
+        XCTAssertEqual(i4, [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)])
     }
 
     func testIntersectionsLineYesCoincidentRealWorldData() {
