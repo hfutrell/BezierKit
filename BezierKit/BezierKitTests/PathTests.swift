@@ -830,6 +830,25 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultUnion2.components[0], expectedUnion.components[0]))
     }
 
+    func testUnionCoincidentEdges2() {
+        // square 2 falls inside square 1 except its maximum x edge which is coincident
+        let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
+        let square2 = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 1, width: 1, height: 1), transform: nil))
+        let expectedUnion = { () -> Path in
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint.zero)
+            temp.addLine(to: CGPoint(x: 3.0, y: 0.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 1.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 2.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 3.0))
+            temp.addLine(to: CGPoint(x: 0.0, y: 3.0))
+            temp.closeSubpath()
+            return Path(cgPath: temp)
+        }()
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(square1.union(square2)!.components[0], expectedUnion.components[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(square2.union(square1)!.components[0], expectedUnion.components[0]))
+    }
+
     func testUnionCoincidentEdgesRealWorldTestCase1() {
         let polygon1 = {() -> Path in
             let temp = CGMutablePath()
