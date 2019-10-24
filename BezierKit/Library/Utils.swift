@@ -12,6 +12,21 @@ import Foundation
 import CoreGraphics
 #endif
 
+internal extension Array where Element: Comparable {
+    func sortedAndUniqued() -> [Element] {
+        guard self.count > 1 else { return self }
+        return self.sorted().duplicatesRemovedFromSorted()
+    }
+    func duplicatesRemovedFromSorted() -> [Element] {
+        return self.indices.compactMap {
+            let element = self[$0]
+            guard $0 > self.startIndex else { return element }
+            guard element != self[$0 - 1] else { return nil }
+            return element
+        }
+    }
+}
+
 internal class Utils {
 
     // float precision significant decimal

@@ -56,24 +56,6 @@ extension Subcurve: Equatable where CurveType: Equatable {
 
 extension BezierCurve {
 
-    private var dpoints: [[CGPoint]] {
-        var ret: [[CGPoint]] = []
-        var p: [CGPoint] = self.points
-        ret.reserveCapacity(p.count-1)
-        for d in (2 ... p.count).reversed() {
-            let c = d-1
-            var list: [CGPoint] = []
-            list.reserveCapacity(c)
-            for j: Int in 0..<c {
-                let dpt: CGPoint = CGFloat(c) * (p[j+1] - p[j])
-                list.append(dpt)
-            }
-            ret.append(list)
-            p = list
-        }
-        return ret
-    }
-
     /// a curve is considered linear if its control points are all a small distance from its baseline
     private var linear: Bool {
         let a = Utils.align(points, p1: self.startingPoint, p2: self.endingPoint)
@@ -87,39 +69,25 @@ extension BezierCurve {
         return Utils.length({(_ t: CGFloat) in self.derivative(t)})
     }
 
-    // computes the extrema for each dimension
-    internal func internalExtrema(includeInflection: Bool) -> (x: [CGFloat], y: [CGFloat]) {
-        var xy: [[CGFloat]] = []
-        xy.reserveCapacity(CGPoint.dimensions)
-        for d in 0..<CGPoint.dimensions {
-            let mfn = {(v: CGPoint) in v[d]}
-            var p: [CGFloat] = self.dpoints[0].map(mfn)
-            xy.append(Utils.droots(p))
-            if includeInflection && self.order >= 3 {
-                p = self.dpoints[1].map(mfn)
-                xy[d] += Utils.droots(p)
-            }
-            xy[d] = xy[d].filter({$0 >= 0 && $0 <= 1}).sorted()
-        }
-        return (x: xy[0], y: xy[1])
-    }
-
     public func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat]) {
-        let (x, y) = self.internalExtrema(includeInflection: true)
-        let roots = [x, y].joined().sorted() // the roots for each dimension, flattened and sorted
-        var all: [CGFloat] = []
-        if !roots.isEmpty {
-            all.reserveCapacity(roots.count)
-            var lastInserted: CGFloat = -CGFloat.infinity
-            for i in 0..<roots.count { // loop ensures (pre-sorted) roots are unique when added to values
-                let v = roots[i]
-                if v > lastInserted {
-                    all.append(v)
-                    lastInserted = v
-                }
-            }
+        func sequentialDifference<T>(_ array: [T]) -> [T] where T: FloatingPoint {
+            return (1..<array.count).map { array[$0] - array[$0 - 1] }
         }
-        return (x: x, y: y, all: all)
+        func rootsForDimension(_ dimension: Int) -> [CGFloat] {
+            let values = self.points.map { $0[dimension] }
+            let firstOrderDiffs = sequentialDifference(values)
+            var roots = Utils.droots(firstOrderDiffs)
+            if self.order >= 3 {
+                let secondOrderDiffs = sequentialDifference(firstOrderDiffs)
+                roots += Utils.droots(secondOrderDiffs)
+            }
+            return roots.filter({$0 >= 0 && $0 <= 1}).sortedAndUniqued()
+        }
+        guard self.order > 1 else { return (x: [], y: [], all: []) }
+        let xRoots = rootsForDimension(0)
+        let yRoots = rootsForDimension(1)
+        let allRoots = (xRoots + yRoots).sortedAndUniqued()
+        return (x: xRoots, y: yRoots, all: allRoots)
     }
 
     // MARK: -

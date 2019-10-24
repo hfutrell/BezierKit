@@ -35,19 +35,12 @@ public extension BezierCurve {
     }
 }
 
-private func sortedAndUniquifiedIntersections(_ intersections: [Intersection]) -> [Intersection] {
-    let sortedIntersections = intersections.sorted(by: <)
-    return sortedIntersections.reduce([Intersection]()) { (intersection: [Intersection], next: Intersection) in
-        return (intersection.isEmpty || (intersection.last!) != next) ? intersection + [next] : intersection
-    }
-}
-
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var intersections: [Intersection] = []
     Utils.pairiteration(curve1, curve2, lb, rb, &intersections, accuracy)
-    return sortedAndUniquifiedIntersections(intersections)
+    return intersections.sortedAndUniqued()
 }
 
 internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reversed: Bool = false) -> [Intersection] where U: NonlinearBezierCurve {
@@ -85,7 +78,7 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
         }
         return reversed ? Intersection(t1: t2, t2: t1) : Intersection(t1: t1, t2: t2)
     })
-    return sortedAndUniquifiedIntersections(intersections)
+    return intersections.sortedAndUniqued()
 }
 
 // MARK: - extensions to support intersection

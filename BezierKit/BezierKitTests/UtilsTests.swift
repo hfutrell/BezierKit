@@ -65,7 +65,7 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(drootsTestHelper(12, 6, 4), [])
         XCTAssertEqual(drootsTestHelper(2, 1, 0), [1])
         XCTAssertEqual(drootsTestHelper(1, 1, 1), [])
-        XCTAssertEqual(drootsTestHelper(4, -5, 4), [oneThird, twoThirds])                    
+        XCTAssertEqual(drootsTestHelper(4, -5, 4), [oneThird, twoThirds])
         XCTAssertEqual(drootsTestHelper(-4, 5, -4), [oneThird, twoThirds])
         XCTAssertEqual(drootsTestHelper(CGFloat.nan, CGFloat.nan, CGFloat.nan), [])
     }
@@ -83,5 +83,13 @@ class UtilsTests: XCTestCase {
         XCTAssertNil(Utils.linesIntersection(p0, p1, p4, p5), "these lines should NOT intersect.")
         // degenerate case
         XCTAssertNil(Utils.linesIntersection(nanPoint, nanPoint, p0, p1), "nothing should intersect a line that includes NaN values.")
+    }
+
+    func testSortedAndUniqued() {
+        XCTAssertEqual([Int]().sortedAndUniqued(), [])
+        XCTAssertEqual([1].sortedAndUniqued(), [1])
+        XCTAssertEqual([1, 1].sortedAndUniqued(), [1])
+        XCTAssertEqual([1, 3, 1].sortedAndUniqued(), [1, 3])
+        XCTAssertEqual([1, 2, 4, 5, 5, 6].sortedAndUniqued(), [1, 2, 4, 5, 6])
     }
 }
