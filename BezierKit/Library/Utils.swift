@@ -237,17 +237,22 @@ internal class Utils {
     static func droots(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, callback: (CGFloat) -> Void) {
         // quadratic roots are easy
         // do something with each root
-        let d: CGFloat = a - 2.0*b + c
+        let d: CGFloat = a - 2.0 * b + c
+        guard d.isFinite else { return }
         if abs(d) > CGFloat(epsilon) {
-            let m1 = -sqrt(b*b-a*c)
-            let m2 = -a+b
-            let v1 = -( m1+m2)/d
-            let v2 = -(-m1+m2)/d
+            let radical = b * b - a * c
+            guard radical >= 0 else { return }
+            let m1 = sqrt(radical)
+            let m2 = a - b
+            let v1 = (m2 + m1) / d
+            let v2 = (m2 - m1) / d
             if v1 < v2 {
                 callback(v1)
                 callback(v2)
-            } else {
+            } else if v1 > v2 {
                 callback(v2)
+                callback(v1)
+            } else {
                 callback(v1)
             }
         } else if a != b {
