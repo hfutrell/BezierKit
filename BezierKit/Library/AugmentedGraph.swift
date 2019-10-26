@@ -9,7 +9,7 @@
 import CoreGraphics
 
 internal class PathLinkedListRepresentation {
-
+    // TODO: investigate access control
     private var lists: [[Vertex]] = []
     private let path: Path
 
@@ -108,25 +108,7 @@ internal class PathLinkedListRepresentation {
         self.lists = p.components.map { self.createListFor(component: $0) }
     }
 
-    fileprivate var coincidentComponents: [PathComponent] {
-        return self.componentsWhereAllVerticesSatisfy { $0.forwardEdge == .coincident }
-    }
-
-    fileprivate var internalComponents: [PathComponent] {
-        return self.componentsWhereAllVerticesSatisfy { $0.forwardEdge == .internal }
-    }
-
-    fileprivate var externalComponents: [PathComponent] {
-        return self.componentsWhereAllVerticesSatisfy { $0.forwardEdge == .external }
-    }
-
-    private func componentsWhereAllVerticesSatisfy(_ satisfy: (Vertex) -> Bool) -> [PathComponent] {
-        return (0..<lists.count).compactMap { (i: Int) -> PathComponent? in
-            self.allVerticesInComponent(atIndex: i, satisfy: satisfy) ? self.path.components[i] : nil
-        }
-    }
-
-    private func allVerticesInComponent(atIndex i: Int, satisfy: (Vertex) -> Bool) -> Bool {
+    fileprivate func allVerticesInComponent(atIndex i: Int, satisfy: (Vertex) -> Bool) -> Bool {
         var result = true
         self.forEachVertexInComponent(atIndex: i) {
             if !satisfy($0) {
@@ -135,54 +117,8 @@ internal class PathLinkedListRepresentation {
         }
         return result
     }
-
-    /// traverses the list of edges and marks each edge as either .internal, .external, or .coincident with respect to `path`
-    fileprivate func classifyEdges(_ path: Path, forCrossingsRemoved: Bool) {
-        let fillRule: PathFillRule = forCrossingsRemoved ? .winding : .evenOdd
-        func vertexIsIntersection(_ v: Vertex) -> Bool {
-            return v.intersectionInfo?.neighbor != nil
-        }
-        for i in 0..<lists.count {
-            let startingVertex: Vertex
-            if let firstIntersection = self.firstIntersectionVertex(forComponentindex: i) {
-                startingVertex = firstIntersection
-            } else {
-                // component has no intersections -- we'll classify edges as either all inside or all outside.
-                startingVertex = self.startingVertex(forComponentIndex: i, elementIndex: 0)
-                startingVertex.previous.forwardEdge = path.contains(startingVertex.location, using: fillRule) ? .internal : .external
-            }
-            self.forEachVertexStartingFrom(startingVertex) { v in
-                guard vertexIsIntersection(v) else {
-                    // until we hit an intersection edges continue with same classification as prior edge
-                    v.forwardEdge = v.previous.forwardEdge
-                    return
-                }
-                let nextEdge = v.emitNext()
-                let point = nextEdge.compute(0.5)
-                let normal = nextEdge.normal(0.5)
-                let smallDistance: CGFloat = CGFloat(Utils.epsilon)
-                let windingCount1 = path.windingCount(point + smallDistance * normal)
-                let windingCount2 = path.windingCount(point - smallDistance * normal)
-                let contained1 = windingCountImpliesContainment(windingCount1, using: fillRule)
-                let contained2 = windingCountImpliesContainment(windingCount2, using: fillRule)
-                if forCrossingsRemoved {
-                    if contained1, contained2 {
-                        v.forwardEdge = .internal
-                    } else {
-                        v.forwardEdge = .external
-                    }
-                } else {
-                    if windingCount1 == windingCount2 {
-                        v.forwardEdge = contained1 ? .internal : .external
-                    } else {
-                        v.forwardEdge = .coincident
-                    }
-                }
-            }
-        }
-    }
-
-    private func firstIntersectionVertex(forComponentindex i: Int) -> Vertex? {
+    
+    fileprivate func firstIntersectionVertex(forComponentindex i: Int) -> Vertex? {
         let startingVertex = self.startingVertex(forComponentIndex: i, elementIndex: 0)
         var v = startingVertex
         repeat {
@@ -192,7 +128,7 @@ internal class PathLinkedListRepresentation {
         return nil
     }
 
-    private func forEachVertexStartingFrom(_ v: Vertex, _ callback: (Vertex) -> Void) {
+    fileprivate func forEachVertexStartingFrom(_ v: Vertex, _ callback: (Vertex) -> Void) {
         var current = v
         repeat {
             let next = current.next!
@@ -201,7 +137,7 @@ internal class PathLinkedListRepresentation {
         } while current !== v
     }
 
-    private func forEachVertexInComponent(atIndex index: Int, _ callback: (Vertex) -> Void) {
+    fileprivate func forEachVertexInComponent(atIndex index: Int, _ callback: (Vertex) -> Void) {
         self.forEachVertexStartingFrom(lists[index].first!, callback)
     }
 
@@ -209,6 +145,10 @@ internal class PathLinkedListRepresentation {
         return self.lists[componentIndex][elementIndex]
     }
 
+    internal var numberOfComponents: Int {
+        return self.lists.count
+    }
+    
     func forEachVertex(_ callback: (Vertex) -> Void) {
         lists.forEach {
             self.forEachVertexStartingFrom($0.first!, callback)
@@ -227,14 +167,57 @@ internal class AugmentedGraph {
     internal var list1: PathLinkedListRepresentation
     internal var list2: PathLinkedListRepresentation
 
+    private let operation: BooleanPathOperation
     private let path1: Path
     private let path2: Path
 
-    internal init(path1: Path, path2: Path, intersections: [PathIntersection], forCrossingsRemoved: Bool = false) {
+    private func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
+        let rule: PathFillRule = (operation == .removeCrossings) ? .winding : .evenOdd
+        let contained1 = path1.contains(point, using: rule)
+        guard operation != .removeCrossings else { return contained1 }
+        let contained2 = path2.contains(point, using: rule)
+        switch operation {
+        case .union:
+            return contained1 || contained2
+        case .intersect:
+            return contained1 && contained2
+        case .subtract:
+            return contained1 && !contained2
+        default:
+            assertionFailure()
+            return false
+        }
+    }
+    
+    /// traverses the list of edges and marks each edge as either .internal, .external, or .coincident with respect to `path`
+    private func classifyEdges(in list: PathLinkedListRepresentation) {
+        for i in 0..<list.numberOfComponents {
+            var previousEdge: Vertex.EdgeType?
+            list.forEachVertexInComponent(atIndex: i) { v in
+                if v.isIntersection == false, let previousEdge = previousEdge, previousEdge != .unknown {
+                    // just take on the value of the previous edge, if possible
+                    v.forwardEdge = previousEdge
+                    return
+                }
+                let nextEdge = v.emitNext()
+                let point = nextEdge.compute(0.5)
+                let normal = nextEdge.normal(0.5)
+                let smallDistance = CGFloat(Utils.epsilon)
+                let included1 = self.pointIsContainedInBooleanResult(point: point + smallDistance * normal, operation: operation)
+                let included2 = self.pointIsContainedInBooleanResult(point: point - smallDistance * normal, operation: operation)
+                let edgeType: Vertex.EdgeType = (included1 != included2) ? .toInclude : .shouldExclude
+                v.forwardEdge = edgeType
+                previousEdge = v.forwardEdge
+            }
+        }
+    }
+    
+    internal init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
+        self.operation = operation
         self.path1 = path1
         self.path2 = path2
         self.list1 = PathLinkedListRepresentation(path1)
-        self.list2 = forCrossingsRemoved ? self.list1 : PathLinkedListRepresentation(path2)
+        self.list2 = operation != .removeCrossings ? PathLinkedListRepresentation(path2) : self.list1
         intersections.forEach {
             let location1 = $0.indexedPathLocation1
             let location2 = $0.indexedPathLocation2
@@ -247,82 +230,86 @@ internal class AugmentedGraph {
             list2.insertIntersectionVertex(vertex2, at: location2)
         }
         // mark each intersection as either entry or exit
-        list1.classifyEdges(path2, forCrossingsRemoved: forCrossingsRemoved)
-        if forCrossingsRemoved == false {
-            list2.classifyEdges(path1, forCrossingsRemoved: forCrossingsRemoved)
+        self.classifyEdges(in: self.list1)
+        if list1 !== list2 {
+            self.classifyEdges(in: self.list2)
         }
     }
 
-    private func shouldMoveForwards(fromVertex v: Vertex, forOperation operation: BooleanPathOperation, isOnFirstCurve: Bool) -> Bool {
-        // TODO: investigate coincident behavior with operation types besides `.union`
-        switch operation {
-        case .union, .removeCrossings:
-            return v.forwardEdge == .external || (v.forwardEdge == .coincident && v.backwardEdge == .internal)
-        case .subtract:
-            return isOnFirstCurve ? v.isExit : v.isEntry
-        case .intersect:
-            return v.isEntry
+    private func shouldContinue(fromVertex v: Vertex, inForwardsDirection forwards: Bool) -> Bool {
+        if forwards {
+            return v.forwardEdge == .toInclude
+        } else {
+            return v.backwardEdge == .toInclude
         }
     }
-
-    internal func booleanOperation(_ operation: BooleanPathOperation) -> Path? {
-
-        // special cases for components which do not cross
-        func anyPointOnComponent(_ c: PathComponent) -> CGPoint {
-            return c.startingPoint
-        }
-        var pathComponents: [PathComponent] = []
-        switch operation {
-        case .removeCrossings:
-            pathComponents += self.list1.internalComponents
-            pathComponents += self.list1.externalComponents
-            pathComponents += self.list1.coincidentComponents
-        case .union:
-            pathComponents += self.list1.coincidentComponents
-            pathComponents += self.list1.externalComponents
-            pathComponents += self.list2.externalComponents
-        case .subtract:
-            pathComponents += self.list1.externalComponents
-            pathComponents += self.list2.internalComponents
-        case .intersect:
-            pathComponents += self.list1.coincidentComponents
-            pathComponents += self.list1.internalComponents
-            pathComponents += self.list2.internalComponents
-        }
-
-        // handle components that have crossings (the main algorithm)
-        var unvisitedCrossings: [Vertex] = []
-        list1.forEachVertex {
-            if $0.isCrossing && shouldMoveForwards(fromVertex: $0, forOperation: operation, isOnFirstCurve: true) {
-                unvisitedCrossings.append($0)
-            }
-        }
-        list1.forEachVertex {
-            if $0.isCrossing && !shouldMoveForwards(fromVertex: $0, forOperation: operation, isOnFirstCurve: true) {
-                unvisitedCrossings.append($0)
-            }
-        }
-        while let start = unvisitedCrossings.first {
+    
+    private func crossableNeighbor(fromVertex v: Vertex) -> Vertex? {
+        guard let neighbor = v.intersectionInfo?.neighbor else { return nil }
+        guard neighbor.forwardEdge == .toInclude || neighbor.backwardEdge == .toInclude else { return nil }
+        return neighbor
+    }
+    
+    internal func performOperation() -> Path? {
+        func pathComponent(startingFrom startingVertex: Vertex) -> PathComponent {
+            assert(startingVertex.forwardEdge == .toInclude)
             var curves: [BezierCurve] = []
-            var isOnFirstCurve = true
-            var v = start
-            repeat {
-                let movingForwards = shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve)
-                unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
+            var currentVertex = startingVertex
+            var movingForwards = true
+            // TODO: when we visit a coincident edge we must mark the other edge visited too
+            while true {
                 repeat {
-                    curves.append(movingForwards ? v.emitNext() : v.emitPrevious())
-                    v = movingForwards ? v.next : v.previous
-                } while v.isIntersection == false || shouldMoveForwards(fromVertex: v, forOperation: operation, isOnFirstCurve: isOnFirstCurve) == movingForwards
-                unvisitedCrossings = unvisitedCrossings.filter { $0 !== v }
-                v = v.intersectionInfo!.neighbor!
-                isOnFirstCurve.toggle()
-                if isOnFirstCurve && v.isCrossing && unvisitedCrossings.contains(v) == false && v !== start {
-                    return nil
+                    curves.append(movingForwards ? currentVertex.emitNext() : currentVertex.emitPrevious())
+                    if movingForwards {
+                        assert(currentVertex.forwardEdge == .toInclude)
+                        currentVertex.forwardEdge = .visited
+                    } else {
+                        assert(currentVertex.backwardEdge == .toInclude)
+                        currentVertex.previous.forwardEdge = .visited
+                        assert(currentVertex.backwardEdge == .visited)
+                    }
+                    let nextVertex = movingForwards ? currentVertex.next : currentVertex.previous
+                    // UGH:
+                    // SO this *appears* to work to mark duplicate coincident edges as visited
+                    // BUT it doesn't really because it's based on vertex coordinates and not coincidence
+                    // which works for lines, but not curves
+                    //
+                    // maybe just mark one set of coincident edges as visited ahead of time? I don't know.
+                    //
+                    if let neighbor = currentVertex.intersectionInfo?.neighbor {
+                        if neighbor.next.intersectionInfo?.neighbor === nextVertex {
+                         //   neighbor.forwardEdge = .visited
+                        }
+                        if neighbor.previous.intersectionInfo?.neighbor === nextVertex {
+                        //    neighbor.previous.forwardEdge = .visited
+                        }
+                    }
+                    currentVertex = nextVertex!
+                } while shouldContinue(fromVertex: currentVertex, inForwardsDirection: movingForwards)
+                if let neighbor = crossableNeighbor(fromVertex: currentVertex) {
+                    currentVertex = neighbor
+                    movingForwards = (currentVertex.forwardEdge == .toInclude)
+                } else {
+                    if currentVertex.location != startingVertex.location {
+                        // TODO: we need to check if this is hit in cases that actually worked correctly before
+                        print("oh no")
+                        curves.append(LineSegment(p0: currentVertex.location, p1: startingVertex.location))
+                    }
+                    return PathComponent(curves: curves)
                 }
-            } while v !== start && v.intersectionInfo?.neighbor != start
-            pathComponents.append(PathComponent(curves: curves))
+            }
         }
-        return Path(components: pathComponents)
+        func pathComponents(forList list: PathLinkedListRepresentation) -> [PathComponent] {
+            var components = [PathComponent]()
+            for i in 0..<list.numberOfComponents {
+                list.forEachVertexInComponent(atIndex: i) { v in
+                    guard v.forwardEdge == .toInclude else { return }
+                    components.append(pathComponent(startingFrom: v))
+                }
+            }
+            return components
+        }
+        return Path(components: pathComponents(forList: self.list1) + pathComponents(forList: self.list2))
     }
 
     deinit {
@@ -360,39 +347,24 @@ internal class Vertex: Equatable {
     }
     var intersectionInfo: IntersectionInfo?
 
-    func checkCoincidenceDirection(_ forwards: Bool) -> Bool {
-        guard let vertexNeighbor = self.intersectionInfo?.neighbor else { return false }
-        guard let nextVertexNeighbor = self.next.intersectionInfo?.neighbor else { return false }
-        if forwards {
-            return vertexNeighbor.next === nextVertexNeighbor
-        } else {
-            return vertexNeighbor.previous === nextVertexNeighbor
-        }
-    }
-
     enum EdgeType {
-        case coincident
-        case `internal`
-        case external
+        case unknown         /* edge classifications are unknown until `classifyEdges` is run */
+        case toInclude       /* the edge must be included in the result */
+        case shouldExclude   /* the edge must be excluded from the result */
+        case visited         /* the edge was previous toInclude but has been marked as visited */
     }
 
-    fileprivate(set) var forwardEdge: EdgeType = .external
+    fileprivate(set) var forwardEdge: EdgeType = .unknown
     var backwardEdge: EdgeType { return self.previous.forwardEdge }
 
     var isCrossing: Bool {
-        guard self.isEntry || self.isExit else { return false }
-        guard let neighbor = self.intersectionInfo?.neighbor else { return false }
-        return neighbor.isEntry || neighbor.isExit
+        assert(self.forwardEdge != .unknown)
+        return self.forwardEdge != self.backwardEdge
     }
-    var isEntry: Bool {
-        return self.forwardEdge != .external && backwardEdge == .external
-    }
-    var isExit: Bool {
-        let backwardEdge = self.backwardEdge
-        return self.forwardEdge == .external && backwardEdge != .external
-    }
+    
     var isIntersection: Bool {
-        return self.intersectionInfo != nil
+        // TODO: assert consistency
+        return self.intersectionInfo?.neighbor?.intersectionInfo?.neighbor === self
     }
 
     private(set) var next: Vertex! = nil

@@ -262,8 +262,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path? {
         let intersections = self.intersections(with: other, accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
-        return augmentedGraph.booleanOperation(operation)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections, operation: operation)
+        return augmentedGraph.performOperation()
     }
 
     @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
@@ -286,8 +286,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         let intersections = self.selfIntersections(accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections, forCrossingsRemoved: true)
-        return augmentedGraph.booleanOperation(.removeCrossings)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections, operation: .removeCrossings)
+        return augmentedGraph.performOperation()
     }
 
     @objc public func disjointComponents() -> [Path] {
