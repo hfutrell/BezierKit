@@ -156,20 +156,59 @@ internal class PathLinkedListRepresentation {
     }
 }
 
-internal enum BooleanPathOperation {
+// TODO: revert public scope
+public enum BooleanPathOperation {
     case union
     case subtract
     case intersect
     case removeCrossings
 }
 
-internal class AugmentedGraph {
+// TODO: revert public scope
+public class AugmentedGraph {
     internal var list1: PathLinkedListRepresentation
     internal var list2: PathLinkedListRepresentation
 
     private let operation: BooleanPathOperation
     private let path1: Path
     private let path2: Path
+
+    public func draw(_ context: CGContext) {
+        func drawList(_ list: PathLinkedListRepresentation) {
+            for i in 0..<list.numberOfComponents {
+                let firstVertex = list.startingVertex(forComponentIndex: i, elementIndex: 0)
+                var current = firstVertex
+                repeat {
+                    switch current.forwardEdge {
+                    case .shouldExclude:
+                        Draw.setColor(context, color: Draw.red)
+                    case .toInclude:
+                        Draw.setColor(context, color: Draw.green)
+                    case .unknown:
+                        Draw.setColor(context, color: Draw.blue)
+                    case .visited:
+                        Draw.setColor(context, color: Draw.black)
+                    }
+                    Draw.drawCurve(context, curve: current.emitNext())
+                    var radius: CGFloat = 1.0
+                    if current.isIntersection {
+                        radius = 2.0
+                        if current.forwardEdge == .shouldExclude {
+                            radius += 2.0
+                        }
+                    } else {
+                        Draw.setColor(context, color: Draw.black)
+                    }
+                    Draw.drawCircle(context, center: current.location, radius: radius)
+
+                    current = current.next
+                } while current !== firstVertex
+            }
+        }
+        drawList(self.list1)
+        drawList(self.list2)
+        Draw.reset(context)
+    }
 
     private func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
         let rule: PathFillRule = (operation == .removeCrossings) ? .winding : .evenOdd
@@ -212,7 +251,7 @@ internal class AugmentedGraph {
         }
     }
     
-    internal init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
+    public init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
         self.operation = operation
         self.path1 = path1
         self.path2 = path2
@@ -361,14 +400,14 @@ internal class Vertex: Equatable {
         assert(self.forwardEdge != .unknown)
         return self.forwardEdge != self.backwardEdge
     }
-    
+
     var isIntersection: Bool {
         // TODO: assert consistency
         return self.intersectionInfo?.neighbor?.intersectionInfo?.neighbor === self
     }
 
-    private(set) var next: Vertex! = nil
-    private(set) weak var previous: Vertex! = nil
+    private(set) public var next: Vertex! = nil
+    private(set) public weak var previous: Vertex! = nil
     private(set) var nextTransition: VertexTransition! = nil
 
     func setNextVertex(_ vertex: Vertex, transition: VertexTransition) {
