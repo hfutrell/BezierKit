@@ -212,9 +212,9 @@ public class AugmentedGraph {
 
     private func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
         let rule: PathFillRule = (operation == .removeCrossings) ? .winding : .evenOdd
-        let contained1 = path1.contains(point, using: rule)
+        let contained1 = self.path1.contains(point, using: rule)
         guard operation != .removeCrossings else { return contained1 }
-        let contained2 = path2.contains(point, using: rule)
+        let contained2 = self.path2.contains(point, using: rule)
         switch operation {
         case .union:
             return contained1 || contained2
@@ -253,21 +253,28 @@ public class AugmentedGraph {
     
     public init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
         self.operation = operation
-        self.path1 = path1
-        self.path2 = path2
-        self.list1 = PathLinkedListRepresentation(path1)
-        self.list2 = operation != .removeCrossings ? PathLinkedListRepresentation(path2) : self.list1
-        intersections.forEach {
-            let location1 = $0.indexedPathLocation1
-            let location2 = $0.indexedPathLocation2
-            let averagePosition = 0.5 * (path1.point(at: location1) + path2.point(at: location2))
-            let vertex1 = Vertex(location: averagePosition, isIntersection: true)
-            let vertex2 = Vertex(location: averagePosition, isIntersection: true)
+        let list1 = PathLinkedListRepresentation(path1)
+        let list2 = operation != .removeCrossings ? PathLinkedListRepresentation(path2) : list1
+        let adjustments = intersections.map { (intersection: PathIntersection) -> CGPoint in
+            let location1 = intersection.indexedPathLocation1
+            let location2 = intersection.indexedPathLocation2
+            return 0.5 * (path1.point(at: location1) + path2.point(at: location2))
+        }
+        zip(intersections, adjustments).forEach { intersection, adjustment in
+            let location1 = intersection.indexedPathLocation1
+            let location2 = intersection.indexedPathLocation2
+            let vertex1 = Vertex(location: adjustment, isIntersection: true)
+            let vertex2 = Vertex(location: adjustment, isIntersection: true)
             vertex1.intersectionInfo?.neighbor = vertex2
             vertex2.intersectionInfo?.neighbor = vertex1
             list1.insertIntersectionVertex(vertex1, at: location1)
             list2.insertIntersectionVertex(vertex2, at: location2)
         }
+        // insert the intersections into the paths
+        self.path1 = path1.insert(locations: intersections.map { $0.indexedPathLocation1 }, adjustments: adjustments)
+        self.path2 = path2.insert(locations: intersections.map { $0.indexedPathLocation2 }, adjustments: adjustments)
+        self.list1 = list1
+        self.list2 = list2
         // mark each intersection as either entry or exit
         self.classifyEdges(in: self.list1)
         if list1 !== list2 {
