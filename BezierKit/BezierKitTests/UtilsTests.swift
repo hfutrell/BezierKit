@@ -39,17 +39,35 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(curve.compute(CGFloat(filtered[0])).y, y, accuracy: CGFloat(1.0e-5))
     }
 
-    func testdroots() {
-        let a: CGFloat = 0.36159566118413977
-        let b: CGFloat = -3.2979288390483816
-        let c: CGFloat = 3.5401259561374445
+    private func drootsTestHelper(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat) -> [CGFloat] {
         var roots: [CGFloat] = []
         Utils.droots(a, b, c) {
             roots.append($0)
         }
+        return roots
+    }
+
+    func testDrootsCubic() {
+        let a: CGFloat = 0.36159566118413977
+        let b: CGFloat = -3.2979288390483816
+        let c: CGFloat = 3.5401259561374445
+        let roots = drootsTestHelper(a, b, c)
         let accuracy: CGFloat = 1.0e-5
         XCTAssertEqual(roots[0], CGFloat(0.053511820486391165), accuracy: accuracy)
         XCTAssertEqual(roots[1], CGFloat(0.64370120305889711), accuracy: accuracy)
+    }
+
+    func testDrootsCubicEdgeCases() {
+        let oneThird = CGFloat(1.0 / 3.0)
+        let twoThirds = CGFloat(2.0 / 3.0)
+        XCTAssertEqual(drootsTestHelper(3, 6, 12), [-1])
+        XCTAssertEqual(drootsTestHelper(12, 6, 3), [2])
+        XCTAssertEqual(drootsTestHelper(12, 6, 4), [])
+        XCTAssertEqual(drootsTestHelper(2, 1, 0), [1])
+        XCTAssertEqual(drootsTestHelper(1, 1, 1), [])
+        XCTAssertEqual(drootsTestHelper(4, -5, 4), [oneThird, twoThirds])
+        XCTAssertEqual(drootsTestHelper(-4, 5, -4), [oneThird, twoThirds])
+        XCTAssertEqual(drootsTestHelper(CGFloat.nan, CGFloat.nan, CGFloat.nan), [])
     }
 
     func testLinesIntersection() {
@@ -65,5 +83,13 @@ class UtilsTests: XCTestCase {
         XCTAssertNil(Utils.linesIntersection(p0, p1, p4, p5), "these lines should NOT intersect.")
         // degenerate case
         XCTAssertNil(Utils.linesIntersection(nanPoint, nanPoint, p0, p1), "nothing should intersect a line that includes NaN values.")
+    }
+
+    func testSortedAndUniqued() {
+        XCTAssertEqual([Int]().sortedAndUniqued(), [])
+        XCTAssertEqual([1].sortedAndUniqued(), [1])
+        XCTAssertEqual([1, 1].sortedAndUniqued(), [1])
+        XCTAssertEqual([1, 3, 1].sortedAndUniqued(), [1, 3])
+        XCTAssertEqual([1, 2, 4, 5, 5, 6].sortedAndUniqued(), [1, 2, 4, 5, 6])
     }
 }
