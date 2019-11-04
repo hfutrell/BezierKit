@@ -153,7 +153,7 @@ import Foundation
     }
 
     private static func computeOffsets(from orders: [Int]) -> [Int] {
-        var offsets = [Int]()
+        var offsets: [Int] = []
         offsets.reserveCapacity(orders.count)
         var sum = 0
         offsets.append(sum)
@@ -410,8 +410,8 @@ import Foundation
         let start = range.start
         let end   = range.end
 
-        var resultPoints = [CGPoint]()
-        var resultOrders = [Int]()
+        var resultPoints: [CGPoint] = []
+        var resultOrders: [Int] = []
 
         func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
             assert(includeStart || includeEnd)

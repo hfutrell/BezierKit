@@ -42,7 +42,7 @@ class DemoView: NSView, DraggableDelegate {
 
     var mouseTrackingArea: NSTrackingArea?
 
-    var draggables: [Draggable] = [Draggable]()
+    var draggables: [Draggable] = []
     var selectedDraggable: Draggable?
 
     var demos: [Demo] = []
