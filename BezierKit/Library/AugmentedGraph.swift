@@ -14,25 +14,24 @@ internal class IntersectionNode {
     var next: IntersectionNode?
     var previous: IntersectionNode?
     var edge: Edge?
-    var isIntersection: Bool
     /// links to locations on neighboring paths, indexed by path number
-    var neighbors: [Int: [IntersectionNode]] = [:]
-    init(location: IndexedPathLocation, isIntersection: Bool) {
+    var neighbors = [IntersectionNode]()
+    init(location: IndexedPathLocation) {
         self.location = location
-        self.isIntersection = isIntersection
     }
-    func addNeighbor(_ neighbor: IntersectionNode, pathNumber: Int) {
-        if neighbors[pathNumber] == nil { neighbors[pathNumber] = [] }
-        neighbors[pathNumber]!.append(neighbor)
+    func addNeighbor(_ neighbor: IntersectionNode) {
+        guard self.neighbors.allSatisfy({ $0 !== neighbor }) else { return }
+        neighbors.append(neighbor)
+    }
+    func replaceNeighborReference(_ node: IntersectionNode, with replacement: IntersectionNode) {
+        for i in neighbors.indices where neighbors[i] === node {
+            neighbors[i] = replacement
+        }
     }
     func mergeNeighbors(of node: IntersectionNode) {
-        // TODO: point the links from node.neighbors.neighbors back to self
-
-        // point the links from self.neighbors to node.neighbors
-        for (key, value) in node.neighbors {
-            for node in value {
-                self.addNeighbor(node, pathNumber: key)
-            }
+        for neighbor in node.neighbors {
+            neighbor.replaceNeighborReference(node, with: self)
+            self.addNeighbor(neighbor)
         }
     }
 }
@@ -160,15 +159,14 @@ public final class AugmentedGraph {
     /// Create the graph representing the component and return the first node (which represents the start of the first edge)
     static func createGraph(for component: PathComponent, componentIndex: Int, using intersections: [IntersectionNode]) -> IntersectionNode {
         var endCappedIntersections = intersections
-        
         let startingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.startingIndexedLocation.elementIndex, t: component.startingIndexedLocation.t)
         let endingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.endingIndexedLocation.elementIndex, t: component.endingIndexedLocation.t)
 
-        if endCappedIntersections.isEmpty || endCappedIntersections.first!.location != startingLocation {
-            endCappedIntersections.insert(IntersectionNode(location: startingLocation, isIntersection: false), at: 0)
+        if endCappedIntersections.first?.location != startingLocation {
+            endCappedIntersections.insert(IntersectionNode(location: startingLocation), at: 0)
         }
-        if endCappedIntersections.last!.location != endingLocation {
-            endCappedIntersections.append(IntersectionNode(location: endingLocation, isIntersection: false))
+        if endCappedIntersections.last?.location != endingLocation {
+            endCappedIntersections.append(IntersectionNode(location: endingLocation))
         }
 
         for i in 0..<endCappedIntersections.count {
@@ -197,7 +195,7 @@ public final class AugmentedGraph {
             let first = endCappedIntersections.first!
             first.previous = last.previous
             last.previous?.next = first
-            first.isIntersection = first.isIntersection || last.isIntersection
+            first.mergeNeighbors(of: last)
             endCappedIntersections.removeLast()
         }
         return endCappedIntersections.first!
@@ -241,15 +239,16 @@ public final class AugmentedGraph {
         var path1Intersections: [IntersectionNode] = []
         var path2Intersections: [IntersectionNode] = []
         intersections.forEach {
-            let node1 = IntersectionNode(location: $0.indexedPathLocation1, isIntersection: true)
-            let node2 = IntersectionNode(location: $0.indexedPathLocation2, isIntersection: true)
-            node1.addNeighbor(node2, pathNumber: 1)
-            node2.addNeighbor(node1, pathNumber: 0)
+            let node1 = IntersectionNode(location: $0.indexedPathLocation1)
+            let node2 = IntersectionNode(location: $0.indexedPathLocation2)
+            node1.addNeighbor(node2 /*, pathNumber: 1 */)
+            node2.addNeighbor(node1 /*, pathNumber: 0 */)
             path1Intersections.append(node1)
             if operation != .removeCrossings {
                 path2Intersections.append(node2)
             } else {
                 path1Intersections.append(node1)
+                path1Intersections.append(node2)
             }
         }
         AugmentedGraph.sortAndMergeDuplicates(of: &path1Intersections)
@@ -269,45 +268,50 @@ public final class AugmentedGraph {
     private func createComponent(from node: IntersectionNode) -> PathComponent {
         var points: [CGPoint] = [node.edge!.component.startingPoint]
         var orders = [Int]()
-
+        func visit(from node: IntersectionNode) -> IntersectionNode? {
+            guard let forwardEdge = node.edge else {
+                assertionFailure("consistency failure")
+                return nil
+            }
+            guard let backwardsEdge = node.previous?.edge else {
+                assertionFailure("consistency failure")
+                return nil
+            }
+            if forwardEdge.inSolution, forwardEdge.visited == false {
+                visit(forwardEdge.component)
+                forwardEdge.visited = true
+                return node.next
+            } else if backwardsEdge.inSolution, backwardsEdge.visited == false {
+                visit(backwardsEdge.component.reversed())
+                backwardsEdge.visited = true
+                return node.previous
+            } else {
+                return nil
+            }
+        }
         func visit(_ component: PathComponent) {
             points += component.points[1..<component.points.count]
             orders += component.orders
         }
+
         var nextNode: IntersectionNode? = node
         while let currentNode = nextNode {
             nextNode = nil
-            if currentNode.edge?.inSolution == true, currentNode.edge?.visited == false {
-                visit(node.edge!.component)
-                currentNode.edge?.visited = true
-                nextNode = currentNode.next
-            } else if currentNode.previous?.edge?.inSolution == true, currentNode.previous?.edge?.visited == false {
-                currentNode.previous?.edge?.visited = true
-                visit(currentNode.previous!.edge!.component.reversed())
-                nextNode = currentNode.previous
+            if let temp = visit(from: currentNode) {
+                nextNode = temp
             } else {
-
-                for neighbor in currentNode.neighbors.values.joined() {
-                    if nextNode != nil {
+                for neighbor in currentNode.neighbors {
+                    if let temp = visit(from: neighbor) {
+                        nextNode = temp
                         break
                     }
-                    if neighbor.edge!.inSolution == true, neighbor.edge!.visited == false {
-                        visit(neighbor.edge!.component)
-                        neighbor.edge!.visited = true
-                        nextNode = neighbor.next
-                    } else if neighbor.previous!.edge!.inSolution == true, neighbor.previous!.edge!.visited == false {
-                        neighbor.previous!.edge!.visited = true
-                        visit(neighbor.previous!.edge!.component.reversed())
-                        nextNode = neighbor.previous
-                    }
                 }
-
             }
         }
 
         if points.last != points.first {
-//            points.append(points.first!)
-//            orders.append(1)
+            points.append(points.first!)
+            orders.append(1)
         }
 
         return PathComponent(points: points, orders: orders)
