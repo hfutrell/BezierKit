@@ -8,27 +8,27 @@
 
 import CoreGraphics
 
-internal class IntersectionNode {
+private class Node {
     let location: IndexedPathLocation
     var componentLocation: IndexedPathComponentLocation { return IndexedPathComponentLocation(elementIndex: self.location.elementIndex, t: self.location.t) }
-    var next: IntersectionNode?
-    var previous: IntersectionNode?
+    var next: Node?
+    var previous: Node?
     var edge: Edge?
     /// links to locations on neighboring paths, indexed by path number
-    var neighbors = [IntersectionNode]()
+    var neighbors = [Node]()
     init(location: IndexedPathLocation) {
         self.location = location
     }
-    func addNeighbor(_ neighbor: IntersectionNode) {
+    func addNeighbor(_ neighbor: Node) {
         guard self.neighbors.allSatisfy({ $0 !== neighbor }) else { return }
         neighbors.append(neighbor)
     }
-    func replaceNeighborReference(_ node: IntersectionNode, with replacement: IntersectionNode) {
+    func replaceNeighborReference(_ node: Node, with replacement: Node) {
         for i in neighbors.indices where neighbors[i] === node {
             neighbors[i] = replacement
         }
     }
-    func mergeNeighbors(of node: IntersectionNode) {
+    func mergeNeighbors(of node: Node) {
         for neighbor in node.neighbors {
             neighbor.replaceNeighborReference(node, with: self)
             self.addNeighbor(neighbor)
@@ -36,7 +36,7 @@ internal class IntersectionNode {
     }
 }
 
-internal class Edge {
+private class Edge {
     var visited: Bool = false
     var inSolution: Bool = false
     let component: PathComponent
@@ -59,11 +59,45 @@ public final class AugmentedGraph {
     private let operation: BooleanPathOperation
     private let path1: Path
     private let path2: Path
-    private let graph1: [IntersectionNode]
-    private let graph2: [IntersectionNode]
+    private let graph1: [Node]
+    private let graph2: [Node]
+
+    public init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
+        self.operation = operation
+        self.path1 = path1
+        self.path2 = path2
+        // take the pairwise intersections and make two mutually linked lists of intersections, one for each path
+        var path1Intersections: [Node] = []
+        var path2Intersections: [Node] = []
+        intersections.forEach {
+            let node1 = Node(location: $0.indexedPathLocation1)
+            let node2 = Node(location: $0.indexedPathLocation2)
+            node1.addNeighbor(node2 /*, pathNumber: 1 */)
+            node2.addNeighbor(node1 /*, pathNumber: 0 */)
+            path1Intersections.append(node1)
+            if operation != .removeCrossings {
+                path2Intersections.append(node2)
+            } else {
+                path1Intersections.append(node2)
+            }
+        }
+        // sort each list of intersections and merge intersections that share the same location together
+        AugmentedGraph.sortAndMergeDuplicates(of: &path1Intersections)
+        if operation != .removeCrossings {
+            AugmentedGraph.sortAndMergeDuplicates(of: &path2Intersections)
+        }
+        // create graph representations of the two paths
+        self.graph1 = AugmentedGraph.createGraph(for: self.path1, using: path1Intersections)
+        self.graph2 = (operation != .removeCrossings) ? AugmentedGraph.createGraph(for: self.path2, using: path2Intersections) : graph1
+        // mark each edge as either included or excluded from the final result
+        self.classifyEdges(in: graph1)
+        if operation != .removeCrossings {
+            self.classifyEdges(in: graph2)
+        }
+    }
 
     public func draw(_ context: CGContext) {
-        func drawList(_ list: [IntersectionNode]) {
+        func drawList(_ list: [Node]) {
             for i in 0..<list.count {
                 self.forEachNode(in: list[i]) { node, _ in
 
@@ -85,11 +119,28 @@ public final class AugmentedGraph {
         Draw.reset(context)
     }
 
-    private func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
+    internal func performOperation() -> Path {
+        func performOperation(for components: [Node], appendingToComponents list: inout [PathComponent]) {
+            components.forEach {
+                self.forEachNode(in: $0) { node, _ in
+                    guard node.edge?.inSolution == true, node.edge?.visited == false else { return }
+                    list.append(self.createComponent(from: node))
+                }
+            }
+        }
+        var components = [PathComponent]()
+        performOperation(for: self.graph1, appendingToComponents: &components)
+        performOperation(for: self.graph2, appendingToComponents: &components)
+        return Path(components: components)
+    }
+}
+
+private extension AugmentedGraph {
+
+    func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
         let rule: PathFillRule = (operation == .removeCrossings) ? .winding : .evenOdd
         let contained1 = self.path1.contains(point, using: rule)
-        guard operation != .removeCrossings else { return contained1 }
-        let contained2 = self.path2.contains(point, using: rule)
+        let contained2 = operation != .removeCrossings ? self.path2.contains(point, using: rule) : contained1
         switch operation {
         case .union:
             return contained1 || contained2
@@ -97,47 +148,32 @@ public final class AugmentedGraph {
             return contained1 && contained2
         case .subtract:
             return contained1 && !contained2
-        default:
-            assertionFailure()
-            return false
-        }
-    }
-
-    private func classifyEdge(_ edge: Edge) {
-        // TODO: we use a crummy point location
-        let nextEdge = edge.component.element(at: 0)
-        let point = nextEdge.compute(0.5)
-        let normal = nextEdge.normal(0.5)
-        let smallDistance = CGFloat(Utils.epsilon)
-        let included1 = self.pointIsContainedInBooleanResult(point: point + smallDistance * normal, operation: operation)
-        let included2 = self.pointIsContainedInBooleanResult(point: point - smallDistance * normal, operation: operation)
-        edge.inSolution = (included1 != included2)
-    }
-
-    private func classifyEdges(in component: IntersectionNode) {
-        self.forEachNode(in: component) { node, _ in
-            let edge = node.edge
-            self.classifyEdge(edge!)
+        case .removeCrossings:
+            return contained1
         }
     }
 
     /// traverses the list of edges and marks each edge as either .internal, .external, or .coincident with respect to `path`
-    private func classifyEdges(in graph: [IntersectionNode]) {
-        graph.forEach { self.classifyEdges(in: $0) }
-    }
-
-    private func firstNode(in component: IntersectionNode, where callback: (_ node: IntersectionNode) -> Bool) -> IntersectionNode? {
-        var value: IntersectionNode?
-        self.forEachNode(in: component) { node, stop in
-            if callback(node) {
-                stop = true
-                value = node
+    func classifyEdges(in graph: [Node]) {
+        func classifyEdge(_ edge: Edge) {
+            // TODO: we use a crummy point location
+            let nextEdge = edge.component.element(at: 0)
+            let point = nextEdge.compute(0.5)
+            let normal = nextEdge.normal(0.5)
+            let smallDistance = CGFloat(Utils.epsilon)
+            let included1 = self.pointIsContainedInBooleanResult(point: point + smallDistance * normal, operation: operation)
+            let included2 = self.pointIsContainedInBooleanResult(point: point - smallDistance * normal, operation: operation)
+            edge.inSolution = (included1 != included2)
+        }
+        func classifyEdges(in component: Node) {
+            self.forEachNode(in: component) { node, _ in
+                classifyEdge(node.edge!)
             }
         }
-        return value
+        graph.forEach { classifyEdges(in: $0) }
     }
 
-    private func forEachNode(in component: IntersectionNode, callback: (_ node: IntersectionNode, _ stop: inout Bool) -> Void) {
+    func forEachNode(in component: Node, callback: (_ node: Node, _ stop: inout Bool) -> Void) {
         var currentNode = component
         var stop: Bool = false
         repeat {
@@ -149,24 +185,17 @@ public final class AugmentedGraph {
         } while true
     }
 
-    func findNeighbor(for node: IntersectionNode, in graph: [IntersectionNode], at locationInNeighbor: IndexedPathLocation ) -> IntersectionNode? {
-        let neighborComponent = graph[locationInNeighbor.componentIndex]
-        return self.firstNode(in: neighborComponent) { node in
-            node.location.elementIndex == locationInNeighbor.elementIndex && node.location.t == locationInNeighbor.t
-        }
-    }
-
     /// Create the graph representing the component and return the first node (which represents the start of the first edge)
-    static func createGraph(for component: PathComponent, componentIndex: Int, using intersections: [IntersectionNode]) -> IntersectionNode {
+    static func createGraph(for component: PathComponent, componentIndex: Int, using intersections: [Node]) -> Node {
         var endCappedIntersections = intersections
         let startingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.startingIndexedLocation.elementIndex, t: component.startingIndexedLocation.t)
         let endingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.endingIndexedLocation.elementIndex, t: component.endingIndexedLocation.t)
 
         if endCappedIntersections.first?.location != startingLocation {
-            endCappedIntersections.insert(IntersectionNode(location: startingLocation), at: 0)
+            endCappedIntersections.insert(Node(location: startingLocation), at: 0)
         }
         if endCappedIntersections.last?.location != endingLocation {
-            endCappedIntersections.append(IntersectionNode(location: endingLocation))
+            endCappedIntersections.append(Node(location: endingLocation))
         }
 
         for i in 0..<endCappedIntersections.count {
@@ -201,10 +230,10 @@ public final class AugmentedGraph {
         return endCappedIntersections.first!
     }
 
-    static func createGraph(for path: Path, using intersections: [IntersectionNode]) -> [IntersectionNode] {
+    static func createGraph(for path: Path, using intersections: [Node]) -> [Node] {
         // first file each intersection by component index
-        let intersectionsByComponent = { () -> [[IntersectionNode]] in
-            var temp = [[IntersectionNode]](repeating: [], count: path.components.count)
+        let intersectionsByComponent = { () -> [[Node]] in
+            var temp = [[Node]](repeating: [], count: path.components.count)
             intersections.forEach {
                 temp[$0.location.componentIndex].append($0)
             }
@@ -215,7 +244,7 @@ public final class AugmentedGraph {
         }
     }
 
-    static func sortAndMergeDuplicates(of nodes: inout [IntersectionNode]) {
+    static func sortAndMergeDuplicates(of nodes: inout [Node]) {
         guard nodes.count > 1 else { return }
         nodes.sort(by: { $0.location < $1.location })
         var duplicatesRemoved = [nodes[0]]
@@ -230,45 +259,10 @@ public final class AugmentedGraph {
         nodes = duplicatesRemoved
     }
 
-    public init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
-        self.operation = operation
-        self.path1 = path1
-        self.path2 = path2
-
-        // create intersection nodes for each intersection
-        var path1Intersections: [IntersectionNode] = []
-        var path2Intersections: [IntersectionNode] = []
-        intersections.forEach {
-            let node1 = IntersectionNode(location: $0.indexedPathLocation1)
-            let node2 = IntersectionNode(location: $0.indexedPathLocation2)
-            node1.addNeighbor(node2 /*, pathNumber: 1 */)
-            node2.addNeighbor(node1 /*, pathNumber: 0 */)
-            path1Intersections.append(node1)
-            if operation != .removeCrossings {
-                path2Intersections.append(node2)
-            } else {
-                path1Intersections.append(node1)
-                path1Intersections.append(node2)
-            }
-        }
-        AugmentedGraph.sortAndMergeDuplicates(of: &path1Intersections)
-        if operation != .removeCrossings {
-            AugmentedGraph.sortAndMergeDuplicates(of: &path2Intersections)
-        }
-        // create graph representations of the two paths
-        self.graph1 = AugmentedGraph.createGraph(for: self.path1, using: path1Intersections)
-        self.graph2 = (operation != .removeCrossings) ? AugmentedGraph.createGraph(for: self.path2, using: path2Intersections) : graph1
-        // mark each intersection as either entry or exit
-        self.classifyEdges(in: graph1)
-        if operation != .removeCrossings {
-            self.classifyEdges(in: graph2)
-        }
-    }
-
-    private func createComponent(from node: IntersectionNode) -> PathComponent {
+    func createComponent(from node: Node) -> PathComponent {
         var points: [CGPoint] = [node.edge!.component.startingPoint]
         var orders = [Int]()
-        func visit(from node: IntersectionNode) -> IntersectionNode? {
+        func visit(from node: Node) -> Node? {
             guard let forwardEdge = node.edge else {
                 assertionFailure("consistency failure")
                 return nil
@@ -293,8 +287,7 @@ public final class AugmentedGraph {
             points += component.points[1..<component.points.count]
             orders += component.orders
         }
-
-        var nextNode: IntersectionNode? = node
+        var nextNode: Node? = node
         while let currentNode = nextNode {
             nextNode = nil
             if let temp = visit(from: currentNode) {
@@ -308,28 +301,10 @@ public final class AugmentedGraph {
                 }
             }
         }
-
         if points.last != points.first {
             points.append(points.first!)
             orders.append(1)
         }
-
         return PathComponent(points: points, orders: orders)
-    }
-
-    internal func performOperation(for components: [IntersectionNode], appendingToComponents list: inout [PathComponent]) {
-        for component in components {
-            self.forEachNode(in: component) { node, _ in
-                guard node.edge?.inSolution == true, node.edge?.visited == false else { return }
-                list.append(self.createComponent(from: node))
-            }
-        }
-    }
-
-    internal func performOperation() -> Path {
-        var components: [PathComponent] = []
-        self.performOperation(for: self.graph1, appendingToComponents: &components)
-        self.performOperation(for: self.graph2, appendingToComponents: &components)
-        return Path(components: components)
     }
 }
