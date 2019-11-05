@@ -44,19 +44,19 @@ private class Node {
 private class Edge {
     var visited: Bool = false
     var inSolution: Bool = false
-    let forwardNode: Node
-    let backwardNode: Node
-    init(forwardNode: Node, backwardNode: Node) {
-        self.forwardNode = forwardNode
-        self.backwardNode = backwardNode
+    let endingNode: Node
+    let startingNode: Node
+    init(startingNode: Node, endingNode: Node) {
+        self.startingNode = startingNode
+        self.endingNode = endingNode
     }
     var component: PathComponent {
-        let parentComponent = self.forwardNode.pathComponent
-        var nextLocation = forwardNode.componentLocation
+        let parentComponent = self.endingNode.pathComponent
+        var nextLocation = endingNode.componentLocation
         if nextLocation == parentComponent.startingIndexedLocation {
             nextLocation = parentComponent.endingIndexedLocation
         }
-        return self.forwardNode.pathComponent.split(from: backwardNode.componentLocation, to: nextLocation)
+        return self.endingNode.pathComponent.split(from: startingNode.componentLocation, to: nextLocation)
     }
 }
 
@@ -82,7 +82,7 @@ private class PathComponentGraph {
             endCappedIntersections.append(Node(location: endingLocation, pathComponent: component))
         }
         let edges = (1..<endCappedIntersections.count).map {
-            Edge(forwardNode: endCappedIntersections[$0], backwardNode: endCappedIntersections[$0-1])
+            Edge(startingNode: endCappedIntersections[$0-1], endingNode: endCappedIntersections[$0])
         }
         for i in 0..<endCappedIntersections.count {
             if i > 0 {
@@ -96,8 +96,8 @@ private class PathComponentGraph {
         if component.isClosed {
             let last = endCappedIntersections.last!
             let first = endCappedIntersections.first!
-            if let secondToLast = last.backwardEdge?.backwardNode {
-                let edge = Edge(forwardNode: first, backwardNode: secondToLast)
+            if let secondToLast = last.backwardEdge?.startingNode {
+                let edge = Edge(startingNode: secondToLast, endingNode: first)
                 secondToLast.forwardEdge = edge
                 first.backwardEdge = edge
             }
@@ -276,24 +276,26 @@ private extension AugmentedGraph {
         let firstPoint = startingNode.pathComponent.point(at: startingNode.componentLocation)
         var points: [CGPoint] = [firstPoint]
         var orders: [Int] = []
-        func visit(from node: Node) -> Node? {
-            if let edge = node.forwardEdge, edge.inSolution, edge.visited == false {
-                let component = edge.component
-                visit(component)
-                edge.visited = true
-                return edge.forwardNode
-            }
-            if let edge = node.backwardEdge, edge.inSolution, edge.visited == false {
-                let component = edge.component.reversed()
-                visit(component)
-                edge.visited = true
-                return edge.backwardNode
-            }
-            return nil
+        func edgeNeedsVisiting(_ edge: Edge) -> Bool {
+            return edge.inSolution == true && edge.visited == false
         }
-        func visit(_ component: PathComponent) {
+        func appendComponent(_ component: PathComponent) {
             points += component.points[1..<component.points.count]
             orders += component.orders
+        }
+        func visitEdge(_ edge: Edge, forwards: Bool) -> Node {
+            let component = edge.component
+            appendComponent(forwards ? component : component.reversed())
+            edge.visited = true
+            return forwards ? edge.endingNode : edge.startingNode
+        }
+        func visit(from node: Node) -> Node? {
+            if let edge = node.forwardEdge, edgeNeedsVisiting(edge) {
+                return visitEdge(edge, forwards: true)
+            } else if let edge = node.backwardEdge, edgeNeedsVisiting(edge) {
+                return visitEdge(edge, forwards: false)
+            }
+            return nil
         }
         var currentNode = startingNode
         repeat {
