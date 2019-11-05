@@ -260,16 +260,17 @@ private extension AugmentedGraph {
     static func sortAndMergeDuplicates(of nodes: inout [Node]) {
         guard nodes.count > 1 else { return }
         nodes.sort(by: { $0.location < $1.location })
-        var duplicatesRemoved = [nodes[0]]
-        duplicatesRemoved.reserveCapacity(nodes.count)
+        var currentUniqueIndex = 0
         for i in 1..<nodes.count {
-            if nodes[i].location == duplicatesRemoved.last!.location {
-                duplicatesRemoved.last!.mergeNeighbors(of: nodes[i])
+            let node = nodes[i]
+            if node.location == nodes[currentUniqueIndex].location {
+                nodes[currentUniqueIndex].mergeNeighbors(of: node)
             } else {
-                duplicatesRemoved.append(nodes[i])
+                currentUniqueIndex += 1
+                nodes[currentUniqueIndex] = node
             }
         }
-        nodes = duplicatesRemoved
+        nodes = Array(nodes[0...currentUniqueIndex])
     }
     func createComponent(from startingNode: Node) -> PathComponent {
         let firstPoint = startingNode.pathComponent.point(at: startingNode.componentLocation)
