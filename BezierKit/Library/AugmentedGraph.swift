@@ -13,9 +13,8 @@ private class Node {
     var componentLocation: IndexedPathComponentLocation {
         return IndexedPathComponentLocation(elementIndex: self.location.elementIndex, t: self.location.t)
     }
-    var next: Node?
-    var previous: Node?
-    var edge = Edge()
+    var forwardEdge: Edge?
+    var backwardEdge: Edge?
     var neighbors: [Node] = []
     unowned var pathComponent: PathComponent
     init(location: IndexedPathLocation, pathComponent: PathComponent) {
@@ -40,28 +39,24 @@ private class Node {
             self.addNeighbor($0)
         }
     }
-    func forwardComponent(to node: Node) -> PathComponent {
-        var nextLocation = node.componentLocation
-        if nextLocation == self.pathComponent.startingIndexedLocation {
-            nextLocation = self.pathComponent.endingIndexedLocation
-        }
-        return self.pathComponent.split(from: self.componentLocation, to: nextLocation)
-    }
-    func backwardComponent(to node: Node) -> PathComponent {
-        var startingLocation = self.componentLocation
-        if startingLocation == self.pathComponent.startingIndexedLocation {
-            startingLocation = self.pathComponent.endingIndexedLocation
-        }
-        return self.pathComponent.split(from: startingLocation, to: node.componentLocation)
-    }
 }
 
 private class Edge {
     var visited: Bool = false
     var inSolution: Bool = false
-    init() {
-        self.visited = false
-        self.inSolution = false
+    let forwardNode: Node
+    let backwardNode: Node
+    init(forwardNode: Node, backwardNode: Node) {
+        self.forwardNode = forwardNode
+        self.backwardNode = backwardNode
+    }
+    var component: PathComponent {
+        let parentComponent = self.forwardNode.pathComponent
+        var nextLocation = forwardNode.componentLocation
+        if nextLocation == parentComponent.startingIndexedLocation {
+            nextLocation = parentComponent.endingIndexedLocation
+        }
+        return self.forwardNode.pathComponent.split(from: backwardNode.componentLocation, to: nextLocation)
     }
 }
 
@@ -86,22 +81,29 @@ private class PathComponentGraph {
         if endCappedIntersections.last?.location != endingLocation {
             endCappedIntersections.append(Node(location: endingLocation, pathComponent: component))
         }
+        let edges = (1..<endCappedIntersections.count).map {
+            Edge(forwardNode: endCappedIntersections[$0], backwardNode: endCappedIntersections[$0-1])
+        }
         for i in 0..<endCappedIntersections.count {
             if i > 0 {
-                endCappedIntersections[i].previous = endCappedIntersections[i-1]
+                endCappedIntersections[i].backwardEdge = edges[i-1]
             }
             if i < endCappedIntersections.count-1 {
-                endCappedIntersections[i].next = endCappedIntersections[i+1]
+                endCappedIntersections[i].forwardEdge = edges[i]
             }
         }
         // loop back the end to the start (if needed)
         if component.isClosed {
-            // if the component is closed then the first and last nodes are really the same node
             let last = endCappedIntersections.last!
             let first = endCappedIntersections.first!
-            first.previous = last.previous
-            last.previous?.next = first
+            if let secondToLast = last.backwardEdge?.backwardNode {
+                let edge = Edge(forwardNode: first, backwardNode: secondToLast)
+                secondToLast.forwardEdge = edge
+                first.backwardEdge = edge
+            }
             first.mergeNeighbors(of: last)
+            last.forwardEdge = nil
+            last.backwardEdge = nil
             endCappedIntersections.removeLast()
         }
         self.nodes = endCappedIntersections
@@ -174,14 +176,14 @@ public final class AugmentedGraph {
         func drawGraph(_ graph: PathGraph) {
             for i in 0..<graph.components.count {
                 graph.components[i].forEachNode { node, _ in
-                    guard let nextNode = node.next else { return }
-                    switch node.edge.inSolution {
+                    guard let edge = node.forwardEdge else { return }
+                    switch edge.inSolution {
                     case true:
                         Draw.setColor(context, color: Draw.red)
                     case false:
                         Draw.setColor(context, color: Draw.green)
                     }
-                    for curve in node.forwardComponent(to: nextNode).curves {
+                    for curve in edge.component.curves {
                         Draw.drawCurve(context, curve: curve)
                     }
                 }
@@ -195,7 +197,7 @@ public final class AugmentedGraph {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
             graph.components.forEach {
                 $0.forEachNode { node, _ in
-                    guard node.edge.inSolution == true, node.edge.visited == false else { return }
+                    guard let edge = node.forwardEdge, edge.inSolution == true, edge.visited == false else { return }
                     list.append(self.createComponent(from: node))
                 }
             }
@@ -212,8 +214,8 @@ private extension AugmentedGraph {
     func classifyEdges(for graph: PathGraph, isForFirstPath: Bool) {
         func classifyEdge(for node: Node) {
             // TODO: we use a crummy point location
-            guard let nextNode = node.next else { return }
-            let component = node.forwardComponent(to: nextNode)
+            guard let edge = node.forwardEdge else { return }
+            let component = edge.component
             let nextEdge = component.element(at: 0)
             let point = nextEdge.compute(0.5)
             let normal = nextEdge.normal(0.5)
@@ -222,14 +224,14 @@ private extension AugmentedGraph {
             let point2 = point - smallDistance * normal
             let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
             let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
-            node.edge.inSolution = (included1 != included2)
-            if !isForFirstPath, node.edge.inSolution, operation != .removeCrossings {
+            edge.inSolution = (included1 != included2)
+            if !isForFirstPath, edge.inSolution, operation != .removeCrossings {
                 // remove duplicate coincident edges
                 let rule: PathFillRule = .evenOdd
                 let edge1 = self.graph1.path.contains(point1, using: rule) != self.graph1.path.contains(point2, using: rule)
                 let edge2 = self.graph2.path.contains(point1, using: rule) != self.graph2.path.contains(point2, using: rule)
                 if edge1, edge2 {
-                    node.edge.inSolution = false
+                    edge.inSolution = false
                 }
             }
         }
@@ -274,27 +276,17 @@ private extension AugmentedGraph {
         var points: [CGPoint] = [firstPoint]
         var orders: [Int] = []
         func visit(from node: Node) -> Node? {
-            if let next = node.next {
-                let forwardEdge = node.edge
-                if forwardEdge.inSolution, forwardEdge.visited == false {
-                    let component = node.forwardComponent(to: next)
-                    visit(component)
-                    forwardEdge.visited = true
-                    return next
-                }
-            } else {
-                assert(node.pathComponent.isClosed == false, "expected next node to exist")
+            if let edge = node.forwardEdge, edge.inSolution, edge.visited == false {
+                let component = edge.component
+                visit(component)
+                edge.visited = true
+                return edge.forwardNode
             }
-            if let previous = node.previous {
-                let backwardsEdge = previous.edge
-                if backwardsEdge.inSolution, backwardsEdge.visited == false {
-                    let component = node.backwardComponent(to: previous)
-                    visit(component)
-                    backwardsEdge.visited = true
-                    return previous
-                }
-            } else {
-                assert(node.pathComponent.isClosed == false, "expected previous node to exist")
+            if let edge = node.backwardEdge, edge.inSolution, edge.visited == false {
+                let component = edge.component.reversed()
+                visit(component)
+                edge.visited = true
+                return edge.backwardNode
             }
             return nil
         }
