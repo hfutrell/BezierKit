@@ -276,7 +276,7 @@ private extension AugmentedGraph {
         var points: [CGPoint] = [firstPoint]
         var orders: [Int] = []
         func appendComponent(_ component: PathComponent) {
-            points += component.points[1..<component.points.count]
+            points += component.points[1...]
             orders += component.orders
         }
         func visitEdge(_ edge: Edge, forwards: Bool) -> Node {
