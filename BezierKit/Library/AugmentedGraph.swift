@@ -108,12 +108,8 @@ private class PathComponentGraph {
         }
         self.nodes = endCappedIntersections
     }
-    func forEachNode(callback: (_ node: Node, _ stop: inout Bool) -> Void) {
-        var stop = false
-        for node in self.nodes {
-            callback(node, &stop)
-            guard stop == false else { return }
-        }
+    func forEachNode(callback: (_ node: Node) -> Void) {
+        self.nodes.forEach { callback($0) }
     }
 }
 
@@ -175,7 +171,7 @@ public final class AugmentedGraph {
     public func draw(_ context: CGContext) {
         func drawGraph(_ graph: PathGraph) {
             for i in 0..<graph.components.count {
-                graph.components[i].forEachNode { node, _ in
+                graph.components[i].forEachNode { node in
                     guard let edge = node.forwardEdge else { return }
                     switch edge.inSolution {
                     case true:
@@ -196,7 +192,7 @@ public final class AugmentedGraph {
     internal func performOperation() -> Path {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
             graph.components.forEach {
-                $0.forEachNode { node, _ in
+                $0.forEachNode { node in
                     guard let edge = node.forwardEdge, edge.inSolution == true, edge.visited == false else { return }
                     list.append(self.createComponent(from: node))
                 }
@@ -236,8 +232,8 @@ private extension AugmentedGraph {
             }
         }
         func classifyEdges(for component: PathComponentGraph) {
-            component.forEachNode { node, _ in
-                classifyEdge(for: node)
+            component.forEachNode {
+                classifyEdge(for: $0)
             }
         }
         graph.components.forEach { classifyEdges(for: $0) }
