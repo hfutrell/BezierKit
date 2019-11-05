@@ -1114,9 +1114,11 @@ class PathTests: XCTestCase {
         // the crossing as an entry / exit, which would completely cull off the square with +1 count
 
         let points = [CGPoint(x: 0, y: 1),
+                      CGPoint(x: 1, y: 1),
                       CGPoint(x: 2, y: 1),
                       CGPoint(x: 2, y: 2),
                       CGPoint(x: 1, y: 2),
+                      CGPoint(x: 1, y: 1),
                       CGPoint(x: 1, y: 0),
                       CGPoint(x: 0, y: 0)]
 
