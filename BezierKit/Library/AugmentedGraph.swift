@@ -196,7 +196,7 @@ public final class AugmentedGraph {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
             graph.components.forEach {
                 $0.forEachNode { node in
-                    guard let edge = node.forwardEdge, edge.inSolution == true, edge.visited == false else { return }
+                    guard let edge = node.forwardEdge, edge.needsVisiting else { return }
                     list.append(self.createComponent(from: node))
                 }
             }
