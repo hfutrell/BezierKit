@@ -209,7 +209,7 @@ extension BezierCurve {
             }
         }
         let scaledPoints = (0..<self.points.count).map(scaledPoint)
-        return Self.init(points: scaledPoints)
+        return type(of: self).init(points: scaledPoints)
     }
 
     // MARK: -
