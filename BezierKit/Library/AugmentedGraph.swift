@@ -50,6 +50,9 @@ private class Edge {
         self.startingNode = startingNode
         self.endingNode = endingNode
     }
+    var needsVisiting: Bool {
+        return self.visited == false && self.inSolution == true
+    }
     var component: PathComponent {
         let parentComponent = self.endingNode.pathComponent
         var nextLocation = endingNode.componentLocation
@@ -163,9 +166,9 @@ public final class AugmentedGraph {
         self.graph1 = PathGraph(for: path1, using: path1Intersections)
         self.graph2 = (operation != .removeCrossings) ? PathGraph(for: path2, using: path2Intersections) : graph1
         // mark each edge as either included or excluded from the final result
-        self.classifyEdges(for: self.graph1, isForFirstPath: true)
+        self.classifyEdges(in: self.graph1, isForFirstPath: true)
         if operation != .removeCrossings {
-            self.classifyEdges(for: self.graph2, isForFirstPath: false)
+            self.classifyEdges(in: self.graph2, isForFirstPath: false)
         }
     }
     public func draw(_ context: CGContext) {
@@ -207,10 +210,9 @@ public final class AugmentedGraph {
 
 private extension AugmentedGraph {
     /// traverses the list of edges and marks each edge as either .internal, .external, or .coincident with respect to `self.path`
-    func classifyEdges(for graph: PathGraph, isForFirstPath: Bool) {
-        func classifyEdge(for node: Node) {
+    func classifyEdges(in graph: PathGraph, isForFirstPath: Bool) {
+        func classifyEdge(_ edge: Edge) {
             // TODO: we use a crummy point location
-            guard let edge = node.forwardEdge else { return }
             let component = edge.component
             let nextEdge = component.element(at: 0)
             let point = nextEdge.compute(0.5)
@@ -231,12 +233,13 @@ private extension AugmentedGraph {
                 }
             }
         }
-        func classifyEdges(for component: PathComponentGraph) {
+        func classifyComponentEdges(in component: PathComponentGraph) {
             component.forEachNode {
-                classifyEdge(for: $0)
+                guard let edge = $0.forwardEdge else { return }
+                classifyEdge(edge)
             }
         }
-        graph.components.forEach { classifyEdges(for: $0) }
+        graph.components.forEach { classifyComponentEdges(in: $0) }
     }
     func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
         let rule: PathFillRule = (operation == .removeCrossings) ? .winding : .evenOdd
@@ -272,9 +275,6 @@ private extension AugmentedGraph {
         let firstPoint = startingNode.pathComponent.point(at: startingNode.componentLocation)
         var points: [CGPoint] = [firstPoint]
         var orders: [Int] = []
-        func edgeNeedsVisiting(_ edge: Edge) -> Bool {
-            return edge.inSolution == true && edge.visited == false
-        }
         func appendComponent(_ component: PathComponent) {
             points += component.points[1..<component.points.count]
             orders += component.orders
@@ -285,29 +285,21 @@ private extension AugmentedGraph {
             edge.visited = true
             return forwards ? edge.endingNode : edge.startingNode
         }
-        func visit(from node: Node) -> Node? {
-            if let edge = node.forwardEdge, edgeNeedsVisiting(edge) {
+        func visitNextNode(from node: Node) -> Node? {
+            if let edge = node.forwardEdge, edge.needsVisiting {
                 return visitEdge(edge, forwards: true)
-            } else if let edge = node.backwardEdge, edgeNeedsVisiting(edge) {
+            } else if let edge = node.backwardEdge, edge.needsVisiting {
                 return visitEdge(edge, forwards: false)
-            }
-            return nil
-        }
-        var currentNode = startingNode
-        repeat {
-            var nextNode = visit(from: currentNode)
-            if nextNode == nil {
-                for neighbor in currentNode.neighbors {
-                    nextNode = visit(from: neighbor)
-                    if nextNode != nil { break }
+            } else {
+                return node.neighbors.first {
+                    $0.forwardEdge?.needsVisiting == true || $0.backwardEdge?.needsVisiting == true
                 }
             }
-            if let nextNode = nextNode {
-                currentNode = nextNode
-            } else {
-                break
-            }
-        } while true
+        }
+        var currentNode = startingNode
+        while let nextNode = visitNextNode(from: currentNode) {
+            currentNode = nextNode
+        }
         if points.count > 1, currentNode !== startingNode {
             // if we ended at a node that's not equal to where we started, we may need
             // to close the current component
