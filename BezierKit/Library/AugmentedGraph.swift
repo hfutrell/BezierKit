@@ -32,7 +32,7 @@ private class Node {
         return self.neighbors.contains(where: { $0 === node })
     }
     func addNeighbor(_ node: Node) {
-        guard self.neighborsContain(node) == false else { return }
+        assert(self.neighborsContain(node) == false)
         self.neighbors.append(node)
     }
     private func replaceNeighbor(_ node: Node, with replacement: Node) {
@@ -211,8 +211,9 @@ private extension AugmentedGraph {
         }
         func classifyComponentEdges(in component: PathComponentGraph) {
             component.forEachNode {
-                guard let edge = $0.forwardEdge else { return }
-                classifyEdge(edge)
+                if let edge = $0.forwardEdge {
+                    classifyEdge(edge)
+                }
             }
         }
         graph.components.forEach { classifyComponentEdges(in: $0) }
