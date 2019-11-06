@@ -286,10 +286,9 @@ private extension AugmentedGraph {
                 return visitEdge(edge, forwards: true)
             } else if let edge = node.backwardEdge, edge.needsVisiting {
                 return visitEdge(edge, forwards: false)
-            } else {
-                return node.neighbors.first {
-                    $0.forwardEdge?.needsVisiting == true || $0.backwardEdge?.needsVisiting == true
-                }
+            }
+            return node.neighbors.first {
+                $0.forwardEdge?.needsVisiting == true || $0.backwardEdge?.needsVisiting == true
             }
         }
         var currentNode = startingNode
