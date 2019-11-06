@@ -457,51 +457,6 @@ import Foundation
         return self.split(range: PathComponentRange(start: start, end: end))
     }
 
-    fileprivate func mutateControlPoints(mutator: (UnsafeMutableBufferPointer<CGPoint>) -> Void) {
-        // this method MUST NOT be used externally. It is not threadsafe and does not play nice with our semantics
-        points.withUnsafeMutableBufferPointer { mutator($0) }
-    }
-
-    static private func component<T: PathComponent>(fromConcatinatingContinuousComponents components: [T]) -> T {
-        guard let first = components.first else { fatalError("unexpectedly empty components array.") }
-        var points: [CGPoint] = [first.startingPoint]
-        var orders: [Int] = []
-        components.forEach {
-            assert(distance($0.startingPoint, points.last!) < 1.0e-5)
-            guard $0.isPoint == false else { return }
-            orders += $0.orders
-            points += $0.points[1...] // 0th point shared with last component
-        }
-        if orders.isEmpty {
-            assert(points.count == 1)
-            orders = [0]
-        }
-        return T.init(points: points, orders: orders)
-    }
-
-    public func insert(locations: [IndexedPathComponentLocation], adjustments: [CGPoint]) -> Self {
-        let sortedBuckets = zip(locations, adjustments).sorted(by: { $0.0 < $1.0 })
-        let sortedLocations = sortedBuckets.map { $0.0 }
-        let sortedAdjustments = sortedBuckets.map { $0.1 }
-
-        let locationsWithEnds = [self.startingIndexedLocation] + sortedLocations + [self.endingIndexedLocation]
-        let adjustmentsWithEnds = [self.startingPoint] + sortedAdjustments + [self.endingPoint]
-
-        let ranges = locationsWithEnds.dropLast().indices.map {
-            PathComponentRange(start: locationsWithEnds[$0], end: locationsWithEnds[$0+1])
-        }
-        let components = (0..<ranges.count).map { (i: Int) -> Self in
-            let range = ranges[i]
-            let component = self.split(standardizedRange: range.standardized)
-            component.mutateControlPoints { buffer in
-                buffer[0] = adjustmentsWithEnds[i]
-                buffer[buffer.count-1] = adjustmentsWithEnds[i+1]
-            }
-            return component
-        }
-        return Self.component(fromConcatinatingContinuousComponents: components)
-    }
-
     open func reversed() -> Self {
         return type(of: self).init(points: self.points.reversed(), orders: self.orders.reversed())
     }

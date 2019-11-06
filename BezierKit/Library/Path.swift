@@ -266,21 +266,6 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return augmentedGraph.performOperation()
     }
 
-    public func insert(locations: [IndexedPathLocation], adjustments: [CGPoint]) -> Self {
-        guard locations.isEmpty == false else { return self }
-        var locationsByComponent = [[IndexedPathComponentLocation]](repeating: [], count: self.components.count)
-        var adjustmentsByComponent = [[CGPoint]](repeating: [], count: self.components.count)
-        for i in locations.indices {
-            let location = locations[i]
-            adjustmentsByComponent[location.componentIndex].append(adjustments[i])
-            locationsByComponent[location.componentIndex].append(IndexedPathComponentLocation(elementIndex: location.elementIndex, t: location.t))
-        }
-        let components = self.components.indices.map {
-            self.components[$0].insert(locations: locationsByComponent[$0], adjustments: adjustmentsByComponent[$0])
-        }
-        return Self(components: components)
-    }
-
     @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         return self.performBooleanOperation(.subtract, with: other.reversed(), accuracy: accuracy)
     }
