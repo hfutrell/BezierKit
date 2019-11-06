@@ -8,6 +8,13 @@
 
 import CoreGraphics
 
+internal enum BooleanPathOperation {
+    case union
+    case subtract
+    case intersect
+    case removeCrossings
+}
+
 private class Node {
     let location: IndexedPathLocation
     var componentLocation: IndexedPathComponentLocation {
@@ -15,8 +22,8 @@ private class Node {
     }
     var forwardEdge: Edge?
     var backwardEdge: Edge?
-    var neighbors: [Node] = []
-    unowned var pathComponent: PathComponent
+    private(set) var neighbors: [Node] = []
+    let pathComponent: PathComponent
     init(location: IndexedPathLocation, pathComponent: PathComponent) {
         self.location = location
         self.pathComponent = pathComponent
@@ -69,16 +76,7 @@ private class Edge {
     }
 }
 
-// TODO: revert public scope
-public enum BooleanPathOperation {
-    case union
-    case subtract
-    case intersect
-    case removeCrossings
-}
-
 private class PathComponentGraph {
-    /// Create the graph representing the component and return the first node (which represents the start of the first edge)
     private let nodes: [Node]
     init(for component: PathComponent, componentIndex: Int, using intersections: [Node]) {
         var nodes = intersections
@@ -122,7 +120,6 @@ private class PathGraph {
     let path: Path
     let components: [PathComponentGraph]
     init(for path: Path, using intersections: [Node]) {
-        // first file each intersection by component index
         self.path = path
         let intersectionsByComponent = { () -> [[Node]] in
             var temp = [[Node]](repeating: [], count: path.components.count)
@@ -137,12 +134,11 @@ private class PathGraph {
     }
 }
 
-// TODO: revert public scope
-public final class AugmentedGraph {
+internal class AugmentedGraph {
     private let operation: BooleanPathOperation
     private let graph1: PathGraph
     private let graph2: PathGraph
-    public init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
+    init(path1: Path, path2: Path, intersections: [PathIntersection], operation: BooleanPathOperation) {
         // take the pairwise intersections and make two mutually linked lists of intersections, one for each path
         self.operation = operation
         var path1Intersections: [Node] = []
@@ -173,7 +169,7 @@ public final class AugmentedGraph {
             self.classifyEdges(in: self.graph2, isForFirstPath: false)
         }
     }
-    internal func performOperation() -> Path {
+    func performOperation() -> Path {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
             graph.components.forEach {
                 $0.forEachNode { node in
@@ -190,7 +186,6 @@ public final class AugmentedGraph {
 }
 
 private extension AugmentedGraph {
-    /// traverses the list of edges and marks each edge as either .internal, .external, or .coincident with respect to `self.path`
     func classifyEdges(in graph: PathGraph, isForFirstPath: Bool) {
         func classifyEdge(_ edge: Edge) {
             // TODO: we use a crummy point location
