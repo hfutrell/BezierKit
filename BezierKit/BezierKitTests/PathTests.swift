@@ -1095,7 +1095,7 @@ class PathTests: XCTestCase {
 
         let resultAlt = pathAlt.crossingsRemoved()!
         XCTAssertEqual(resultAlt.components.count, 1)
-       // XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.components[0], expectedResult.components[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.components[0], expectedResult.components[0]))
     }
 
     func testCrossingsRemovedNoCrossings() {
