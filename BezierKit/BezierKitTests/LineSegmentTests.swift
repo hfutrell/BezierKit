@@ -272,8 +272,14 @@ class LineSegmentTests: XCTestCase {
         let l2 = LineSegment(p0: CGPoint(x: 111.2, y: 90.0),
                              p1: CGPoint(x: 171.33627533401454, y: 102.89462632327792))
         let i = l1.intersections(with: l2)
-        XCTAssertEqual(i, [Intersection(t1: 0, t2: 0.3919154238582343),
-                           Intersection(t1: 1, t2: 1)])
+        guard i.count == 2 else {
+            assertionFailure("expected two intersections, got: \(i)")
+            return
+        }
+        XCTAssertEqual(i[0].t1, 0)
+        XCTAssertEqual(i[0].t2, 0.3919154238582343, accuracy: 1.0e-4)
+        XCTAssertEqual(i[1].t1, 1)
+        XCTAssertEqual(i[1].t2, 1)
     }
 
     // -- MARK: - line-curve intersection tests
