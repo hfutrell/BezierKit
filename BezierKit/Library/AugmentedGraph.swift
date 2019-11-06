@@ -193,7 +193,7 @@ private extension AugmentedGraph {
             let nextEdge = component.element(at: 0)
             let point = nextEdge.compute(0.5)
             let normal = nextEdge.normal(0.5)
-            let smallDistance: CGFloat = 1.0e-5
+            let smallDistance: CGFloat = 1.0e-4
             let point1 = point + smallDistance * normal
             let point2 = point - smallDistance * normal
             let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
