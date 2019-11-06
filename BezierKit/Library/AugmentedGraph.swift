@@ -84,16 +84,12 @@ private class PathComponentGraph {
         if endCappedIntersections.last?.location != endingLocation {
             endCappedIntersections.append(Node(location: endingLocation, pathComponent: component))
         }
-        let edges = (1..<endCappedIntersections.count).map {
-            Edge(startingNode: endCappedIntersections[$0-1], endingNode: endCappedIntersections[$0])
-        }
-        for i in 0..<endCappedIntersections.count {
-            if i > 0 {
-                endCappedIntersections[i].backwardEdge = edges[i-1]
-            }
-            if i < endCappedIntersections.count-1 {
-                endCappedIntersections[i].forwardEdge = edges[i]
-            }
+        for i in 1..<endCappedIntersections.count {
+            let startingNode = endCappedIntersections[i-1]
+            let endingNode = endCappedIntersections[i]
+            let edge = Edge(startingNode: startingNode, endingNode: endingNode)
+            endingNode.backwardEdge = edge
+            startingNode.forwardEdge = edge
         }
         // loop back the end to the start (if needed)
         if component.isClosed {
