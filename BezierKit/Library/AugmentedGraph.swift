@@ -39,7 +39,7 @@ private class Node {
             self.addNeighbor($0)
         }
     }
-    /// Nodes can have strong reference cycles either through their neighbors or through their edges, unlinking all nodes in deallocation of owner prevents memory leakage
+    /// Nodes can have strong reference cycles either through their neighbors or through their edges, unlinking all nodes when owner no longer holds instance prevents memory leakage
     func unlink() {
         self.neighbors = []
         self.forwardEdge = nil
@@ -98,9 +98,7 @@ private class PathComponentGraph {
             startingNode.forwardEdge = edge
         }
         // loop back the end to the start (if needed)
-        if component.isClosed {
-            let last = nodes.last!
-            let first = nodes.first!
+        if component.isClosed, let last = nodes.last, let first = nodes.first {
             if let secondToLast = last.backwardEdge?.startingNode {
                 let edge = Edge(startingNode: secondToLast, endingNode: first)
                 secondToLast.forwardEdge = edge
