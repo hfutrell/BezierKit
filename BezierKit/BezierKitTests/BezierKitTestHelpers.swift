@@ -76,7 +76,7 @@ class BezierKitTestHelpers {
         return sum
     }
 
-    static func cubicBezierCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> CubicBezierCurve {
+    static func cubicCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> CubicCurve {
         precondition(f.count == 4 && g.count == 4)
         // create a cubic bezier curve from two polynomials
         // the first polynomial f[0] t^3 + f[1] t^2 + f[2] t + f[3] defines x(t) for the Bezier curve
@@ -90,7 +90,7 @@ class BezierKitTestHelpers {
         let c = q / 3.0 + 2.0 * b - a
         let d = p + a - 3.0 * b + 3.0 * c
         // check that it worked
-        let curve = CubicBezierCurve(p0: a, p1: b, p2: c, p3: d)
+        let curve = CubicCurve(p0: a, p1: b, p2: c, p3: d)
         for t: CGFloat in stride(from: 0, through: 1, by: 0.1) {
             assert(distance(curve.compute(t), CGPoint(x: evaluatePolynomial(f, at: t), y: evaluatePolynomial(g, at: t))) < 0.001, "internal error! failed to fit polynomial!")
         }
@@ -107,7 +107,7 @@ class BezierKitTestHelpers {
             guard result[i].t2 == result[i+1].t1 else { return false }
         }
         // ensure that it conains the extrema
-        let extrema = curve.extrema().values
+        let extrema = curve.extrema().all
         for e in extrema {
             let extremaExistsInSolution = result.contains { subcurve in
                 abs(subcurve.t1 - e) <= reduceStepSize || abs(subcurve.t2 - e) <= reduceStepSize
@@ -129,7 +129,7 @@ class BezierKitTestHelpers {
         return true
     }
 
-//    static func quadraticBezierCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> QuadraticBezierCurve {
+//    static func quadraticCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> QuadraticCurve {
 //        precondition(f.count == 3 && g.count == 3)
 //        // create a quadratic bezier curve from two polynomials
 //        // the first polynomial f[0] t^2 + f[1] t + f[2] defines x(t) for the Bezier curve
@@ -141,7 +141,7 @@ class BezierKitTestHelpers {
 //        let b = r / 3.0 + a
 //        let c = q / 3.0 + 2.0 * b - a
 //        // check that it worked
-//        let curve = QuadraticBezierCurve(p0: a, p1: b, p2: c)
+//        let curve = QuadraticCurve(p0: a, p1: b, p2: c)
 //        for t: CGFloat in stride(from: 0, through: 1, by: 0.1) {
 //            assert(distance(curve.compute(t), CGPoint(x: evaluatePolynomial(f, at: t), y: evaluatePolynomial(g, at: t))) < 0.001, "internal error! failed to fit polynomial!")
 //        }

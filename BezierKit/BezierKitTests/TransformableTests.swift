@@ -28,20 +28,20 @@ class TransformableTests: XCTestCase {
     }
 
     func testTransformQuadraticCurve() {
-        let q = QuadraticBezierCurve(p0: CGPoint(x: -1, y: -1),
+        let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
                                      p1: CGPoint(x: 3, y: 1),
                                      p2: CGPoint(x: 7, y: -1))
-        XCTAssertEqual(q.copy(using: transform), QuadraticBezierCurve(p0: CGPoint(x: 0, y: 0),
+        XCTAssertEqual(q.copy(using: transform), QuadraticCurve(p0: CGPoint(x: 0, y: 0),
                                                                       p1: CGPoint(x: -2, y: 4),
                                                                       p2: CGPoint(x: 0, y: 8)))
     }
 
     func testTransformCubicCurve() {
-        let c = CubicBezierCurve(p0: CGPoint(x: -1, y: -1),
+        let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
                                  p1: CGPoint(x: 3, y: 1),
                                  p2: CGPoint(x: 7, y: -1),
                                  p3: CGPoint(x: 8, y: 0))
-        XCTAssertEqual(c.copy(using: transform), CubicBezierCurve(p0: CGPoint(x: 0, y: 0),
+        XCTAssertEqual(c.copy(using: transform), CubicCurve(p0: CGPoint(x: 0, y: 0),
                                                                   p1: CGPoint(x: -2, y: 4),
                                                                   p2: CGPoint(x: 0, y: 8),
                                                                   p3: CGPoint(x: -1, y: 9)))

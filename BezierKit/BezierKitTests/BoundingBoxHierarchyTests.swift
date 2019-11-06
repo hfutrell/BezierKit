@@ -82,7 +82,7 @@ class BoundingBoxHierarchyTests: XCTestCase {
 
     private func createListFromAllNodesVisited(in boundingBoxHierarchy: BoundingBoxHierarchy) -> [BoundingBoxHierarchy.Node] {
         var result: [BoundingBoxHierarchy.Node] = []
-        boundingBoxHierarchy.visit { (node: BoundingBoxHierarchy.Node, depth: Int) -> Bool in
+        boundingBoxHierarchy.visit { node, _ in
             result.append(node)
             return true
         }
@@ -106,7 +106,7 @@ class BoundingBoxHierarchyTests: XCTestCase {
         XCTAssertEqual(roundUpPowerOfTwo(65), 128)
         XCTAssertEqual(roundUpPowerOfTwo(128), 128)
     }
-    
+
     /// test that when we visit a bounding volume hierarchy the leaf node elementIndex and internal node start and end element indexes are correct
     func testVisitElementIndexes() {
         let sampleBox = BoundingBox(min: CGPoint.zero, max: CGPoint.zero)

@@ -27,14 +27,11 @@ public class Draw {
      * HSL to RGB converter.
      * Adapted from: https://github.com/alessani/ColorConverter
      */
-    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat, outR: inout CGFloat, outG: inout CGFloat, outB: inout CGFloat) {
+    internal static func HSLToRGB(h: CGFloat, s: CGFloat, l: CGFloat) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
 
         // Check for saturation. If there isn't any just return the luminance value for each, which results in gray.
         if s == 0.0 {
-            outR = l
-            outG = l
-            outB = l
-            return
+            return (r: l, g: l, b: l)
         }
 
         var temp1, temp2: CGFloat
@@ -72,9 +69,7 @@ public class Draw {
             }
         }
         // Assign temporary values to R, G, B
-        outR = temp[0]
-        outG = temp[1]
-        outB = temp[2]
+        return (r: temp[0], g: temp[1], b: temp[2])
     }
 
     // MARK: - some useful hard-coded colors
@@ -92,11 +87,7 @@ public class Draw {
         var temp: [CGColor] = []
         for i in 0..<360 {
             var j = (i*47) % 360
-            var r: CGFloat = 0.0
-            var g: CGFloat = 0.0
-            var b: CGFloat = 0.0
-            HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5, outR: &r, outG: &g, outB: &b)
-
+            let (r, g, b) = HSLToRGB(h: CGFloat(j) / 360.0, s: 0.5, l: 0.5)
             temp.append(Draw.Color(red: r, green: g, blue: b, alpha: 1.0))
         }
         return temp
@@ -132,11 +123,11 @@ public class Draw {
 
     public static func drawCurve(_ context: CGContext, curve: BezierCurve, offset: CGPoint=CGPoint.zero) {
         context.beginPath()
-        if let quadraticCurve = curve as? QuadraticBezierCurve {
+        if let quadraticCurve = curve as? QuadraticCurve {
             context.move(to: quadraticCurve.p0 + offset)
             context.addQuadCurve(to: quadraticCurve.p2 + offset,
                                  control: quadraticCurve.p1 + offset)
-        } else if let cubicCurve = curve as? CubicBezierCurve {
+        } else if let cubicCurve = curve as? CubicCurve {
             context.move(to: cubicCurve.p0 + offset)
             context.addCurve(to: cubicCurve.p3 + offset,
                              control1: cubicCurve.p1 + offset,
@@ -196,10 +187,10 @@ public class Draw {
 
         context.setStrokeColor(lightGrey)
 
-        if let cubicCurve = curve as? CubicBezierCurve {
+        if let cubicCurve = curve as? CubicCurve {
             self.drawLine(context, from: cubicCurve.p0, to: cubicCurve.p1, offset: offset)
             self.drawLine(context, from: cubicCurve.p2, to: cubicCurve.p3, offset: offset)
-        } else if let quadraticCurve = curve as? QuadraticBezierCurve {
+        } else if let quadraticCurve = curve as? QuadraticCurve {
             self.drawLine(context, from: quadraticCurve.p0, to: quadraticCurve.p1, offset: offset)
             self.drawLine(context, from: quadraticCurve.p1, to: quadraticCurve.p2, offset: offset)
         }
@@ -208,20 +199,6 @@ public class Draw {
             context.setStrokeColor(black)
             self.drawPoints(context, points: curve.points, offset: offset)
         }
-
-    }
-
-    public static func draw(_ context: CGContext, arc: Arc, offset: CGPoint = .zero) {
-        let o = offset
-        context.beginPath()
-        context.move(to: arc.origin + o)
-        context.addArc(center: arc.origin + o,
-                       radius: arc.radius,
-                       startAngle: arc.startAngle,
-                       endAngle: arc.endAngle,
-                       clockwise: false)
-        context.addLine(to: arc.origin + o)
-        context.drawPath(using: .fillStroke)
     }
 
     public static func drawHull(_ context: CGContext, hull: [CGPoint], offset: CGPoint = .zero) {

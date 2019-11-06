@@ -45,7 +45,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.5.13'
+    pod 'BezierKit', '>= 0.6.0'
 end
 ```
 
@@ -59,14 +59,14 @@ $ pod install
 
 ### Constructing & Drawing Curves
 
-BezierKit supports cubic Bezier curves (`CubicBezierCurve`) and quadratic Bezier curves (`QuadraticBezierCurve`) as well as line segments (`LineSegment`) each of which adopts the `BezierCurve` protocol that encompasses most API functionality.
+BezierKit supports cubic Bezier curves (`CubicCurve`) and quadratic Bezier curves (`QuadraticCurve`) as well as line segments (`LineSegment`) each of which adopts the `BezierCurve` protocol that encompasses most API functionality.
 
 <img src="https://raw.githubusercontent.com/hfutrell/BezierKit/master/images/usage-construct.png" width="256" height="256">
 
 ```swift
 import BezierKit
 
-let curve = CubicBezierCurve(
+let curve = CubicCurve(
     p0: CGPoint(x: 100, y: 25),
     p1: CGPoint(x: 10, y: 90),
     p2: CGPoint(x: 110, y: 100),

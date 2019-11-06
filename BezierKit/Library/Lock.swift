@@ -9,7 +9,7 @@
 import Foundation
 
 internal class UnfairLock {
-    private var lockPointer: UnsafeMutablePointer<os_unfair_lock>
+    private let lockPointer: UnsafeMutablePointer<os_unfair_lock>
     init() {
         lockPointer = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
         lockPointer.initialize(to: os_unfair_lock())

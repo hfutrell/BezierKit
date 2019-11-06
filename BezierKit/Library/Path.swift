@@ -25,7 +25,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 @objc(BezierKitPath) open class Path: NSObject, NSCoding {
 
     /// lock to make external accessing of lazy vars threadsafe
-    private var lock = UnfairLock()
+    private let lock = UnfairLock()
 
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint?
@@ -262,8 +262,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path? {
         let intersections = self.intersections(with: other, accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections)
-        return augmentedGraph.booleanOperation(operation)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections, operation: operation)
+        return augmentedGraph.performOperation()
     }
 
     @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
@@ -286,13 +286,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
         let intersections = self.selfIntersections(accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections)
-        return augmentedGraph.booleanOperation(.removeCrossings)
+        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections, operation: .removeCrossings)
+        return augmentedGraph.performOperation()
     }
 
     @objc public func disjointComponents() -> [Path] {
         let rule: PathFillRule = .evenOdd
-        var outerComponents: [PathComponent:[PathComponent]] = [:]
+        var outerComponents: [PathComponent: [PathComponent]] = [:]
         var innerComponents: [PathComponent] = []
         // determine which components are outer and which are inner
         for component in self.components {
@@ -305,7 +305,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         // file the inner components into their "owning" outer components
         for component in innerComponents {
-            var owner: PathComponent? = nil
+            var owner: PathComponent?
             for outer in outerComponents.keys {
                 if let owner = owner {
                     guard outer.boundingBox.intersection(owner.boundingBox) == outer.boundingBox else { continue }

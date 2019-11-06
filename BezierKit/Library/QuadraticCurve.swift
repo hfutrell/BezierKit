@@ -1,5 +1,5 @@
 //
-//  QuadraticBezierCurve.swift
+//  QuadraticCurve.swift
 //  BezierKit
 //
 //  Created by Holmes Futrell on 3/3/17.
@@ -8,7 +8,7 @@
 
 import CoreGraphics
 
-public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Equatable {
+public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
 
     public var p0, p1, p2: CGPoint
 
@@ -99,7 +99,7 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         return a*p0 + b*p1
     }
 
-    public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticBezierCurve {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let h0 = self.p0
         let h1 = self.p1
@@ -109,10 +109,10 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         let h5 = Utils.lerp(t1, h3, h4)
         let tr = (t2 - t1) / (1.0 - t1)
         let i3 = Utils.lerp(tr, h5, h4)
-        return QuadraticBezierCurve(p0: self.compute(t1), p1: i3, p2: self.compute(t2))
+        return QuadraticCurve(p0: self.compute(t1), p1: i3, p2: self.compute(t2))
     }
 
-    public func split(at t: CGFloat) -> (left: QuadraticBezierCurve, right: QuadraticBezierCurve) {
+    public func split(at t: CGFloat) -> (left: QuadraticCurve, right: QuadraticCurve) {
         // use "de Casteljau" iteration.
         let h0 = self.p0
         let h1 = self.p1
@@ -121,8 +121,8 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
         let h4 = Utils.lerp(t, h1, h2)
         let h5 = Utils.lerp(t, h3, h4)
 
-        let leftCurve = QuadraticBezierCurve(p0: h0, p1: h3, p2: h5)
-        let rightCurve = QuadraticBezierCurve(p0: h5, p1: h4, p2: h2)
+        let leftCurve = QuadraticCurve(p0: h0, p1: h3, p2: h5)
+        let rightCurve = QuadraticCurve(p0: h5, p1: h4, p2: h2)
 
         return (left: leftCurve, right: rightCurve)
     }
@@ -175,19 +175,19 @@ public struct QuadraticBezierCurve: NonlinearBezierCurve, ArcApproximateable, Eq
     }
 }
 
-extension QuadraticBezierCurve: Transformable {
-    public func copy(using t: CGAffineTransform) -> QuadraticBezierCurve {
-        return QuadraticBezierCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t))
+extension QuadraticCurve: Transformable {
+    public func copy(using t: CGAffineTransform) -> QuadraticCurve {
+        return QuadraticCurve(p0: self.p0.applying(t), p1: self.p1.applying(t), p2: self.p2.applying(t))
     }
 }
 
-extension QuadraticBezierCurve: Reversible {
-    public func reversed() -> QuadraticBezierCurve {
-        return QuadraticBezierCurve(p0: self.p2, p1: self.p1, p2: self.p0)
+extension QuadraticCurve: Reversible {
+    public func reversed() -> QuadraticCurve {
+        return QuadraticCurve(p0: self.p2, p1: self.p1, p2: self.p0)
     }
 }
 
-extension QuadraticBezierCurve: Flatness {
+extension QuadraticCurve: Flatness {
     public var flatnessSquared: CGFloat {
         let a: CGPoint = 2.0 * self.p1 - self.p0 - self.p2
         return (1.0 / 16.0) * (a.x * a.x + a.y * a.y)

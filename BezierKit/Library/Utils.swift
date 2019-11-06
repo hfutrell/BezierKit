@@ -12,6 +12,21 @@ import Foundation
 import CoreGraphics
 #endif
 
+internal extension Array where Element: Comparable {
+    func sortedAndUniqued() -> [Element] {
+        guard self.count > 1 else { return self }
+        return self.sorted().duplicatesRemovedFromSorted()
+    }
+    func duplicatesRemovedFromSorted() -> [Element] {
+        return self.indices.compactMap {
+            let element = self[$0]
+            guard $0 > self.startIndex else { return element }
+            guard element != self[$0 - 1] else { return nil }
+            return element
+        }
+    }
+}
+
 internal class Utils {
 
     // float precision significant decimal
@@ -130,11 +145,9 @@ internal class Utils {
         let x3 = line2p1.x; let y3 = line2p1.y
         let x4 = line2p2.x; let y4 = line2p2.y
         let d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-        if d == 0 {
-            return nil
-        }
-        let a = (x1 * y2 - y1 * x2)
-        let b = (x3 * y4 - y3 * x4)
+        guard d != 0, d.isFinite else { return nil }
+        let a = x1 * y2 - y1 * x2
+        let b = x3 * y4 - y3 * x4
         let n = a * (line2p1 - line2p2) - b * (line1p1 - line1p2)
         return (1.0 / d) * n
     }
@@ -239,17 +252,22 @@ internal class Utils {
     static func droots(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, callback: (CGFloat) -> Void) {
         // quadratic roots are easy
         // do something with each root
-        let d: CGFloat = a - 2.0*b + c
+        let d: CGFloat = a - 2.0 * b + c
+        guard d.isFinite else { return }
         if abs(d) > CGFloat(epsilon) {
-            let m1 = -sqrt(b*b-a*c)
-            let m2 = -a+b
-            let v1 = -( m1+m2)/d
-            let v2 = -(-m1+m2)/d
+            let radical = b * b - a * c
+            guard radical >= 0 else { return }
+            let m1 = sqrt(radical)
+            let m2 = a - b
+            let v1 = (m2 + m1) / d
+            let v2 = (m2 - m1) / d
             if v1 < v2 {
                 callback(v1)
                 callback(v2)
-            } else {
+            } else if v1 > v2 {
                 callback(v2)
+                callback(v1)
+            } else {
                 callback(v1)
             }
         } else if a != b {
@@ -282,18 +300,8 @@ internal class Utils {
         return result
     }
 
-    static func mod(_ a: Int, _ n: Int) -> Int {
-        precondition(n > 0, "modulus must be positive")
-        let r = a % n
-        return r >= 0 ? r : r + n
-    }
-
     static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {
         return v1 + r * (v2 - v1)
-    }
-
-    static func dist(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
-        return (p1 - p2).length
     }
 
     static func arcfn(_ t: CGFloat, _ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
@@ -328,6 +336,9 @@ internal class Utils {
             )
         }
     }
+
+    // disable this SwiftLint warning about function having more than 5 parameters
+    // swiftlint:disable function_parameter_count
 
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
@@ -377,53 +388,7 @@ internal class Utils {
         }
     }
 
-    static func getccenter( _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint, _ interval: Interval) -> Arc {
-        let d1 = p2 - p1
-        let d2 = p3 - p2
-        let d1p = CGPoint(x: d1.x * cos(CGFloat(quart)) - d1.y * sin(CGFloat(quart)),
-                          y: d1.x * sin(CGFloat(quart)) + d1.y * cos(CGFloat(quart)))
-        let d2p = CGPoint(x: d2.x * cos(CGFloat(quart)) - d2.y * sin(CGFloat(quart)),
-                          y: d2.x * sin(CGFloat(quart)) + d2.y * cos(CGFloat(quart)))
-        // chord midpoints
-        let m1 = 0.5 * (p1 + p2)
-        let m2 = 0.5 * (p2 + p3)
-        // midpoint offsets
-        let m1n = m1 + d1p
-        let m2n = m2 + d2p
-        // intersection of these lines:
-        let oo = Utils.linesIntersection(m1, m1n, m2, m2n)
-
-        assert(oo != nil)
-
-        let o: CGPoint = oo!
-        let r = Utils.dist(o, p1)
-        // arc start/end values, over mid point:
-        var s = atan2(p1.y - o.y, p1.x - o.x)
-        let m = atan2(p2.y - o.y, p2.x - o.x)
-        var e = atan2(p3.y - o.y, p3.x - o.x)
-        // determine arc direction (cw/ccw correction)
-        if s<e {
-            // if s<m<e, arc(s, e)
-            // if m<s<e, arc(e, s + tau)
-            // if s<e<m, arc(e, s + tau)
-            if s>m || m>e {
-                s += CGFloat(tau)
-            }
-            if s>e {
-                swap(&s, &e)
-            }
-        } else {
-            // if e<m<s, arc(e, s)
-            // if m<e<s, arc(s, e + tau)
-            // if e<s<m, arc(s, e + tau)
-            if e<m && m<s {
-                swap(&s, &e)
-            } else {
-                e += CGFloat(tau)
-            }
-        }
-        return Arc(origin: o, radius: r, startAngle: s, endAngle: e, interval: interval)
-    }
+    // swiftlint:enable function_parameter_count
 
     static func hull(_ p: [CGPoint], _ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count

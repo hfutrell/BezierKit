@@ -53,7 +53,7 @@ private func windingCountIncrementer<A: BezierCurve>(_ curve: A, point: CGPoint)
 
 internal extension PathComponent {
 
-    private func enumerateYMonotonicComponentsForQuadratic(at index: Int, callback: (_ curve: QuadraticBezierCurve) -> Void) {
+    private func enumerateYMonotonicComponentsForQuadratic(at index: Int, callback: (_ curve: QuadraticCurve) -> Void) {
         let curve = self.quadratic(at: index)
         let p0 = curve.p0
         let p1 = curve.p1
@@ -71,7 +71,7 @@ internal extension PathComponent {
         }
     }
 
-    private func enumerateYMonotonicComponentsForCubic(at index: Int, callback: (_ curve: CubicBezierCurve) -> Void) {
+    private func enumerateYMonotonicComponentsForCubic(at index: Int, callback: (_ curve: CubicCurve) -> Void) {
         let curve = self.cubic(at: index)
         let p0 = curve.p0
         let p1 = curve.p1
@@ -90,7 +90,7 @@ internal extension PathComponent {
             callback(curve.split(from: last, to: 1.0))
         }
     }
-    
+
     func windingCount(at point: CGPoint) -> Int {
         guard self.isClosed, self.boundingBox.contains(point) else {
             return 0

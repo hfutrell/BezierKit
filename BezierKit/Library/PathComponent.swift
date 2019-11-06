@@ -12,10 +12,10 @@ import Foundation
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
 
     private let offsets: [Int]
-    public let points: [CGPoint]
+    public var points: [CGPoint]
     public let orders: [Int]
     /// lock to make external accessing of lazy vars threadsafe
-    private var lock = UnfairLock()
+    private let lock = UnfairLock()
 
     public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<elementCount).map {
@@ -69,28 +69,28 @@ import Foundation
             return LineSegment(p0: p, p1: p)
         }
     }
-    
+
     public func startingPointForElement(at index: Int) -> CGPoint {
         return self.points[self.offsets[index]]
     }
-    
+
     public func endingPointForElement(at index: Int) -> CGPoint {
         return self.points[self.offsets[index] + self.orders[index]]
     }
 
-    internal func cubic(at index: Int) -> CubicBezierCurve {
+    internal func cubic(at index: Int) -> CubicCurve {
         assert(self.order(at: index) == 3)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
-            CubicBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
+            CubicCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2], p3: p[offset+3])
         }
     }
 
-    internal func quadratic(at index: Int) -> QuadraticBezierCurve {
+    internal func quadratic(at index: Int) -> QuadraticCurve {
         assert(self.order(at: index) == 2)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
-            return QuadraticBezierCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2])
+            return QuadraticCurve(p0: p[offset], p1: p[offset+1], p2: p[offset+2])
         }
     }
 
@@ -153,7 +153,7 @@ import Foundation
     }
 
     private static func computeOffsets(from orders: [Int]) -> [Int] {
-        var offsets = [Int]()
+        var offsets: [Int] = []
         offsets.reserveCapacity(orders.count)
         var sum = 0
         offsets.append(sum)
@@ -279,7 +279,6 @@ import Foundation
     }
 
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
-        precondition(other !== self, "use selfIntersections(accuracy:) for self intersection testing.")
         var intersections: [PathComponentIntersection] = []
         let isClosed1 = self.isClosed
         let isClosed2 = other.isClosed
@@ -328,7 +327,7 @@ import Foundation
             // TODO: unfortunately we badly need more tests for all these obscure codepaths
             /*if i1 == i2 {
                 // we are intersecting a path element against itself
-                if let c = c1 as? CubicBezierCurve {
+                if let c = c1 as? CubicCurve {
                     elementIntersections = c.selfIntersections(accuracy: accuracy)
                 }
             }
@@ -382,7 +381,7 @@ import Foundation
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         return self.element(at: location.elementIndex).compute(location.t)
     }
-    
+
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
@@ -411,8 +410,8 @@ import Foundation
         let start = range.start
         let end   = range.end
 
-        var resultPoints = [CGPoint]()
-        var resultOrders = [Int]()
+        var resultPoints: [CGPoint] = []
+        var resultOrders: [Int] = []
 
         func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
             assert(includeStart || includeEnd)
