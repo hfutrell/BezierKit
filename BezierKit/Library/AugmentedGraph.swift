@@ -39,6 +39,12 @@ private class Node {
             self.addNeighbor($0)
         }
     }
+    /// Nodes can have strong reference cycles either through their neighbors or through their edges, unlinking all nodes in deallocation of owner prevents memory leakage
+    func unlink() {
+        self.neighbors = []
+        self.forwardEdge = nil
+        self.backwardEdge = nil
+    }
 }
 
 private class Edge {
@@ -75,40 +81,42 @@ private class PathComponentGraph {
     /// Create the graph representing the component and return the first node (which represents the start of the first edge)
     private let nodes: [Node]
     init(for component: PathComponent, componentIndex: Int, using intersections: [Node]) {
-        var endCappedIntersections = intersections
+        var nodes = intersections
         let startingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.startingIndexedLocation.elementIndex, t: component.startingIndexedLocation.t)
         let endingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.endingIndexedLocation.elementIndex, t: component.endingIndexedLocation.t)
-        if endCappedIntersections.first?.location != startingLocation {
-            endCappedIntersections.insert(Node(location: startingLocation, pathComponent: component), at: 0)
+        if nodes.first?.location != startingLocation {
+            nodes.insert(Node(location: startingLocation, pathComponent: component), at: 0)
         }
-        if endCappedIntersections.last?.location != endingLocation {
-            endCappedIntersections.append(Node(location: endingLocation, pathComponent: component))
+        if nodes.last?.location != endingLocation {
+            nodes.append(Node(location: endingLocation, pathComponent: component))
         }
-        for i in 1..<endCappedIntersections.count {
-            let startingNode = endCappedIntersections[i-1]
-            let endingNode = endCappedIntersections[i]
+        for i in 1..<nodes.count {
+            let startingNode = nodes[i-1]
+            let endingNode = nodes[i]
             let edge = Edge(startingNode: startingNode, endingNode: endingNode)
             endingNode.backwardEdge = edge
             startingNode.forwardEdge = edge
         }
         // loop back the end to the start (if needed)
         if component.isClosed {
-            let last = endCappedIntersections.last!
-            let first = endCappedIntersections.first!
+            let last = nodes.last!
+            let first = nodes.first!
             if let secondToLast = last.backwardEdge?.startingNode {
                 let edge = Edge(startingNode: secondToLast, endingNode: first)
                 secondToLast.forwardEdge = edge
                 first.backwardEdge = edge
             }
             first.mergeNeighbors(of: last)
-            last.forwardEdge = nil
-            last.backwardEdge = nil
-            endCappedIntersections.removeLast()
+            last.unlink()
+            nodes.removeLast()
         }
-        self.nodes = endCappedIntersections
+        self.nodes = nodes
     }
     func forEachNode(callback: (_ node: Node) -> Void) {
         self.nodes.forEach { callback($0) }
+    }
+    deinit {
+        self.forEachNode { $0.unlink() }
     }
 }
 
@@ -166,27 +174,6 @@ public final class AugmentedGraph {
         if operation != .removeCrossings {
             self.classifyEdges(in: self.graph2, isForFirstPath: false)
         }
-    }
-    public func draw(_ context: CGContext) {
-        func drawGraph(_ graph: PathGraph) {
-            for i in 0..<graph.components.count {
-                graph.components[i].forEachNode { node in
-                    guard let edge = node.forwardEdge else { return }
-                    switch edge.inSolution {
-                    case true:
-                        Draw.setColor(context, color: Draw.red)
-                    case false:
-                        Draw.setColor(context, color: Draw.green)
-                    }
-                    for curve in edge.component.curves {
-                        Draw.drawCurve(context, curve: curve)
-                    }
-                }
-            }
-        }
-        drawGraph(self.graph1)
-        drawGraph(self.graph2)
-        Draw.reset(context)
     }
     internal func performOperation() -> Path {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
