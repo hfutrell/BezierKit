@@ -56,12 +56,6 @@ extension Subcurve: Equatable where CurveType: Equatable {
 
 extension BezierCurve {
 
-    /// a curve is considered linear if its control points are all a small distance from its baseline
-    private var linear: Bool {
-        let a = Utils.align(points, p1: self.startingPoint, p2: self.endingPoint)
-        return a.allSatisfy { abs($0.y) <= CGFloat(Utils.epsilon) }
-    }
-
     /*
      Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
      */
@@ -215,10 +209,6 @@ extension BezierCurve {
     // MARK: -
 
     public func offset(distance d: CGFloat) -> [BezierCurve] {
-        if self.linear {
-            let n = self.normal(0)
-            return [Self.init(points: self.points.map { $0 + d * n })]
-        }
         // for non-linear curves we need to create a set of curves
         var result: [BezierCurve] = self.reduce().map { $0.curve.scale(distance: d) }
         ensureContinuous(&result)

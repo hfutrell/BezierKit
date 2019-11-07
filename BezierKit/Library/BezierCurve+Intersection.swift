@@ -49,20 +49,24 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     }
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
-    let intersections = Utils.roots(points: curve.points, line: line).compactMap({t -> Intersection? in
-
+    let transform = CGAffineTransform(a: lineDirection.x,
+                                      b: lineDirection.y,
+                                      c: -lineDirection.y,
+                                      d: lineDirection.x,
+                                      tx: line.p0.x,
+                                      ty: line.p0.y).inverted()
+    var intersections: [Intersection] = []
+    func callback(_ t: CGFloat) {
         var t1 = CGFloat(t)
         let smallValue: CGFloat = 1.0e-8
         assert(smallValue < CGFloat(Utils.epsilon))
-
         guard t1 >= -smallValue, t1 <= 1.0+smallValue else {
-            return nil
+            return
         }
-
         let p = curve.compute(t1) - line.p0
         var t2 = p.dot(lineDirection) / lineLength
         guard t2 >= -smallValue, t2 <= 1.0+smallValue else {
-            return nil
+            return
         }
         if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
             t1 = 0.0
@@ -76,8 +80,16 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
         if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
             t2 = 1.0
         }
-        return reversed ? Intersection(t1: t2, t2: t1) : Intersection(t1: t1, t2: t2)
-    })
+        intersections.append(reversed ? Intersection(t1: t2, t2: t1) : Intersection(t1: t1, t2: t2))
+    }
+    switch curve.copy(using: transform) {
+    case let q as QuadraticCurve:
+        Utils.droots(q.p0.y, q.p1.y, q.p2.y, callback: callback)
+    case let c as CubicCurve:
+        Utils.droots(c.p0.y, c.p1.y, c.p2.y, c.p3.y, callback: callback)
+    default:
+        assertionFailure("unexpected curve type.")
+    }
     return intersections.sortedAndUniqued()
 }
 

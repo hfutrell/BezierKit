@@ -168,26 +168,6 @@ internal class Utils {
         }
     }
 
-    static func roots(points: [CGPoint], line: LineSegment) -> [Double] {
-        let order = points.count - 1
-        let p = Utils.align(points, p1: line.p0, p2: line.p1)
-        var values: [Double] = []
-        func append(_ value: CGFloat) {
-            values.append(Double(value))
-        }
-        switch points.count {
-        case 4:
-            droots(p[0].y, p[1].y, p[2].y, p[3].y, callback: append)
-        case 3:
-            droots(p[0].y, p[1].y, p[2].y, callback: append)
-        case 2:
-            droots(p[0].y, p[1].y, callback: append)
-        default:
-            break
-        }
-        return values
-    }
-
     static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, _ p3: CGFloat, callback: (CGFloat) -> Void) {
         // convert the points p0, p1, p2, p3 to a cubic polynomial at^3 + bt^2 + ct + 1 and solve
         // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
@@ -209,6 +189,7 @@ internal class Utils {
         let q = (2 * a * a * a - 9 * a * b + 27 * c) / 27
         let q2 = q/2
         let discriminant = q2 * q2 + p3 * p3 * p3
+        /* TODO: callback isn't ORDERED */
         if discriminant < -smallValue {
             let mp3 = -p / 3
             let mp33 = mp3 * mp3 * mp3
@@ -307,17 +288,6 @@ internal class Utils {
         let d1 = v1 - o
         let d2 = v2 - o
         return atan2(d1.cross(d2), d1.dot(d2))
-    }
-
-    static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
-        let lineDirection = (p2 - p1).normalize()
-        return points.map {
-            let pointDirection = $0 - p1
-            return CGPoint(
-                x: pointDirection.dot(lineDirection),
-                y: pointDirection.dot(lineDirection.perpendicular)
-            )
-        }
     }
 
     // disable this SwiftLint warning about function having more than 5 parameters
