@@ -44,14 +44,14 @@ private func windingCountAdjustment(_ y: CGFloat, _ startY: CGFloat, _ endY: CGF
     }
 }
 
-private func windingCountIncrementer<A: BezierCurve>(_ curve: A, point: CGPoint) -> Int {
-    if curve.boundingBox.min.x > point.x { return 0 }
+private func windingCountIncrementer<A: BezierCurve>(_ curve: A, boundingBox: BoundingBox, point: CGPoint) -> Int {
+    if boundingBox.min.x > point.x { return 0 }
     // we include the highest point and exclude the lowest point
     // that ensures if the juncture between curves changes direction it's counted twice or not at all
     // and if the juncture between curves does not change direction it's counted exactly once
     let increment = windingCountAdjustment(point.y, curve.startingPoint.y, curve.endingPoint.y)
     guard increment != 0 else { return 0 }
-    if curve.boundingBox.max.x >= point.x {
+    if boundingBox.max.x >= point.x {
         // slowest path: must determine x intercept and test against it
         let x = xIntercept(curve: curve, y: point.y)
         guard point.x > x else { return 0  }
@@ -140,14 +140,14 @@ internal extension PathComponent {
             case 0:
                 windingCount += 0
             case 1:
-                windingCount += windingCountIncrementer(line(at: elementIndex), point: point)
+                windingCount += windingCountIncrementer(line(at: elementIndex), boundingBox: boundingBox, point: point)
             case 2:
                 self.enumerateYMonotonicComponentsForQuadratic(at: elementIndex) {
-                    windingCount += windingCountIncrementer($0, point: point)
+                    windingCount += windingCountIncrementer($0, boundingBox: boundingBox, point: point)
                 }
             case 3:
                 self.enumerateYMonotonicComponentsForCubic(at: elementIndex) {
-                    windingCount += windingCountIncrementer($0, point: point)
+                    windingCount += windingCountIncrementer($0, boundingBox: boundingBox, point: point)
                 }
             default:
                 fatalError("unsupported")
