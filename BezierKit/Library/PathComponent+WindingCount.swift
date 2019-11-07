@@ -15,15 +15,23 @@ private func xIntercept<A: BezierCurve>(curve: A, y: CGFloat) -> CGFloat {
     guard y != curve.endingPoint.y else { return curve.endingPoint.x }
     let linearSolutionT = ( y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
     let linearSolution = LineSegment(p0: startingPoint, p1: endingPoint).compute(linearSolutionT).x
-    if curve.order > 1 {
-        let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
-        guard let t = Utils.roots(points: curve.points, line: line).first(where: { $0 >= 0.0 && $0 <= 1.0 }) else {
-            return linearSolution
-        }
-        return curve.compute(CGFloat(t)).x
-    } else {
-        return linearSolution
+    var solution: CGFloat?
+    func callback(_ root: CGFloat) {
+        guard root >= 0.0, root <= 1.0 else { return }
+        solution = solution ?? root
     }
+    switch curve {
+    case let q as QuadraticCurve:
+        Utils.droots(q.p0.y - y, q.p1.y - y, q.p2.y - y, callback: callback)
+    case let c as CubicCurve:
+        Utils.droots(c.p0.y - y, c.p1.y - y, c.p2.y - y, c.p3.y - y, callback: callback)
+    default:
+        break
+    }
+    if let solution = solution {
+        return curve.compute(CGFloat(solution)).x
+    }
+    return linearSolution
 }
 
 private func windingCountAdjustment(_ y: CGFloat, _ startY: CGFloat, _ endY: CGFloat) -> Int {
