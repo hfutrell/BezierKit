@@ -50,12 +50,9 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
     guard lineLength > 0 else { return [] }
-    let transform = CGAffineTransform(a: lineDirection.x,
-                                      b: lineDirection.y,
-                                      c: -lineDirection.y,
-                                      d: lineDirection.x,
-                                      tx: line.p0.x,
-                                      ty: line.p0.y).inverted()
+    func align(_ point: CGPoint) -> CGFloat {
+        return (point - line.p0).dot(lineDirection.perpendicular)
+    }
     var intersections: [Intersection] = []
     func callback(_ t: CGFloat) {
         var t1 = CGFloat(t)
@@ -71,23 +68,21 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
         }
         if Utils.approximately(Double(t1), 0.0, precision: Utils.epsilon) {
             t1 = 0.0
-        }
-        if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
+        } else if Utils.approximately(Double(t1), 1.0, precision: Utils.epsilon) {
             t1 = 1.0
         }
         if Utils.approximately(Double(t2), 0.0, precision: Utils.epsilon) {
             t2 = 0.0
-        }
-        if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
+        } else if Utils.approximately(Double(t2), 1.0, precision: Utils.epsilon) {
             t2 = 1.0
         }
         intersections.append(reversed ? Intersection(t1: t2, t2: t1) : Intersection(t1: t1, t2: t2))
     }
-    switch curve.copy(using: transform) {
+    switch curve {
     case let q as QuadraticCurve:
-        Utils.droots(q.p0.y, q.p1.y, q.p2.y, callback: callback)
+        Utils.droots(align(q.p0), align(q.p1), align(q.p2), callback: callback)
     case let c as CubicCurve:
-        Utils.droots(c.p0.y, c.p1.y, c.p2.y, c.p3.y, callback: callback)
+        Utils.droots(align(c.p0), align(c.p1), align(c.p2), align(c.p3), callback: callback)
     default:
         assertionFailure("unexpected curve type.")
     }
