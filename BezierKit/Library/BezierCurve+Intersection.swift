@@ -49,6 +49,7 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     }
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
+    guard lineLength >= 0 else { return [] }
     let transform = CGAffineTransform(a: lineDirection.x,
                                       b: lineDirection.y,
                                       c: -lineDirection.y,
