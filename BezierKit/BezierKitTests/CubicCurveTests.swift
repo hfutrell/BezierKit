@@ -490,6 +490,12 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(i[0].t2, 0)
     }
 
+    func testCubicIntersectsLineCoincident() {
+        let line = LineSegment(p0: CGPoint(x: -4, y: 7), p1: CGPoint(x: 10, y: 3))
+        let curve = CubicCurve(lineSegment: line)
+        XCTAssertEqual(line.intersections(with: curve), [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)], "curve and line should be fully coincident")
+    }
+
     // MARK: -
 
     func testEquatable() {

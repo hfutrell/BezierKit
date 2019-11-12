@@ -11,6 +11,8 @@ import CoreGraphics
 
 // MARK: - helpers using generics
 
+let tinyValue = 1.0e-10
+
 public extension BezierCurve {
     func intersects(_ curve: BezierCurve) -> Bool {
         return self.intersects(curve, accuracy: BezierKit.defaultIntersectionAccuracy)
@@ -35,47 +37,46 @@ public extension BezierCurve {
     }
 }
 
-internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-
-    func close<X: NonlinearBezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
+private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> [Intersection]? {
+    func close<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
         let (projection, t) = curve.project(point, accuracy: accuracy)
         guard distance(point, projection) < 2.0 * accuracy else { return nil }
         return t
     }
-
-    let c1 = curve1.curve
-    let c2 = curve2.curve
     var coincidentIntersections: [Intersection] = []
-    if let t2 = close(c1.startingPoint, c2) {
+    if let t2 = close(curve1.startingPoint, curve2) {
         coincidentIntersections.append(Intersection(t1: 0, t2: t2))
     }
-    if let t2 = close(c1.endingPoint, c2) {
+    if let t2 = close(curve1.endingPoint, curve2) {
         coincidentIntersections.append(Intersection(t1: 1, t2: t2))
     }
-    if let t1 = close(c2.startingPoint, c1) {
+    if let t1 = close(curve2.startingPoint, curve1) {
         coincidentIntersections.append(Intersection(t1: t1, t2: 0))
     }
-    if let t1 = close(c2.endingPoint, c1) {
+    if let t1 = close(curve2.endingPoint, curve1) {
         coincidentIntersections.append(Intersection(t1: t1, t2: 1))
     }
     coincidentIntersections = coincidentIntersections.sortedAndUniqued()
-    if coincidentIntersections.count > 1, let rangeStart = coincidentIntersections.first?.t1, let rangeEnd = coincidentIntersections.last?.t1, rangeEnd > rangeStart {
-        let delta = (rangeEnd - rangeStart) / CGFloat(c2.order + 1)
-        var valid = true
-        for t in stride(from: rangeStart, to: rangeEnd, by: delta) {
-            guard close(c1.compute(t), c2) != nil else {
-                valid = false
-                break
-            }
-        }
-        if coincidentIntersections.last?.t2 == coincidentIntersections.first?.t2 {
+    guard coincidentIntersections.count > 1, let rangeStart = coincidentIntersections.first?.t1, let rangeEnd = coincidentIntersections.last?.t1, rangeEnd > rangeStart else { return nil }
+    let delta = (rangeEnd - rangeStart) / CGFloat(max(curve2.order, curve1.order) + 1)
+    var valid = true
+    for t in stride(from: rangeStart, to: rangeEnd, by: delta) {
+        guard close(curve1.compute(t), curve2) != nil else {
             valid = false
-        }
-        if valid {
-            return [coincidentIntersections.first!, coincidentIntersections.last!]
+            break
         }
     }
+    if coincidentIntersections.last?.t2 == coincidentIntersections.first?.t2 {
+        valid = false
+    }
+    guard valid else { return nil }
+    return [coincidentIntersections.first!, coincidentIntersections.last!]
+}
 
+internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        return coincidence
+    }
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var intersections: [Intersection] = []
@@ -86,6 +87,9 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
 internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reversed: Bool = false) -> [Intersection] where U: NonlinearBezierCurve {
     guard line.boundingBox.overlaps(curve.boundingBox) else {
         return []
+    }
+    if let coincidence = coincidenceCheck(curve, line, accuracy: CGFloat(tinyValue)) {
+        return coincidence
     }
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
@@ -176,37 +180,6 @@ public extension LineSegment {
     /// check if two line segments are coincident, and if so return intersections representing the range over which they are coincident, otherwise nil
     /// - Parameter line1: the first line to check for coincidence
     /// - Parameter line2: the second line to check for coincidence
-    private static func coincidenceCheck(_ line1: LineSegment, _ line2: LineSegment) -> [Intersection]? {
-        func approximateNearEndpointsAndClamp(_ value: CGFloat) -> CGFloat {
-            if Utils.approximately(Double(value), 0, precision: Utils.epsilon) {
-                return 0
-            } else if Utils.approximately(Double(value), 1, precision: Utils.epsilon) {
-                return 1
-            } else {
-                return Utils.clamp(value, 0, 1)
-            }
-        }
-        let delta1 = line1.p1 - line1.p0
-        let delta2 = line2.p1 - line2.p0
-        let rlb2 = 1.0 / delta2.lengthSquared
-        let b = rlb2 * (line1.p0 - line2.p0).dot(delta2)
-        let m = rlb2 * delta1.dot(delta2)
-        let t21 = approximateNearEndpointsAndClamp(b)
-        let t22 = approximateNearEndpointsAndClamp(m + b)
-        guard t21 != t22 else { return nil }
-        // t2(t1) = m * t1 + b
-        // so t1(t2) = (t2 - b) / m
-        let t11 = approximateNearEndpointsAndClamp(( t21 - b ) / m)
-        let t12 = approximateNearEndpointsAndClamp(( t22 - b ) / m)
-        let tinyValue: CGFloat = 1.0e-10
-        guard t11 != t12 else { return nil }
-        guard distance(line1.compute(t11), line2.compute(t21)) < tinyValue else { return nil }
-        guard distance(line1.compute(t12), line2.compute(t22)) < tinyValue else { return nil }
-        let i1 = Intersection(t1: t11, t2: t21)
-        let i2 = Intersection(t1: t12, t2: t22)
-        // compare the t-values to ensure intersections are properly sorted
-        return t11 < t12 ? [i1, i2] : [i2, i1]
-    }
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {
         case 3:
@@ -228,8 +201,8 @@ public extension LineSegment {
             return []
         }
 
-        if let intersections = LineSegment.coincidenceCheck(self, line) {
-            return intersections
+        if let coincidence = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
+            return coincidence
         }
 
         let a1 = self.p0
