@@ -36,6 +36,46 @@ public extension BezierCurve {
 }
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+
+    func close<X: NonlinearBezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
+        let (projection, t) = curve.project(point, accuracy: accuracy)
+        guard distance(point, projection) < 2.0 * accuracy else { return nil }
+        return t
+    }
+
+    let c1 = curve1.curve
+    let c2 = curve2.curve
+    var coincidentIntersections: [Intersection] = []
+    if let t2 = close(c1.startingPoint, c2) {
+        coincidentIntersections.append(Intersection(t1: 0, t2: t2))
+    }
+    if let t2 = close(c1.endingPoint, c2) {
+        coincidentIntersections.append(Intersection(t1: 1, t2: t2))
+    }
+    if let t1 = close(c2.startingPoint, c1) {
+        coincidentIntersections.append(Intersection(t1: t1, t2: 0))
+    }
+    if let t1 = close(c2.endingPoint, c1) {
+        coincidentIntersections.append(Intersection(t1: t1, t2: 1))
+    }
+    coincidentIntersections = coincidentIntersections.sortedAndUniqued()
+    if coincidentIntersections.count > 1, let rangeStart = coincidentIntersections.first?.t1, let rangeEnd = coincidentIntersections.last?.t1, rangeEnd > rangeStart {
+        let delta = (rangeEnd - rangeStart) / CGFloat(c2.order + 1)
+        var valid = true
+        for t in stride(from: rangeStart, to: rangeEnd, by: delta) {
+            guard close(c1.compute(t), c2) != nil else {
+                valid = false
+                break
+            }
+        }
+        if coincidentIntersections.last?.t2 == coincidentIntersections.first?.t2 {
+            valid = false
+        }
+        if valid {
+            return [coincidentIntersections.first!, coincidentIntersections.last!]
+        }
+    }
+
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var intersections: [Intersection] = []
