@@ -113,7 +113,7 @@ extension BezierCurve {
 
     public func extrema() -> (xyz: [[CGFloat]], values: [CGFloat] ) {
         let xyz = self.internalExtrema(includeInflection: true)
-        var roots = xyz.joined().sorted() // the roots for each dimension, flattened and sorted
+        let roots = xyz.joined().sorted() // the roots for each dimension, flattened and sorted
         var values: [CGFloat] = []
         if !roots.isEmpty {
             values.reserveCapacity(roots.count)
@@ -251,9 +251,9 @@ extension BezierCurve {
             r2 = distanceFunction(1)
         }
 
-        var v = [ self.internalOffset(t: 0, distance: 1), self.internalOffset(t: 1, distance: 1) ]
+        let v = [ self.internalOffset(t: 0, distance: 1), self.internalOffset(t: 1, distance: 1) ]
         // move all points by distance 'd' wrt the origin 'o'
-        var points: [CGPoint] = self.points
+        let points: [CGPoint] = self.points
         var np: [CGPoint] = [CGPoint](repeating: .zero, count: self.order + 1)
 
         // move end points by fixed distance along normal.
