@@ -47,6 +47,14 @@ class TransformableTests: XCTestCase {
                                                                   p3: CGPoint(x: -1, y: 9)))
     }
 
+    func testTransformPathComponent() {
+        let line = LineSegment(p0: CGPoint(x: -1, y: -1), p1: CGPoint(x: 3, y: 1))
+        let component = PathComponent(curves: [line])
+        let transformedComponent = component.copy(using: transform)
+        XCTAssertEqual(transformedComponent.curves.count, 1)
+        XCTAssertEqual(transformedComponent.curves.first as? LineSegment, LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -2, y: 4)))
+    }
+
     func testTransformPath() {
 
         // just a simple path with two path components made up of line segments
