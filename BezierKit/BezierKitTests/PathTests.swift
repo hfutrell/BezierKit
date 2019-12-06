@@ -1320,7 +1320,10 @@ class PathTests: XCTestCase {
         }()
         let result = path.crossingsRemoved(accuracy: 0.0001)
         XCTAssertEqual(result?.components.count, 1)
-        XCTAssertEqual(result?.components.first?.elementCount, 7) // in practice we had an issue where this came out to be 9
+        // in practice we had an issue where this came out to be 9 instead of 7
+        // where the coincident line shared between the component was followed a 2nd time (+1)
+        // and then to recover from the error we jumped back (+1 again)
+        XCTAssertEqual(result?.components.first?.elementCount, 7)
     }
 
     func testCrossingsRemovedRealWorldInfiniteLoop() {
