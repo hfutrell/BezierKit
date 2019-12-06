@@ -180,7 +180,9 @@ internal class AugmentedGraph {
         }
         var components: [PathComponent] = []
         performOperation(for: self.graph1, appendingToComponents: &components)
-        performOperation(for: self.graph2, appendingToComponents: &components)
+        if operation != .removeCrossings {
+            performOperation(for: self.graph2, appendingToComponents: &components)
+        }
         return Path(components: components)
     }
 }
