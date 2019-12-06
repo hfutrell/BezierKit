@@ -1295,6 +1295,34 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[1], expectedResult.components[1]))
     }
 
+    func testCrossingsRemovedMulticomponentRealWorldIssue() {
+        let points1: [CGPoint] = [
+            CGPoint(x: 306.7644175272825, y: 37.62048178369263),
+            CGPoint(x: 306.7644175272825, y: 39.90095048600892),
+            CGPoint(x: 304.4839488249662, y: 39.90095048600892),
+            CGPoint(x: 304.4010007151713, y: 37.61425955635238),
+            CGPoint(x: 306.7644175272825, y: 37.62048178369263)
+        ]
+        let points2: [CGPoint] = [
+            CGPoint(x: 304.5969784942766, y: 37.514703918908296),
+            CGPoint(x: 306.87744719659287, y: 37.514703918908296),
+            CGPoint(x: 306.87744719659287, y: 39.79517262122458),
+            CGPoint(x: 306.7644175272825, y: 39.90095048600892),
+            CGPoint(x: 304.4839488249662, y: 39.90095048600892),
+            CGPoint(x: 304.4839488249662, y: 37.62048178369263),
+            CGPoint(x: 304.5969784942766, y: 37.514703918908296)
+        ]
+        let path = { () -> Path in
+            let temp = CGMutablePath()
+            temp.addLines(between: points1)
+            temp.addLines(between: points2)
+            return Path(cgPath: temp)
+        }()
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+        XCTAssertEqual(result?.components.count, 1)
+        XCTAssertEqual(result?.components.first?.elementCount, 7) // in practice we had an issue where this came out to be 9
+    }
+
     func testCrossingsRemovedRealWorldInfiniteLoop() {
 
         // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)
@@ -1339,6 +1367,31 @@ class PathTests: XCTestCase {
 
         // for now the test's only expectation is that we do not go into an infinite loop
         // TODO: make test stricter
+    }
+
+    func testIntersectingOpenPath() {
+        // an open path intersecting a closed path should remove the region outside the closed path
+    }
+
+    func testUnionOpenPath() {
+        // union'ing with an open path simply appends the open components (for now)
+    }
+
+    func testSubtractingOpenPath() {
+        // an open path minus a closed path should remove the region inside the closed path
+
+        let openPath = Path(curve: CubicCurve(p0: CGPoint(x: 1, y: 1),
+                                              p1: CGPoint(x: 2, y: 2),
+                                              p2: CGPoint(x: 4, y: 0),
+                                              p3: CGPoint(x: 5, y: 1)))
+        let closedPath = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil))
+
+        let subtractionResult = openPath.subtract(closedPath, accuracy: 1.0e-5)
+
+        // intersects at t = 0.27254795438823776
+
+        let intersections = openPath.intersections(with: closedPath, accuracy: 1.0e-10).map { openPath.point(at: $0.indexedPathLocation1)}
+        print(intersections)
     }
 
     func testOffset() {
