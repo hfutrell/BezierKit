@@ -23,10 +23,13 @@ private class Node {
     var forwardEdge: Edge?
     var backwardEdge: Edge?
     private(set) var neighbors: [Node] = []
-    let pathComponent: PathComponent
-    init(location: IndexedPathLocation, pathComponent: PathComponent) {
+    let path: Path
+    var pathComponent: PathComponent {
+        return path.components[self.location.componentIndex]
+    }
+    init(location: IndexedPathLocation, path: Path) {
         self.location = location
-        self.pathComponent = pathComponent
+        self.path = path
     }
     func neighborsContain(_ node: Node) -> Bool {
         return self.neighbors.contains(where: { $0 === node })
@@ -78,15 +81,16 @@ private class Edge {
 
 private class PathComponentGraph {
     private let nodes: [Node]
-    init(for component: PathComponent, componentIndex: Int, using intersections: [Node]) {
+    init(for path: Path, componentIndex: Int, using intersections: [Node]) {
         var nodes = intersections
+        let component = path.components[componentIndex]
         let startingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.startingIndexedLocation.elementIndex, t: component.startingIndexedLocation.t)
         let endingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.endingIndexedLocation.elementIndex, t: component.endingIndexedLocation.t)
         if nodes.first?.location != startingLocation {
-            nodes.insert(Node(location: startingLocation, pathComponent: component), at: 0)
+            nodes.insert(Node(location: startingLocation, path: path), at: 0)
         }
         if nodes.last?.location != endingLocation {
-            nodes.append(Node(location: endingLocation, pathComponent: component))
+            nodes.append(Node(location: endingLocation, path: path))
         }
         for i in 1..<nodes.count {
             let startingNode = nodes[i-1]
@@ -129,7 +133,7 @@ private class PathGraph {
             return temp
         }()
         self.components = (0..<path.components.count).map {
-            PathComponentGraph(for: path.components[$0], componentIndex: $0, using: intersectionsByComponent[$0])
+            PathComponentGraph(for: path, componentIndex: $0, using: intersectionsByComponent[$0])
         }
     }
 }
@@ -144,8 +148,8 @@ internal class AugmentedGraph {
         var path1Intersections: [Node] = []
         var path2Intersections: [Node] = []
         intersections.forEach {
-            let node1 = Node(location: $0.indexedPathLocation1, pathComponent: path1.components[$0.indexedPathLocation1.componentIndex])
-            let node2 = Node(location: $0.indexedPathLocation2, pathComponent: path2.components[$0.indexedPathLocation2.componentIndex])
+            let node1 = Node(location: $0.indexedPathLocation1, path: path1)
+            let node2 = Node(location: $0.indexedPathLocation2, path: path2)
             node1.addNeighbor(node2)
             node2.addNeighbor(node1)
             path1Intersections.append(node1)
