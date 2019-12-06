@@ -1295,7 +1295,7 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[1], expectedResult.components[1]))
     }
 
-    func testCrossingsRemovedMulticomponentRealWorldIssue() {
+    func testCrossingsRemovedMulticomponentCoincidentEdgeRealWorldIssue() {
         let points1: [CGPoint] = [
             CGPoint(x: 306.7644175272825, y: 37.62048178369263),
             CGPoint(x: 306.7644175272825, y: 39.90095048600892),
@@ -1323,6 +1323,8 @@ class PathTests: XCTestCase {
         // in practice we had an issue where this came out to be 9 instead of 7
         // where the coincident line shared between the component was followed a 2nd time (+1)
         // and then to recover from the error we jumped back (+1 again)
+        // this was because although a `union` between two paths would exclude coincident edges
+        // doing crossings removed would not.
         XCTAssertEqual(result?.components.first?.elementCount, 7)
     }
 
