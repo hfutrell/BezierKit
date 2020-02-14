@@ -163,15 +163,20 @@ class CubicCurveTests: XCTestCase {
         let b: CGFloat = 0.73653845530600293
         let c: CGFloat = 1.0
         let curve = CubicCurve(p0: CGPoint(x: 286.8966218087201, y: 69.11759651620365),
-                                     p1: CGPoint(x: 285.7845542083973, y: 69.84970485476842),
-                                     p2: CGPoint(x: 284.6698515652002, y: 70.60114443784359),
-                                     p3: CGPoint(x: 283.5560914830615, y: 71.34238971309229))
+                               p1: CGPoint(x: 285.7845542083973, y: 69.84970485476842),
+                               p2: CGPoint(x: 284.6698515652002, y: 70.60114443784359),
+                               p3: CGPoint(x: 283.5560914830615, y: 71.34238971309229))
         let split1 = curve.split(from: a, to: b)
         let split2 = curve.split(from: b, to: c)
         XCTAssertEqual(split1.endingPoint, split2.startingPoint)
 
         let (left, right) = curve.split(at: b)
         XCTAssertEqual(left.endingPoint, right.startingPoint)
+
+        XCTAssertEqual(curve.split(from: 1, to: 0), curve.reversed())
+        XCTAssertTrue(BezierKitTestHelpers.curveControlPointsEqual(curve1: curve.split(from: b, to: a),
+                                                                   curve2: curve.split(from: a, to: b).reversed(),
+                                                                   tolerance: 1.0e-5))
     }
 
     func testSplitAt() {

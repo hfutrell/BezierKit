@@ -162,21 +162,23 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
-        let h0 = self.p0
-        let h1 = self.p1
-        let h2 = self.p2
-        let h3 = self.p3
-        let h4 = Utils.lerp(t1, h0, h1)
-        let h5 = Utils.lerp(t1, h1, h2)
-        let h6 = Utils.lerp(t1, h2, h3)
-        let h7 = Utils.lerp(t1, h4, h5)
-        let h8 = Utils.lerp(t1, h5, h6)
-        let h9 = Utils.lerp(t1, h7, h8)
-        let tr = (t2 - t1) / (1.0 - t1)
-        let i4 = Utils.lerp(tr, h9, h8)
-        let i5 = Utils.lerp(tr, h8, h6)
-        let i7 = Utils.lerp(tr, i4, i5)
-        return CubicCurve(p0: self.compute(t1), p1: i4, p2: i7, p3: self.compute(t2))
+        // compute the coordinates of a new curve where t' = t1 + (t2 - t1) * t
+        // see 'Deriving new hull coordinates' https://pomax.github.io/bezierinfo/#matrixsplit
+        // the coefficients q_xy represent the entry at the xth row and yth column of the matrix Q
+        // using a computer algebra system is helpful here
+        // compute p1
+        let q10 = 1 - 2*t1 - t2 + t1*t1 + 2*t1*t2 - t1*t1*t2
+        let q11 = t2 + 2*t1 + 3*t1*t1*t2 - 2*t1*t1 - 4*t1*t2
+        let q12 = t1*t1 - 3*t1*t1*t2 + 2*t1*t2
+        let q13 = t1*t1*t2
+        let p1 = q10 * self.p0 + q11 * self.p1 + q12 * self.p2 + q13 * self.p3
+        // compute p2 (notice that this just flips the role of t1 and t2 from the computation of p1)
+        let q20 = 1 - 2*t2 - t1 + t2*t2 + 2*t1*t2 - t1*t2*t2
+        let q21 = t1 + 2*t2 + 3*t1*t2*t2 - 2*t2*t2 - 4*t1*t2
+        let q22 = t2*t2 - 3*t1*t2*t2 + 2*t1*t2
+        let q23 = t1*t2*t2
+        let p2 = q20 * self.p0 + q21 * self.p1 + q22 * self.p2 + q23 * self.p3
+        return CubicCurve(p0: self.compute(t1), p1: p1, p2: p2, p3: self.compute(t2))
     }
 
     public func split(at t: CGFloat) -> (left: CubicCurve, right: CubicCurve) {
