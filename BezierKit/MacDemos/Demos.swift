@@ -430,8 +430,8 @@ class Demos {
 //                                        v = v.next
 //                                    } while v !== first
 
-                                    let augmentedGraph = AugmentedGraph(path1: path1, path2: path2, intersections: path1.intersections(with: path2, accuracy: 0.5), operation: .intersect)
-                                    augmentedGraph.draw(context)
+//                                    let augmentedGraph = AugmentedGraph(path1: path1, path2: path2, intersections: path1.intersections(with: path2, accuracy: 0.5), operation: .intersect)
+//                                    augmentedGraph.draw(context)
 
                                     let subtracted = path1.intersect(path2) ?? path1
                                     Draw.drawPath(context, subtracted)
