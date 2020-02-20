@@ -38,39 +38,68 @@ public extension BezierCurve {
 }
 
 private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> [Intersection]? {
-    func close<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
+    func pointIsCloseToCurve<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
         let (projection, t) = curve.project(point, accuracy: accuracy)
-        guard distance(point, projection) < 2.0 * accuracy else { return nil }
+        guard distanceSquared(point, projection) < 4.0 * accuracy * accuracy else { return nil }
         return t
     }
-    var coincidentIntersections: [Intersection] = []
-    if let t2 = close(curve1.startingPoint, curve2) {
-        coincidentIntersections.append(Intersection(t1: 0, t2: t2))
+    var range1Start: CGFloat    = .infinity
+    var range1End: CGFloat      = -.infinity
+    var range2Start: CGFloat    = .infinity
+    var range2End: CGFloat      = -.infinity
+    if let t2 = pointIsCloseToCurve(curve1.startingPoint, curve2) {
+        range1Start = 0
+        range2Start = min(range2Start, t2)
+        range2End   = max(range2End, t2)
     }
-    if let t2 = close(curve1.endingPoint, curve2) {
-        coincidentIntersections.append(Intersection(t1: 1, t2: t2))
+    if let t2 = pointIsCloseToCurve(curve1.endingPoint, curve2) {
+        range1End = 1
+        range2Start = min(range2Start, t2)
+        range2End   = max(range2End, t2)
     }
-    if let t1 = close(curve2.startingPoint, curve1) {
-        coincidentIntersections.append(Intersection(t1: t1, t2: 0))
+    if let t1 = pointIsCloseToCurve(curve2.startingPoint, curve1) {
+        range2Start = 0
+        range1Start = min(range1Start, t1)
+        range1End   = max(range1End, t1)
     }
-    if let t1 = close(curve2.endingPoint, curve1) {
-        coincidentIntersections.append(Intersection(t1: t1, t2: 1))
+    if let t1 = pointIsCloseToCurve(curve2.endingPoint, curve1) {
+        range2End = 1
+        range1Start = min(range1Start, t1)
+        range1End   = max(range1End, t1)
     }
-    coincidentIntersections = coincidentIntersections.sortedAndUniqued()
-    guard coincidentIntersections.count > 1, let rangeStart = coincidentIntersections.first?.t1, let rangeEnd = coincidentIntersections.last?.t1, rangeEnd > rangeStart else { return nil }
-    let delta = (rangeEnd - rangeStart) / CGFloat(max(curve2.order, curve1.order) + 1)
-    var valid = true
-    for t in stride(from: rangeStart, to: rangeEnd, by: delta) {
-        guard close(curve1.compute(t), curve2) != nil else {
-            valid = false
-            break
+    guard range1End > range1Start, range2End > range2Start else { return nil }
+    let curve1Start = curve1.compute(range1Start)
+    let curve1End   = curve1.compute(range1End)
+    let curve2Start = curve2.compute(range2Start)
+    let curve2End   = curve2.compute(range2End)
+    // if curves do not represent entire range, prevent recognition of coincident sections smaller than `accuracy`
+    if range1End - range1Start < 1.0 {
+        guard distanceSquared(curve1Start, curve1End) >= accuracy * accuracy else { return nil }
+    }
+    if range2End - range2Start < 1.0 {
+        guard distanceSquared(curve2Start, curve2End) >= accuracy * accuracy else { return nil }
+    }
+    // determine proper ordering of intersections
+    let reversed = { () -> Bool in
+        let distance1 = distanceSquared(curve1Start, curve2Start)
+        let distance2 = distanceSquared(curve1Start, curve2End)
+        return distance1 > distance2
+    }()
+    let firstT1     = range1Start
+    let secondT1    = range1End
+    let firstT2     = reversed ? range2End : range2Start
+    let secondT2    = reversed ? range2Start : range2End
+    // ensure curves are actually relatively equal by testing more points
+    // for example with a quadratic curve we must test 1 additional point, and cubic two
+    let numberOfPointsToTest = max(curve1.order, curve2.order) - 1
+    if numberOfPointsToTest > 0 {
+        let delta = (secondT1 - firstT1) / CGFloat(numberOfPointsToTest+1)
+        for i in 1...numberOfPointsToTest {
+            let t = firstT1 + delta * CGFloat(i)
+            guard pointIsCloseToCurve(curve1.compute(t), curve2) != nil else { return nil }
         }
     }
-    if coincidentIntersections.last?.t2 == coincidentIntersections.first?.t2 {
-        valid = false
-    }
-    guard valid else { return nil }
-    return [coincidentIntersections.first!, coincidentIntersections.last!]
+    return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
