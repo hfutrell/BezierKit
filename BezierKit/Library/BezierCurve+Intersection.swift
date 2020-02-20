@@ -73,10 +73,8 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     let curve2Start = curve2.compute(range2Start)
     let curve2End   = curve2.compute(range2End)
     // if curves do not represent entire range, prevent recognition of coincident sections smaller than `accuracy`
-    if range1End - range1Start < 1.0 {
+    if range1End - range1Start < 1.0, range2End - range2Start < 1.0 {
         guard distanceSquared(curve1Start, curve1End) >= accuracy * accuracy else { return nil }
-    }
-    if range2End - range2Start < 1.0 {
         guard distanceSquared(curve2Start, curve2End) >= accuracy * accuracy else { return nil }
     }
     // determine proper ordering of intersections
