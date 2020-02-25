@@ -106,8 +106,7 @@ import Foundation
         return self.orders[index]
     }
 
-    private lazy var _cgPath: CGPath = {
-        let mutablePath = CGMutablePath()
+    internal func appendPath(to mutablePath: CGMutablePath) {
         mutablePath.move(to: self.startingPoint)
         for i in 0..<self.elementCount {
             let order = orders[i]
@@ -119,7 +118,7 @@ import Foundation
             }
             switch order {
             case 0:
-                break // do nothing: we already did the move(to:) at the top of the method
+            break // do nothing: we already did the move(to:) at the top of the method
             case 1:
                 mutablePath.addLine(to: points[offset+1])
             case 2:
@@ -130,6 +129,11 @@ import Foundation
                 fatalError("CGPath does not support curve of order \(order)")
             }
         }
+    }
+
+    private lazy var _cgPath: CGPath = {
+        let mutablePath = CGMutablePath()
+        self.appendPath(to: mutablePath)
         return mutablePath.copy()!
     }()
 
