@@ -157,15 +157,15 @@ import Foundation
     }
 
     private static func computeOffsets(from orders: [Int]) -> [Int] {
-        var offsets: [Int] = []
-        offsets.reserveCapacity(orders.count)
-        var sum = 0
-        offsets.append(sum)
-        for i in 1..<orders.count {
-            sum += orders[i-1]
-            offsets.append(sum)
+        return [Int](unsafeUninitializedCapacity: orders.count) { buffer, initializedCount in
+            var sum = 0
+            buffer[0] = 0
+            for i in 1..<orders.count {
+                sum += orders[i-1]
+                buffer[i] = sum
+            }
+            initializedCount = orders.count
         }
-        return offsets
     }
 
     public init(curves: [BezierCurve]) {
