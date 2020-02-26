@@ -125,13 +125,11 @@ extension BezierCurve {
         extrema.append(1.0)
 
         // first pass: split on extrema
-        var pass1: [Subcurve<Self>] = []
-        pass1.reserveCapacity(extrema.count-1)
-        for i in 0..<extrema.count-1 {
-            let t1 = extrema[i]
-            let t2 = extrema[i+1]
+        let pass1: [Subcurve<Self>] = (0..<extrema.count-1).map {
+            let t1 = extrema[$0]
+            let t2 = extrema[$0+1]
             let curve = self.split(from: t1, to: t2)
-            pass1.append(Subcurve(t1: t1, t2: t2, curve: curve))
+            return Subcurve(t1: t1, t2: t2, curve: curve)
         }
 
         func bisectionMethod(min: CGFloat, max: CGFloat, tolerance: CGFloat, callback: (_ value: CGFloat) -> Bool) -> CGFloat {
