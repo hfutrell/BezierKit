@@ -1391,12 +1391,13 @@ class PathTests: XCTestCase {
                                               p3: CGPoint(x: 5, y: 1)))
         let closedPath = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil))
 
-        let subtractionResult = openPath.subtract(closedPath, accuracy: 1.0e-5)
+        //let subtractionResult = openPath.subtract(closedPath, accuracy: 1.0e-5)
 
         // intersects at t = 0.27254795438823776
 
         let intersections = openPath.intersections(with: closedPath, accuracy: 1.0e-10).map { openPath.point(at: $0.indexedPathLocation1)}
         print(intersections)
+        #warning("this test just prints stuff?")
     }
 
     func testOffset() {
