@@ -255,7 +255,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
-        return Path(components: self.components.map {
+        return Path(components: self.components.compactMap {
             $0.offset(distance: d)
         })
     }

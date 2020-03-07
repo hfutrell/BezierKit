@@ -195,10 +195,11 @@ import Foundation
         return self.startingPoint == self.endingPoint
     }
 
-    public func offset(distance d: CGFloat) -> PathComponent {
+    public func offset(distance d: CGFloat) -> PathComponent? {
         var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
         }
+        guard offsetCurves.isEmpty == false else { return nil }
         // force the set of curves to be contiguous
         for i in 0..<offsetCurves.count-1 {
             let start = offsetCurves[i+1].startingPoint

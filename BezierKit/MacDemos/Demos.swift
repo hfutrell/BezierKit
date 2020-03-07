@@ -291,7 +291,8 @@ class Demos {
                                         Draw.drawCurve(context, curve: c)
                                     }
                                     for i in stride(from: -30, through: 30, by: 10) {
-                                        Draw.drawCurve(context, curve: reduced[(reduced.count/2)].scale(distance: CGFloat(i)))
+                                        guard let scaled = reduced[reduced.count/2].scale(distance: CGFloat(i)) else { continue }
+                                        Draw.drawCurve(context, curve: scaled)
                                     }
                                 } else {
                                     Draw.drawCurve(context, curve: curve)
@@ -312,8 +313,8 @@ class Demos {
                                 let outline = curve.outline(distance: 25)
                                 outline.curves.forEach(doc)
                                 Draw.setColor(context, color: Draw.transparentBlue)
-                                outline.offset(distance: 10).curves.forEach(doc)
-                                outline.offset(distance: -10).curves.forEach(doc)
+                                outline.offset(distance: 10)?.curves.forEach(doc)
+                                outline.offset(distance: -10)?.curves.forEach(doc)
     })
 
     static let demo17 = Demo(title: "outlineShapes",
@@ -384,7 +385,7 @@ class Demos {
 
                                 Draw.reset(context)
 
-                                var flip = CGAffineTransform.init(scaleX: 1, y: -1)
+                                var flip = CGAffineTransform(scaleX: 1, y: -1)
                                 let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
                                 let height = CTFontGetXHeight(font)
                                 var translate = CGAffineTransform.init(translationX: 0, y: -height + 15)

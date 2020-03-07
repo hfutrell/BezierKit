@@ -176,12 +176,17 @@ extension BezierCurve {
 
     /// Scales a curve with respect to the intersection between the end point normals. Note that this will only work if that intersection point exists, which is only guaranteed for simple segments.
     /// - Parameter distance: desired distance the resulting curve should fall from the original (in the direction of its normals).
-    public func scale(distance: CGFloat) -> Self {
+    public func scale(distance: CGFloat) -> Self? {
         let order = self.order
         assert(order < 4, "only works with cubic or lower order")
         guard order > 0 else { return self } // points cannot be scaled
         let points = self.points
-        let origin = Utils.linesIntersection(self.startingPoint, self.startingPoint + self.normal(0), self.endingPoint, self.endingPoint - self.normal(1))
+
+        let n1 = self.normal(0)
+        let n2 = self.normal(1)
+        guard n1.x.isFinite, n1.y.isFinite, n2.x.isFinite, n2.y.isFinite else { return nil }
+
+        let origin = Utils.linesIntersection(self.startingPoint, self.startingPoint + n1, self.endingPoint, self.endingPoint - n2)
         func scaledPoint(index: Int) -> CGPoint {
             let referencePointIsStart = (index < 2 && order > 1) || (index == 0 && order == 1)
             let referenceT: CGFloat = referencePointIsStart ? 0.0 : 1.0
@@ -208,7 +213,7 @@ extension BezierCurve {
 
     public func offset(distance d: CGFloat) -> [BezierCurve] {
         // for non-linear curves we need to create a set of curves
-        var result: [BezierCurve] = self.reduce().map { $0.curve.scale(distance: d) }
+        var result: [BezierCurve] = self.reduce().compactMap { $0.curve.scale(distance: d) }
         ensureContinuous(&result)
         return result
     }
@@ -247,8 +252,8 @@ extension BezierCurve {
     private func internalOutline(d1: CGFloat, d2: CGFloat) -> PathComponent {
         let reduced = self.reduce()
         let length = reduced.count
-        var forwardCurves: [BezierCurve] = reduced.map { $0.curve.scale(distance: d1) }
-        var backCurves: [BezierCurve] = reduced.map { $0.curve.scale(distance: -d2) }
+        var forwardCurves: [BezierCurve] = reduced.compactMap { $0.curve.scale(distance: d1) }
+        var backCurves: [BezierCurve] = reduced.compactMap { $0.curve.scale(distance: -d2) }
         ensureContinuous(&forwardCurves)
         ensureContinuous(&backCurves)
         // reverse the "return" outline

@@ -31,8 +31,9 @@ class PathComponentTests: XCTestCase {
         let p = PathComponent(curves: [ql, qr])
         // test that offset gives us the same result as offsetting the split segments
         let pOffset = p.offset(distance: 1)
+        XCTAssertNotNil(pOffset)
 
-        for (c1, c2) in zip(pOffset.curves, ql.offset(distance: 1) + qr.offset(distance: 1)) {
+        for (c1, c2) in zip(pOffset!.curves, ql.offset(distance: 1) + qr.offset(distance: 1)) {
             XCTAssert(c1 == c2)
         }
     }

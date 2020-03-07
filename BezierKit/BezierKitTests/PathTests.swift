@@ -1423,6 +1423,15 @@ class PathTests: XCTestCase {
         }
     }
 
+    func testOffsetDegenerate() {
+        // this can actually happen in practice if the path is created from a circle with zero radius
+        let point = CGPoint(x: 245.2276926738644, y: 76.62374839782714)
+        let curve = CubicCurve(p0: point, p1: point, p2: point, p3: point)
+        let path = Path(components: [PathComponent(curves: [BezierCurve](repeating: curve, count: 4))])
+        let result = path.offset(distance: 1)
+        XCTAssert(result.isEmpty)
+    }
+
     func testDisjointComponentsNesting() {
         XCTAssertEqual(Path().disjointComponents(), [])
         // test that a simple square just gives the same square back
