@@ -82,7 +82,7 @@ private class Edge {
         let nextEdge = component.element(at: 0)
         let point = nextEdge.compute(0.5)
         let normal = nextEdge.normal(0.5)
-        let smallDistance: CGFloat = 1.0e-4
+        let smallDistance: CGFloat = 1.0e-5
         let point1 = point + smallDistance * normal
         let point2 = point - smallDistance * normal
         func edgeIsCoincident(_ edge: Edge) -> Bool {
@@ -90,14 +90,21 @@ private class Edge {
             let component = edge.startingNode.pathComponent
             return component.contains(point1, using: rule) != component.contains(point2, using: rule)
         }
+        func tValueIsIntervalEnd(_ t: CGFloat) -> Bool {
+            return t == 0 || t == 1
+        }
         for edge in self.startingNode.neighbors.compactMap({ $0.forwardEdge }) {
             guard edge.visited == false else { continue }
+            guard tValueIsIntervalEnd(self.startingNode.location.t) || tValueIsIntervalEnd(edge.startingNode.location.t) else { continue }
+            guard tValueIsIntervalEnd(self.endingNode.location.t) || tValueIsIntervalEnd(edge.endingNode.location.t) else { continue }
             if edge.endingNode.neighborsContain(self.endingNode), edgeIsCoincident(edge) {
                 edge.visited = true
             }
         }
         for edge in self.startingNode.neighbors.compactMap({ $0.backwardEdge }) {
             guard edge.visited == false else { continue }
+            guard tValueIsIntervalEnd(self.startingNode.location.t) || tValueIsIntervalEnd(edge.endingNode.location.t) else { continue }
+            guard tValueIsIntervalEnd(self.endingNode.location.t) || tValueIsIntervalEnd(edge.startingNode.location.t) else { continue }
             if edge.startingNode.neighborsContain(self.endingNode), edgeIsCoincident(edge) {
                 edge.visited = true
             }
