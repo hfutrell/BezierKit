@@ -853,6 +853,31 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result2.components[0], expectedUnion.components[0]))
     }
 
+    func testUnionCoincidentEdges3() {
+        // square 2 and 3 have a partially overlapping edge
+        let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
+        let square2 = Path(cgPath: CGPath(rect: CGRect(x: 3, y: 2, width: -2, height: 2), transform: nil))
+        let expectedUnion = { () -> Path in
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint.zero)
+            temp.addLine(to: CGPoint(x: 3.0, y: 0.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 2.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 3.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 4.0))
+            temp.addLine(to: CGPoint(x: 1.0, y: 4.0))
+            temp.addLine(to: CGPoint(x: 1.0, y: 3.0))
+            temp.addLine(to: CGPoint(x: 0.0, y: 3.0))
+            temp.closeSubpath()
+            return Path(cgPath: temp)
+        }()
+        let result1 = square1.union(square2)!
+        let result2 = square1.union(square2.reversed())!
+        XCTAssertEqual(result1.components.count, 1)
+        XCTAssertEqual(result2.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result1.components[0], expectedUnion.components[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result2.components[0], expectedUnion.components[0]))
+    }
+
     func testUnionCoincidentEdgesRealWorldTestCase1() {
         let polygon1 = {() -> Path in
             let temp = CGMutablePath()
