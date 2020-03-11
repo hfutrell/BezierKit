@@ -153,7 +153,7 @@ internal class Utils {
     }
 
     // cube root function yielding real roots
-    static private func crt(_ v: CGFloat) -> CGFloat {
+    static private func crt(_ v: Double) -> Double {
         return (v < 0) ? -pow(-v, 1.0/3.0) : pow(v, 1.0/3.0)
     }
 
@@ -171,57 +171,61 @@ internal class Utils {
     static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, _ p3: CGFloat, callback: (CGFloat) -> Void) {
         // convert the points p0, p1, p2, p3 to a cubic polynomial at^3 + bt^2 + ct + 1 and solve
         // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
+        let p0 = Double(p0)
+        let p1 = Double(p1)
+        let p2 = Double(p2)
+        let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
-        let smallValue: CGFloat = 1.0e-8
+        let smallValue: Double = 1.0e-8
         guard abs(d) >= smallValue else {
             // solve the quadratic polynomial at^2 + bt + c instead
             let a = (3 * p0 - 6 * p1 + 3 * p2)
             let b = (-3 * p0 + 3 * p1)
             let c = p0
-            droots(c, b / 2.0 + c, a + b + c, callback: callback)
+            droots(CGFloat(c), CGFloat(b / 2.0 + c), CGFloat(a + b + c), callback: callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d
         let b = (-3 * p0 + 3 * p1) / d
         let c = p0 / d
         let p = (3 * b - a * a) / 3
-        let p3 = p / 3
         let q = (2 * a * a * a - 9 * a * b + 27 * c) / 27
         let q2 = q/2
-        let discriminant = q2 * q2 + p3 * p3 * p3
+        let discriminant = q2 * q2 + p * p * p / 27
         /* TODO: callback isn't ORDERED */
         if discriminant < -smallValue {
-            let mp3 = -p / 3
-            let mp33 = mp3 * mp3 * mp3
-            let r = sqrt( mp33 )
+            let r = sqrt(-p * p * p / 27)
             let t = -q / (2 * r)
             let cosphi = t < -1 ? -1 : t > 1 ? 1 : t
             let phi = acos(cosphi)
             let crtr = crt(r)
             let t1 = 2 * crtr
-            callback(t1 * cos(phi / 3) - a / 3)
-            callback(t1 * cos((phi + CGFloat(tau)) / 3) - a / 3)
-            callback(t1 * cos((phi + 2 * CGFloat(tau)) / 3) - a / 3)
+            callback(CGFloat(t1 * cos(phi / 3) - a / 3))
+            callback(CGFloat(t1 * cos((phi + tau) / 3) - a / 3))
+            callback(CGFloat(t1 * cos((phi + 2 * tau) / 3) - a / 3))
         } else if discriminant > smallValue {
             let sd = sqrt(discriminant)
             let u1 = crt(-q2 + sd)
             let v1 = crt(q2 + sd)
-            callback(u1 - v1 - a / 3)
+            callback(CGFloat(u1 - v1 - a / 3))
         } else if discriminant.isNaN == false {
             let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
-            callback(2 * u1 - a / 3)
-            callback(-u1 - a / 3)
+            callback(CGFloat(2 * u1 - a / 3))
+            callback(CGFloat(-u1 - a / 3))
         }
     }
 
     static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, callback: (CGFloat) -> Void) {
         // quadratic roots are easy
         // do something with each root
-        let d: CGFloat = p0 - 2.0 * p1 + p2
+        let p0 = Double(p0)
+        let p1 = Double(p1)
+        let p2 = Double(p2)
+        let d = p0 - 2.0 * p1 + p2
         guard d.isFinite else { return }
-        guard abs(d) > CGFloat(epsilon) else {
+        guard abs(d) > epsilon else {
             if p0 != p1 {
-                callback(0.5 * p0 / (p0 - p1))
+                callback(CGFloat(0.5 * p0 / (p0 - p1)))
             }
             return
         }
@@ -229,8 +233,8 @@ internal class Utils {
         guard radical >= 0 else { return }
         let m1 = sqrt(radical)
         let m2 = p0 - p1
-        let v1 = (m2 + m1) / d
-        let v2 = (m2 - m1) / d
+        let v1 = CGFloat((m2 + m1) / d)
+        let v2 = CGFloat((m2 - m1) / d)
         if v1 < v2 {
             callback(v1)
             callback(v2)
