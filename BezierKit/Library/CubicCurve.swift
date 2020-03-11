@@ -167,18 +167,20 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         // the coefficients q_xy represent the entry at the xth row and yth column of the matrix Q
         // using a computer algebra system is helpful here
         // compute p1
-        let q10 = 1 - 2*t1 - t2 + t1*t1 + 2*t1*t2 - t1*t1*t2
-        let q11 = t2 + 2*t1 + 3*t1*t1*t2 - 2*t1*t1 - 4*t1*t2
-        let q12 = t1*t1 - 3*t1*t1*t2 + 2*t1*t2
-        let q13 = t1*t1*t2
+        let t1 = Double(t1)
+        let t2 = Double(t2)
+        let q10 = CGFloat(1 - 2*t1 - t2 + t1*t1 + 2*t1*t2 - t1*t1*t2)
+        let q11 = CGFloat(t2 + 2*t1 + 3*t1*t1*t2 - 2*t1*t1 - 4*t1*t2)
+        let q12 = CGFloat(t1*t1 - 3*t1*t1*t2 + 2*t1*t2)
+        let q13 = CGFloat(t1*t1*t2)
         let p1 = q10 * self.p0 + q11 * self.p1 + q12 * self.p2 + q13 * self.p3
         // compute p2 (notice that this just flips the role of t1 and t2 from the computation of p1)
-        let q20 = 1 - 2*t2 - t1 + t2*t2 + 2*t1*t2 - t1*t2*t2
-        let q21 = t1 + 2*t2 + 3*t1*t2*t2 - 2*t2*t2 - 4*t1*t2
-        let q22 = t2*t2 - 3*t1*t2*t2 + 2*t1*t2
-        let q23 = t1*t2*t2
+        let q20 = CGFloat(1 - 2*t2 - t1 + t2*t2 + 2*t1*t2 - t1*t2*t2)
+        let q21 = CGFloat(t1 + 2*t2 + 3*t1*t2*t2 - 2*t2*t2 - 4*t1*t2)
+        let q22 = CGFloat(t2*t2 - 3*t1*t2*t2 + 2*t1*t2)
+        let q23 = CGFloat(t1*t2*t2)
         let p2 = q20 * self.p0 + q21 * self.p1 + q22 * self.p2 + q23 * self.p3
-        return CubicCurve(p0: self.compute(t1), p1: p1, p2: p2, p3: self.compute(t2))
+        return CubicCurve(p0: self.compute(CGFloat(t1)), p1: p1, p2: p2, p3: self.compute(CGFloat(t2)))
     }
 
     public func split(at t: CGFloat) -> (left: CubicCurve, right: CubicCurve) {
