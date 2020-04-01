@@ -204,9 +204,6 @@ public extension QuadraticCurve {
 }
 
 public extension LineSegment {
-    /// check if two line segments are coincident, and if so return intersections representing the range over which they are coincident, otherwise nil
-    /// - Parameter line1: the first line to check for coincidence
-    /// - Parameter line2: the second line to check for coincidence
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {
         case 3:
