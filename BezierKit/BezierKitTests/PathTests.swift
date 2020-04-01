@@ -1399,31 +1399,31 @@ class PathTests: XCTestCase {
         // TODO: make test stricter
     }
 
-    func testIntersectingOpenPath() {
-        // an open path intersecting a closed path should remove the region outside the closed path
-    }
-
-    func testUnionOpenPath() {
-        // union'ing with an open path simply appends the open components (for now)
-    }
-
-    func testSubtractingOpenPath() {
-        // an open path minus a closed path should remove the region inside the closed path
-
-        let openPath = Path(curve: CubicCurve(p0: CGPoint(x: 1, y: 1),
-                                              p1: CGPoint(x: 2, y: 2),
-                                              p2: CGPoint(x: 4, y: 0),
-                                              p3: CGPoint(x: 5, y: 1)))
-        let closedPath = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil))
-
-        //let subtractionResult = openPath.subtract(closedPath, accuracy: 1.0e-5)
-
-        // intersects at t = 0.27254795438823776
-
-        let intersections = openPath.intersections(with: closedPath, accuracy: 1.0e-10).map { openPath.point(at: $0.indexedPathLocation1)}
-        print(intersections)
-        #warning("this test just prints stuff?")
-    }
+//    func testIntersectingOpenPath() {
+//        // an open path intersecting a closed path should remove the region outside the closed path
+//    }
+//
+//    func testUnionOpenPath() {
+//        // union'ing with an open path simply appends the open components (for now)
+//    }
+//
+//    func testSubtractingOpenPath() {
+//        // an open path minus a closed path should remove the region inside the closed path
+//
+//        let openPath = Path(curve: CubicCurve(p0: CGPoint(x: 1, y: 1),
+//                                              p1: CGPoint(x: 2, y: 2),
+//                                              p2: CGPoint(x: 4, y: 0),
+//                                              p3: CGPoint(x: 5, y: 1)))
+//        let closedPath = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil))
+//
+//        //let subtractionResult = openPath.subtract(closedPath, accuracy: 1.0e-5)
+//
+//        // intersects at t = 0.27254795438823776
+//
+//        let intersections = openPath.intersections(with: closedPath, accuracy: 1.0e-10).map { openPath.point(at: $0.indexedPathLocation1)}
+//        print(intersections)
+//        #warning("this test just prints stuff?")
+//    }
 
     func testOffset() {
         let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
