@@ -131,16 +131,6 @@ import Foundation
         }
     }
 
-    private lazy var _cgPath: CGPath = {
-        let mutablePath = CGMutablePath()
-        self.appendPath(to: mutablePath)
-        return mutablePath.copy()!
-    }()
-
-    public var cgPath: CGPath {
-        return self.lock.sync { self._cgPath }
-    }
-
     required public init(points: [CGPoint], orders: [Int]) {
         // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
         self.points = points
