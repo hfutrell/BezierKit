@@ -108,7 +108,7 @@ final internal class BoundingBoxHierarchy {
 
     func visit(callback: (Node, Int) -> Bool) {
         let elementCount = self.elementCount
-        let lastRowIdnex = self.lastRowIndex
+        let lastRowIndex = self.lastRowIndex
         let nodeCount    = 2 &* elementCount &- 1
         let boxes = self.boundingBoxes
         func visitHelper(index: Int, depth: Int, maxLeafsInSubtree: Int, callback: (Node, Int) -> Bool) {

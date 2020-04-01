@@ -139,7 +139,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
-        var context = PathApplierFunctionContext()
+        let context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
                 fatalError("unexpected applierFunction context")
@@ -181,10 +181,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 fatalError("unexpected unknown path element type \(element.pointee.type)")
             }
         }
-        let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
-        cgPath.apply(info: rawContextPointer, function: applierFunction)
+        withUnsafePointer(to: context) {
+            let rawPointer = UnsafeMutableRawPointer(mutating: $0)
+            cgPath.apply(info: rawPointer, function: applierFunction)
+        }
         context.completeComponentIfNeededAndClearPointsAndOrders()
-
         self.init(components: context.components)
     }
 
