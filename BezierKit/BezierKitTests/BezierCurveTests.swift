@@ -75,6 +75,12 @@ class BezierCurveTests: XCTestCase {
                                                                tolerance: epsilon))
     }
 
+    func testScaleDistanceDegenerate() {
+        let p = CGPoint(x: 3.14159, y: 2.71828)
+        let curve = CubicCurve(p0: p, p1: p, p2: p, p3: p)
+        XCTAssertNil(curve.scale(distance: 2))
+    }
+
     func testScaleDistanceEdgeCase() {
         let a = CGPoint(x: 0, y: 0)
         let b = CGPoint(x: 1, y: 0)
