@@ -853,6 +853,31 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result2.components[0], expectedUnion.components[0]))
     }
 
+    func testUnionCoincidentEdges3() {
+        // square 2 and 3 have a partially overlapping edge
+        let square1 = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 3, height: 3), transform: nil))
+        let square2 = Path(cgPath: CGPath(rect: CGRect(x: 3, y: 2, width: -2, height: 2), transform: nil))
+        let expectedUnion = { () -> Path in
+            let temp = CGMutablePath()
+            temp.move(to: CGPoint.zero)
+            temp.addLine(to: CGPoint(x: 3.0, y: 0.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 2.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 3.0))
+            temp.addLine(to: CGPoint(x: 3.0, y: 4.0))
+            temp.addLine(to: CGPoint(x: 1.0, y: 4.0))
+            temp.addLine(to: CGPoint(x: 1.0, y: 3.0))
+            temp.addLine(to: CGPoint(x: 0.0, y: 3.0))
+            temp.closeSubpath()
+            return Path(cgPath: temp)
+        }()
+        let result1 = square1.union(square2)!
+        let result2 = square1.union(square2.reversed())!
+        XCTAssertEqual(result1.components.count, 1)
+        XCTAssertEqual(result2.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result1.components[0], expectedUnion.components[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result2.components[0], expectedUnion.components[0]))
+    }
+
     func testUnionCoincidentEdgesRealWorldTestCase1() {
         let polygon1 = {() -> Path in
             let temp = CGMutablePath()
@@ -1295,6 +1320,39 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[1], expectedResult.components[1]))
     }
 
+    func testCrossingsRemovedMulticomponentCoincidentEdgeRealWorldIssue() {
+        let points1: [CGPoint] = [
+            CGPoint(x: 306.7644175272825, y: 37.62048178369263),
+            CGPoint(x: 306.7644175272825, y: 39.90095048600892),
+            CGPoint(x: 304.4839488249662, y: 39.90095048600892),
+            CGPoint(x: 304.4010007151713, y: 37.61425955635238),
+            CGPoint(x: 306.7644175272825, y: 37.62048178369263)
+        ]
+        let points2: [CGPoint] = [
+            CGPoint(x: 304.5969784942766, y: 37.514703918908296),
+            CGPoint(x: 306.87744719659287, y: 37.514703918908296),
+            CGPoint(x: 306.87744719659287, y: 39.79517262122458),
+            CGPoint(x: 306.7644175272825, y: 39.90095048600892),
+            CGPoint(x: 304.4839488249662, y: 39.90095048600892),
+            CGPoint(x: 304.4839488249662, y: 37.62048178369263),
+            CGPoint(x: 304.5969784942766, y: 37.514703918908296)
+        ]
+        let path = { () -> Path in
+            let temp = CGMutablePath()
+            temp.addLines(between: points1)
+            temp.addLines(between: points2)
+            return Path(cgPath: temp)
+        }()
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+        XCTAssertEqual(result?.components.count, 1)
+        // in practice we had an issue where this came out to be 9 instead of 7
+        // where the coincident line shared between the component was followed a 2nd time (+1)
+        // and then to recover from the error we jumped back (+1 again)
+        // this was because although a `union` between two paths would exclude coincident edges
+        // doing crossings removed would not.
+        XCTAssertEqual(result?.components.first?.elementCount, 7)
+    }
+
     func testCrossingsRemovedRealWorldInfiniteLoop() {
 
         // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)
@@ -1341,6 +1399,32 @@ class PathTests: XCTestCase {
         // TODO: make test stricter
     }
 
+//    func testIntersectingOpenPath() {
+//        // an open path intersecting a closed path should remove the region outside the closed path
+//    }
+//
+//    func testUnionOpenPath() {
+//        // union'ing with an open path simply appends the open components (for now)
+//    }
+//
+//    func testSubtractingOpenPath() {
+//        // an open path minus a closed path should remove the region inside the closed path
+//
+//        let openPath = Path(curve: CubicCurve(p0: CGPoint(x: 1, y: 1),
+//                                              p1: CGPoint(x: 2, y: 2),
+//                                              p2: CGPoint(x: 4, y: 0),
+//                                              p3: CGPoint(x: 5, y: 1)))
+//        let closedPath = Path(cgPath: CGPath(rect: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil))
+//
+//        //let subtractionResult = openPath.subtract(closedPath, accuracy: 1.0e-5)
+//
+//        // intersects at t = 0.27254795438823776
+//
+//        let intersections = openPath.intersections(with: closedPath, accuracy: 1.0e-10).map { openPath.point(at: $0.indexedPathLocation1)}
+//        print(intersections)
+//        #warning("this test just prints stuff?")
+//    }
+
     func testOffset() {
         let circle = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil)) // ellipse with radius 1 centered at 1,1
         let offsetCircle = circle.offset(distance: -1) // should be roughly an ellipse with radius 2
@@ -1362,6 +1446,15 @@ class PathTests: XCTestCase {
                 XCTAssert(percentError < 0.1, "expected offset circle to have radius \(expectedRadius), but there's a point distance \(distance(p, expectedCenter)) from the expected center.")
             }
         }
+    }
+
+    func testOffsetDegenerate() {
+        // this can actually happen in practice if the path is created from a circle with zero radius
+        let point = CGPoint(x: 245.2276926738644, y: 76.62374839782714)
+        let curve = CubicCurve(p0: point, p1: point, p2: point, p3: point)
+        let path = Path(components: [PathComponent(curves: [BezierCurve](repeating: curve, count: 4))])
+        let result = path.offset(distance: 1)
+        XCTAssert(result.isEmpty)
     }
 
     func testDisjointComponentsNesting() {

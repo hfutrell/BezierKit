@@ -106,8 +106,7 @@ import Foundation
         return self.orders[index]
     }
 
-    private lazy var _cgPath: CGPath = {
-        let mutablePath = CGMutablePath()
+    internal func appendPath(to mutablePath: CGMutablePath) {
         mutablePath.move(to: self.startingPoint)
         for i in 0..<self.elementCount {
             let order = orders[i]
@@ -119,7 +118,7 @@ import Foundation
             }
             switch order {
             case 0:
-                break // do nothing: we already did the move(to:) at the top of the method
+            break // do nothing: we already did the move(to:) at the top of the method
             case 1:
                 mutablePath.addLine(to: points[offset+1])
             case 2:
@@ -130,11 +129,6 @@ import Foundation
                 fatalError("CGPath does not support curve of order \(order)")
             }
         }
-        return mutablePath.copy()!
-    }()
-
-    public var cgPath: CGPath {
-        return self.lock.sync { self._cgPath }
     }
 
     required public init(points: [CGPoint], orders: [Int]) {
@@ -153,15 +147,15 @@ import Foundation
     }
 
     private static func computeOffsets(from orders: [Int]) -> [Int] {
-        var offsets: [Int] = []
-        offsets.reserveCapacity(orders.count)
-        var sum = 0
-        offsets.append(sum)
-        for i in 1..<orders.count {
-            sum += orders[i-1]
-            offsets.append(sum)
+        return [Int](unsafeUninitializedCapacity: orders.count) { buffer, initializedCount in
+            var sum = 0
+            buffer[0] = 0
+            for i in 1..<orders.count {
+                sum += orders[i-1]
+                buffer[i] = sum
+            }
+            initializedCount = orders.count
         }
-        return offsets
     }
 
     public init(curves: [BezierCurve]) {
@@ -191,10 +185,11 @@ import Foundation
         return self.startingPoint == self.endingPoint
     }
 
-    public func offset(distance d: CGFloat) -> PathComponent {
+    public func offset(distance d: CGFloat) -> PathComponent? {
         var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
         }
+        guard offsetCurves.isEmpty == false else { return nil }
         // force the set of curves to be contiguous
         for i in 0..<offsetCurves.count-1 {
             let start = offsetCurves[i+1].startingPoint

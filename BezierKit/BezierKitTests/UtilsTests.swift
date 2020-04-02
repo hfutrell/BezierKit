@@ -24,22 +24,7 @@ class UtilsTests: XCTestCase {
         XCTAssertTrue(Utils.clamp(CGFloat.nan, -1.0, 1.0).isNaN)
     }
 
-    func testRootsRealWorldIssue() {
-        let points: [CGPoint] = [
-            CGPoint(x: 523.4257521858988, y: 691.8949684622992),
-            CGPoint(x: 523.1393916834338, y: 691.8714265856051),
-            CGPoint(x: 522.8595588275791, y: 691.7501129962762),
-            CGPoint(x: 522.6404735257349, y: 691.531027694432)
-        ]
-        let curve = CubicCurve(points: points)
-        let y: CGFloat = 691.87778055040201
-        let line = LineSegment(p0: CGPoint(x: 0, y: y), p1: CGPoint(x: 1, y: y))
-        let r = Utils.roots(points: points, line: line)
-        let filtered = r.filter { $0 >= 0 && $0 <= 1 }
-        XCTAssertEqual(curve.compute(CGFloat(filtered[0])).y, y, accuracy: CGFloat(1.0e-5))
-    }
-
-    private func drootsTestHelper(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat) -> [CGFloat] {
+    private func drootsQuadraticTestHelper(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat) -> [CGFloat] {
         var roots: [CGFloat] = []
         Utils.droots(a, b, c) {
             roots.append($0)
@@ -47,27 +32,50 @@ class UtilsTests: XCTestCase {
         return roots
     }
 
-    func testDrootsCubic() {
+    private func drootsCubicTestHelper(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, _ d: CGFloat) -> [CGFloat] {
+        var roots: [CGFloat] = []
+        Utils.droots(a, b, c, d) {
+            roots.append($0)
+        }
+        return roots
+    }
+    
+    func testDrootsCubicWorldIssue() {
+        var points: [CGPoint] = [
+            CGPoint(x: 523.4257521858988, y: 691.8949684622992),
+            CGPoint(x: 523.1393916834338, y: 691.8714265856051),
+            CGPoint(x: 522.8595588275791, y: 691.7501129962762),
+            CGPoint(x: 522.6404735257349, y: 691.531027694432)
+        ]
+        let y: CGFloat = 691.87778055040201
+        points = points.map { $0 - CGPoint(x: 0, y: y)}
+        let r = drootsCubicTestHelper(points[0].y, points[1].y, points[2].y, points[3].y)
+        let filtered = r.filter { $0 >= 0 && $0 <= 1 }
+        XCTAssertEqual(filtered.count, 1)
+        XCTAssertEqual(filtered.first!, CGFloat(0.1499651773565319), accuracy: 1.0e-3)
+    }
+
+    func testDrootsQuadratic() {
         let a: CGFloat = 0.36159566118413977
         let b: CGFloat = -3.2979288390483816
         let c: CGFloat = 3.5401259561374445
-        let roots = drootsTestHelper(a, b, c)
+        let roots = drootsQuadraticTestHelper(a, b, c)
         let accuracy: CGFloat = 1.0e-5
         XCTAssertEqual(roots[0], CGFloat(0.053511820486391165), accuracy: accuracy)
         XCTAssertEqual(roots[1], CGFloat(0.64370120305889711), accuracy: accuracy)
     }
 
-    func testDrootsCubicEdgeCases() {
+    func testDrootsQuadraticEdgeCases() {
         let oneThird = CGFloat(1.0 / 3.0)
         let twoThirds = CGFloat(2.0 / 3.0)
-        XCTAssertEqual(drootsTestHelper(3, 6, 12), [-1])
-        XCTAssertEqual(drootsTestHelper(12, 6, 3), [2])
-        XCTAssertEqual(drootsTestHelper(12, 6, 4), [])
-        XCTAssertEqual(drootsTestHelper(2, 1, 0), [1])
-        XCTAssertEqual(drootsTestHelper(1, 1, 1), [])
-        XCTAssertEqual(drootsTestHelper(4, -5, 4), [oneThird, twoThirds])
-        XCTAssertEqual(drootsTestHelper(-4, 5, -4), [oneThird, twoThirds])
-        XCTAssertEqual(drootsTestHelper(CGFloat.nan, CGFloat.nan, CGFloat.nan), [])
+        XCTAssertEqual(drootsQuadraticTestHelper(3, 6, 12), [-1])
+        XCTAssertEqual(drootsQuadraticTestHelper(12, 6, 3), [2])
+        XCTAssertEqual(drootsQuadraticTestHelper(12, 6, 4), [])
+        XCTAssertEqual(drootsQuadraticTestHelper(2, 1, 0), [1])
+        XCTAssertEqual(drootsQuadraticTestHelper(1, 1, 1), [])
+        XCTAssertEqual(drootsQuadraticTestHelper(4, -5, 4), [oneThird, twoThirds])
+        XCTAssertEqual(drootsQuadraticTestHelper(-4, 5, -4), [oneThird, twoThirds])
+        XCTAssertEqual(drootsQuadraticTestHelper(CGFloat.nan, CGFloat.nan, CGFloat.nan), [])
     }
 
     func testLinesIntersection() {

@@ -273,13 +273,20 @@ class LineSegmentTests: XCTestCase {
                              p1: CGPoint(x: 171.33627533401454, y: 102.89462632327792))
         let i = l1.intersections(with: l2)
         guard i.count == 2 else {
-            assertionFailure("expected two intersections, got: \(i)")
+            XCTAssertTrue(false, "expected two intersections, got: \(i)")
             return
         }
         XCTAssertEqual(i[0].t1, 0)
         XCTAssertEqual(i[0].t2, 0.3919154238582343, accuracy: 1.0e-4)
         XCTAssertEqual(i[1].t1, 1)
         XCTAssertEqual(i[1].t2, 1)
+    }
+
+    func testIntersectionsLineNotCoincidentRealWorldData() {
+        // in practice due to limitations of precision we can come to the wrong conclusion and think we're coincident over a tiny range (eg t=0.9999999999998739 to t=1)
+        let line1 = LineSegment(p0: CGPoint(x: 207.15663697593666, y: 105.38213850350812), p1: CGPoint(x: 203.27567019330237, y: 95.49245438213565))
+        let line2 = LineSegment(p0: CGPoint(x: 199.5505907010711, y: 85.41166231873908), p1: CGPoint(x: 203.27567019330286, y: 95.4924543821369))
+        XCTAssertEqual(line1.intersections(with: line2), [Intersection(t1: 1, t2: 1)], "lines intersect only at their endpoint")
     }
 
     // -- MARK: - line-curve intersection tests

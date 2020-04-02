@@ -10,9 +10,9 @@ env:
   - OSX_SCHEME=BezierKit_Mac
   - OSX_SDK=macosx10.15
   matrix:
-    - DESTINATION="OS=10.3.1,name=iPhone 5"		 SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-    - DESTINATION="OS=13.2,name=iPad Pro (11-inch)"      SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-    - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=10.3.1,name=iPhone 5" SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="OS=13.2.2,name=iPad Pro (12.9-inch) (3rd generation)" SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
+    - DESTINATION="arch=x86_64"SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
 script:
   - set -o pipefail
   - xcodebuild -version

@@ -274,7 +274,7 @@ public class Draw {
             }
         }
         Draw.setRandomFill(context, alpha: 0.2)
-        context.addPath(pathComponent.cgPath)
+        context.addPath(Path(components: [pathComponent]).cgPath)
         context.drawPath(using: .fillStroke)
     }
 

@@ -168,119 +168,87 @@ internal class Utils {
         }
     }
 
-    static func roots(points: [CGPoint], line: LineSegment) -> [Double] {
-        let order = points.count - 1
-        let p = Utils.align(points, p1: line.p0, p2: line.p1)
-
-        if order == 2 {
-            let a = Double(p[0].y)
-            let b = Double(p[1].y)
-            let c = Double(p[2].y)
-            let d = a - 2*b + c
-            if abs(d) > epsilon {
-                let m1 = -sqrt(b*b-a*c)
-                let m2 = -a+b
-                let v1: Double = -( m1+m2)/d
-                let v2: Double = -(-m1+m2)/d
-                return [v1, v2]
-            } else if a != b {
-                return [Double(0.5) * a / (a-b)]
-            } else {
-                return []
-            }
-        } else if order == 3 {
-            // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
-            let pa = Double(p[0].y)
-            let pb = Double(p[1].y)
-            let pc = Double(p[2].y)
-            let pd = Double(p[3].y)
-            let temp1 = -pa
-            let temp2 = 3*pb
-            let temp3 = -3*pc
-            let d = temp1 + temp2 + temp3 + pd
-            let smallValue = 1.0e-8
-            if abs(d) < smallValue {
-                let temp1 = 3*points[0]
-                let temp2 = -6*points[1]
-                let temp3 = 3*points[2]
-                let a = (temp1 + temp2 + temp3)
-                let temp4 = -3*points[0]
-                let temp5 = 3*points[1]
-                let b = (temp4 + temp5)
-                let c = points[0]
-                return roots(points: [c, b / 2.0 + c, a + b + c], line: line)
-            }
-            let a = (3*pa - 6*pb + 3*pc) / d
-            let b = (-3*pa + 3*pb) / d
-            let c = pa / d
-            let p = (3*b - a*a)/3
-            let p3 = p/3
-            let q = (2*a*a*a - 9*a*b + 27*c)/27
-            let q2 = q/2
-            let discriminant = q2*q2 + p3*p3*p3
-            if discriminant < -smallValue {
-                let mp3 = -p/3
-                let mp33 = mp3*mp3*mp3
-                let r = sqrt( mp33 )
-                let t = -q/(2*r)
-                let cosphi = t < -1 ? -1 : t > 1 ? 1 : t
-                let phi = acos(cosphi)
-                let crtr = crt(r)
-                let t1 = 2*crtr
-                let x1 = t1 * cos(phi/3) - a/3
-                let x2 = t1 * cos((phi+tau)/3) - a/3
-                let x3 = t1 * cos((phi+2*tau)/3) - a/3
-                return [x1, x2, x3]
-            } else if discriminant > smallValue {
-                let sd = sqrt(discriminant)
-                let u1 = crt(-q2+sd)
-                let v1 = crt(q2+sd)
-                return [u1-v1-a/3]
-            } else if discriminant.isNaN == false {
-                let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
-                let x1 = 2*u1-a/3
-                let x2 = -u1 - a/3
-                return [x1, x2]
-            } else {
-                return []
-            }
-        } else {
-            fatalError("unsupported")
+    static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, _ p3: CGFloat, callback: (CGFloat) -> Void) {
+        // convert the points p0, p1, p2, p3 to a cubic polynomial at^3 + bt^2 + ct + 1 and solve
+        // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
+        let p0 = Double(p0)
+        let p1 = Double(p1)
+        let p2 = Double(p2)
+        let p3 = Double(p3)
+        let d = -p0 + 3 * p1 - 3 * p2 + p3
+        let smallValue: Double = 1.0e-8
+        guard abs(d) >= smallValue else {
+            // solve the quadratic polynomial at^2 + bt + c instead
+            let a = (3 * p0 - 6 * p1 + 3 * p2)
+            let b = (-3 * p0 + 3 * p1)
+            let c = p0
+            droots(CGFloat(c), CGFloat(b / 2.0 + c), CGFloat(a + b + c), callback: callback)
+            return
+        }
+        let a = (3 * p0 - 6 * p1 + 3 * p2) / d
+        let b = (-3 * p0 + 3 * p1) / d
+        let c = p0 / d
+        let p = (3 * b - a * a) / 3
+        let q = (2 * a * a * a - 9 * a * b + 27 * c) / 27
+        let q2 = q/2
+        let discriminant = q2 * q2 + p * p * p / 27
+        /* TODO: callback isn't ORDERED */
+        if discriminant < -smallValue {
+            let r = sqrt(-p * p * p / 27)
+            let t = -q / (2 * r)
+            let cosphi = t < -1 ? -1 : t > 1 ? 1 : t
+            let phi = acos(cosphi)
+            let crtr = crt(r)
+            let t1 = 2 * crtr
+            callback(CGFloat(t1 * cos(phi / 3) - a / 3))
+            callback(CGFloat(t1 * cos((phi + tau) / 3) - a / 3))
+            callback(CGFloat(t1 * cos((phi + 2 * tau) / 3) - a / 3))
+        } else if discriminant > smallValue {
+            let sd = sqrt(discriminant)
+            let u1 = crt(-q2 + sd)
+            let v1 = crt(q2 + sd)
+            callback(CGFloat(u1 - v1 - a / 3))
+        } else if discriminant.isNaN == false {
+            let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
+            callback(CGFloat(2 * u1 - a / 3))
+            callback(CGFloat(-u1 - a / 3))
         }
     }
 
-    static func droots(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, callback: (CGFloat) -> Void) {
+    static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, callback: (CGFloat) -> Void) {
         // quadratic roots are easy
         // do something with each root
-        let d: CGFloat = a - 2.0 * b + c
+        let p0 = Double(p0)
+        let p1 = Double(p1)
+        let p2 = Double(p2)
+        let d = p0 - 2.0 * p1 + p2
         guard d.isFinite else { return }
-        if abs(d) > CGFloat(epsilon) {
-            let radical = b * b - a * c
-            guard radical >= 0 else { return }
-            let m1 = sqrt(radical)
-            let m2 = a - b
-            let v1 = (m2 + m1) / d
-            let v2 = (m2 - m1) / d
-            if v1 < v2 {
-                callback(v1)
-                callback(v2)
-            } else if v1 > v2 {
-                callback(v2)
-                callback(v1)
-            } else {
-                callback(v1)
+        guard abs(d) > epsilon else {
+            if p0 != p1 {
+                callback(CGFloat(0.5 * p0 / (p0 - p1)))
             }
-        } else if a != b {
-            callback(0.5 * a / (a - b))
+            return
+        }
+        let radical = p1 * p1 - p0 * p2
+        guard radical >= 0 else { return }
+        let m1 = sqrt(radical)
+        let m2 = p0 - p1
+        let v1 = CGFloat((m2 + m1) / d)
+        let v2 = CGFloat((m2 - m1) / d)
+        if v1 < v2 {
+            callback(v1)
+            callback(v2)
+        } else if v1 > v2 {
+            callback(v2)
+            callback(v1)
+        } else {
+            callback(v1)
         }
     }
 
-    static func droots(_ a: CGFloat, _ b: CGFloat, callback: (CGFloat) -> Void) {
-        // linear roots are super easy
-        // do something with the root, if it exists
-        if a != b {
-            callback(a/(a-b))
-        }
+    static func droots(_ p0: CGFloat, _ p1: CGFloat, callback: (CGFloat) -> Void) {
+        guard p0 != p1 else { return }
+        callback(p0 / (p0 - p1))
     }
 
     static func droots(_ p: [CGFloat]) -> [CGFloat] {
@@ -324,17 +292,6 @@ internal class Utils {
         let d1 = v1 - o
         let d2 = v2 - o
         return atan2(d1.cross(d2), d1.dot(d2))
-    }
-
-    static func align(_ points: [CGPoint], p1: CGPoint, p2: CGPoint) -> [CGPoint] {
-        let lineDirection = (p2 - p1).normalize()
-        return points.map {
-            let pointDirection = $0 - p1
-            return CGPoint(
-                x: pointDirection.dot(lineDirection),
-                y: pointDirection.dot(lineDirection.perpendicular)
-            )
-        }
     }
 
     // disable this SwiftLint warning about function having more than 5 parameters

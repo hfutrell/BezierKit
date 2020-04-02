@@ -163,15 +163,20 @@ class CubicCurveTests: XCTestCase {
         let b: CGFloat = 0.73653845530600293
         let c: CGFloat = 1.0
         let curve = CubicCurve(p0: CGPoint(x: 286.8966218087201, y: 69.11759651620365),
-                                     p1: CGPoint(x: 285.7845542083973, y: 69.84970485476842),
-                                     p2: CGPoint(x: 284.6698515652002, y: 70.60114443784359),
-                                     p3: CGPoint(x: 283.5560914830615, y: 71.34238971309229))
+                               p1: CGPoint(x: 285.7845542083973, y: 69.84970485476842),
+                               p2: CGPoint(x: 284.6698515652002, y: 70.60114443784359),
+                               p3: CGPoint(x: 283.5560914830615, y: 71.34238971309229))
         let split1 = curve.split(from: a, to: b)
         let split2 = curve.split(from: b, to: c)
         XCTAssertEqual(split1.endingPoint, split2.startingPoint)
 
         let (left, right) = curve.split(at: b)
         XCTAssertEqual(left.endingPoint, right.startingPoint)
+
+        XCTAssertEqual(curve.split(from: 1, to: 0), curve.reversed())
+        XCTAssertTrue(BezierKitTestHelpers.curveControlPointsEqual(curve1: curve.split(from: b, to: a),
+                                                                   curve2: curve.split(from: a, to: b).reversed(),
+                                                                   tolerance: 1.0e-5))
     }
 
     func testSplitAt() {
@@ -410,6 +415,7 @@ class CubicCurveTests: XCTestCase {
 //        XCTAssertEqualWithAccuracy(i2[2].t2, 0.0, accuracy: epsilon)
 //    }
 //
+
     func testIntersectionsCubicMaxIntersections() {
         let epsilon: CGFloat = 1.0e-5
         let a = 4.0
@@ -435,6 +441,26 @@ class CubicCurveTests: XCTestCase {
         for i in 0..<intersections.count {
             XCTAssertTrue(distance(c1.compute(intersections[i].t1), expectedResults[i]) < epsilon)
             XCTAssertTrue(distance(c2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
+        }
+    }
+
+    func testIntersectionsCoincident() {
+        let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
+                           p1: CGPoint(x: 0, y: 0),
+                           p2: CGPoint(x: 2, y: 0),
+                           p3: CGPoint(x: 3, y: -1))
+        XCTAssertEqual(c.intersections(with: c.reversed()), [Intersection(t1: 0, t2: 1), Intersection(t1: 1, t2: 0)], "curves should be fully coincident with themselves.")
+        // now, a tricky case, overlap from t = 1/3, to t=3/5 on the original curve
+        let c1 = c.split(from: 1.0 / 3.0, to: 2.0 / 3.0)
+        let c2 = c.split(from: 1.0 / 5.0, to: 3.0 / 5.0)
+        let accuracy: CGFloat = 1.0e-4
+        let intersections = c1.intersections(with: c2, accuracy: accuracy) // (t1: 0, t2: 1/3), (t1: 4/5, t2: 1)
+        XCTAssertEqual(intersections.count, 2)
+        if intersections.count == 2 {
+            let i1 = intersections[0]
+            XCTAssertTrue(distance(c1.compute(i1.t1), c2.compute(i1.t2)) < accuracy)
+            let i2 = intersections[1]
+            XCTAssertTrue(distance(c1.compute(i2.t1), c2.compute(i2.t2)) < accuracy)
         }
     }
 
@@ -467,6 +493,12 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(i.count, 1)
         XCTAssertEqual(i[0].t1, 1)
         XCTAssertEqual(i[0].t2, 0)
+    }
+
+    func testCubicIntersectsLineCoincident() {
+        let line = LineSegment(p0: CGPoint(x: -4, y: 7), p1: CGPoint(x: 10, y: 3))
+        let curve = CubicCurve(lineSegment: line)
+        XCTAssertEqual(line.intersections(with: curve), [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)], "curve and line should be fully coincident")
     }
 
     // MARK: -

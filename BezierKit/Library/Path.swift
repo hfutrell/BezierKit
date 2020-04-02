@@ -59,7 +59,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     private lazy var _cgPath: CGPath = {
         let mutablePath = CGMutablePath()
         self.components.forEach {
-            mutablePath.addPath($0.cgPath)
+            $0.appendPath(to: mutablePath)
         }
         return mutablePath.copy()!
     }()
@@ -139,7 +139,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
-        var context = PathApplierFunctionContext()
+        let context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
                 fatalError("unexpected applierFunction context")
@@ -181,10 +181,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 fatalError("unexpected unknown path element type \(element.pointee.type)")
             }
         }
-        let rawContextPointer = UnsafeMutableRawPointer(&context).bindMemory(to: PathApplierFunctionContext.self, capacity: 1)
-        cgPath.apply(info: rawContextPointer, function: applierFunction)
+        withUnsafePointer(to: context) {
+            let rawPointer = UnsafeMutableRawPointer(mutating: $0)
+            cgPath.apply(info: rawPointer, function: applierFunction)
+        }
         context.completeComponentIfNeededAndClearPointsAndOrders()
-
         self.init(components: context.components)
     }
 
@@ -255,7 +256,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
-        return Path(components: self.components.map {
+        return Path(components: self.components.compactMap {
             $0.offset(distance: d)
         })
     }
