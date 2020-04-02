@@ -52,7 +52,7 @@ class UtilsTests: XCTestCase {
         let r = drootsCubicTestHelper(points[0].y, points[1].y, points[2].y, points[3].y)
         let filtered = r.filter { $0 >= 0 && $0 <= 1 }
         XCTAssertEqual(filtered.count, 1)
-        XCTAssertEqual(filtered.first!, CGFloat(0.1499651773565319), accuracy: 1.0e-5)
+        XCTAssertEqual(filtered.first!, CGFloat(0.1499651773565319), accuracy: 1.0e-3)
     }
 
     func testDrootsQuadratic() {
