@@ -307,8 +307,10 @@ internal class Utils {
 
         let canSplit1 = c1.canSplit
         let canSplit2 = c2.canSplit
-        let shouldRecurse1 = canSplit1 && ((c1b.size.x + c1b.size.y) >= accuracy)
-        let shouldRecurse2 = canSplit2 && ((c2b.size.x + c2b.size.y) >= accuracy)
+        let size1 = c1b.size
+        let size2 = c2b.size
+        let shouldRecurse1 = canSplit1 && ((size1.x + size1.y) >= accuracy)
+        let shouldRecurse2 = canSplit2 && ((size2.x + size2.y) >= accuracy)
 
         if shouldRecurse1 == false, shouldRecurse2 == false {
             // subcurves are small enough or we simply cannot recurse any more
