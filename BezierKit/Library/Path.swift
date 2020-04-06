@@ -261,17 +261,17 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         })
     }
 
-    private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path? {
+    private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path {
         let intersections = self.intersections(with: other, accuracy: accuracy)
         let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections, operation: operation)
         return augmentedGraph.performOperation()
     }
 
-    @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
         return self.performBooleanOperation(.subtract, with: other.reversed(), accuracy: accuracy)
     }
 
-    @objc(unionPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(unionPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
         guard self.isEmpty == false else {
             return other
         }
@@ -281,11 +281,11 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.performBooleanOperation(.union, with: other, accuracy: accuracy)
     }
 
-    @objc(intersectPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(intersectPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
         return self.performBooleanOperation(.intersect, with: other, accuracy: accuracy)
     }
 
-    @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path? {
+    @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
         let intersections = self.selfIntersections(accuracy: accuracy)
         let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections, operation: .removeCrossings)
         return augmentedGraph.performOperation()
