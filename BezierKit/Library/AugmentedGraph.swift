@@ -82,7 +82,7 @@ private class Edge {
         let nextEdge = component.element(at: 0)
         let point = nextEdge.compute(0.5)
         let normal = nextEdge.normal(0.5)
-        let smallDistance: CGFloat = 1.0e-6
+        let smallDistance: CGFloat = AugmentedGraph.smallDistance
         let point1 = point + smallDistance * normal
         let point2 = point - smallDistance * normal
         func edgeIsCoincident(_ edge: Edge) -> Bool {
@@ -225,6 +225,9 @@ internal class AugmentedGraph {
 }
 
 private extension AugmentedGraph {
+    static var smallDistance: CGFloat {
+        return MemoryLayout<CGFloat>.size > 4 ? 1.0e-6 : 1.0e-5
+    }
     func classifyEdges(in graph: PathGraph, isForFirstPath: Bool) {
         func classifyEdge(_ edge: Edge) {
             // TODO: we use a crummy point location
@@ -232,7 +235,7 @@ private extension AugmentedGraph {
             let nextEdge = component.element(at: 0)
             let point = nextEdge.compute(0.5)
             let normal = nextEdge.normal(0.5)
-            let smallDistance: CGFloat = MemoryLayout<CGFloat>.size > 4 ? 1.0e-6 : 1.0e-4
+            let smallDistance: CGFloat = AugmentedGraph.smallDistance
             let point1 = point + smallDistance * normal
             let point2 = point - smallDistance * normal
             let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
