@@ -226,7 +226,7 @@ internal class AugmentedGraph {
 
 private extension AugmentedGraph {
     static var smallDistance: CGFloat {
-        return MemoryLayout<CGFloat>.size > 4 ? 1.0e-6 : 1.0e-5
+        return MemoryLayout<CGFloat>.size > 4 ? 1.0e-6 : 1.0e-4
     }
     func classifyEdges(in graph: PathGraph, isForFirstPath: Bool) {
         func classifyEdge(_ edge: Edge) {
