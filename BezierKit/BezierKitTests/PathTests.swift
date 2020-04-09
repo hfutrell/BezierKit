@@ -1275,7 +1275,7 @@ class PathTests: XCTestCase {
         let p = Path(cgPath: cgPath)
         _ = p.crossingsRemoved(accuracy: 0.0001)
     }
-    
+
     func testCrosingsRemovedFourthRealWorldCase() {
         // this case was cauesd by a curve that self-intersected which caused us to make the wrong determination
         // classifying which parts of the path should be included in the final result
