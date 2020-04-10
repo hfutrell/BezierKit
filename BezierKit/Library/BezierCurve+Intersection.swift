@@ -227,7 +227,9 @@ public extension LineSegment {
         }
     }
     func intersections(with line: LineSegment) -> [Intersection] {
-
+        return self.intersections(with: line, checkCoincidence: true)
+    }
+    internal func intersections(with line: LineSegment, checkCoincidence: Bool) -> [Intersection] {
         guard self.p1 != self.p0, line.p1 != line.p0 else {
             return []
         }
@@ -235,7 +237,7 @@ public extension LineSegment {
             return []
         }
 
-        if let coincidence = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
+        if checkCoincidence, let coincidence = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
             return coincidence
         }
 
