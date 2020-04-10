@@ -320,13 +320,12 @@ import Foundation
             var elementIntersections: [Intersection] = []
             // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
             // TODO: unfortunately we badly need more tests for all these obscure codepaths
-            /*if i1 == i2 {
+            if i1 == i2 {
                 // we are intersecting a path element against itself
-                if let c = c1 as? CubicCurve {
-                    elementIntersections = c.selfIntersections(accuracy: accuracy)
+                if self.order(at: i1) == 3 {
+                    elementIntersections = self.cubic(at: i1).selfIntersections(accuracy: accuracy)
                 }
-            }
-            else*/ if i1 < i2 {
+            } else if i1 < i2 {
                 // we are intersecting two distinct path elements
                 let areNeighbors = (i1 == i2-1) || (isClosed && i1 == 0 && i2 == self.elementCount-1)
                 if areNeighbors, neighborsIntersectOnlyTrivially(i1, i2) {
