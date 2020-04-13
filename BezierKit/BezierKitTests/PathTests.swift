@@ -1289,7 +1289,7 @@ class PathTests: XCTestCase {
         cgPath.addCurve(to: CGPoint(x: 128.79675990503895, y: 123.69769370837568), control1: CGPoint(x: 132.04540574377128, y: 115.20344746873103), control2: CGPoint(x: 132.0409782041019, y: 120.45893705628086))
         cgPath.addCurve(to: firstPoint, control1: CGPoint(x: 125.59151708590264, y: 125.68258785765616), control2: CGPoint(x: 126.31169113142379, y: 125.37317639620701))
         let path = Path(cgPath: cgPath)
-        let result = path.crossingsRemoved(accuracy: 1.0e-5)
+        let result = path.crossingsRemoved(accuracy: 1.0e-4)
         let point1 = CGPoint(x: 128.50258215906004, y: 123.86146049479626)
         let point2 = CGPoint(x: 128.64870715906002, y: 123.77228080729627)
         let point3 = CGPoint(x: 127.29466809656003, y: 124.65276518229626)
