@@ -1226,7 +1226,7 @@ class PathTests: XCTestCase {
     }
 
     func testCrossingsRemovedAnotherRealWorldCase() {
-        
+
         guard MemoryLayout<CGFloat>.size > 4 else { return } // not enough precision in points for test to be valid
 
         let cgPath = CGMutablePath()
