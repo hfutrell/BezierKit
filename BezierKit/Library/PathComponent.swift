@@ -318,10 +318,8 @@ import Foundation
         let isClosed = self.isClosed
         self.bvh.enumerateSelfIntersections { i1, i2 in
             var elementIntersections: [Intersection] = []
-            // TODO: fix behavior for `crossingsRemoved` when there are self intersections at t=0 or t=1 and re-enable
-            // TODO: unfortunately we badly need more tests for all these obscure codepaths
             if i1 == i2 {
-                // we are intersecting a path element against itself
+                // we are intersecting a path element against itself (only possible with cubic or higher order)
                 if self.order(at: i1) == 3 {
                     elementIntersections = self.cubic(at: i1).selfIntersections(accuracy: accuracy)
                 }
