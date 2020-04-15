@@ -82,7 +82,7 @@ private class Edge {
         let nextEdge = component.element(at: 0)
         let point = nextEdge.compute(0.5)
         let normal = nextEdge.normal(0.5)
-        let smallDistance: CGFloat = 1.0e-5
+        let smallDistance: CGFloat = AugmentedGraph.smallDistance
         let point1 = point + smallDistance * normal
         let point2 = point - smallDistance * normal
         func edgeIsCoincident(_ edge: Edge) -> Bool {
@@ -210,8 +210,9 @@ internal class AugmentedGraph {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
             graph.components.forEach {
                 $0.forEachNode { node in
-                    guard let edge = node.forwardEdge, edge.needsVisiting else { return }
-                    list.append(self.createComponent(from: node))
+                    guard let path = findUnvisitedPath(from: node, to: node) else { return }
+                    guard path.count > 0 else { return }
+                    list.append(self.createComponent(using: path))
                 }
             }
         }
@@ -225,6 +226,9 @@ internal class AugmentedGraph {
 }
 
 private extension AugmentedGraph {
+    static var smallDistance: CGFloat {
+        return MemoryLayout<CGFloat>.size > 4 ? 1.0e-6 : 1.0e-4
+    }
     func classifyEdges(in graph: PathGraph, isForFirstPath: Bool) {
         func classifyEdge(_ edge: Edge) {
             // TODO: we use a crummy point location
@@ -232,7 +236,7 @@ private extension AugmentedGraph {
             let nextEdge = component.element(at: 0)
             let point = nextEdge.compute(0.5)
             let normal = nextEdge.normal(0.5)
-            let smallDistance: CGFloat = 1.0e-4
+            let smallDistance: CGFloat = AugmentedGraph.smallDistance
             let point1 = point + smallDistance * normal
             let point2 = point - smallDistance * normal
             let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
@@ -278,45 +282,44 @@ private extension AugmentedGraph {
         }
         nodes = Array(nodes[0...currentUniqueIndex])
     }
-    func createComponent(from startingNode: Node) -> PathComponent {
-        let firstPoint = startingNode.pathComponent.point(at: startingNode.componentLocation)
-        var points: [CGPoint] = [firstPoint]
+    func findUnvisitedPath(from node: Node, to goal: Node) -> [(Edge, Bool)]? {
+        func pathUsingEdge(_ edge: Edge?, from node: Node, forwards: Bool) -> [(Edge, Bool)]? {
+            guard let edge = edge, edge.needsVisiting else { return nil }
+            edge.visited = true
+            edge.visitCoincidentEdges()
+            let nextNode = forwards ? edge.endingNode : edge.startingNode
+            if let path = findUnvisitedPath(from: nextNode, to: goal) {
+                return [(edge, forwards)] + path
+            } else {
+                return nil
+            }
+        }
+        // we prefer to keep the direction of the path the same which is why
+        // we try all the possible forward edges before any back edges
+        if let result = pathUsingEdge(node.forwardEdge, from: node, forwards: true) { return result }
+        for neighbor in node.neighbors {
+            if let result = pathUsingEdge(neighbor.forwardEdge, from: neighbor, forwards: true) { return result }
+        }
+        if let result = pathUsingEdge(node.backwardEdge, from: node, forwards: false) { return result }
+        for neighbor in node.neighbors {
+            if let result = pathUsingEdge(neighbor.backwardEdge, from: neighbor, forwards: false) { return result }
+        }
+        if node === goal || node.neighborsContain(goal) { return [] }
+        return nil
+    }
+    func createComponent(using path: [(Edge, Bool)]) -> PathComponent {
+        var points: [CGPoint] = []
         var orders: [Int] = []
         func appendComponent(_ component: PathComponent) {
+            if points.isEmpty { points.append(component.startingPoint) }
             points += component.points[1...]
             orders += component.orders
         }
-        func visitEdge(_ edge: Edge, forwards: Bool) -> Node {
+        for (edge, forwards) in path {
             let component = edge.component
             appendComponent(forwards ? component : component.reversed())
-            edge.visited = true
-            edge.visitCoincidentEdges()
-            return forwards ? edge.endingNode : edge.startingNode
         }
-        func visitNextNode(from node: Node) -> Node? {
-            if let edge = node.forwardEdge, edge.needsVisiting {
-                return visitEdge(edge, forwards: true)
-            } else if let edge = node.backwardEdge, edge.needsVisiting {
-                return visitEdge(edge, forwards: false)
-            }
-            return node.neighbors.first {
-                $0.forwardEdge?.needsVisiting == true || $0.backwardEdge?.needsVisiting == true
-            }
-        }
-        var currentNode = startingNode
-        while let nextNode = visitNextNode(from: currentNode) {
-            currentNode = nextNode
-        }
-        if points.count > 1, currentNode !== startingNode {
-            // if we ended at a node that's not equal to where we started, we may need
-            // to close the current component
-            if currentNode.neighborsContain(startingNode) {
-                points[points.index(before: points.endIndex)] = firstPoint
-            } else {
-                points.append(firstPoint)
-                orders.append(1)
-            }
-        }
+        points[points.count - 1] = points[0]
         return PathComponent(points: points, orders: orders)
     }
 }

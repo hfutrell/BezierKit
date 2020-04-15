@@ -39,7 +39,7 @@ class UtilsTests: XCTestCase {
         }
         return roots
     }
-    
+
     func testDrootsCubicWorldIssue() {
         var points: [CGPoint] = [
             CGPoint(x: 523.4257521858988, y: 691.8949684622992),

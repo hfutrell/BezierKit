@@ -47,25 +47,33 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     var range1End: CGFloat      = -.infinity
     var range2Start: CGFloat    = .infinity
     var range2End: CGFloat      = -.infinity
-    if let t2 = pointIsCloseToCurve(curve1.startingPoint, curve2) {
-        range1Start = 0
-        range2Start = min(range2Start, t2)
-        range2End   = max(range2End, t2)
+    if range1Start > 0 || range2Start > 0 || range2End < 1 {
+        if let t2 = pointIsCloseToCurve(curve1.startingPoint, curve2) {
+            range1Start = 0
+            range2Start = min(range2Start, t2)
+            range2End   = max(range2End, t2)
+        }
     }
-    if let t2 = pointIsCloseToCurve(curve1.endingPoint, curve2) {
-        range1End = 1
-        range2Start = min(range2Start, t2)
-        range2End   = max(range2End, t2)
+    if range1End < 1 || range2Start > 0 || range2Start < 1 {
+        if let t2 = pointIsCloseToCurve(curve1.endingPoint, curve2) {
+            range1End = 1
+            range2Start = min(range2Start, t2)
+            range2End   = max(range2End, t2)
+        }
     }
-    if let t1 = pointIsCloseToCurve(curve2.startingPoint, curve1) {
-        range2Start = 0
-        range1Start = min(range1Start, t1)
-        range1End   = max(range1End, t1)
+    if range2Start > 0 || range1Start > 0 || range1End < 1 {
+        if let t1 = pointIsCloseToCurve(curve2.startingPoint, curve1) {
+            range2Start = 0
+            range1Start = min(range1Start, t1)
+            range1End   = max(range1End, t1)
+        }
     }
-    if let t1 = pointIsCloseToCurve(curve2.endingPoint, curve1) {
-        range2End = 1
-        range1Start = min(range1Start, t1)
-        range1End   = max(range1End, t1)
+    if range2End < 1 || range1Start > 0 || range1End < 1 {
+        if let t1 = pointIsCloseToCurve(curve2.endingPoint, curve1) {
+            range2End = 1
+            range1Start = min(range1Start, t1)
+            range1End   = max(range1End, t1)
+        }
     }
     guard range1End > range1Start, range2End > range2Start else { return nil }
     let curve1Start = curve1.compute(range1Start)
@@ -101,13 +109,15 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
 }
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
-        return coincidence
-    }
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var intersections: [Intersection] = []
     Utils.pairiteration(curve1, curve2, lb, rb, &intersections, accuracy)
+    if intersections.count >= curve1.curve.order * curve2.curve.order {
+        if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+            return coincidence
+        }
+    }
     return intersections.sortedAndUniqued()
 }
 
@@ -217,7 +227,9 @@ public extension LineSegment {
         }
     }
     func intersections(with line: LineSegment) -> [Intersection] {
-
+        return self.intersections(with: line, checkCoincidence: true)
+    }
+    internal func intersections(with line: LineSegment, checkCoincidence: Bool) -> [Intersection] {
         guard self.p1 != self.p0, line.p1 != line.p0 else {
             return []
         }
@@ -225,7 +237,7 @@ public extension LineSegment {
             return []
         }
 
-        if let coincidence = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
+        if checkCoincidence, let coincidence = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
             return coincidence
         }
 
