@@ -1585,13 +1585,14 @@ class PathTests: XCTestCase {
         let location2 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 1.0)
         let location3 = IndexedPathLocation(componentIndex: 0, elementIndex: 2, t: 0.0)
         let location4 = IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.0)
+        let location5 = IndexedPathLocation(componentIndex: location4.componentIndex, locationInComponent: location4.locationInComponent)
         XCTAssert(location1 < location2)
         XCTAssert(location1 < location3)
         XCTAssert(location1 < location4)
         XCTAssertFalse(location2 < location1) // no! t is greater
         XCTAssertFalse(location3 < location1) // no! element index is greater
         XCTAssertFalse(location4 < location1) // no! component index is greater
-        XCTAssertEqual(location1.locationInComponent, IndexedPathComponentLocation(elementIndex: 1, t: 0.5))
-        XCTAssertEqual(location4, IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.0))
+        XCTAssertEqual(location1.locationInComponent, IndexedPathComponentLocation(elementIndex: location1.elementIndex, t: location1.t))
+        XCTAssertEqual(location4, location5)
     }
 }
