@@ -1591,5 +1591,7 @@ class PathTests: XCTestCase {
         XCTAssertFalse(location2 < location1) // no! t is greater
         XCTAssertFalse(location3 < location1) // no! element index is greater
         XCTAssertFalse(location4 < location1) // no! component index is greater
+        XCTAssertEqual(location1.locationInComponent, IndexedPathComponentLocation(elementIndex: 1, t: 0.5))
+        XCTAssertEqual(location4, IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.0))
     }
 }

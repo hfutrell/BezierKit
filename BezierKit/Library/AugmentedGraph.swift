@@ -18,7 +18,7 @@ internal enum BooleanPathOperation {
 private class Node {
     let location: IndexedPathLocation
     var componentLocation: IndexedPathComponentLocation {
-        return IndexedPathComponentLocation(elementIndex: self.location.elementIndex, t: self.location.t)
+        return self.location.locationInComponent
     }
     var forwardEdge: Edge?
     var backwardEdge: Edge?
@@ -117,8 +117,8 @@ private class PathComponentGraph {
     init(for path: Path, componentIndex: Int, using intersections: [Node]) {
         var nodes = intersections
         let component = path.components[componentIndex]
-        let startingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.startingIndexedLocation.elementIndex, t: component.startingIndexedLocation.t)
-        let endingLocation = IndexedPathLocation(componentIndex: componentIndex, elementIndex: component.endingIndexedLocation.elementIndex, t: component.endingIndexedLocation.t)
+        let startingLocation = IndexedPathLocation(componentIndex: componentIndex, locationInComponent: component.startingIndexedLocation)
+        let endingLocation = IndexedPathLocation(componentIndex: componentIndex, locationInComponent: component.endingIndexedLocation)
         if nodes.first?.location != startingLocation {
             nodes.insert(Node(location: startingLocation, in: path), at: 0)
         }

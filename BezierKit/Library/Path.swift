@@ -344,6 +344,9 @@ public struct IndexedPathLocation: Equatable, Comparable {
         self.elementIndex = elementIndex
         self.t = t
     }
+    public init(componentIndex: Int, locationInComponent: IndexedPathComponentLocation) {
+        self.init(componentIndex: componentIndex, elementIndex: locationInComponent.elementIndex, t: locationInComponent.t)
+    }
     public static func < (lhs: IndexedPathLocation, rhs: IndexedPathLocation) -> Bool {
         if lhs.componentIndex < rhs.componentIndex {
             return true
@@ -357,6 +360,9 @@ public struct IndexedPathLocation: Equatable, Comparable {
         }
         return lhs.t < rhs.t
     }
+    public var locationInComponent: IndexedPathComponentLocation {
+        return IndexedPathComponentLocation(elementIndex: self.elementIndex, t: self.t)
+    }
 }
 
 public struct PathIntersection: Equatable {
@@ -366,12 +372,7 @@ public struct PathIntersection: Equatable {
         self.indexedPathLocation2 = indexedPathLocation2
     }
     fileprivate init(componentIntersection: PathComponentIntersection, componentIndex1: Int, componentIndex2: Int) {
-        self.indexedPathLocation1 = IndexedPathLocation(componentIndex: componentIndex1,
-                                                        elementIndex: componentIntersection.indexedComponentLocation1.elementIndex,
-                                                        t: componentIntersection.indexedComponentLocation1.t)
-        self.indexedPathLocation2 = IndexedPathLocation(componentIndex: componentIndex2,
-                                                        elementIndex: componentIntersection.indexedComponentLocation2.elementIndex,
-                                                        t: componentIntersection.indexedComponentLocation2.t)
-
+        self.indexedPathLocation1 = IndexedPathLocation(componentIndex: componentIndex1, locationInComponent: componentIntersection.indexedComponentLocation1)
+        self.indexedPathLocation2 = IndexedPathLocation(componentIndex: componentIndex2, locationInComponent: componentIntersection.indexedComponentLocation2)
     }
 }
