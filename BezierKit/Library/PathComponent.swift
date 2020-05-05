@@ -12,7 +12,7 @@ import Foundation
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
 
     private let offsets: [Int]
-    public var points: [CGPoint]
+    public let points: [CGPoint]
     public let orders: [Int]
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
