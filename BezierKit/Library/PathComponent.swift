@@ -371,7 +371,7 @@ import Foundation
     // MARK: -
 
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
-        return self.element(at: location.elementIndex).compute(location.t)
+        return self.element(at: location.elementIndex).point(at: location.t)
     }
 
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {

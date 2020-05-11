@@ -122,15 +122,15 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         if a1>0 && a2<0 || a1<0 && a2>0 {
             return false
         }
-        let n1 = self.normal(0)
-        let n2 = self.normal(1)
+        let n1 = self.normal(at: 0)
+        let n2 = self.normal(at: 1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
         let angle: CGFloat = CGFloat(abs(acos(Double(s))))
         return angle < (CGFloat.pi / 3.0)
     }
 
-    public func normal(_ t: CGFloat) -> CGPoint {
-        var d = self.derivative(t)
+    public func normal(at t: CGFloat) -> CGPoint {
+        var d = self.derivative(at: t)
         if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p0
@@ -144,7 +144,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         return d.perpendicular.normalize()
     }
 
-    public func derivative(_ t: CGFloat) -> CGPoint {
+    public func derivative(at t: CGFloat) -> CGPoint {
         let mt: CGFloat = 1-t
         let k: CGFloat = 3
         let p0 = k * (self.p1 - self.p0)
@@ -180,7 +180,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         let q22 = CGFloat(t2*t2 - 3*t1*t2*t2 + 2*t1*t2)
         let q23 = CGFloat(t1*t2*t2)
         let p2 = q20 * self.p0 + q21 * self.p1 + q22 * self.p2 + q23 * self.p3
-        return CubicCurve(p0: self.compute(CGFloat(t1)), p1: p1, p2: p2, p3: self.compute(CGFloat(t2)))
+        return CubicCurve(p0: self.point(at: CGFloat(t1)), p1: p1, p2: p2, p3: self.point(at: CGFloat(t2)))
     }
 
     public func split(at t: CGFloat) -> (left: CubicCurve, right: CubicCurve) {
@@ -227,7 +227,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
             }
             Utils.droots(d0[d], d1[d], d2[d]) {(t: CGFloat) in
                 guard t > 0.0, t < 1.0 else { return }
-                let value = self.compute(t)[d]
+                let value = self.point(at: t)[d]
                 if value < mmind {
                     mmin[d] = value
                 } else if value > mmaxd {
@@ -238,7 +238,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         return BoundingBox(min: mmin, max: mmax)
     }
 
-    public func compute(_ t: CGFloat) -> CGPoint {
+    public func point(at t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         } else if t == 1 {

@@ -80,17 +80,17 @@ class CubicCurveTests: XCTestCase {
 
         // first test passing without passing a t or d paramter
         var c = CubicCurve(start: start, end: end, mid: mid)
-        XCTAssertEqual(c.compute(0.0), start)
-        XCTAssert((c.compute(0.5) - mid).length < epsilon)
-        XCTAssertEqual(c.compute(1.0), end)
+        XCTAssertEqual(c.point(at: 0.0), start)
+        XCTAssert((c.point(at: 0.5) - mid).length < epsilon)
+        XCTAssertEqual(c.point(at: 1.0), end)
 
         // now test passing in a manual t and length d
         let t: CGFloat = 7.0 / 9.0
         let d: CGFloat = 1.5
         c = CubicCurve(start: start, end: end, mid: mid, t: t, d: d)
-        XCTAssertEqual(c.compute(0.0), start)
-        XCTAssert((c.compute(t) - mid).length < epsilon)
-        XCTAssertEqual(c.compute(1.0), end)
+        XCTAssertEqual(c.point(at: 0.0), start)
+        XCTAssert((c.point(at: t) - mid).length < epsilon)
+        XCTAssertEqual(c.point(at: 1.0), end)
         // make sure our solution has the proper strut length
         let e1 = c.hull(t)[7]
         let e2 = c.hull(t)[8]
@@ -142,9 +142,9 @@ class CubicCurveTests: XCTestCase {
         let p2 = CGPoint(x: 5.0, y: 2.0)
         let p3 = CGPoint(x: 7.0, y: 1.0)
         let c = CubicCurve(p0: p0, p1: p1, p2: p2, p3: p3)
-        XCTAssert(distance(c.derivative(0.0), 3.0 * (p1 - p0)) < epsilon)
-        XCTAssert(distance(c.derivative(0.5), CGPoint(x: 6.0, y: 0.0)) < epsilon)
-        XCTAssert(distance(c.derivative(1.0), 3.0 * (p3 - p2)) < epsilon)
+        XCTAssert(distance(c.derivative(at: 0.0), 3.0 * (p1 - p0)) < epsilon)
+        XCTAssert(distance(c.derivative(at: 0.5), CGPoint(x: 6.0, y: 0.0)) < epsilon)
+        XCTAssert(distance(c.derivative(at: 1.0), 3.0 * (p3 - p2)) < epsilon)
     }
 
     func testSplitFromTo() {
@@ -217,9 +217,9 @@ class CubicCurveTests: XCTestCase {
                                  p1: CGPoint(x: 4.0, y: 6.0),
                                  p2: CGPoint(x: 6.0, y: 6.0),
                                  p3: CGPoint(x: 7.0, y: 5.0))
-        XCTAssertEqual(c.compute(0.0), CGPoint(x: 3.0, y: 5.0))
-        XCTAssertEqual(c.compute(0.5), CGPoint(x: 5.0, y: 5.75))
-        XCTAssertEqual(c.compute(1.0), CGPoint(x: 7.0, y: 5.0))
+        XCTAssertEqual(c.point(at: 0.0), CGPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(c.point(at: 0.5), CGPoint(x: 5.0, y: 5.75))
+        XCTAssertEqual(c.point(at: 1.0), CGPoint(x: 7.0, y: 5.0))
     }
 
 // -- MARK: - methods for which default implementations provided by protocol
@@ -277,13 +277,13 @@ class CubicCurveTests: XCTestCase {
         let b = CGPoint(x: 3, y: 3)
         let c = CGPoint(x: 4, y: 4)
         let cubic1 = CubicCurve(p0: a, p1: a, p2: b, p3: c)
-        XCTAssertTrue( distance(cubic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(cubic1.normal(at: 0), CGPoint(x: 0, y: 1)) < maxError )
         let cubic2 = CubicCurve(p0: a, p1: b, p2: c, p3: c)
-        XCTAssertTrue( distance(cubic2.normal(1), CGPoint(x: -sqrt(2)/2, y: sqrt(2)/2)) < maxError )
+        XCTAssertTrue( distance(cubic2.normal(at: 1), CGPoint(x: -sqrt(2)/2, y: sqrt(2)/2)) < maxError )
         let cubic3 = CubicCurve(p0: a, p1: a, p2: a, p3: b)
-        XCTAssertTrue( distance(cubic3.normal(0), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(cubic3.normal(at: 0), CGPoint(x: 0, y: 1)) < maxError )
         let cubic4 = CubicCurve(p0: a, p1: b, p2: b, p3: b)
-        XCTAssertTrue( distance(cubic4.normal(1), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(cubic4.normal(at: 1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
     func testNormalCusp() {
@@ -292,9 +292,9 @@ class CubicCurveTests: XCTestCase {
                                  p1: CGPoint(x: 2, y: 2),
                                  p2: CGPoint(x: 1, y: 2),
                                  p3: CGPoint(x: 2, y: 1))
-        XCTAssertEqual(c.derivative(0.5), CGPoint.zero)
-        XCTAssertTrue(c.normal(0.5).x.isNaN)
-        XCTAssertTrue(c.normal(0.5).y.isNaN)
+        XCTAssertEqual(c.derivative(at: 0.5), CGPoint.zero)
+        XCTAssertTrue(c.normal(at: 0.5).x.isNaN)
+        XCTAssertTrue(c.normal(at: 0.5).y.isNaN)
     }
 
     func testReduce() {
@@ -439,8 +439,8 @@ class CubicCurveTests: XCTestCase {
                                CGPoint(x: 0.9895666738958517, y: 0.8806493722540778)]
         XCTAssertEqual(intersections.count, 9)
         for i in 0..<intersections.count {
-            XCTAssertTrue(distance(c1.compute(intersections[i].t1), expectedResults[i]) < epsilon)
-            XCTAssertTrue(distance(c2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(c1.point(at: intersections[i].t1), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(c2.point(at: intersections[i].t2), expectedResults[i]) < epsilon)
         }
     }
 
@@ -458,9 +458,9 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(intersections.count, 2)
         if intersections.count == 2 {
             let i1 = intersections[0]
-            XCTAssertTrue(distance(c1.compute(i1.t1), c2.compute(i1.t2)) < accuracy)
+            XCTAssertTrue(distance(c1.point(at: i1.t1), c2.point(at: i1.t2)) < accuracy)
             let i2 = intersections[1]
-            XCTAssertTrue(distance(c1.compute(i2.t1), c2.compute(i2.t2)) < accuracy)
+            XCTAssertTrue(distance(c1.point(at: i2.t1), c2.point(at: i2.t2)) < accuracy)
         }
     }
 

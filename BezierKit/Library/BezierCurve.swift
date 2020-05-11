@@ -60,7 +60,7 @@ extension BezierCurve {
      Calculates the length of this Bezier curve. Length is calculated using numerical approximation, specifically the Legendre-Gauss quadrature algorithm.
      */
     public func length() -> CGFloat {
-        return Utils.length({(_ t: CGFloat) in self.derivative(t)})
+        return Utils.length({(_ t: CGFloat) in self.derivative(at: t)})
     }
 
     public func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat]) {
@@ -93,7 +93,7 @@ extension BezierCurve {
         assert(steps >= 0)
         return (0 ... steps).map {
             let t = CGFloat($0) / CGFloat(steps)
-            return self.compute(t)
+            return self.point(at: t)
         }
     }
     // MARK: -
@@ -182,8 +182,8 @@ extension BezierCurve {
         guard order > 0 else { return self } // points cannot be scaled
         let points = self.points
 
-        let n1 = self.normal(0)
-        let n2 = self.normal(1)
+        let n1 = self.normal(at: 0)
+        let n2 = self.normal(at: 1)
         guard n1.x.isFinite, n1.y.isFinite, n2.x.isFinite, n2.y.isFinite else { return nil }
 
         let origin = Utils.linesIntersection(self.startingPoint, self.startingPoint + n1, self.endingPoint, self.endingPoint - n2)
@@ -196,7 +196,7 @@ extension BezierCurve {
             case 0, self.order:
                 return referencePoint
             default:
-                let tangent = self.normal(referenceT).perpendicular
+                let tangent = self.normal(at: referenceT).perpendicular
                 if let origin = origin, let intersection = Utils.linesIntersection(referencePoint, referencePoint + tangent, origin, points[index]) {
                     return intersection
                 } else {
@@ -219,7 +219,7 @@ extension BezierCurve {
     }
 
     public func offset(t: CGFloat, distance: CGFloat) -> CGPoint {
-        return self.compute(t) + distance * self.normal(t)
+        return self.point(at: t) + distance * self.normal(at: t)
     }
 
     // MARK: - intersection
@@ -313,11 +313,11 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var endingPoint: CGPoint { get set }
     var order: Int { get }
     init(points: [CGPoint])
-    func derivative(_ t: CGFloat) -> CGPoint
-    func normal(_ t: CGFloat) -> CGPoint
+    func derivative(at t: CGFloat) -> CGPoint
+    func normal(at t: CGFloat) -> CGPoint
     func split(from t1: CGFloat, to t2: CGFloat) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
-    func compute(_ t: CGFloat) -> CGPoint
+    func point(at t: CGFloat) -> CGPoint
     func length() -> CGFloat
     func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat])
     func lookupTable(steps: Int) -> [CGPoint]
@@ -385,7 +385,7 @@ extension Flatness {
             // to try and find a new best
             list.forEach {
                 let sampleT: CGFloat = 0.5
-                let curvePoint = $0.curve.compute(sampleT)
+                let curvePoint = $0.curve.point(at: sampleT)
                 let mmax = distance(point, curvePoint)
                 if mmax < bestMax {
                     bestMax = mmax

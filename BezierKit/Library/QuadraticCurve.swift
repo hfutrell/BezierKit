@@ -70,15 +70,15 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
 
     public var simple: Bool {
         guard p0 != p1 || p1 != p2 else { return true }
-        let n1 = self.normal(0)
-        let n2 = self.normal(1)
+        let n1 = self.normal(at: 0)
+        let n2 = self.normal(at: 1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
         let angle: CGFloat = CGFloat(abs(acos(Double(s))))
         return angle < (CGFloat.pi / 3.0)
     }
 
-    public func normal(_ t: CGFloat) -> CGPoint {
-        var d = self.derivative(t)
+    public func normal(at t: CGFloat) -> CGPoint {
+        var d = self.derivative(at: t)
         if d == CGPoint.zero, t == 0.0 || t == 1.0 {
             if t == 0.0 {
                 d = p2 - p1
@@ -89,7 +89,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return d.perpendicular.normalize()
     }
 
-    public func derivative(_ t: CGFloat) -> CGPoint {
+    public func derivative(at t: CGFloat) -> CGPoint {
         let mt: CGFloat = 1-t
         let k: CGFloat = 2
         let p0 = k * (self.p1 - self.p0)
@@ -110,7 +110,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         let q11 = CGFloat(t1 + t2 - 2*t1*t2)
         let q12 = CGFloat(t1*t2)
         let p1 = q10 * self.p0 + q11 * self.p1 + q12 * self.p2
-        return QuadraticCurve(p0: self.compute(CGFloat(t1)), p1: p1, p2: self.compute(CGFloat(t2)))
+        return QuadraticCurve(p0: self.point(at: CGFloat(t1)), p1: p1, p2: self.point(at: CGFloat(t2)))
     }
 
     public func split(at t: CGFloat) -> (left: QuadraticCurve, right: QuadraticCurve) {
@@ -145,7 +145,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
                 guard t > 0.0, t < 1.0 else {
                     return
                 }
-                let value = self.compute(t)[d]
+                let value = self.point(at: t)[d]
                 if value < mmin[d] {
                     mmin[d] = value
                 } else if value > mmax[d] {
@@ -156,7 +156,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return BoundingBox(min: mmin, max: mmax)
     }
 
-    public func compute(_ t: CGFloat) -> CGPoint {
+    public func point(at t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         } else if t == 1 {

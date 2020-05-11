@@ -218,7 +218,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     // MARK: - vector boolean operations
 
     public func point(at location: IndexedPathLocation) -> CGPoint {
-        return self.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex).compute(location.t)
+        return self.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex).point(at: location.t)
     }
 
     internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {

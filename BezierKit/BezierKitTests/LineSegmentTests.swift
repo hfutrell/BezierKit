@@ -57,7 +57,7 @@ class LineSegmentTests: XCTestCase {
 
     func testDerivative() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 3.0, y: 2.0))
-        XCTAssertEqual(l.derivative(0.23), CGPoint(x: 2.0, y: 1.0))
+        XCTAssertEqual(l.derivative(at: 0.23), CGPoint(x: 2.0, y: 1.0))
     }
 
     func testSplitFromTo() {
@@ -82,17 +82,17 @@ class LineSegmentTests: XCTestCase {
 
     func testCompute() {
         let l = LineSegment(p0: CGPoint(x: 3.0, y: 5.0), p1: CGPoint(x: 1.0, y: 3.0))
-        XCTAssertEqual(l.compute(0.0), CGPoint(x: 3.0, y: 5.0))
-        XCTAssertEqual(l.compute(0.5), CGPoint(x: 2.0, y: 4.0))
-        XCTAssertEqual(l.compute(1.0), CGPoint(x: 1.0, y: 3.0))
+        XCTAssertEqual(l.point(at: 0.0), CGPoint(x: 3.0, y: 5.0))
+        XCTAssertEqual(l.point(at: 0.5), CGPoint(x: 2.0, y: 4.0))
+        XCTAssertEqual(l.point(at: 1.0), CGPoint(x: 1.0, y: 3.0))
     }
 
     func testComputeRealWordIssue() {
         let s = CGPoint(x: 0.30901699437494745, y: 0.9510565162951535)
         let e = CGPoint(x: 0.30901699437494723, y: -0.9510565162951536)
         let l = LineSegment(p0: s, p1: e)
-        XCTAssertEqual(l.compute(0), s)
-        XCTAssertEqual(l.compute(1), e) // this failed in practice
+        XCTAssertEqual(l.point(at: 0), s)
+        XCTAssertEqual(l.point(at: 1), e) // this failed in practice
     }
 
     func testLength() {
@@ -119,9 +119,9 @@ class LineSegmentTests: XCTestCase {
 
     func testNormal() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-        let n1 = l.normal(0.0)
-        let n2 = l.normal(0.5)
-        let n3 = l.normal(1.0)
+        let n1 = l.normal(at: 0.0)
+        let n2 = l.normal(at: 0.5)
+        let n3 = l.normal(at: 1.0)
         XCTAssertEqual(n1, CGPoint(x: -1.0 / sqrt(2.0), y: 1.0 / sqrt(2.0)))
         XCTAssertEqual(n1, n2)
         XCTAssertEqual(n2, n3)
@@ -308,19 +308,19 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i1.count, 2)
         XCTAssertEqual(i1[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
         XCTAssertEqual(i1[0].t2, r1 / 2.0, accuracy: epsilon)
-        XCTAssert((l1.compute(i1[0].t1) - q.compute(i1[0].t2)).length < epsilon)
+        XCTAssert((l1.point(at: i1[0].t1) - q.point(at: i1[0].t2)).length < epsilon)
         XCTAssertEqual(i1[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
         XCTAssertEqual(i1[1].t2, r2 / 2.0, accuracy: epsilon)
-        XCTAssert((l1.compute(i1[1].t1) - q.compute(i1[1].t2)).length < epsilon)
+        XCTAssert((l1.point(at: i1[1].t1) - q.point(at: i1[1].t2)).length < epsilon)
         // do the same thing as above but using l2
         let i2 = l2.intersections(with: q)
         XCTAssertEqual(i2.count, 2)
         XCTAssertEqual(i2[0].t1, (r1 + 1.0) / 4.0, accuracy: epsilon)
         XCTAssertEqual(i2[0].t2, r2 / 2.0, accuracy: epsilon)
-        XCTAssert((l2.compute(i2[0].t1) - q.compute(i2[0].t2)).length < epsilon)
+        XCTAssert((l2.point(at: i2[0].t1) - q.point(at: i2[0].t2)).length < epsilon)
         XCTAssertEqual(i2[1].t1, (r2 + 1.0) / 4.0, accuracy: epsilon)
         XCTAssertEqual(i2[1].t2, r1 / 2.0, accuracy: epsilon)
-        XCTAssert((l2.compute(i2[1].t1) - q.compute(i2[1].t2)).length < epsilon)
+        XCTAssert((l2.point(at: i2[1].t1) - q.point(at: i2[1].t2)).length < epsilon)
     }
 
     func testIntersectionsQuadraticSpecialCase() {
@@ -436,7 +436,7 @@ class LineSegmentTests: XCTestCase {
         let i = line.intersections(with: curve)
         XCTAssertEqual(i.count, 2)
         i.forEach {
-            let d = distance(line.compute($0.t1), curve.compute($0.t2))
+            let d = distance(line.point(at: $0.t1), curve.point(at: $0.t2))
             XCTAssertTrue(d < 1.0e-4, "distance line.compute(\($0.t1)) to curve.compute(\($0.t2)) = \(d)")
         }
     }
