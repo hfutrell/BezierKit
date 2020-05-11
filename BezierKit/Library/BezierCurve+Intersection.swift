@@ -27,13 +27,13 @@ public extension BezierCurve {
         return self.selfIntersects(accuracy: BezierKit.defaultIntersectionAccuracy)
     }
     func selfIntersects(accuracy: CGFloat) -> Bool {
-        return !self.selfIntersections(accuracy: BezierKit.defaultIntersectionAccuracy).isEmpty
+        return !self.selfIntersections(accuracy: accuracy).isEmpty
     }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty
     }
     func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool {
-        return !self.intersections(with: curve, accuracy: BezierKit.defaultIntersectionAccuracy).isEmpty
+        return !self.intersections(with: curve, accuracy: accuracy).isEmpty
     }
 }
 
