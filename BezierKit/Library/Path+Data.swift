@@ -113,7 +113,7 @@ private struct SerializationTypes {
     var data: Data {
 
         let expectedCoordinatesCount = 2 * self.components.reduce(0) { $0 + $1.points.count }
-        let expectedCommandsCount = self.components.reduce(0) { $0 + $1.elementCount } + self.components.count
+        let expectedCommandsCount = self.components.reduce(0) { $0 + $1.numberOfElements } + self.components.count
 
         // compile the data into a format we can easily serialize
         var commands: [SerializationTypes.Command] = []

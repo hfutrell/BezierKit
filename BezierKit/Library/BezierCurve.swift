@@ -278,7 +278,7 @@ extension BezierCurve {
     public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [Shape] {
         let outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2)
         var shapes: [Shape] = []
-        let len = outline.elementCount
+        let len = outline.numberOfElements
         for i in 1..<len/2 {
             let shape = Shape(outline.element(at: i), outline.element(at: len-i), i > 1, i < len/2-1)
             shapes.append(shape)

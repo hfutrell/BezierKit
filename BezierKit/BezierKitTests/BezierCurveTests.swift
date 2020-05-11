@@ -183,7 +183,7 @@ class BezierCurveTests: XCTestCase {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let outline: PathComponent = lineSegment.outline(distance: 1)
-        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssertEqual(outline.numberOfElements, 4)
 
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
 
@@ -199,7 +199,7 @@ class BezierCurveTests: XCTestCase {
         let distanceAlongNormal: CGFloat = 1
         let distanceOppositeNormal: CGFloat = 2
         let outline: PathComponent = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
-        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssertEqual(outline.numberOfElements, 4)
 
         let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(at: 0)
         let o1 = lineSegment.endingPoint + distanceAlongNormal * lineSegment.normal(at: 1)
@@ -223,7 +223,7 @@ class BezierCurveTests: XCTestCase {
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 10, y: 1), p1: CGPoint(x: 10, y: -1))
         let expectedSegment4 = LineSegment(p0: CGPoint(x: 10, y: -1), p1: CGPoint(x: 0, y: -1))
 
-        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssertEqual(outline.numberOfElements, 4)
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1 ))
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2 ))
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3 ))
