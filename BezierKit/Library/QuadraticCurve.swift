@@ -128,6 +128,44 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return (left: leftCurve, right: rightCurve)
     }
 
+    public func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat) {
+        return self.project(point)
+    }
+
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
+        func multiplyCoordinates(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
+            return CGPoint(x: a.x * b.x, y: a.y * b.y)
+        }
+        let q = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        let l = LineSegment(p0: self.p1 - self.p0, p1: self.p2 - self.p1)
+        // p0, p1, p2, p3 form the control points of a Cubic Bezier Curve formed
+        // by multiplying the polynomials q and l
+        let p0 = multiplyCoordinates(q.p0, l.p0)
+        let p1 = (1.0 / 3.0) * multiplyCoordinates(q.p0, l.p1) + (2.0 / 3.0) * multiplyCoordinates(q.p1, l.p0)
+        let p2 = (1.0 / 3.0) * multiplyCoordinates(q.p2, l.p0) + (2.0 / 3.0) * multiplyCoordinates(q.p1, l.p1)
+        let p3 = multiplyCoordinates(q.p2, l.p1)
+        let lengthSquaredStart  = q.p0.lengthSquared
+        let lengthSquaredEnd    = q.p2.lengthSquared
+        var minimumT: CGFloat = 0.0
+        var minimumDistanceSquared = lengthSquaredStart
+        if lengthSquaredEnd < lengthSquaredStart {
+            minimumT = 1.0
+            minimumDistanceSquared = lengthSquaredEnd
+        }
+        // the roots represent the values at which the curve and its derivative are perpendicular
+        // ie, the dot product of q and l is equal to zero
+        Utils.droots(p0.x + p0.y, p1.x + p1.y, p2.x + p2.y, p3.x + p3.y) { (t: CGFloat) in
+            guard t > 0.0, t < 1.0 else { return }
+            let point = q.compute(t)
+            let distanceSquared = point.lengthSquared
+            if distanceSquared < minimumDistanceSquared {
+                minimumDistanceSquared = distanceSquared
+                minimumT = t
+            }
+        }
+        return (point: self.compute(minimumT), t: minimumT)
+    }
+
     public var boundingBox: BoundingBox {
 
         let p0: CGPoint = self.p0
