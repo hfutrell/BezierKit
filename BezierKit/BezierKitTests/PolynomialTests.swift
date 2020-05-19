@@ -39,6 +39,7 @@ class PolynomialTests: XCTestCase {
     }
 
     func testDegree3RepeatedRoot() {
+        // repeated root at x = 1
         let polynomial = PolynomialDegree3(a3: 1, a2: -4, a1: 5, a0: -2)
         let roots = findRoots(of: polynomial, between: -1, and: 3)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)

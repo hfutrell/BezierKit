@@ -84,6 +84,21 @@ struct PolynomialDegree5: Polynomial {
     }
 }
 
+func newton<P: Polynomial>(polynomial: P, guess: Double, relaxation: Double = 1) -> Double? {
+    let maxIterations = 20
+    let derivative = polynomial.derivative
+    var x = guess
+    for _ in 0..<maxIterations {
+        let f = polynomial.f(x)
+        guard f != 0.0 else { break }
+        let fPrime = derivative.f(x)
+        let delta = relaxation * f / fPrime
+        guard abs(delta) > 1.0e-10 else { break }
+        x -= delta
+    }
+    return x
+}
+
 func findRootBisection<P: Polynomial>(of polynomial: P, start: Double, end: Double) -> Double {
     var guess = (start + end) / 2
     var low = start
@@ -129,12 +144,22 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
         let end     = intervals[i+1]
         let fStart  = polynomial.f(start)
         let fEnd    = polynomial.f(end)
-        if abs(fStart) < 1.0e-5 {
-            return start
-        } else if fEnd != 0, fStart.sign != fEnd.sign {
-            return findRootBisection(of: polynomial, start: start, end: end)
+        if (fStart < 0 && fEnd > 0) || (fStart > 0 && fEnd < 0) {
+            let value = newton(polynomial: polynomial, guess: (start + end ) / 2)!
+            return value
+        } else {
+            let value = newton(polynomial: polynomial, guess: end, relaxation: 1.5)!
+            guard value > start, value <= end else {
+                return nil // possibly converged to wrong root
+            }
+            guard abs(end - value) < abs(start - value) else {
+                return nil // possibly converged to wrong root
+            }
+            guard polynomial.f(value) < 1.0e-10 else {
+                return nil // not actually a root
+            }
+            return value
         }
-        return nil
     }
     return possibleRoots
 }
