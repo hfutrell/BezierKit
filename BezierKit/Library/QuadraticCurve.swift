@@ -137,15 +137,16 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
         let q = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
-        let l = LineSegment(p0: self.p1 - self.p0, p1: self.p2 - self.p1)
-        // p0, p1, p2, p3 form the control points of a Cubic Bezier Curve formed
-        // by multiplying the polynomials q and l
-        let p0 = multiplyCoordinates(q.p0, l.p0)
-        let p1 = (1.0 / 3.0) * multiplyCoordinates(q.p0, l.p1) + (2.0 / 3.0) * multiplyCoordinates(q.p1, l.p0)
-        let p2 = (1.0 / 3.0) * multiplyCoordinates(q.p2, l.p0) + (2.0 / 3.0) * multiplyCoordinates(q.p1, l.p1)
-        let p3 = multiplyCoordinates(q.p2, l.p1)
-        let lengthSquaredStart  = q.p0.lengthSquared
-        let lengthSquaredEnd    = q.p2.lengthSquared
+        // p0, p1, p2, p3 form the control points of a cubic Bezier curve
+        // created by multiplying the curve with its derivative
+        let qd0 = q.p1 - q.p0
+        let qd1 = q.p2 - q.p1
+        let p0 = 3 * multiplyCoordinates(q.p0, qd0)
+        let p1 = multiplyCoordinates(q.p0, qd1) + 2 * multiplyCoordinates(q.p1, qd0)
+        let p2 = multiplyCoordinates(q.p2, qd0) + 2 * multiplyCoordinates(q.p1, qd1)
+        let p3 = 3 * multiplyCoordinates(q.p2, qd1)
+        let lengthSquaredStart  = q.startingPoint.lengthSquared
+        let lengthSquaredEnd    = q.endingPoint.lengthSquared
         var minimumT: CGFloat = 0.0
         var minimumDistanceSquared = lengthSquaredStart
         if lengthSquaredEnd < lengthSquaredStart {
