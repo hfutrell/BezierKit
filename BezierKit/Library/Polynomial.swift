@@ -15,78 +15,52 @@ protocol Polynomial {
     func criticalPoints(between start: Double, and end: Double) -> [Double]
 }
 
-protocol AnalyticRoots: Polynomial {
-    var roots: [Double] { get }
-}
-
-struct PolynomialDegree0: Polynomial, AnalyticRoots {
+extension Array: Polynomial where Element == Double {
     typealias Derivative = Self
-    var a0: Double
-    func f(_ x: Double) -> Double { return a0 }
-    var roots: [Double] { return [] }
-    var derivative: Derivative {
-        return PolynomialDegree0(a0: 0.0)
-    }
-}
-
-struct PolynomialDegree1: Polynomial, AnalyticRoots {
-    typealias Derivative = PolynomialDegree0
-    var a1, a0: Double
-    func f(_ x: Double) -> Double { return a1 * x + a0 }
-    var roots: [Double] {
-        guard a1 != 0.0 else { return [] }
-        return [-a0 / a1]
-    }
-    var derivative: Derivative {
-        return PolynomialDegree0(a0: a1)
-    }
-}
-
-struct PolynomialDegree2: Polynomial {
-    typealias Derivative = PolynomialDegree1
-    var a2, a1, a0: Double
-    func f(_ x: Double) -> Double { return a2 * x * x + a1 * x + a0 }
-    var derivative: Derivative {
-        return PolynomialDegree1(a1: 2 * a2, a0: a1)
-    }
-}
-
-struct PolynomialDegree3: Polynomial {
-    typealias Derivative = PolynomialDegree2
-    var a3, a2, a1, a0: Double
+    var points: [Double] { return self }
+    var order: Int { return self.count - 1 }
     func f(_ x: Double) -> Double {
-        return a3 * x * x * x + a2 * x * x + a1 * x + a0
+        let oneMinusX = 1.0 - x
+        var temp = self.points
+        self.points.withUnsafeBufferPointer { points in
+            for i in (0..<points.count).reversed() {
+                for j in 0..<i {
+                    temp[j] = oneMinusX * temp[j] + x * temp[j+1]
+                }
+            }
+        }
+        return temp.first ?? 0
     }
-    var derivative: Derivative {
-        return PolynomialDegree2(a2: 3 * a3, a1: 2 * a2, a0: a1)
+    var derivative: [Double] {
+        let bufferCapacity = self.order
+        guard bufferCapacity > 0 else { return [] }
+        let n = Double(bufferCapacity)
+        return [Double](unsafeUninitializedCapacity: bufferCapacity) { (buffer: inout UnsafeMutableBufferPointer<Double>, count: inout Int) in
+            for i in 0..<bufferCapacity {
+                buffer[i] = n * (self.points[i+1] - self.points[i])
+            }
+            count = bufferCapacity
+        }
+    }
+    func criticalPoints(between start: Double, and end: Double) -> [Double] {
+        let order = self.order
+        guard order > 1 else { return [] }
+        let derivative = self.derivative
+        if order == 2 {
+            let p0 = derivative[0]
+            let p1 = derivative[1]
+            guard p0 * p1 < 0 else { return [] }
+            let t = p0 / (p0 - p1)
+            guard t > start, t < end else { return [] }
+            return [t]
+        } else {
+            return findRoots(of: derivative, between: start, and: end)
+        }
     }
 }
 
-struct PolynomialDegree4: Polynomial {
-    typealias Derivative = PolynomialDegree3
-    var a4, a3, a2, a1, a0: Double
-    func f(_ x: Double) -> Double {
-        return a4 * x * x * x * x + a3 * x * x * x + a2 * x * x + a1 * x + a0
-    }
-    var derivative: Derivative {
-        return PolynomialDegree3(a3: 4 * a4, a2: 3 * a3, a1: 2 * a2, a0: a1)
-    }
-}
-
-struct PolynomialDegree5: Polynomial {
-    typealias Derivative = PolynomialDegree4
-    var a5, a4, a3, a2, a1, a0: Double
-    func f(_ x: Double) -> Double {
-        return a5 * x * x * x * x * x + a4 * x * x * x * x + a3 * x * x * x + a2 * x * x + a1 * x + a0
-    }
-    var derivative: Derivative {
-        return PolynomialDegree4(a4: 5 * a5, a3: 4 * a4, a2: 3 * a3, a1: 2 * a2, a0: a1)
-    }
-}
-
-func newton<P: Polynomial>(polynomial: P, guess: Double, relaxation: Double = 1) -> Double? {
+func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Double, relaxation: Double = 1) -> Double {
     let maxIterations = 20
-    let derivative = polynomial.derivative
     var x = guess
     for _ in 0..<maxIterations {
         let f = polynomial.f(x)
@@ -99,44 +73,9 @@ func newton<P: Polynomial>(polynomial: P, guess: Double, relaxation: Double = 1)
     return x
 }
 
-func findRootBisection<P: Polynomial>(of polynomial: P, start: Double, end: Double) -> Double {
-    var guess = (start + end) / 2
-    var low = start
-    var high = end
-    let lowSign = polynomial.f(low).sign
-    let highSign = polynomial.f(high).sign
-    assert(lowSign != highSign)
-   // let derivative = polynomial.derivative
-    while high - low > 1.0e-5 {
-        let midGuess = (low + high) / 2
-        guess = midGuess
-        let nextGuessF = polynomial.f(guess)
-        if nextGuessF == 0 {
-            return guess
-        } else if nextGuessF.sign == lowSign {
-            low = guess
-        } else {
-            assert(nextGuessF.sign == highSign)
-            high = guess
-        }
-    }
-    return guess
-}
-
-extension Polynomial where Derivative: AnalyticRoots {
-    func criticalPoints(between start: Double, and end: Double) -> [Double] {
-        return self.derivative.roots.filter { $0 > start && $0 < end }
-    }
-}
-
-extension Polynomial {
-    func criticalPoints(between start: Double, and end: Double) -> [Double] {
-        return findRoots(of: self.derivative, between: start, and: end)
-    }
-}
-
 func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
     assert(start < end)
+    let derivative = polynomial.derivative
     let criticalPoints: [Double] = polynomial.criticalPoints(between: start, and: end)
     let intervals: [Double] = ([start, end] + criticalPoints).sorted()
     let possibleRoots = (0..<intervals.count-1).compactMap { (i: Int) -> Double? in
@@ -144,11 +83,10 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
         let end     = intervals[i+1]
         let fStart  = polynomial.f(start)
         let fEnd    = polynomial.f(end)
-        if (fStart < 0 && fEnd > 0) || (fStart > 0 && fEnd < 0) {
-            let value = newton(polynomial: polynomial, guess: (start + end ) / 2)!
-            return value
+        if fStart * fEnd < 0 {
+            return newton(polynomial: polynomial, derivative: derivative, guess: (start + end ) / 2)
         } else {
-            let value = newton(polynomial: polynomial, guess: end, relaxation: 1.5)!
+            let value = newton(polynomial: polynomial, derivative: derivative, guess: end)
             guard value > start, value <= end else {
                 return nil // possibly converged to wrong root
             }
