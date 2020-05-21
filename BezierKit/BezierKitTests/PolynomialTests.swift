@@ -37,7 +37,6 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(quad.derivative, [4, -2])
 
         let roots = findRoots(of: quad, between: 0, and: 1)
-        
     }
     
 //    func testDegree2() {

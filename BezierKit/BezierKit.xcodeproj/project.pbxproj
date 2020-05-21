@@ -43,6 +43,8 @@
 		FD84360622B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */; };
 		FDA727591ED5035300011871 /* CubicCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicCurveTests.swift */; };
 		FDA7275A1ED5035300011871 /* CubicCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicCurveTests.swift */; };
+		FDAE32AF247742D4005F3F03 /* FixedArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDAE32AE247742D4005F3F03 /* FixedArray.swift */; };
+		FDAE32B0247742D4005F3F03 /* FixedArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDAE32AE247742D4005F3F03 /* FixedArray.swift */; };
 		FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */; };
 		FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */; };
 		FDB6B4041EAFD6DF00001C61 /* CubicCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6B3F81EAFD6DF00001C61 /* CubicCurve.swift */; };
@@ -161,6 +163,7 @@
 		FD80FF8922B1CEE00018C592 /* LockTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LockTests.swift; sourceTree = "<group>"; };
 		FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathComponent+WindingCount.swift"; sourceTree = "<group>"; };
 		FDA727581ED5035300011871 /* CubicCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicCurveTests.swift; sourceTree = "<group>"; };
+		FDAE32AE247742D4005F3F03 /* FixedArray.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FixedArray.swift; sourceTree = "<group>"; };
 		FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BezierCurve.swift; sourceTree = "<group>"; };
 		FDB6B3F81EAFD6DF00001C61 /* CubicCurve.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicCurve.swift; sourceTree = "<group>"; };
 		FDB6B3F91EAFD6DF00001C61 /* Draw.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Draw.swift; sourceTree = "<group>"; };
@@ -330,6 +333,7 @@
 				FDC859622119274A00AF7642 /* BoundingBoxHierarchy.swift */,
 				FDC2EB492298735C007768FC /* Lock.swift */,
 				FD067AC7246F1200006DA36B /* Polynomial.swift */,
+				FDAE32AE247742D4005F3F03 /* FixedArray.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -647,6 +651,7 @@
 				FDC2EB4B2298735C007768FC /* Lock.swift in Sources */,
 				FDB6B4071EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
+				FDAE32B0247742D4005F3F03 /* FixedArray.swift in Sources */,
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
@@ -672,6 +677,7 @@
 				FDC2EB4A2298735C007768FC /* Lock.swift in Sources */,
 				FDB6B4061EAFD6DF00001C61 /* Draw.swift in Sources */,
 				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
+				FDAE32AF247742D4005F3F03 /* FixedArray.swift in Sources */,
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,

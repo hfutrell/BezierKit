@@ -215,15 +215,15 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         let q = QuadraticCurve(p0: self.p1 - self.p0, p1: self.p2 - self.p1, p2: self.p3 - self.p2)
         // p0, p1, p2, p3 form the control points of a Cubic Bezier Curve formed
         // by multiplying the polynomials q and l
-        let p0 = mul(c.p0, q.p0)
-        let p1 = p0 + 0.2 * (2 * mul(c.p0, q.p1 - q.p0) + 3 * mul(c.p1 - c.p0, q.p0))
-        let dd0 = 6 * mul(c.p2 - 2 * c.p1 + c.p0, q.p0) + 12 * mul(c.p1 - c.p0, q.p1 - q.p0) + 2 * mul(c.p0, q.p2 - 2 * q.p1 + q.p0)
-        let p2 = 2 * p1 - p0 + 0.05 * dd0
+        let p0 = 10 * mul(c.p0, q.p0)
+        let p1 = p0 + 4 * mul(c.p0, q.p1 - q.p0) + 6 * mul(c.p1 - c.p0, q.p0)
+        let dd0 = 3 * mul(c.p2 - 2 * c.p1 + c.p0, q.p0) + 6 * mul(c.p1 - c.p0, q.p1 - q.p0) + mul(c.p0, q.p2 - 2 * q.p1 + q.p0)
+        let p2 = 2 * p1 - p0 + dd0
         //
-        let p5 = mul(c.p3, q.p2)
-        let p4 = p5 - 0.2 * (2 * mul(c.p3, q.p2 - q.p1) + 3 * mul(c.p3 - c.p2, q.p2))
-        let dd1 = 6 * mul(c.p1 - 2 * c.p2 + c.p3, q.p2) + 12 * mul(c.p3 - c.p2, q.p2 - q.p1) + 2 * mul(c.p3, q.p2 - 2 * q.p1 + q.p0)
-        let p3 = 2 * p4 - p5 + 0.05 * dd1
+        let p5 = 10 * mul(c.p3, q.p2)
+        let p4 = p5 - 4 * mul(c.p3, q.p2 - q.p1) - 6 * mul(c.p3 - c.p2, q.p2)
+        let dd1 = 3 * mul(c.p1 - 2 * c.p2 + c.p3, q.p2) + 6 * mul(c.p3 - c.p2, q.p2 - q.p1) + mul(c.p3, q.p2 - 2 * q.p1 + q.p0)
+        let p3 = 2 * p4 - p5 + dd1
 
         let lengthSquaredStart  = c.p0.lengthSquared
         let lengthSquaredEnd    = c.p3.lengthSquared

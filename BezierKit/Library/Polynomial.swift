@@ -12,24 +12,28 @@ protocol Polynomial {
     associatedtype Derivative: Polynomial
     func f(_ x: Double) -> Double
     var derivative: Derivative { get }
-    func criticalPoints(between start: Double, and end: Double) -> [Double]
+    var order: Int { get }
+    func analyticalRoots(between start: Double, and end: Double) -> [Double]?
 }
 
 extension Array: Polynomial where Element == Double {
     typealias Derivative = Self
-    var points: [Double] { return self }
     var order: Int { return self.count - 1 }
     func f(_ x: Double) -> Double {
-        let oneMinusX = 1.0 - x
-        var temp = self.points
-        self.points.withUnsafeBufferPointer { points in
-            for i in (0..<points.count).reversed() {
-                for j in 0..<i {
-                    temp[j] = oneMinusX * temp[j] + x * temp[j+1]
+        assert(self.count <= 16, "_FixedArray16 will fail here.")
+        var scratchPad = _FixedArray16<Double>()
+        self.forEach { scratchPad.append($0) }
+        return scratchPad.withUnsafeMutableBufferPointer { buffer in
+            let oneMinusX = 1.0 - x
+            self.withUnsafeBufferPointer { points in
+                for i in (0..<points.count).reversed() {
+                    for j in 0..<i {
+                        buffer[j] = oneMinusX * buffer[j] + x * buffer[j+1]
+                    }
                 }
             }
+            return buffer[0]
         }
-        return temp.first ?? 0
     }
     var derivative: [Double] {
         let bufferCapacity = self.order
@@ -37,25 +41,24 @@ extension Array: Polynomial where Element == Double {
         let n = Double(bufferCapacity)
         return [Double](unsafeUninitializedCapacity: bufferCapacity) { (buffer: inout UnsafeMutableBufferPointer<Double>, count: inout Int) in
             for i in 0..<bufferCapacity {
-                buffer[i] = n * (self.points[i+1] - self.points[i])
+                buffer[i] = n * (self[i+1] - self[i])
             }
             count = bufferCapacity
         }
     }
-    func criticalPoints(between start: Double, and end: Double) -> [Double] {
+    func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
-        guard order > 1 else { return [] }
-        let derivative = self.derivative
-        if order == 2 {
-            let p0 = derivative[0]
-            let p1 = derivative[1]
+        if order == 0 {
+            return []
+        } else if order == 1 {
+            let p0 = self[0]
+            let p1 = self[1]
             guard p0 * p1 < 0 else { return [] }
             let t = p0 / (p0 - p1)
             guard t > start, t < end else { return [] }
             return [t]
-        } else {
-            return findRoots(of: derivative, between: start, and: end)
         }
+        return nil
     }
 }
 
@@ -75,8 +78,11 @@ func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Doubl
 
 func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
     assert(start < end)
+    if let roots = polynomial.analyticalRoots(between: start, and: end) {
+        return roots
+    }
     let derivative = polynomial.derivative
-    let criticalPoints: [Double] = polynomial.criticalPoints(between: start, and: end)
+    let criticalPoints: [Double] = findRoots(of: derivative, between: start, and: end)
     let intervals: [Double] = ([start, end] + criticalPoints).sorted()
     let possibleRoots = (0..<intervals.count-1).compactMap { (i: Int) -> Double? in
         let start   = intervals[i]
