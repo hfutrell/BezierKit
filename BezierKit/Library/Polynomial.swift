@@ -83,27 +83,30 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
     }
     let derivative = polynomial.derivative
     let criticalPoints: [Double] = findRoots(of: derivative, between: start, and: end)
-    let intervals: [Double] = ([start, end] + criticalPoints).sorted()
-    let possibleRoots = (0..<intervals.count-1).compactMap { (i: Int) -> Double? in
+    let intervals: [Double] = [start] + criticalPoints + [end]
+    var lastFoundRoot: Double?
+    let roots = (0..<intervals.count-1).compactMap { (i: Int) -> Double? in
         let start   = intervals[i]
         let end     = intervals[i+1]
         let fStart  = polynomial.f(start)
         let fEnd    = polynomial.f(end)
+        let root: Double
         if fStart * fEnd < 0 {
-            return newton(polynomial: polynomial, derivative: derivative, guess: (start + end ) / 2)
+            let mid = (start + end ) / 2
+            root = newton(polynomial: polynomial, derivative: derivative, guess: mid)
         } else {
             let value = newton(polynomial: polynomial, derivative: derivative, guess: end)
-            guard value > start, value <= end else {
-                return nil // possibly converged to wrong root
-            }
-            guard abs(end - value) < abs(start - value) else {
-                return nil // possibly converged to wrong root
-            }
             guard polynomial.f(value) < 1.0e-10 else {
                 return nil // not actually a root
             }
-            return value
+            root = value
         }
+        guard start < root, root < end else { return nil }
+        if let lastFoundRoot = lastFoundRoot, lastFoundRoot >= root {
+            return nil // ensures roots are unique and ordered
+        }
+        lastFoundRoot = root
+        return root
     }
-    return possibleRoots
+    return roots
 }

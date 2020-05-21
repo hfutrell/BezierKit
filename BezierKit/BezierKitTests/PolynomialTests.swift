@@ -35,10 +35,8 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(quad.f(0.5), 0.25)
         XCTAssertEqual(quad.f(1), 0)
         XCTAssertEqual(quad.derivative, [4, -2])
-
-        let roots = findRoots(of: quad, between: 0, and: 1)
     }
-    
+
 //    func testDegree2() {
 //        let polynomial = PolynomialDegree2(a2: 3, a1: -2, a0: -5)
 //        let roots = findRoots(of: polynomial, between: -10, and: 10)
