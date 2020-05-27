@@ -10,7 +10,7 @@ import Foundation
 
 protocol Polynomial {
     associatedtype Derivative: Polynomial
-    func f(_ x: Double) -> Double
+    func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double
     var derivative: Derivative { get }
     var order: Int { get }
     func analyticalRoots(between start: Double, and end: Double) -> [Double]?
@@ -19,21 +19,27 @@ protocol Polynomial {
 extension Array: Polynomial where Element == Double {
     typealias Derivative = Self
     var order: Int { return self.count - 1 }
-    func f(_ x: Double) -> Double {
-        assert(self.count <= 16, "_FixedArray16 will fail here.")
-        var scratchPad = _FixedArray16<Double>()
-        self.forEach { scratchPad.append($0) }
-        return scratchPad.withUnsafeMutableBufferPointer { buffer in
-            let oneMinusX = 1.0 - x
-            self.withUnsafeBufferPointer { points in
-                for i in (0..<points.count).reversed() {
-                    for j in 0..<i {
-                        buffer[j] = oneMinusX * buffer[j] + x * buffer[j+1]
-                    }
-                }
+    func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+        assert(scratchPad.count >= self.count, "scratchpad will fail here.")
+        let oneMinusX = 1.0 - x
+        self.withUnsafeBufferPointer { (points: UnsafeBufferPointer<Double>) in
+            var i = 0
+            let count = points.count
+            while i < count {
+                scratchPad[i] = points[i]
+                i += 1
             }
-            return buffer[0]
+            i = points.count - 1
+            repeat {
+                var j = 0
+                repeat {
+                    scratchPad[j] = oneMinusX * scratchPad[j] + x * scratchPad[j+1]
+                    j += 1
+                } while j < i
+                i -= 1
+            } while i > 0
         }
+        return scratchPad[0]
     }
     var derivative: [Double] {
         let bufferCapacity = self.order
@@ -48,27 +54,24 @@ extension Array: Polynomial where Element == Double {
     }
     func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
-        if order == 0 {
-            return []
-        } else if order == 1 {
-            let p0 = self[0]
-            let p1 = self[1]
-            guard p0 * p1 < 0 else { return [] }
-            let t = p0 / (p0 - p1)
-            guard t > start, t < end else { return [] }
-            return [t]
-        }
-        return nil
+        guard order > 0 else { return [] }
+        guard order < 4 else { return nil } // cannot solve
+        #warning("todo: ensure droots is sorted and uniqued")
+        return Utils.droots(self.map { CGFloat($0) }).compactMap {
+            let t = Double($0)
+            guard t > start, t < end else { return nil }
+            return t
+        }.sortedAndUniqued()
     }
 }
 
-func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Double, relaxation: Double = 1) -> Double {
+func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Double, relaxation: Double = 1, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
-        let f = polynomial.f(x)
+        let f = polynomial.f(x, scratchPad)
         guard f != 0.0 else { break }
-        let fPrime = derivative.f(x)
+        let fPrime = derivative.f(x, scratchPad)
         let delta = relaxation * f / fPrime
         guard abs(delta) > 1.0e-10 else { break }
         x -= delta
@@ -76,27 +79,27 @@ func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Doubl
     return x
 }
 
-func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
+func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
     assert(start < end)
     if let roots = polynomial.analyticalRoots(between: start, and: end) {
         return roots
     }
     let derivative = polynomial.derivative
-    let criticalPoints: [Double] = findRoots(of: derivative, between: start, and: end)
+    let criticalPoints: [Double] = findRoots(of: derivative, between: start, and: end, scratchPad: scratchPad)
     let intervals: [Double] = [start] + criticalPoints + [end]
     var lastFoundRoot: Double?
     let roots = (0..<intervals.count-1).compactMap { (i: Int) -> Double? in
         let start   = intervals[i]
         let end     = intervals[i+1]
-        let fStart  = polynomial.f(start)
-        let fEnd    = polynomial.f(end)
+        let fStart  = polynomial.f(start, scratchPad)
+        let fEnd    = polynomial.f(end, scratchPad)
         let root: Double
         if fStart * fEnd < 0 {
             let mid = (start + end ) / 2
-            root = newton(polynomial: polynomial, derivative: derivative, guess: mid)
+            root = newton(polynomial: polynomial, derivative: derivative, guess: mid, scratchPad: scratchPad)
         } else {
-            let value = newton(polynomial: polynomial, derivative: derivative, guess: end)
-            guard polynomial.f(value) < 1.0e-10 else {
+            let value = newton(polynomial: polynomial, derivative: derivative, guess: end, scratchPad: scratchPad)
+            guard polynomial.f(value, scratchPad) < 1.0e-10 else {
                 return nil // not actually a root
             }
             root = value
