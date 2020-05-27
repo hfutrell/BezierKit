@@ -99,7 +99,7 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
         } else {
             #warning("return nil here and the tests still pass ... is it really needed?")
             let value = newton(polynomial: polynomial, derivative: derivative, guess: end, scratchPad: scratchPad)
-            guard polynomial.f(value, scratchPad) < 1.0e-10 else {
+            guard abs(polynomial.f(value, scratchPad)) < 1.0e-10 else {
                 return nil // not actually a root
             }
             root = value
