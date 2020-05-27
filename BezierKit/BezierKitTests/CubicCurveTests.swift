@@ -250,6 +250,28 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(y[0], 1.0 / 3.0)
     }
 
+    func testProject() {
+        let epsilon: CGFloat = 1.0e-5
+        // test a cubic
+        let c = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 5.0, y: 1.0))
+        let p4 = c.project(CGPoint(x: 0.95, y: 1.05)) // should project to p0
+        XCTAssertEqual(p4.point, CGPoint(x: 1.0, y: 1.0))
+        XCTAssertEqual(p4.t, 0.0)
+        let p5 = c.project(CGPoint(x: 5.05, y: 1.05)) // should project to p3
+        XCTAssertEqual(p5.point, CGPoint(x: 5.0, y: 1.0))
+        XCTAssertEqual(p5.t, 1.0)
+        let p6 = c.project(CGPoint(x: 3.0, y: 2.0)) // should project to center of curve
+        XCTAssertEqual(p6.point, CGPoint(x: 3.0, y: 1.75))
+        XCTAssertEqual(p6.t, 0.5)
+
+        let t: CGFloat = 0.831211
+        let pointToProject = c.compute(t) + c.normal(t)
+        let expectedAnswer = c.compute(t)
+        let p7 = c.project(pointToProject, accuracy: epsilon) // should project back to (roughly) c.compute(0.831211)
+        XCTAssert(distance(p7.point, expectedAnswer) < epsilon)
+        XCTAssertEqual(p7.t, t, accuracy: epsilon)
+    }
+
 // TODO: we still have some missing unit tests for CubicCurve's API entry points
 
 //    func testHull() {
