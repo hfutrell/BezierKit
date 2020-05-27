@@ -42,7 +42,7 @@ class PolynomialTests: XCTestCase {
         // x^3 - 6x^2 + 11x - 6
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 4)
         defer { scratchPad.deallocate() }
-        let polynomial: [Double] = [-6, 7.0 / 3.0, -2.0 / 3.0, 0]
+        let polynomial: [Double] = [-6, -7.0 / 3.0, -2.0 / 3.0, 0]
         let roots = findRoots(of: polynomial, between: 0, and: 4, scratchPad: scratchPad)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
