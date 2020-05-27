@@ -56,7 +56,6 @@ extension Array: Polynomial where Element == Double {
         let order = self.order
         guard order > 0 else { return [] }
         guard order < 4 else { return nil } // cannot solve
-        #warning("todo: ensure droots is sorted and uniqued")
         return Utils.droots(self.map { CGFloat($0) }).compactMap {
             let t = Double($0)
             guard t > start, t < end else { return nil }
@@ -98,6 +97,7 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
             let mid = (start + end ) / 2
             root = newton(polynomial: polynomial, derivative: derivative, guess: mid, scratchPad: scratchPad)
         } else {
+            #warning("return nil here and the tests still pass ... is it really needed?")
             let value = newton(polynomial: polynomial, derivative: derivative, guess: end, scratchPad: scratchPad)
             guard polynomial.f(value, scratchPad) < 1.0e-10 else {
                 return nil // not actually a root
