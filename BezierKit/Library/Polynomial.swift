@@ -6,7 +6,7 @@
 //  Copyright © 2020 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
 protocol Polynomial {
     associatedtype Derivative: Polynomial

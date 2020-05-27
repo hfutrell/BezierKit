@@ -6,11 +6,7 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
-
-#if os(iOS)
 import CoreGraphics
-#endif
 
 internal extension Array where Element: Comparable {
     func sortedAndUniqued() -> [Element] {

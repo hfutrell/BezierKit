@@ -6,7 +6,6 @@
 //  Copyright © 2019 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
 import CoreGraphics
 
 // MARK: - helpers using generics
