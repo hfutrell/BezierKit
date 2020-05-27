@@ -128,10 +128,6 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return (left: leftCurve, right: rightCurve)
     }
 
-    public func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat) {
-        return self.project(point)
-    }
-
     public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         func multiplyCoordinates(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)

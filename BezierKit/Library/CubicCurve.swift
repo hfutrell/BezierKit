@@ -203,10 +203,6 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
 
     }
 
-    public func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat) {
-        return self.project(point)
-    }
-
     public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         func mul(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)

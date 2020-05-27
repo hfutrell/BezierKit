@@ -38,7 +38,7 @@ public extension BezierCurve {
 
 private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> [Intersection]? {
     func pointIsCloseToCurve<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
-        let (projection, t) = curve.project(point, accuracy: accuracy)
+        let (projection, t) = curve.project(point)
         guard distanceSquared(point, projection) < 4.0 * accuracy * accuracy else { return nil }
         return t
     }

@@ -108,23 +108,37 @@ class QuadraticCurveTests: XCTestCase {
         let q = QuadraticCurve(p0: CGPoint(x: 1, y: 1),
                                p1: CGPoint(x: 2, y: 0),
                                p2: CGPoint(x: 4, y: 1))
-        let result1 = q.project(CGPoint(x: 2, y: 2), accuracy: epsilon)
+        let result1 = q.project(CGPoint(x: 2, y: 2))
         XCTAssertEqual(result1.t, 0)
         XCTAssertEqual(result1.point, CGPoint(x: 1, y: 1))
-        let result2 = q.project(CGPoint(x: 5, y: 1), accuracy: epsilon)
+        let result2 = q.project(CGPoint(x: 5, y: 1))
         XCTAssertEqual(result2.t, 1)
         XCTAssertEqual(result2.point, CGPoint(x: 4, y: 1))
-        let result3 = q.project(CGPoint(x: 2.25, y: 1), accuracy: epsilon)
+        let result3 = q.project(CGPoint(x: 2.25, y: 1))
         XCTAssertEqual(result3.t, 0.5)
         XCTAssertEqual(result3.point, CGPoint(x: 2.25, y: 0.5))
         // test accuracy
         let t: CGFloat = 0.374858262
         let expectedPoint = q.compute(t)
         let pointToProject = expectedPoint + 0.234 * q.normal(t)
-        let result4 = q.project(pointToProject, accuracy: epsilon)
+        let result4 = q.project(pointToProject)
         XCTAssertEqual(result4.t, t, accuracy: epsilon)
         XCTAssertTrue(distance(result4.point, expectedPoint) < epsilon)
     }
+
+    func testProjectPerformance() {
+        let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
+                               p1: CGPoint(x: 0, y: 2),
+                               p2: CGPoint(x: 1, y: -1))
+        self.measure {
+            // roughly 0.043 -Onone, 0.022 with -Ospeed
+            // if comparing with cubic performance, be sure to note `by` parameter in stride
+            for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
+                _ = q.project(CGPoint(x: cos(theta), y: sin(theta)))
+            }
+        }
+    }
+
 //
 //    func testHull() {
 //    }

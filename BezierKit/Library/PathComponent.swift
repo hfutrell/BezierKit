@@ -210,7 +210,7 @@ import Foundation
         return PathComponent(curves: offsetCurves)
     }
 
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
         var found = false
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
@@ -218,7 +218,7 @@ import Foundation
                 found = true
             } else if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
-                if distance(p, curve.project(p, accuracy: accuracy).point) < d {
+                if distance(p, curve.project(p).point) < d {
                     found = true
                 }
             }

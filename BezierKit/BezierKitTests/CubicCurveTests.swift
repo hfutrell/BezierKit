@@ -267,9 +267,22 @@ class CubicCurveTests: XCTestCase {
         let t: CGFloat = 0.831211
         let pointToProject = c.compute(t) + c.normal(t)
         let expectedAnswer = c.compute(t)
-        let p7 = c.project(pointToProject, accuracy: epsilon) // should project back to (roughly) c.compute(0.831211)
+        let p7 = c.project(pointToProject) // should project back to (roughly) c.compute(0.831211)
         XCTAssert(distance(p7.point, expectedAnswer) < epsilon)
         XCTAssertEqual(p7.t, t, accuracy: epsilon)
+    }
+
+    func testProjectPerformance() {
+        let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
+                           p1: CGPoint(x: 3, y: 1),
+                           p2: CGPoint(x: -3, y: 1),
+                           p3: CGPoint(x: 1, y: -1))
+        self.measure {
+            // roughly 0.063 -Onone, 0.011 with -Ospeed
+            for theta in stride(from: 0, to: 2*Double.pi, by: 0.01) {
+                _ = c.project(CGPoint(x: cos(theta), y: sin(theta)))
+            }
+        }
     }
 
 // TODO: we still have some missing unit tests for CubicCurve's API entry points
@@ -356,16 +369,6 @@ class CubicCurveTests: XCTestCase {
 //    //    func testScaleDistanceFunc {
 //    //
 //    //    }
-//
-//    func testProject() {
-//        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-//        let p1 = l.project(point: CGPoint(x: 0.0, y: 0.0)) // should project to p0
-//        XCTAssertEqual(p1, CGPoint(x: 1.0, y: 2.0))
-//        let p2 = l.project(point: CGPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
-//        XCTAssertEqual(p2, CGPoint(x: 2.0, y: 3.0))
-//        let p3 = l.project(point: CGPoint(x: 6.0, y: 7.0))
-//        XCTAssertEqual(p3, CGPoint(x: 5.0, y: 6.0)) // should project to p1
-//    }
 //    
 //    func testIntersects() {
 //        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))

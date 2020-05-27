@@ -109,12 +109,11 @@ class LineSegmentTests: XCTestCase {
     }
 
     func testProject() {
-        let epsilon: CGFloat = 2.0e-4
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let p1 = l.project(CGPoint(x: 0.0, y: 0.0)) // should project to p0
         XCTAssertEqual(p1.point, CGPoint(x: 1.0, y: 2.0))
         XCTAssertEqual(p1.t, 0.0)
-        let p2 = l.project(CGPoint(x: 1.0, y: 4.0), accuracy: epsilon) // should project to l.compute(0.25)
+        let p2 = l.project(CGPoint(x: 1.0, y: 4.0)) // should project to l.compute(0.25)
         XCTAssertEqual(p2.point, CGPoint(x: 2.0, y: 3.0))
         XCTAssertEqual(p2.t, 0.25)
         let p3 = l.project(CGPoint(x: 6.0, y: 7.0))
