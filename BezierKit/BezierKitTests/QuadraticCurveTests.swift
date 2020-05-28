@@ -119,8 +119,8 @@ class QuadraticCurveTests: XCTestCase {
         XCTAssertEqual(result3.point, CGPoint(x: 2.25, y: 0.5))
         // test accuracy
         let t: CGFloat = 0.374858262
-        let expectedPoint = q.compute(t)
-        let pointToProject = expectedPoint + 0.234 * q.normal(t)
+        let expectedPoint = q.point(at: t)
+        let pointToProject = expectedPoint + 0.234 * q.normal(at: t)
         let result4 = q.project(pointToProject)
         XCTAssertEqual(result4.t, t, accuracy: epsilon)
         XCTAssertTrue(distance(result4.point, expectedPoint) < epsilon)

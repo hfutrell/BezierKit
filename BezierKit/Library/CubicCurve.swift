@@ -240,7 +240,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: points.count)
         for t in findRoots(of: points, between: 0, and: 1, scratchPad: scratchPad) {
             guard t > 0.0, t < 1.0 else { break }
-            let point = c.compute(CGFloat(t))
+            let point = c.point(at: CGFloat(t))
             let distanceSquared = point.lengthSquared
             if distanceSquared < minimumDistanceSquared {
                 minimumDistanceSquared = distanceSquared
@@ -248,7 +248,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
             }
         }
         scratchPad.deallocate()
-        return (point: self.compute(minimumT), t: minimumT)
+        return (point: self.point(at: minimumT), t: minimumT)
     }
 
     public var boundingBox: BoundingBox {

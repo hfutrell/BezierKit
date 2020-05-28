@@ -153,14 +153,14 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         // ie, the dot product of q and l is equal to zero
         Utils.droots(p0.x + p0.y, p1.x + p1.y, p2.x + p2.y, p3.x + p3.y) { (t: CGFloat) in
             guard t > 0.0, t < 1.0 else { return }
-            let point = q.compute(t)
+            let point = q.point(at: t)
             let distanceSquared = point.lengthSquared
             if distanceSquared < minimumDistanceSquared {
                 minimumDistanceSquared = distanceSquared
                 minimumT = t
             }
         }
-        return (point: self.compute(minimumT), t: minimumT)
+        return (point: self.point(at: minimumT), t: minimumT)
     }
 
     public var boundingBox: BoundingBox {

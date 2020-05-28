@@ -265,8 +265,8 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(p6.t, 0.5)
 
         let t: CGFloat = 0.831211
-        let pointToProject = c.compute(t) + c.normal(t)
-        let expectedAnswer = c.compute(t)
+        let pointToProject = c.point(at: t) + c.normal(at: t)
+        let expectedAnswer = c.point(at: t)
         let p7 = c.project(pointToProject) // should project back to (roughly) c.compute(0.831211)
         XCTAssert(distance(p7.point, expectedAnswer) < epsilon)
         XCTAssertEqual(p7.t, t, accuracy: epsilon)
