@@ -96,6 +96,8 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
         let fEnd    = polynomial.f(end, scratchPad)
         let root: Double
         if fStart * fEnd < 0 {
+            // TODO: if a critical point is a root we take this
+            // codepath due to roundoff and  converge only linearly to one end of interval
             let mid = (start + end ) / 2
             root = newton(polynomial: polynomial, derivative: derivative, guess: mid, scratchPad: scratchPad)
             guard start < root, root < end else { return nil }
