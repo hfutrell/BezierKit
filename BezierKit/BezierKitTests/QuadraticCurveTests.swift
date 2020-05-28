@@ -149,9 +149,9 @@ class QuadraticCurveTests: XCTestCase {
         let a = CGPoint(x: 2, y: 3)
         let b = CGPoint(x: 3, y: 3)
         let quadratic1 = QuadraticCurve(p0: a, p1: a, p2: b)
-        XCTAssertTrue( distance(quadratic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(quadratic1.normal(at: 0), CGPoint(x: 0, y: 1)) < maxError )
         let quadratic2 = QuadraticCurve(p0: a, p1: b, p2: b)
-        XCTAssertTrue( distance(quadratic2.normal(1), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(quadratic2.normal(at: 1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
     func testReduce() {
@@ -192,10 +192,10 @@ class QuadraticCurveTests: XCTestCase {
         let root2 = 1.0 + sqrt(2) / 2.0
         let expectedResult1 = CGPoint(x: root1, y: 1)
         let expectedResult2 = CGPoint(x: root2, y: 1)
-        XCTAssertTrue( distance(q1.compute(i[0].t1), expectedResult1) < epsilon)
-        XCTAssertTrue( distance(q1.compute(i[1].t1), expectedResult2) < epsilon)
-        XCTAssertTrue( distance(q2.compute(i[0].t2), expectedResult1) < epsilon)
-        XCTAssertTrue( distance(q2.compute(i[1].t2), expectedResult2) < epsilon)
+        XCTAssertTrue( distance(q1.point(at: i[0].t1), expectedResult1) < epsilon)
+        XCTAssertTrue( distance(q1.point(at: i[1].t1), expectedResult2) < epsilon)
+        XCTAssertTrue( distance(q2.point(at: i[0].t2), expectedResult1) < epsilon)
+        XCTAssertTrue( distance(q2.point(at: i[1].t2), expectedResult2) < epsilon)
     }
 
     func testIntersectionsQuadraticMaxIntersections() {
@@ -215,8 +215,8 @@ class QuadraticCurveTests: XCTestCase {
                                CGPoint(x: 1.8090170, y: 0.69098300)]
         XCTAssertEqual(intersections.count, 4)
         for i in 0..<intersections.count {
-            XCTAssertTrue(distance(q1.compute(intersections[i].t1), expectedResults[i]) < epsilon)
-            XCTAssertTrue(distance(q2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(q1.point(at: intersections[i].t1), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(q2.point(at: intersections[i].t2), expectedResults[i]) < epsilon)
         }
     }
 

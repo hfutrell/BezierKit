@@ -66,7 +66,7 @@ class PathTests: XCTestCase {
         let p4 = CGPoint(x: 0.5, y: 0.0)
 
         XCTAssertEqual(path2.components.count, 1)
-        XCTAssertEqual(path2.components[0].elementCount, 4)
+        XCTAssertEqual(path2.components[0].numberOfElements, 4)
         XCTAssertEqual(path2.components[0].element(at: 0).startingPoint, p1)
         XCTAssertEqual(path2.components[0].element(at: 1).startingPoint, p2)
         XCTAssertEqual(path2.components[0].element(at: 2).startingPoint, p3)
@@ -97,7 +97,7 @@ class PathTests: XCTestCase {
 
         let path3 = Path(cgPath: cgPath3)
         XCTAssertEqual(path3.components.count, 1)
-        XCTAssertEqual(path3.components[0].elementCount, 4)
+        XCTAssertEqual(path3.components[0].numberOfElements, 4)
         XCTAssertEqual(path3.components[0].element(at: 1) as! QuadraticCurve, QuadraticCurve(p0: p2, p1: p3, p2: p4))
     }
 
@@ -117,8 +117,8 @@ class PathTests: XCTestCase {
 
         let path4 = Path(cgPath: cgPath4)
         XCTAssertEqual(path4.components.count, 2)
-        XCTAssertEqual(path4.components[0].elementCount, 1)
-        XCTAssertEqual(path4.components[1].elementCount, 1)
+        XCTAssertEqual(path4.components[0].numberOfElements, 1)
+        XCTAssertEqual(path4.components[1].numberOfElements, 1)
         XCTAssertEqual(path4.components[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
         XCTAssertEqual(path4.components[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
@@ -1222,7 +1222,7 @@ class PathTests: XCTestCase {
          // in practice .crossingsRemoved was cutting off most of the shape
         XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
         XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
-        XCTAssertEqual(result.components[0].elementCount, 5) // with crossings removed we should have 1 fewer curve (the last one)
+        XCTAssertEqual(result.components[0].numberOfElements, 5) // with crossings removed we should have 1 fewer curve (the last one)
     }
 
     func testCrossingsRemovedAnotherRealWorldCase() {
@@ -1370,7 +1370,7 @@ class PathTests: XCTestCase {
         // and then to recover from the error we jumped back (+1 again)
         // this was because although a `union` between two paths would exclude coincident edges
         // doing crossings removed would not.
-        XCTAssertEqual(result.components.first?.elementCount, 7)
+        XCTAssertEqual(result.components.first?.numberOfElements, 7)
     }
 
     func testCrossingsRemovedRealWorldInfiniteLoop() {
@@ -1451,14 +1451,14 @@ class PathTests: XCTestCase {
         XCTAssertEqual(offsetCircle.components.count, 1)
         // make sure that the offsetting process created a series of elements that is *contiguous*
         let component = offsetCircle.components.first!
-        let elementCount = component.elementCount
+        let elementCount = component.numberOfElements
         for i in 0..<elementCount {
             XCTAssertEqual(component.element(at: i).endingPoint, component.element(at: (i+1) % elementCount).startingPoint)
         }
         // make sure that the offset circle is a actually circle, or, well, close to one
         let expectedRadius: CGFloat = 2.0
         let expectedCenter = CGPoint(x: 1.0, y: 1.0)
-        for i in 0..<offsetCircle.components[0].elementCount {
+        for i in 0..<offsetCircle.components[0].numberOfElements {
             let c = offsetCircle.components[0].element(at: i)
             for p in c.lookupTable(steps: 10) {
                 let radius = distance(p, expectedCenter)
@@ -1585,11 +1585,14 @@ class PathTests: XCTestCase {
         let location2 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 1.0)
         let location3 = IndexedPathLocation(componentIndex: 0, elementIndex: 2, t: 0.0)
         let location4 = IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0.0)
+        let location5 = IndexedPathLocation(componentIndex: location4.componentIndex, locationInComponent: location4.locationInComponent)
         XCTAssert(location1 < location2)
         XCTAssert(location1 < location3)
         XCTAssert(location1 < location4)
         XCTAssertFalse(location2 < location1) // no! t is greater
         XCTAssertFalse(location3 < location1) // no! element index is greater
         XCTAssertFalse(location4 < location1) // no! component index is greater
+        XCTAssertEqual(location1.locationInComponent, IndexedPathComponentLocation(elementIndex: location1.elementIndex, t: location1.t))
+        XCTAssertEqual(location4, location5)
     }
 }

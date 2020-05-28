@@ -13,8 +13,8 @@ class BezierKitTestHelpers {
 
     static internal func intersections(_ intersections: [Intersection], betweenCurve c1: BezierCurve, andOtherCurve c2: BezierCurve, areWithinTolerance epsilon: CGFloat) -> Bool {
         for i in intersections {
-            let p1 = c1.compute(i.t1)
-            let p2 = c2.compute(i.t2)
+            let p1 = c1.point(at: i.t1)
+            let p2 = c2.point(at: i.t2)
             if (p1 - p2).length > epsilon {
                 return false
             }
@@ -61,7 +61,7 @@ class BezierKitTestHelpers {
         for i in 0..<numPointsToCheck {
             let t1 = CGFloat(i) / CGFloat(numPointsToCheck-1)
             let t2 = interval.start * (1.0 - t1) + interval.end * t1
-            if distance(c1.compute(t1), c2.compute(t2)) > tolerance {
+            if distance(c1.point(at: t1), c2.point(at: t2)) > tolerance {
                 return false
             }
         }
@@ -92,7 +92,7 @@ class BezierKitTestHelpers {
         // check that it worked
         let curve = CubicCurve(p0: a, p1: b, p2: c, p3: d)
         for t: CGFloat in stride(from: 0, through: 1, by: 0.1) {
-            assert(distance(curve.compute(t), CGPoint(x: evaluatePolynomial(f, at: t), y: evaluatePolynomial(g, at: t))) < 0.001, "internal error! failed to fit polynomial!")
+            assert(distance(curve.point(at: t), CGPoint(x: evaluatePolynomial(f, at: t), y: evaluatePolynomial(g, at: t))) < 0.001, "internal error! failed to fit polynomial!")
         }
         return curve
     }
