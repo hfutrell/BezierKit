@@ -95,6 +95,17 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[3], 1.2, accuracy: accuracy)
     }
 
+    func testDegree4RepeatedRoots() {
+        // x^4 - 2x^2 + 1
+        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
+        defer { scratchPad.deallocate() }
+        let polynomial: [Double] = [1, 1, 2.0 / 3.0, 0, 0]
+        let roots = findRoots(of: polynomial, between: -2, and: 2, scratchPad: scratchPad)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], -1, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 1, accuracy: accuracy)
+    }
+
     func testDegree5() {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 6)
         defer { scratchPad.deallocate() }

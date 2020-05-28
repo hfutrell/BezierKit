@@ -110,7 +110,7 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
             root = value
         }
         if let lastFoundRoot = lastFoundRoot {
-            guard lastFoundRoot < root else {
+            guard lastFoundRoot + 1.0e-5 < root else {
                 return nil // ensures roots are unique and ordered
             }
         }
