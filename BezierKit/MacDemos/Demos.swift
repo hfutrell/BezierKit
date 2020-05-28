@@ -148,7 +148,7 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 for t in stride(from: 0, through: 1, by: 0.1) {
                                     let pt = curve.point(at: CGFloat(t))
-                                    let dv = curve.point(at: CGFloat(t))
+                                    let dv = curve.derivative(at: CGFloat(t))
                                     Draw.drawLine(context, from: pt, to: pt + dv )
                                 }
     })
@@ -163,7 +163,7 @@ class Demos {
                                 let d: CGFloat = 20.0
                                 for t in stride(from: 0, through: 1, by: 0.1) {
                                     let pt = curve.point(at: CGFloat(t))
-                                    let dv = curve.point(at: CGFloat(t))
+                                    let dv = curve.normal(at: CGFloat(t))
                                     Draw.drawLine(context, from: pt, to: pt + d * dv )
                                 }
     })
