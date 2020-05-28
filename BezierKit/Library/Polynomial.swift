@@ -70,6 +70,7 @@ private func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, gues
     var x = guess
     for _ in 0..<maxIterations {
         let f = polynomial.f(x, scratchPad)
+        guard f != 0.0 else { break }
         let fPrime = derivative.f(x, scratchPad)
         let delta = relaxation * f / fPrime
         let previous = x
