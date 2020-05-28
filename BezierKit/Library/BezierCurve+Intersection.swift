@@ -6,7 +6,6 @@
 //  Copyright © 2019 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
 import CoreGraphics
 
 // MARK: - helpers using generics
@@ -27,19 +26,19 @@ public extension BezierCurve {
         return self.selfIntersects(accuracy: BezierKit.defaultIntersectionAccuracy)
     }
     func selfIntersects(accuracy: CGFloat) -> Bool {
-        return !self.selfIntersections(accuracy: BezierKit.defaultIntersectionAccuracy).isEmpty
+        return !self.selfIntersections(accuracy: accuracy).isEmpty
     }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty
     }
     func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool {
-        return !self.intersections(with: curve, accuracy: BezierKit.defaultIntersectionAccuracy).isEmpty
+        return !self.intersections(with: curve, accuracy: accuracy).isEmpty
     }
 }
 
 private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> [Intersection]? {
     func pointIsCloseToCurve<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
-        let (projection, t) = curve.project(point, accuracy: accuracy)
+        let (projection, t) = curve.project(point)
         guard distanceSquared(point, projection) < 4.0 * accuracy * accuracy else { return nil }
         return t
     }
@@ -76,10 +75,10 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
         }
     }
     guard range1End > range1Start, range2End > range2Start else { return nil }
-    let curve1Start = curve1.compute(range1Start)
-    let curve1End   = curve1.compute(range1End)
-    let curve2Start = curve2.compute(range2Start)
-    let curve2End   = curve2.compute(range2End)
+    let curve1Start = curve1.point(at: range1Start)
+    let curve1End   = curve1.point(at: range1End)
+    let curve2Start = curve2.point(at: range2Start)
+    let curve2End   = curve2.point(at: range2End)
     // if curves do not represent entire range, prevent recognition of coincident sections smaller than `accuracy`
     if range1End - range1Start < 1.0, range2End - range2Start < 1.0 {
         guard distanceSquared(curve1Start, curve1End) >= accuracy * accuracy else { return nil }
@@ -102,7 +101,7 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
         let delta = (secondT1 - firstT1) / CGFloat(numberOfPointsToTest+1)
         for i in 1...numberOfPointsToTest {
             let t = firstT1 + delta * CGFloat(i)
-            guard pointIsCloseToCurve(curve1.compute(t), curve2) != nil else { return nil }
+            guard pointIsCloseToCurve(curve1.point(at: t), curve2) != nil else { return nil }
         }
     }
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
@@ -142,7 +141,7 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
         guard t1 >= -smallValue, t1 <= 1.0+smallValue else {
             return
         }
-        let p = curve.compute(t1) - line.p0
+        let p = curve.point(at: t1) - line.p0
         var t2 = p.dot(lineDirection) / lineLength
         guard t2 >= -smallValue, t2 <= 1.0+smallValue else {
             return

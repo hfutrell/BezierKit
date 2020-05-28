@@ -6,11 +6,7 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
-import Foundation
-
-#if os(iOS)
 import CoreGraphics
-#endif
 
 internal extension Array where Element: Comparable {
     func sortedAndUniqued() -> [Element] {
@@ -254,15 +250,15 @@ internal class Utils {
     static func droots(_ p: [CGFloat]) -> [CGFloat] {
         // quadratic roots are easy
         var result: [CGFloat] = []
-        if p.count == 3 {
-            droots(p[0], p[1], p[2]) {
-                result.append($0)
-            }
-        } else if p.count == 2 {
-            droots(p[0], p[1]) {
-                result.append($0)
-            }
-        } else {
+        let callback = { result.append($0) }
+        switch p.count {
+        case 4:
+            droots(p[0], p[1], p[2], p[3], callback: callback)
+        case 3:
+            droots(p[0], p[1], p[2], callback: callback)
+        case 2:
+            droots(p[0], p[1], callback: callback)
+        default:
             fatalError("unsupported")
         }
         return result

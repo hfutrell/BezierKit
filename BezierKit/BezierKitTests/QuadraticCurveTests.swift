@@ -102,6 +102,43 @@ class QuadraticCurveTests: XCTestCase {
 //
 //    func testExtrema() {
 //    }
+
+    func testProject() {
+        let epsilon: CGFloat = 1.0e-5
+        let q = QuadraticCurve(p0: CGPoint(x: 1, y: 1),
+                               p1: CGPoint(x: 2, y: 0),
+                               p2: CGPoint(x: 4, y: 1))
+        let result1 = q.project(CGPoint(x: 2, y: 2))
+        XCTAssertEqual(result1.t, 0)
+        XCTAssertEqual(result1.point, CGPoint(x: 1, y: 1))
+        let result2 = q.project(CGPoint(x: 5, y: 1))
+        XCTAssertEqual(result2.t, 1)
+        XCTAssertEqual(result2.point, CGPoint(x: 4, y: 1))
+        let result3 = q.project(CGPoint(x: 2.25, y: 1))
+        XCTAssertEqual(result3.t, 0.5)
+        XCTAssertEqual(result3.point, CGPoint(x: 2.25, y: 0.5))
+        // test accuracy
+        let t: CGFloat = 0.374858262
+        let expectedPoint = q.point(at: t)
+        let pointToProject = expectedPoint + 0.234 * q.normal(at: t)
+        let result4 = q.project(pointToProject)
+        XCTAssertEqual(result4.t, t, accuracy: epsilon)
+        XCTAssertTrue(distance(result4.point, expectedPoint) < epsilon)
+    }
+
+    func testProjectPerformance() {
+        let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
+                               p1: CGPoint(x: 0, y: 2),
+                               p2: CGPoint(x: 1, y: -1))
+        self.measure {
+            // roughly 0.043 -Onone, 0.022 with -Ospeed
+            // if comparing with cubic performance, be sure to note `by` parameter in stride
+            for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
+                _ = q.project(CGPoint(x: cos(theta), y: sin(theta)))
+            }
+        }
+    }
+
 //
 //    func testHull() {
 //    }
@@ -112,9 +149,9 @@ class QuadraticCurveTests: XCTestCase {
         let a = CGPoint(x: 2, y: 3)
         let b = CGPoint(x: 3, y: 3)
         let quadratic1 = QuadraticCurve(p0: a, p1: a, p2: b)
-        XCTAssertTrue( distance(quadratic1.normal(0), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(quadratic1.normal(at: 0), CGPoint(x: 0, y: 1)) < maxError )
         let quadratic2 = QuadraticCurve(p0: a, p1: b, p2: b)
-        XCTAssertTrue( distance(quadratic2.normal(1), CGPoint(x: 0, y: 1)) < maxError )
+        XCTAssertTrue( distance(quadratic2.normal(at: 1), CGPoint(x: 0, y: 1)) < maxError )
     }
 
     func testReduce() {
@@ -137,8 +174,6 @@ class QuadraticCurveTests: XCTestCase {
 //    func testScaleDistanceFunc {
 //    }
 //
-//    func testProject() {
-//    }
 //
 //
     func testIntersectionsQuadratic() {
@@ -157,10 +192,10 @@ class QuadraticCurveTests: XCTestCase {
         let root2 = 1.0 + sqrt(2) / 2.0
         let expectedResult1 = CGPoint(x: root1, y: 1)
         let expectedResult2 = CGPoint(x: root2, y: 1)
-        XCTAssertTrue( distance(q1.compute(i[0].t1), expectedResult1) < epsilon)
-        XCTAssertTrue( distance(q1.compute(i[1].t1), expectedResult2) < epsilon)
-        XCTAssertTrue( distance(q2.compute(i[0].t2), expectedResult1) < epsilon)
-        XCTAssertTrue( distance(q2.compute(i[1].t2), expectedResult2) < epsilon)
+        XCTAssertTrue( distance(q1.point(at: i[0].t1), expectedResult1) < epsilon)
+        XCTAssertTrue( distance(q1.point(at: i[1].t1), expectedResult2) < epsilon)
+        XCTAssertTrue( distance(q2.point(at: i[0].t2), expectedResult1) < epsilon)
+        XCTAssertTrue( distance(q2.point(at: i[1].t2), expectedResult2) < epsilon)
     }
 
     func testIntersectionsQuadraticMaxIntersections() {
@@ -180,8 +215,8 @@ class QuadraticCurveTests: XCTestCase {
                                CGPoint(x: 1.8090170, y: 0.69098300)]
         XCTAssertEqual(intersections.count, 4)
         for i in 0..<intersections.count {
-            XCTAssertTrue(distance(q1.compute(intersections[i].t1), expectedResults[i]) < epsilon)
-            XCTAssertTrue(distance(q2.compute(intersections[i].t2), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(q1.point(at: intersections[i].t1), expectedResults[i]) < epsilon)
+            XCTAssertTrue(distance(q2.point(at: intersections[i].t2), expectedResults[i]) < epsilon)
         }
     }
 

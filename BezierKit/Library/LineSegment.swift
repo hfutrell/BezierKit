@@ -53,16 +53,16 @@ public struct LineSegment: BezierCurve, Equatable {
         return true
     }
 
-    public func derivative(_ t: CGFloat) -> CGPoint {
+    public func derivative(at t: CGFloat) -> CGPoint {
         return self.p1 - self.p0
     }
 
-    public func normal(_ t: CGFloat) -> CGPoint {
+    public func normal(at t: CGFloat) -> CGPoint {
         return (self.p1 - self.p0).perpendicular.normalize()
     }
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> LineSegment {
-        return LineSegment(p0: self.compute(t1), p1: self.compute(t2))
+        return LineSegment(p0: self.point(at: t1), p1: self.point(at: t2))
     }
 
     public func split(at t: CGFloat) -> (left: LineSegment, right: LineSegment) {
@@ -80,7 +80,7 @@ public struct LineSegment: BezierCurve, Equatable {
         return BoundingBox(min: CGPoint.min(p0, p1), max: CGPoint.max(p0, p1))
     }
 
-    public func compute(_ t: CGFloat) -> CGPoint {
+    public func point(at t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         } else if t == 1 {
@@ -106,11 +106,7 @@ public struct LineSegment: BezierCurve, Equatable {
         let relativePoint    = point - self.p0
         let delta            = self.p1 - self.p0
         let t                = Utils.clamp(relativePoint.dot(delta) / delta.dot(delta), 0.0, 1.0)
-        return (point: self.compute(t), t: t)
-    }
-
-    public func project(_ point: CGPoint, accuracy: CGFloat) -> (point: CGPoint, t: CGFloat) {
-        return self.project(point)
+        return (point: self.point(at: t), t: t)
     }
 }
 

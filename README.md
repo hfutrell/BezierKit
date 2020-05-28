@@ -45,7 +45,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.6.2'
+    pod 'BezierKit', '>= 0.6.3'
 end
 ```
 
@@ -80,7 +80,7 @@ let curve = CubicCurve(
 
 ### Intersecting Curves
 
-The `intersections(with curve: BezierCurve) -> [Intersection]` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `compute(_:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
+The `intersections(with curve: BezierCurve) -> [Intersection]` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `ponit(at:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
 
 Cubic curves may self-intersect which can be determined by calling the `selfIntersections()` method.
 
@@ -88,7 +88,7 @@ Cubic curves may self-intersect which can be determined by calling the `selfInte
 
 ```swift
 let intersections: [Intersection] = curve1.intersections(with: curve2)
-let points: [CGPoint] = intersections.map { curve1.compute($0.t1) }
+let points: [CGPoint] = intersections.map { curve1.point(at: $0.t1) }
 
 Draw.drawCurve(context, curve: curve1)
 Draw.drawCurve(context, curve: curve2)
@@ -110,8 +110,8 @@ Draw.drawCurve(context, curve: curve)
 let subcurve = curve.split(from: 0.25, to: 0.75) // or try (leftCurve, rightCurve) = curve.split(at:)
 Draw.setColor(context, color: Draw.red)
 Draw.drawCurve(context, curve: subcurve)
-Draw.drawCircle(context, center: curve.compute(0.25), radius: 3)
-Draw.drawCircle(context, center: curve.compute(0.75), radius: 3)
+Draw.drawCircle(context, center: curve.point(at: 0.25), radius: 3)
+Draw.drawCircle(context, center: curve.point(at: 0.75), radius: 3)
 ```
 
 ### Determining Bounding Boxes

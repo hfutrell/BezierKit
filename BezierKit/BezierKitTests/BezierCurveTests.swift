@@ -134,47 +134,14 @@ class BezierCurveTests: XCTestCase {
         XCTAssert(distance(p2, CGPoint(x: 4.0, y: 2.0)) < epsilon)
     }
 
-    func testProject() {
-        // line segments override the project implementation, so test them specifically
-        let epsilon: CGFloat = 2.0e-4
-        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-        let p1 = l.project(CGPoint(x: 0.0, y: 0.0)) // should project to p0
-        XCTAssertEqual(p1.point, CGPoint(x: 1.0, y: 2.0))
-        XCTAssertEqual(p1.t, 0.0)
-        let p2 = l.project(CGPoint(x: 1.0, y: 4.0), accuracy: epsilon) // should project to l.compute(0.25)
-        XCTAssertEqual(p2.point, CGPoint(x: 2.0, y: 3.0))
-        XCTAssertEqual(p2.t, 0.25)
-        let p3 = l.project(CGPoint(x: 6.0, y: 7.0))
-        XCTAssertEqual(p3.point, CGPoint(x: 5.0, y: 6.0)) // should project to p1
-        XCTAssertEqual(p3.t, 1.0)
-        // test a cubic
-        let c = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 5.0, y: 1.0))
-        let p4 = c.project(CGPoint(x: 0.95, y: 1.05)) // should project to p0
-        XCTAssertEqual(p4.point, CGPoint(x: 1.0, y: 1.0))
-        XCTAssertEqual(p4.t, 0.0)
-        let p5 = c.project(CGPoint(x: 5.05, y: 1.05)) // should project to p3
-        XCTAssertEqual(p5.point, CGPoint(x: 5.0, y: 1.0))
-        XCTAssertEqual(p5.t, 1.0)
-        let p6 = c.project(CGPoint(x: 3.0, y: 2.0)) // should project to center of curve
-        XCTAssertEqual(p6.point, CGPoint(x: 3.0, y: 1.75))
-        XCTAssertEqual(p6.t, 0.5)
-
-        let t: CGFloat = 0.831211
-        let pointToProject = c.compute(t) + c.normal(t)
-        let expectedAnswer = c.compute(t)
-        let p7 = c.project(pointToProject, accuracy: epsilon) // should project back to (roughly) c.compute(0.831211)
-        XCTAssert(distance(p7.point, expectedAnswer) < epsilon)
-        XCTAssert(abs(p7.t - t) < epsilon)
-    }
-
     static let lineSegmentForOutlining = LineSegment(p0: CGPoint(x: -10, y: -5), p1: CGPoint(x: 20, y: 10))
 
     // swiftlint:disable large_tuple
     private func lineOffsets(_ lineSegment: LineSegment, _ d1: CGFloat, _ d2: CGFloat, _ d3: CGFloat, _ d4: CGFloat) -> (CGPoint, CGPoint, CGPoint, CGPoint) {
-        let o0 = lineSegment.startingPoint + d1 * lineSegment.normal(0)
-        let o1 = lineSegment.endingPoint + d3 * lineSegment.normal(1)
-        let o2 = lineSegment.endingPoint - d4 * lineSegment.normal(1)
-        let o3 = lineSegment.startingPoint - d2 * lineSegment.normal(0)
+        let o0 = lineSegment.startingPoint + d1 * lineSegment.normal(at: 0)
+        let o1 = lineSegment.endingPoint + d3 * lineSegment.normal(at: 1)
+        let o2 = lineSegment.endingPoint - d4 * lineSegment.normal(at: 1)
+        let o3 = lineSegment.startingPoint - d2 * lineSegment.normal(at: 0)
         return (o0, o1, o2, o3)
     }
     // swiftlint:enable large_tuple
@@ -183,7 +150,7 @@ class BezierCurveTests: XCTestCase {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let outline: PathComponent = lineSegment.outline(distance: 1)
-        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssertEqual(outline.numberOfElements, 4)
 
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
 
@@ -199,12 +166,12 @@ class BezierCurveTests: XCTestCase {
         let distanceAlongNormal: CGFloat = 1
         let distanceOppositeNormal: CGFloat = 2
         let outline: PathComponent = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
-        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssertEqual(outline.numberOfElements, 4)
 
-        let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(0)
-        let o1 = lineSegment.endingPoint + distanceAlongNormal * lineSegment.normal(1)
-        let o2 = lineSegment.endingPoint - distanceOppositeNormal * lineSegment.normal(1)
-        let o3 = lineSegment.startingPoint - distanceOppositeNormal * lineSegment.normal(0)
+        let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(at: 0)
+        let o1 = lineSegment.endingPoint + distanceAlongNormal * lineSegment.normal(at: 1)
+        let o2 = lineSegment.endingPoint - distanceOppositeNormal * lineSegment.normal(at: 1)
+        let o3 = lineSegment.startingPoint - distanceOppositeNormal * lineSegment.normal(at: 0)
 
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: LineSegment(p0: o3, p1: o0)))
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: LineSegment(p0: o0, p1: o1)))
@@ -223,7 +190,7 @@ class BezierCurveTests: XCTestCase {
         let expectedSegment3 = LineSegment(p0: CGPoint(x: 10, y: 1), p1: CGPoint(x: 10, y: -1))
         let expectedSegment4 = LineSegment(p0: CGPoint(x: 10, y: -1), p1: CGPoint(x: 0, y: -1))
 
-        XCTAssertEqual(outline.elementCount, 4)
+        XCTAssertEqual(outline.numberOfElements, 4)
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 0), matchesCurve: expectedSegment1 ))
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 1), matchesCurve: expectedSegment2 ))
         XCTAssert( BezierKitTestHelpers.curve(outline.element(at: 2), matchesCurve: expectedSegment3 ))
@@ -278,6 +245,6 @@ class BezierCurveTests: XCTestCase {
                                      p3: CGPoint(x: 1.0, y: 0.0))
         let i = curve.selfIntersections(accuracy: epsilon)
         XCTAssertEqual(i.count, 1, "wrong number of intersections!")
-        XCTAssert( distance(curve.compute(i[0].t1), curve.compute(i[0].t2)) < epsilon, "wrong or inaccurate intersection!" )
+        XCTAssert( distance(curve.point(at: i[0].t1), curve.point(at: i[0].t2)) < epsilon, "wrong or inaccurate intersection!" )
     }
 }

@@ -14,7 +14,7 @@ private func xIntercept<A: BezierCurve>(curve: A, y: CGFloat) -> CGFloat {
     guard y != curve.startingPoint.y else { return curve.startingPoint.x }
     guard y != curve.endingPoint.y else { return curve.endingPoint.x }
     let linearSolutionT = ( y - startingPoint.y ) / ( endingPoint.y - startingPoint.y )
-    let linearSolution = LineSegment(p0: startingPoint, p1: endingPoint).compute(linearSolutionT).x
+    let linearSolution = LineSegment(p0: startingPoint, p1: endingPoint).point(at: linearSolutionT).x
     var solution: CGFloat?
     func callback(_ root: CGFloat) {
         guard root >= 0.0, root <= 1.0 else { return }
@@ -29,7 +29,7 @@ private func xIntercept<A: BezierCurve>(curve: A, y: CGFloat) -> CGFloat {
         break
     }
     if let solution = solution {
-        return curve.compute(CGFloat(solution)).x
+        return curve.point(at: CGFloat(solution)).x
     }
     return linearSolution
 }

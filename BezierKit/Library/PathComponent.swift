@@ -12,23 +12,23 @@ import Foundation
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
 
     private let offsets: [Int]
-    public var points: [CGPoint]
+    public let points: [CGPoint]
     public let orders: [Int]
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
     public var curves: [BezierCurve] { // in most cases use element(at:)
-        return (0..<elementCount).map {
+        return (0..<self.numberOfElements).map {
             self.element(at: $0)
         }
     }
 
-    private lazy var _bvh: BoundingBoxHierarchy = BoundingBoxHierarchy(boxes: (0..<self.elementCount).map { self.element(at: $0).boundingBox })
+    private lazy var _bvh: BoundingBoxHierarchy = BoundingBoxHierarchy(boxes: (0..<self.numberOfElements).map { self.element(at: $0).boundingBox })
 
     internal var bvh: BoundingBoxHierarchy {
         return self.lock.sync { self._bvh }
     }
-    public var elementCount: Int {
+    public var numberOfElements: Int {
         return self.orders.count
     }
 
@@ -45,7 +45,7 @@ import Foundation
     }
 
     public var endingIndexedLocation: IndexedPathComponentLocation {
-        return IndexedPathComponentLocation(elementIndex: self.elementCount-1, t: 1.0)
+        return IndexedPathComponentLocation(elementIndex: self.numberOfElements-1, t: 1.0)
     }
 
     /// if the path component represents a single point
@@ -54,7 +54,7 @@ import Foundation
     }
 
     public func element(at index: Int) -> BezierCurve {
-        assert(index >= 0 && index < self.elementCount)
+        assert(index >= 0 && index < self.numberOfElements)
         let order = self.orders[index]
         if order == 3 {
             return cubic(at: index)
@@ -108,10 +108,10 @@ import Foundation
 
     internal func appendPath(to mutablePath: CGMutablePath) {
         mutablePath.move(to: self.startingPoint)
-        for i in 0..<self.elementCount {
+        for i in 0..<self.numberOfElements {
             let order = orders[i]
             let offset = offsets[i]
-            if i == self.elementCount-1, self.isClosed, order == 1 {
+            if i == self.numberOfElements-1, self.isClosed, order == 1 {
                 // special case: if the path ends in a line segment that goes back to the start just emit a closepath
                 mutablePath.closeSubpath()
                 break
@@ -210,7 +210,7 @@ import Foundation
         return PathComponent(curves: offsetCurves)
     }
 
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
         var found = false
         self.bvh.visit { node, _ in
             let boundingBox = node.boundingBox
@@ -218,7 +218,7 @@ import Foundation
                 found = true
             } else if case let .leaf(elementIndex) = node.type {
                 let curve = self.element(at: elementIndex)
-                if distance(p, curve.project(p, accuracy: accuracy).point) < d {
+                if distance(p, curve.project(p).point) < d {
                     found = true
                 }
             }
@@ -325,7 +325,7 @@ import Foundation
                 }
             } else if i1 < i2 {
                 // we are intersecting two distinct path elements
-                let areNeighbors = (i1 == i2-1) || (isClosed && i1 == 0 && i2 == self.elementCount-1)
+                let areNeighbors = (i1 == i2-1) || (isClosed && i1 == 0 && i2 == self.numberOfElements-1)
                 if areNeighbors, neighborsIntersectOnlyTrivially(i1, i2) {
                     // optimize the very common case of element i intersecting i+1 at its endpoint
                     elementIntersections = []
@@ -334,7 +334,7 @@ import Foundation
                         if i1 == i2-1, $0.t1 == 1.0, $0.t2 == 0.0 {
                             return false // exclude intersections of i and i+1 at t=1
                         }
-                        if i1 == 0, i2 == self.elementCount-1, $0.t1 == 0.0, $0.t2 == 1.0 {
+                        if i1 == 0, i2 == self.numberOfElements-1, $0.t1 == 0.0, $0.t2 == 1.0 {
                             assert(self.isClosed) // how else can that happen?
                             return false // exclude intersections of endpoint and startpoint
                         }
@@ -371,7 +371,7 @@ import Foundation
     // MARK: -
 
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
-        return self.element(at: location.elementIndex).compute(location.t)
+        return self.element(at: location.elementIndex).point(at: location.t)
     }
 
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
