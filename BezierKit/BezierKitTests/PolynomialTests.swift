@@ -49,7 +49,7 @@ class PolynomialTests: XCTestCase {
         let polynomial: [Double] = [-3, 2]
         let roots = findRoots(of: polynomial, between: -1, and: 1, scratchPad: scratchPad)
         XCTAssertEqual(roots.count, 1)
-        XCTAssertEqual(roots[0], 0.6)
+        XCTAssertEqual(roots[0], 0.6, accuracy: accuracy)
     }
 
     func testDegree2() {
