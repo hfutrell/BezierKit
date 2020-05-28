@@ -16,17 +16,40 @@ class PolynomialTests: XCTestCase {
     func testEvaluation() {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
         defer { scratchPad.deallocate() }
+
+        XCTAssertEqual([].f(0, scratchPad), 0)
+        XCTAssertEqual([].derivative, [])
+        XCTAssertEqual([].analyticalRoots(between: 0, and: 1), [])
+
+        let point = [3.0]
+        XCTAssertEqual(point.f(0, scratchPad), 3)
+        XCTAssertEqual(point.f(0.5, scratchPad), 3)
+        XCTAssertEqual(point.f(1, scratchPad), 3)
+        XCTAssertEqual(point.derivative, [])
+        XCTAssertEqual(point.analyticalRoots(between: 0, and: 1), [])
+
         let line = [2.0, 4.0]
         XCTAssertEqual(line.f(0, scratchPad), 2)
         XCTAssertEqual(line.f(0.5, scratchPad), 3)
         XCTAssertEqual(line.f(1, scratchPad), 4)
         XCTAssertEqual(line.derivative, [2])
+        XCTAssertEqual(line.analyticalRoots(between: -2, and: 1), [-1])
+        XCTAssertEqual(line.analyticalRoots(between: 0, and: 1), [])
 
         let quad = [-1, 1.0, 0.0]
         XCTAssertEqual(quad.f(0, scratchPad), -1)
         XCTAssertEqual(quad.f(0.5, scratchPad), 0.25)
         XCTAssertEqual(quad.f(1, scratchPad), 0)
         XCTAssertEqual(quad.derivative, [4, -2])
+    }
+
+    func testDegree1() {
+        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 2)
+        defer { scratchPad.deallocate() }
+        let polynomial: [Double] = [-3, 2]
+        let roots = findRoots(of: polynomial, between: -1, and: 1, scratchPad: scratchPad)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], 0.6)
     }
 
     func testDegree2() {
@@ -78,6 +101,7 @@ class PolynomialTests: XCTestCase {
         // 0.2x^5 - 0.813333x^3 - 8.56x
         let polynomial = [0, -1.712, -3.424, -5.2173333, -7.1733332, -9.173333]
         let roots = findRoots(of: polynomial, between: -4, and: 4, scratchPad: scratchPad)
+        XCTAssertEqual(polynomial.analyticalRoots(between: -5, and: 5), nil, "shouldn't be possible to solve analytically")
         XCTAssertEqual(roots[0], -2.9806382, accuracy: accuracy)
         XCTAssertEqual(roots[1], 0, accuracy: accuracy)
         XCTAssertEqual(roots[2], 2.9806382, accuracy: accuracy)

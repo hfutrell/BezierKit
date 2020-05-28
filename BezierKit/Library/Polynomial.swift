@@ -21,23 +21,24 @@ extension Array: Polynomial where Element == Double {
     var order: Int { return self.count - 1 }
     func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
         assert(scratchPad.count >= self.count, "scratchpad will fail here.")
+        let count = self.count
+        guard count > 0 else { return 0 }
         let oneMinusX = 1.0 - x
         self.withUnsafeBufferPointer { (points: UnsafeBufferPointer<Double>) in
             var i = 0
-            let count = points.count
             while i < count {
                 scratchPad[i] = points[i]
                 i += 1
             }
-            i = points.count - 1
-            repeat {
+            i = count - 1
+            while i > 0 {
                 var j = 0
                 repeat {
                     scratchPad[j] = oneMinusX * scratchPad[j] + x * scratchPad[j+1]
                     j += 1
                 } while j < i
                 i -= 1
-            } while i > 0
+            }
         }
         return scratchPad[0]
     }
@@ -96,17 +97,22 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
         if fStart * fEnd < 0 {
             let mid = (start + end ) / 2
             root = newton(polynomial: polynomial, derivative: derivative, guess: mid, scratchPad: scratchPad)
+            guard start < root, root < end else { return nil }
         } else {
-            #warning("return nil here and the tests still pass ... is it really needed?")
-            let value = newton(polynomial: polynomial, derivative: derivative, guess: end, scratchPad: scratchPad)
+            let guess = end
+            let value = newton(polynomial: polynomial, derivative: derivative, guess: guess, scratchPad: scratchPad)
+            guard abs(value - guess) < 1.0e-5 else {
+                return nil // did not converge near guess
+            }
             guard abs(polynomial.f(value, scratchPad)) < 1.0e-10 else {
                 return nil // not actually a root
             }
             root = value
         }
-        guard start < root, root < end else { return nil }
-        if let lastFoundRoot = lastFoundRoot, lastFoundRoot >= root {
-            return nil // ensures roots are unique and ordered
+        if let lastFoundRoot = lastFoundRoot {
+            guard lastFoundRoot < root else {
+                return nil // ensures roots are unique and ordered
+            }
         }
         lastFoundRoot = root
         return root
