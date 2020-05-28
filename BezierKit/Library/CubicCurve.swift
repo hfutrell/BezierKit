@@ -203,6 +203,54 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
 
     }
 
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
+        func mul(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
+            return CGPoint(x: a.x * b.x, y: a.y * b.y)
+        }
+        let c = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        let q = QuadraticCurve(p0: self.p1 - self.p0, p1: self.p2 - self.p1, p2: self.p3 - self.p2)
+        // p0, p1, p2, p3 form the control points of a Cubic Bezier Curve formed
+        // by multiplying the polynomials q and l
+        let p0 = mul(c.p0, q.p0)
+        let p1 = p0 + 0.2 * (2 * mul(c.p0, q.p1 - q.p0) + 3 * mul(c.p1 - c.p0, q.p0))
+        let dd0 = 6 * mul(c.p2 - 2 * c.p1 + c.p0, q.p0) + 12 * mul(c.p1 - c.p0, q.p1 - q.p0) + 2 * mul(c.p0, q.p2 - 2 * q.p1 + q.p0)
+        let p2 = 2 * p1 - p0 + 0.05 * dd0
+        //
+        let p5 = mul(c.p3, q.p2)
+        let p4 = p5 - 0.2 * (2 * mul(c.p3, q.p2 - q.p1) + 3 * mul(c.p3 - c.p2, q.p2))
+        let dd1 = 6 * mul(c.p1 - 2 * c.p2 + c.p3, q.p2) + 12 * mul(c.p3 - c.p2, q.p2 - q.p1) + 2 * mul(c.p3, q.p2 - 2 * q.p1 + q.p0)
+        let p3 = 2 * p4 - p5 + 0.05 * dd1
+
+        let lengthSquaredStart  = c.p0.lengthSquared
+        let lengthSquaredEnd    = c.p3.lengthSquared
+        var minimumT: CGFloat = 0.0
+        var minimumDistanceSquared = lengthSquaredStart
+        if lengthSquaredEnd < lengthSquaredStart {
+            minimumT = 1.0
+            minimumDistanceSquared = lengthSquaredEnd
+        }
+        // the roots represent the values at which the curve and its derivative are perpendicular
+        // ie, the dot product of q and l is equal to zero
+        let points: [Double] = [p0.x + p0.y,
+                                p1.x + p1.y,
+                                p2.x + p2.y,
+                                p3.x + p3.y,
+                                p4.x + p4.y,
+                                p5.x + p5.y].map { Double($0) }
+        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: points.count)
+        for t in findRoots(of: points, between: 0, and: 1, scratchPad: scratchPad) {
+            guard t > 0.0, t < 1.0 else { break }
+            let point = c.point(at: CGFloat(t))
+            let distanceSquared = point.lengthSquared
+            if distanceSquared < minimumDistanceSquared {
+                minimumDistanceSquared = distanceSquared
+                minimumT = CGFloat(t)
+            }
+        }
+        scratchPad.deallocate()
+        return (point: self.point(at: minimumT), t: minimumT)
+    }
+
     public var boundingBox: BoundingBox {
 
         let p0: CGPoint = self.p0

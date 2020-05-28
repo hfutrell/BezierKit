@@ -134,39 +134,6 @@ class BezierCurveTests: XCTestCase {
         XCTAssert(distance(p2, CGPoint(x: 4.0, y: 2.0)) < epsilon)
     }
 
-    func testProject() {
-        // line segments override the project implementation, so test them specifically
-        let epsilon: CGFloat = 2.0e-4
-        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-        let p1 = l.project(CGPoint(x: 0.0, y: 0.0)) // should project to p0
-        XCTAssertEqual(p1.point, CGPoint(x: 1.0, y: 2.0))
-        XCTAssertEqual(p1.t, 0.0)
-        let p2 = l.project(CGPoint(x: 1.0, y: 4.0), accuracy: epsilon) // should project to l.compute(0.25)
-        XCTAssertEqual(p2.point, CGPoint(x: 2.0, y: 3.0))
-        XCTAssertEqual(p2.t, 0.25)
-        let p3 = l.project(CGPoint(x: 6.0, y: 7.0))
-        XCTAssertEqual(p3.point, CGPoint(x: 5.0, y: 6.0)) // should project to p1
-        XCTAssertEqual(p3.t, 1.0)
-        // test a cubic
-        let c = CubicCurve(p0: CGPoint(x: 1.0, y: 1.0), p1: CGPoint(x: 2.0, y: 2.0), p2: CGPoint(x: 4.0, y: 2.0), p3: CGPoint(x: 5.0, y: 1.0))
-        let p4 = c.project(CGPoint(x: 0.95, y: 1.05)) // should project to p0
-        XCTAssertEqual(p4.point, CGPoint(x: 1.0, y: 1.0))
-        XCTAssertEqual(p4.t, 0.0)
-        let p5 = c.project(CGPoint(x: 5.05, y: 1.05)) // should project to p3
-        XCTAssertEqual(p5.point, CGPoint(x: 5.0, y: 1.0))
-        XCTAssertEqual(p5.t, 1.0)
-        let p6 = c.project(CGPoint(x: 3.0, y: 2.0)) // should project to center of curve
-        XCTAssertEqual(p6.point, CGPoint(x: 3.0, y: 1.75))
-        XCTAssertEqual(p6.t, 0.5)
-
-        let t: CGFloat = 0.831211
-        let pointToProject = c.point(at: t) + c.normal(at: t)
-        let expectedAnswer = c.point(at: t)
-        let p7 = c.project(pointToProject, accuracy: epsilon) // should project back to (roughly) c.compute(0.831211)
-        XCTAssert(distance(p7.point, expectedAnswer) < epsilon)
-        XCTAssert(abs(p7.t - t) < epsilon)
-    }
-
     static let lineSegmentForOutlining = LineSegment(p0: CGPoint(x: -10, y: -5), p1: CGPoint(x: 20, y: 10))
 
     // swiftlint:disable large_tuple

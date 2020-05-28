@@ -128,6 +128,41 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return (left: leftCurve, right: rightCurve)
     }
 
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
+        func multiplyCoordinates(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
+            return CGPoint(x: a.x * b.x, y: a.y * b.y)
+        }
+        let q = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        // p0, p1, p2, p3 form the control points of a cubic Bezier curve
+        // created by multiplying the curve with its derivative
+        let qd0 = q.p1 - q.p0
+        let qd1 = q.p2 - q.p1
+        let p0 = 3 * multiplyCoordinates(q.p0, qd0)
+        let p1 = multiplyCoordinates(q.p0, qd1) + 2 * multiplyCoordinates(q.p1, qd0)
+        let p2 = multiplyCoordinates(q.p2, qd0) + 2 * multiplyCoordinates(q.p1, qd1)
+        let p3 = 3 * multiplyCoordinates(q.p2, qd1)
+        let lengthSquaredStart  = q.startingPoint.lengthSquared
+        let lengthSquaredEnd    = q.endingPoint.lengthSquared
+        var minimumT: CGFloat = 0.0
+        var minimumDistanceSquared = lengthSquaredStart
+        if lengthSquaredEnd < lengthSquaredStart {
+            minimumT = 1.0
+            minimumDistanceSquared = lengthSquaredEnd
+        }
+        // the roots represent the values at which the curve and its derivative are perpendicular
+        // ie, the dot product of q and l is equal to zero
+        Utils.droots(p0.x + p0.y, p1.x + p1.y, p2.x + p2.y, p3.x + p3.y) { (t: CGFloat) in
+            guard t > 0.0, t < 1.0 else { return }
+            let point = q.point(at: t)
+            let distanceSquared = point.lengthSquared
+            if distanceSquared < minimumDistanceSquared {
+                minimumDistanceSquared = distanceSquared
+                minimumT = t
+            }
+        }
+        return (point: self.point(at: minimumT), t: minimumT)
+    }
+
     public var boundingBox: BoundingBox {
 
         let p0: CGPoint = self.p0

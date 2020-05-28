@@ -95,7 +95,7 @@ class Demos {
                             drawFunction: {(context: CGContext, demoState: DemoState) in
 
                                 let curve = demoState.curve!
-                                let points = stride(from: 0, through: 1, by: 1.0 / 7.0).map { curve.compute($0) }
+                                let points = stride(from: 0, through: 1, by: 1.0 / 7.0).map { curve.point(at: $0) }
 
                                 Draw.drawSkeleton(context, curve: curve)
                                 let LUT = curve.lookupTable(steps: 16)
@@ -119,7 +119,7 @@ class Demos {
                                     Draw.drawCurve(context, curve: c)
                                     if idx == last {
                                         let p1 = curve.offset(t: 0.95, distance: -15)
-                                        let p2 = c.compute(1)
+                                        let p2 = c.point(at: 1)
                                         let p3 = curve.offset(t: 0.95, distance: -5)
                                         Draw.drawLine(context, from: p1, to: p2)
                                         Draw.drawLine(context, from: p2, to: p3)
@@ -136,7 +136,7 @@ class Demos {
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
-                                Draw.drawPoint(context, origin: curve.compute(0.5))
+                                Draw.drawPoint(context, origin: curve.point(at: 0.5))
     })
     static let demo6 = Demo(title: ".derivative(t)",
                             quadraticControlPoints: quadraticControlPoints,
@@ -147,8 +147,8 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
                                 for t in stride(from: 0, through: 1, by: 0.1) {
-                                    let pt = curve.compute(CGFloat(t))
-                                    let dv = curve.derivative(CGFloat(t))
+                                    let pt = curve.point(at: CGFloat(t))
+                                    let dv = curve.point(at: CGFloat(t))
                                     Draw.drawLine(context, from: pt, to: pt + dv )
                                 }
     })
@@ -162,8 +162,8 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 let d: CGFloat = 20.0
                                 for t in stride(from: 0, through: 1, by: 0.1) {
-                                    let pt = curve.compute(CGFloat(t))
-                                    let dv = curve.normal(CGFloat(t))
+                                    let pt = curve.point(at: CGFloat(t))
+                                    let dv = curve.point(at: CGFloat(t))
                                     Draw.drawLine(context, from: pt, to: pt + d * dv )
                                 }
     })
@@ -178,8 +178,8 @@ class Demos {
                                 let c = curve.split(from: 0.25, to: 0.75)
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawCurve(context, curve: c)
-                                Draw.drawCircle(context, center: curve.compute(0.25), radius: 3)
-                                Draw.drawCircle(context, center: curve.compute(0.75), radius: 3)
+                                Draw.drawCircle(context, center: curve.point(at: 0.25), radius: 3)
+                                Draw.drawCircle(context, center: curve.point(at: 0.75), radius: 3)
     })
     static let demo9 = Demo(title: ".extrema()",
                             quadraticControlPoints: quadraticControlPoints,
@@ -190,7 +190,7 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
                                 for t in curve.extrema().all {
-                                    Draw.drawCircle(context, center: curve.compute(t), radius: 3)
+                                    Draw.drawCircle(context, center: curve.point(at: t), radius: 3)
                                 }
     })
     static let demo10 = Demo(title: ".bbox()",
@@ -338,7 +338,7 @@ class Demos {
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
                                 for intersection in curve.selfIntersections() {
-                                    Draw.drawPoint(context, origin: curve.compute(intersection.t1))
+                                    Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
                                 }
                                 if demoState.quadratic {
                                     Draw.drawText(context,
@@ -360,7 +360,7 @@ class Demos {
                                 Draw.drawLine(context, from: line.p0, to: line.p1)
                                 Draw.setColor(context, color: Draw.black)
                                 for intersection in curve.intersections(with: line) {
-                                    Draw.drawPoint(context, origin: curve.compute(intersection.t1))
+                                    Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
                                 }
     })
     static let demo20 = Demo(title: ".intersections(with curve: BezierCurve)",
@@ -375,7 +375,7 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve2)
                                 Draw.setColor(context, color: Draw.black)
                                 for intersection in curve.intersections(with: curve2) {
-                                    Draw.drawPoint(context, origin: curve.compute(intersection.t1))
+                                    Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
                                 }
     })
     static let demo21 = Demo(title: "CGPath interoperability",
