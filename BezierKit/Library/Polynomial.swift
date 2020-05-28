@@ -65,7 +65,7 @@ extension Array: Polynomial where Element == Double {
     }
 }
 
-func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Double, relaxation: Double = 1, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+private func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Double, relaxation: Double = 1, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
