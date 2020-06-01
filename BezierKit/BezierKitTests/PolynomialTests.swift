@@ -117,4 +117,14 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 0, accuracy: accuracy)
         XCTAssertEqual(roots[2], 2.9806382, accuracy: accuracy)
     }
+
+    func testDegree4RealWorldIssue() {
+        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
+        defer { scratchPad.deallocate() }
+        let polynomial = [1819945.4373168945, -3353335.8194732666, 3712712.6330566406, -2836657.1703338623, 2483314.5947265625]
+        let roots = findRoots(of: polynomial, between: 0, and: 1, scratchPad: scratchPad)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.15977874432923783, accuracy: 1.0e-5)
+        XCTAssertEqual(roots[1], 0.407811682610126, accuracy: 1.0e-5)
+    }
 }
