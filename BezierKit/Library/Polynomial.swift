@@ -87,6 +87,8 @@ private func findRootBisection<P: Polynomial>(of polynomial: P, start: Double, e
     let lowSign = polynomial.f(low, scratchPad).sign
     let highSign = polynomial.f(high, scratchPad).sign
     assert(lowSign != highSign)
+    let maxIterations = 20
+    var iterations = 0
     while high - low > 1.0e-5 {
         let midGuess = (low + high) / 2
         guess = midGuess
@@ -99,6 +101,8 @@ private func findRootBisection<P: Polynomial>(of polynomial: P, start: Double, e
             assert(nextGuessF.sign == highSign)
             high = guess
         }
+        iterations += 1
+        guard iterations < maxIterations else { break }
     }
     return guess
 }
