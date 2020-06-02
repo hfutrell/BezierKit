@@ -56,7 +56,7 @@ extension Array: Polynomial where Element == Double {
     func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
         guard order > 0 else { return [] }
-        guard order < 4 else { return nil } // cannot solve
+        guard order < 2 else { return nil } // cannot solve
         return Utils.droots(self.map { CGFloat($0) }).compactMap {
             let t = Double($0)
             guard t > start, t < end else { return nil }
@@ -125,13 +125,16 @@ func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: 
         if fStart * fEnd < 0 {
             // TODO: if a critical point is a root we take this
             // codepath due to roundoff and  converge only linearly to one end of interval
-            let guess = (start + end) / 2
+            var guess = start - fEnd * (end - start) / (fEnd - fStart)
+            if guess < start || guess < end {
+                guess = start + (end - start) / 2
+            }
             let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess, scratchPad: scratchPad)
             if start < newtonRoot, newtonRoot < end {
                 root = newtonRoot
             } else {
                 // newton's method failed / converged to the wrong root!
-                // rare, but can happen roughly 5% of the time
+                // rare, but can happen roughly 2% of the time
                 // see unit test: `testDegree4RealWorldIssue`
                 root = findRootBisection(of: polynomial, start: start, end: end, scratchPad: scratchPad)
             }
