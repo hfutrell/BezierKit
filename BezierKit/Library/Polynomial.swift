@@ -61,7 +61,7 @@ extension Array: Polynomial where Element == Double {
             let t = Double($0)
             guard t > start, t < end else { return nil }
             return t
-        }.sortedAndUniqued()
+        }
     }
 }
 
