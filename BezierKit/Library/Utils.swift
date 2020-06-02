@@ -188,7 +188,6 @@ internal class Utils {
         let q = (2 * a * a * a - 9 * a * b + 27 * c) / 27
         let q2 = q/2
         let discriminant = q2 * q2 + p * p * p / 27
-        /* TODO: callback isn't ORDERED */
         if discriminant < -smallValue {
             let r = sqrt(-p * p * p / 27)
             let t = -q / (2 * r)
@@ -196,9 +195,13 @@ internal class Utils {
             let phi = acos(cosphi)
             let crtr = crt(r)
             let t1 = 2 * crtr
-            callback(CGFloat(t1 * cos(phi / 3) - a / 3))
-            callback(CGFloat(t1 * cos((phi + tau) / 3) - a / 3))
-            callback(CGFloat(t1 * cos((phi + 2 * tau) / 3) - a / 3))
+            let root1 = CGFloat(t1 * cos((phi + tau) / 3) - a / 3)
+            let root2 = CGFloat(t1 * cos((phi + 2 * tau) / 3) - a / 3)
+            let root3 = CGFloat(t1 * cos(phi / 3) - a / 3)
+            assert(root1 < root2 && root2 < root3)
+            callback(root1)
+            callback(root2)
+            callback(root3)
         } else if discriminant > smallValue {
             let sd = sqrt(discriminant)
             let u1 = crt(-q2 + sd)
@@ -206,8 +209,17 @@ internal class Utils {
             callback(CGFloat(u1 - v1 - a / 3))
         } else if discriminant.isNaN == false {
             let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
-            callback(CGFloat(2 * u1 - a / 3))
-            callback(CGFloat(-u1 - a / 3))
+            let root1 = CGFloat(2 * u1 - a / 3)
+            let root2 = CGFloat(-u1 - a / 3)
+            if root1 < root2 {
+                callback(root1)
+                callback(root2)
+            } else if root1 > root2 {
+                callback(root2)
+                callback(root1)
+            } else {
+                callback(root1)
+            }
         }
     }
 
