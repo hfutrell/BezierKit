@@ -40,7 +40,7 @@ class UtilsTests: XCTestCase {
         return roots
     }
 
-    func testDrootsCubicWorldIssue() {
+    func testDrootsCubicWorldIssue1() {
         var points: [CGPoint] = [
             CGPoint(x: 523.4257521858988, y: 691.8949684622992),
             CGPoint(x: 523.1393916834338, y: 691.8714265856051),
@@ -53,6 +53,21 @@ class UtilsTests: XCTestCase {
         let filtered = r.filter { $0 >= 0 && $0 <= 1 }
         XCTAssertEqual(filtered.count, 1)
         XCTAssertEqual(filtered.first!, CGFloat(0.1499651773565319), accuracy: 1.0e-3)
+    }
+
+    func testDrootsCubicWorldIssue2() {
+        // this data is actually very close to a quadratic. It may get the wrong
+        // answer is if is recognized as a cubic
+        let points: [CGFloat] = [
+            0.0000010000090924222604,
+            0.0000013261883395898622,
+            -0.1484297874302456,
+            -0.44529201466082213
+        ]
+        let r = drootsCubicTestHelper(points[0], points[1], points[2], points[3])
+        let filtered = r.filter { $0 >= 0 && $0 <= 1 }
+        XCTAssertEqual(filtered.count, 1)
+        XCTAssertEqual(filtered.first!, CGFloat(0.00149972), accuracy: 1.0e-4)
     }
 
     func testDrootsQuadratic() {
