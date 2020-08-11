@@ -767,7 +767,7 @@ class PathTests: XCTestCase {
         let path = Path(cgPath: {
             let cgPath = CGMutablePath()
             cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
-            cgPath.addRect(CGRect(x: 1, y: 1, width: 3, height: 3))
+            cgPath.addRect(CGRect(x: 4, y: 4, width: -3, height: -3))
             return cgPath
         }())
         let subtractionPath = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 1, height: 1), transform: nil))
@@ -1157,8 +1157,17 @@ class PathTests: XCTestCase {
 
         let crossingsRemoved = contour.crossingsRemoved()
 
-        XCTAssertEqual(crossingsRemoved.components.count, 1)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.components[0], contour.components[0]))
+        XCTAssertEqual(crossingsRemoved.components.count, 2)
+        let square1: Path = {
+            let cgPath = CGPath(rect: CGRect(x: 0, y: 0, width: 1, height: 1), transform: nil)
+            return Path(cgPath: cgPath).reversed()
+        }()
+        let square2: Path = {
+            let cgPath = CGPath(rect: CGRect(x: 1, y: 1, width: 1, height: 1), transform: nil)
+            return Path(cgPath: cgPath)
+        }()
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.components[0], square1.components[0]))
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.components[1], square2.components[0]))
     }
 
     func testCrossingsRemovedEdgeCaseInnerLoop() {
