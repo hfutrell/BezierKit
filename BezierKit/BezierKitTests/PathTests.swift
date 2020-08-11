@@ -1123,6 +1123,34 @@ class PathTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(resultAlt.components[0], expectedResult.components[0]))
     }
 
+    func testCrossingsRemovedIssue64() {
+        let outerEllipse: Path = {
+            let cgPath = CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 5, height: 5), transform: nil)
+            return Path(cgPath: cgPath)
+        }()
+        let innerEllipse: Path = {
+            let cgPath = CGPath(ellipseIn: CGRect(x: 1, y: 1, width: 3, height: 5), transform: nil)
+            return Path(cgPath: cgPath).reversed()
+        }()
+        // the inner ellipse intersects the outer ellipse at the top
+        let shape = Path(components: outerEllipse.components + innerEllipse.components)
+        let result = shape.crossingsRemoved()
+        XCTAssertEqual(result.components.count, 2)
+        let point1 = CGPoint(x: 2.5, y: 0.5)
+        let point2 = CGPoint(x: 2.5, y: 2.5)
+        let point3 = CGPoint(x: 2.5, y: 5.5)
+        ///  a "U" shape formed by the outer ellipse, minus where the inner ellipse intersects it
+        let firstComponent = result.components[0]
+        /// a "bump" shape where the inner ellipse pokes through the outer one
+        let secondComponent = result.components[1]
+        XCTAssertTrue(firstComponent.contains(point1))
+        XCTAssertFalse(firstComponent.contains(point2))
+        XCTAssertFalse(firstComponent.contains(point3))
+        XCTAssertFalse(secondComponent.contains(point1))
+        XCTAssertFalse(secondComponent.contains(point2))
+        XCTAssertTrue(secondComponent.contains(point3))
+    }
+
     func testCrossingsRemovedNoCrossings() {
         // a test which ensures that if a path has no crossings then crossingsRemoved does not modify it
         let square = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0), transform: nil))
