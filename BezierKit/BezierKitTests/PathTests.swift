@@ -845,7 +845,7 @@ class PathTests: XCTestCase {
         let path = Path(cgPath: {
             let cgPath = CGMutablePath()
             cgPath.addRect(CGRect(x: 0, y: 0, width: 5, height: 5))
-            cgPath.addRect(CGRect(x: 4, y: 4, width: -3, height: -3))
+            cgPath.addRect(CGRect(x: 1, y: 1, width: 3, height: 3))
             return cgPath
         }())
         let subtractionPath = Path(cgPath: CGPath(rect: CGRect(x: 2, y: 2, width: 1, height: 1), transform: nil))
