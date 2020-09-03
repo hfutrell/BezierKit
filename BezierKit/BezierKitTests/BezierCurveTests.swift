@@ -238,13 +238,64 @@ class BezierCurveTests: XCTestCase {
     }
 
     func testCubicSelfIntersection() {
-        let epsilon: CGFloat = 1.0e-3
-        let curve = CubicCurve(p0: CGPoint(x: 0.0, y: 0.0),
-                                     p1: CGPoint(x: 2.0, y: 1.0),
-                                     p2: CGPoint(x: -1.0, y: 1.0),
-                                     p3: CGPoint(x: 1.0, y: 0.0))
-        let i = curve.selfIntersections(accuracy: epsilon)
-        XCTAssertEqual(i.count, 1, "wrong number of intersections!")
-        XCTAssert( distance(curve.point(at: i[0].t1), curve.point(at: i[0].t2)) < epsilon, "wrong or inaccurate intersection!" )
+
+        var curve = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                               p1: CGPoint(x: 0, y: 1),
+                               p2: CGPoint(x: 1, y: 1),
+                               p3: CGPoint(x: 1, y: 1))
+
+        func selfIntersectsWithEndpointMoved(to point: CGPoint) -> Bool {
+            let epsilon: CGFloat = 1.0e-5
+            var copy = curve
+            copy.p3 = point
+            let result = copy.selfIntersects(accuracy: epsilon)
+            if result == true {
+                // check consistency
+                let intersections = copy.selfIntersections(accuracy: epsilon)
+                XCTAssertEqual(intersections.count, 1)
+                XCTAssertTrue(distance(copy.point(at: intersections[0].t1), copy.point(at: intersections[0].t2)) < epsilon)
+            }
+            return result
+        }
+
+        // check basic cases with no self-intersections
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.5, y: 2)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.5, y: 0.5)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.5, y: -1)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: -1)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: 0.5)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: 2)))
+
+        // check basic cases with self-intersections
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.25, y: 0.75)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: -0.5)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: 0.25)))
+
+        // check edge cases around (0, 0.75)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.76)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.75)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.74)))
+
+        // check for edge cases around (-1, 0)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1.01, y: 0)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: 0)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.99, y: 0)))
+
+        // check for edge cases around (-0.5, 0.58)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: -0.59)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: -0.58)))
+
+        // check for edge cases around (0,0)
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.01, y: 0)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.01)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.01, y: 0)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: -0.01)))
+
+        // check for edge cases around (1,1)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 1, y: 1)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9991)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9993)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9995)))
     }
 }

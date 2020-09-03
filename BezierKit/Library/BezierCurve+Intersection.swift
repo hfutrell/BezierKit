@@ -189,41 +189,41 @@ extension CubicCurve {
             // scale points so that second point falls on (0, 1) and third point falls on x = 1
             let v2 = self.p1.applying(transform)
             let v3 = self.p2.applying(transform)
-            let scaleTransform = CGAffineTransform(scaleX: 1.0 / v3.x, y: 1.0 / v2.y)
+            let scaleTransform = CGAffineTransform(scaleX: 1 / v3.x, y: 1 / v2.y)
             transform = transform.concatenating(scaleTransform)
 
             // sheer so that third point falls at (1, 1)
             let w3 = self.p2.applying(transform)
-            let sheerTransform2 = CGAffineTransform(a: 1, b: (1.0 - w3.y) / w3.x, c: 0, d: 1, tx: 0, ty: 0)
+            let sheerTransform2 = CGAffineTransform(a: 1, b: (1 - w3.y) / w3.x, c: 0, d: 1, tx: 0, ty: 0)
             transform = transform.concatenating(sheerTransform2)
 
             let canonicalPoint = self.p3.applying(transform)
 
             let x = canonicalPoint.x
             let y = canonicalPoint.y
-            
-            guard x <= 1 else {
+
+            guard x < 1 else {
                 return []
             }
-            
 
-            let xSquared = x*x
-            let redEdge = (-xSquared + 2.0 * x + 3.0) / 4.0
+            let xSquared = x * x
+            let cuspEdge = (-xSquared + 2 * x + 3) / 4
 
-            guard y <= redEdge else {
+            guard y < cuspEdge else {
                 return []
             }
 
             if x <= 0 {
-                guard y >= (-xSquared + 3 * x) / 3.0 else {
+                let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
+                guard y >= loopAtTZeroEdge else {
                     return []
                 }
             } else {
-                guard y >= (sqrt(3 * (4.0 * x - xSquared)) - x) / 2.0 else {
+                let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
+                guard y >= loopAtTOneEdge else {
                     return []
                 }
             }
-
 
 //            the resulting transform should map p0, p1, p2 to (0,0), (0,1), and (1,1) with p3 "free"
 //            print( self.p0.applying(transform) )
@@ -249,7 +249,6 @@ extension CubicCurve {
         }
         return results
     }
-
 }
 
 extension NonlinearBezierCurve {
