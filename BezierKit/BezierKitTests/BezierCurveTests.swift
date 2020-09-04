@@ -244,18 +244,23 @@ class BezierCurveTests: XCTestCase {
                                p2: CGPoint(x: 1, y: 1),
                                p3: CGPoint(x: 1, y: 1))
 
-        func selfIntersectsWithEndpointMoved(to point: CGPoint) -> Bool {
+        func curveSelfIntersects(_ curve: CubicCurve) -> Bool {
             let epsilon: CGFloat = 1.0e-5
-            var copy = curve
-            copy.p3 = point
-            let result = copy.selfIntersects(accuracy: epsilon)
+            let result = curve.selfIntersects(accuracy: epsilon)
             if result == true {
                 // check consistency
-                let intersections = copy.selfIntersections(accuracy: epsilon)
+                let intersections = curve.selfIntersections(accuracy: epsilon)
                 XCTAssertEqual(intersections.count, 1)
-                XCTAssertTrue(distance(copy.point(at: intersections[0].t1), copy.point(at: intersections[0].t2)) < epsilon)
+                XCTAssertTrue(distance(curve.point(at: intersections[0].t1),
+                                       curve.point(at: intersections[0].t2)) < epsilon)
             }
             return result
+        }
+        
+        func selfIntersectsWithEndpointMoved(to point: CGPoint) -> Bool {
+            var copy = curve
+            copy.p3 = point
+            return curveSelfIntersects(copy)
         }
 
         // check basic cases with no self-intersections
@@ -297,5 +302,14 @@ class BezierCurveTests: XCTestCase {
         XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9991)))
         XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9993)))
         XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9995)))
+
+        // check degenerate case where all points equal
+        let point = CGPoint(x: 3, y: 4)
+        let degenerateCurve = CubicCurve(p0: point, p1: point, p2: point, p3: point)
+        XCTAssertFalse(curveSelfIntersects(degenerateCurve))
+
+        // check line segment case
+        let lineSegment = CubicCurve(lineSegment: LineSegment(p0: CGPoint(x: 1, y: 2), p1: CGPoint(x: 3, y: 4)))
+        XCTAssertFalse(curveSelfIntersects(lineSegment))
     }
 }
