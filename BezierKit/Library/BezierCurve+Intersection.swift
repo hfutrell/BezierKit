@@ -22,17 +22,17 @@ public extension BezierCurve {
     func selfIntersections() -> [Intersection] {
         return self.selfIntersections(accuracy: BezierKit.defaultIntersectionAccuracy)
     }
-    func selfIntersects() -> Bool {
-        return self.selfIntersects(accuracy: BezierKit.defaultIntersectionAccuracy)
-    }
-    func selfIntersects(accuracy: CGFloat) -> Bool {
-        return !self.selfIntersections(accuracy: accuracy).isEmpty
-    }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty
     }
     func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool {
         return !self.intersections(with: curve, accuracy: accuracy).isEmpty
+    }
+    var selfIntersects: Bool {
+        return false
+    }
+    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+        return []
     }
 }
 
@@ -172,67 +172,54 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
 // MARK: - extensions to support intersection
 
 extension CubicCurve {
-    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+    public var selfIntersects: Bool {
+        // https://pomax.github.io/bezierinfo/#canonical
+        // map first point to (0, 0)
+        let p0 = self.p0
+        var transform = CGAffineTransform(translationX: -p0.x, y: -p0.y)
 
-        if self.order == 3 {
-            // https://pomax.github.io/bezierinfo/#canonical
+        // sheer so that second point falls on x = 0
+        let u2 = self.p1.applying(transform)
+        let sheerTransform1 = CGAffineTransform(a: 1, b: 0, c: -u2.x / u2.y, d: 1, tx: 0, ty: 0)
+        transform = transform.concatenating(sheerTransform1)
 
-            // map first point to (0, 0)
-            let p0 = self.p0
-            var transform = CGAffineTransform(translationX: -p0.x, y: -p0.y)
+        // scale points so that second point falls on (0, 1) and third point falls on x = 1
+        let v2 = self.p1.applying(transform)
+        let v3 = self.p2.applying(transform)
+        let scaleTransform = CGAffineTransform(scaleX: 1 / v3.x, y: 1 / v2.y)
+        transform = transform.concatenating(scaleTransform)
 
-            // sheer so that second point falls on x = 0
-            let u2 = self.p1.applying(transform)
-            let sheerTransform1 = CGAffineTransform(a: 1, b: 0, c: -u2.x / u2.y, d: 1, tx: 0, ty: 0)
-            transform = transform.concatenating(sheerTransform1)
+        // sheer so that third point falls at (1, 1)
+        let w3 = self.p2.applying(transform)
+        let sheerTransform2 = CGAffineTransform(a: 1, b: (1 - w3.y) / w3.x, c: 0, d: 1, tx: 0, ty: 0)
+        transform = transform.concatenating(sheerTransform2)
 
-            // scale points so that second point falls on (0, 1) and third point falls on x = 1
-            let v2 = self.p1.applying(transform)
-            let v3 = self.p2.applying(transform)
-            let scaleTransform = CGAffineTransform(scaleX: 1 / v3.x, y: 1 / v2.y)
-            transform = transform.concatenating(scaleTransform)
+        let canonicalPoint = self.p3.applying(transform)
 
-            // sheer so that third point falls at (1, 1)
-            let w3 = self.p2.applying(transform)
-            let sheerTransform2 = CGAffineTransform(a: 1, b: (1 - w3.y) / w3.x, c: 0, d: 1, tx: 0, ty: 0)
-            transform = transform.concatenating(sheerTransform2)
+        let x = canonicalPoint.x
+        let y = canonicalPoint.y
 
-            let canonicalPoint = self.p3.applying(transform)
+        guard x < 1 else { return false }
 
-            let x = canonicalPoint.x
-            let y = canonicalPoint.y
+        let xSquared = x * x
+        let cuspEdge = (-xSquared + 2 * x + 3) / 4
 
-            guard x < 1 else {
-                return []
-            }
+        guard y < cuspEdge else { return false }
 
-            let xSquared = x * x
-            let cuspEdge = (-xSquared + 2 * x + 3) / 4
-
-            guard y < cuspEdge else {
-                return []
-            }
-
-            if x <= 0 {
-                let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
-                guard y >= loopAtTZeroEdge else {
-                    return []
-                }
-            } else {
-                let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
-                guard y >= loopAtTOneEdge else {
-                    return []
-                }
-            }
-
-//            the resulting transform should map p0, p1, p2 to (0,0), (0,1), and (1,1) with p3 "free"
-//            print( self.p0.applying(transform) )
-//            print( self.p1.applying(transform) )
-//            print( self.p2.applying(transform) )
-//            print( self.p3.applying(transform) )
-
+        if x <= 0 {
+            let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
+            guard y >= loopAtTZeroEdge else { return false }
+        } else {
+            let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
+            guard y >= loopAtTOneEdge else { return false }
         }
-
+        return true
+    }
+    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+        guard self.selfIntersects else {
+            // call to `selfIntersects` is much faster than actually locating points of intersection, so check this first
+            return []
+        }
         let reduced = self.reduce()
         // "simple" curves cannot intersect with their direct
         // neighbour, so for each segment X we check whether
@@ -266,30 +253,6 @@ extension NonlinearBezierCurve {
         default:
             fatalError("unsupported")
         }
-    }
-    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        
-        let reduced = self.reduce()
-        // "simple" curves cannot intersect with their direct
-        // neighbour, so for each segment X we check whether
-        // it intersects [0:x-2][x+2:last].
-        let len=reduced.count-2
-        var results: [Intersection] = []
-        if len > 0 {
-            for i in 0..<len {
-                let left = reduced[i]
-                for j in i+2..<reduced.count {
-                    results += helperIntersectsCurveCurve(left, reduced[j], accuracy: accuracy)
-                }
-            }
-        }
-        return results
-    }
-}
-
-public extension QuadraticCurve {
-    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        return []
     }
 }
 
@@ -378,8 +341,5 @@ public extension LineSegment {
             return [] // t2 out of interval [0, 1]
         }
         return [Intersection(t1: t1, t2: t2)]
-    }
-    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        return []
     }
 }

@@ -317,7 +317,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func lookupTable(steps: Int) -> [CGPoint]
     func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat)
     // intersection routines
-    func selfIntersects(accuracy: CGFloat) -> Bool
+    var selfIntersects: Bool { get }
     func selfIntersections(accuracy: CGFloat) -> [Intersection]
     func intersects(_ line: LineSegment) -> Bool
     func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool

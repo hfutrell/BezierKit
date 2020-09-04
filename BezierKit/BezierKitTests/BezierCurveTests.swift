@@ -246,7 +246,7 @@ class BezierCurveTests: XCTestCase {
 
         func curveSelfIntersects(_ curve: CubicCurve) -> Bool {
             let epsilon: CGFloat = 1.0e-5
-            let result = curve.selfIntersects(accuracy: epsilon)
+            let result = curve.selfIntersects
             if result == true {
                 // check consistency
                 let intersections = curve.selfIntersections(accuracy: epsilon)
@@ -256,7 +256,7 @@ class BezierCurveTests: XCTestCase {
             }
             return result
         }
-        
+
         func selfIntersectsWithEndpointMoved(to point: CGPoint) -> Bool {
             var copy = curve
             copy.p3 = point
