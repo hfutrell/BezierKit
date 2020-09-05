@@ -229,6 +229,15 @@ extension CubicCurve {
         if len > 0 {
             for i in 0..<len {
                 let left = reduced[i]
+                if reduced[i+1].curve.simple == false {
+                    // this codepath is rarely needed (about 0.1% of the time)
+                    // because `reduce()` should return simple curves
+                    // but sometimes does return non-simple curves due to `BezierKit.reduceStepSize`
+                    let result = helperIntersectsCurveCurve(left, reduced[i+1], accuracy: accuracy).filter { $0.t1 < 1 && $0.t1 != $0.t2 }
+                    if result.isEmpty == false {
+                        results += result
+                    }
+                }
                 for j in i+2..<reduced.count {
                     results += helperIntersectsCurveCurve(left, reduced[j], accuracy: accuracy)
                 }

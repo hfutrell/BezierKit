@@ -237,25 +237,25 @@ class BezierCurveTests: XCTestCase {
         XCTAssertEqual(i[1].t2, 0.0)
     }
 
+    private func curveSelfIntersects(_ curve: CubicCurve) -> Bool {
+        let epsilon: CGFloat = 1.0e-5
+        let result = curve.selfIntersects
+        if result == true {
+            // check consistency
+            let intersections = curve.selfIntersections(accuracy: epsilon)
+            XCTAssertEqual(intersections.count, 1)
+            XCTAssertTrue(distance(curve.point(at: intersections[0].t1),
+                                   curve.point(at: intersections[0].t2)) < epsilon)
+        }
+        return result
+    }
+
     func testCubicSelfIntersection() {
 
         var curve = CubicCurve(p0: CGPoint(x: 0, y: 0),
                                p1: CGPoint(x: 0, y: 1),
                                p2: CGPoint(x: 1, y: 1),
                                p3: CGPoint(x: 1, y: 1))
-
-        func curveSelfIntersects(_ curve: CubicCurve) -> Bool {
-            let epsilon: CGFloat = 1.0e-5
-            let result = curve.selfIntersects
-            if result == true {
-                // check consistency
-                let intersections = curve.selfIntersections(accuracy: epsilon)
-                XCTAssertEqual(intersections.count, 1)
-                XCTAssertTrue(distance(curve.point(at: intersections[0].t1),
-                                       curve.point(at: intersections[0].t2)) < epsilon)
-            }
-            return result
-        }
 
         func selfIntersectsWithEndpointMoved(to point: CGPoint) -> Bool {
             var copy = curve
@@ -311,5 +311,60 @@ class BezierCurveTests: XCTestCase {
         // check line segment case
         let lineSegment = CubicCurve(lineSegment: LineSegment(p0: CGPoint(x: 1, y: 2), p1: CGPoint(x: 3, y: 4)))
         XCTAssertFalse(curveSelfIntersects(lineSegment))
+    }
+
+    func testCubicSelfIntersectionEdgeCase() {
+        // this curve nearly has a "cusp" which causes `reduce()` to fail
+        // this failure could prevent detection of the self-intersection in practice
+        let curve = CubicCurve(p0: CGPoint(x: 0.6699848912467168, y: 0.6276580745456783),
+                                p1: CGPoint(x: 0.3985029248079961, y: 0.6770972104768092),
+                                p2: CGPoint(x: 0.6414685401578772, y: 0.8591306876578386),
+                                p3: CGPoint(x: 0.4385385980761747, y: 0.3866255870526274))
+        XCTAssertTrue(curveSelfIntersects(curve))
+    }
+
+    private func generateRandomCurves(count: Int, selfIntersect: Bool, reseed: Int? = nil) -> [CubicCurve] {
+        if let reseed = reseed {
+            srand48(reseed) // seed with zero so that "random" values are actually the same across test runs
+        }
+        func randomPoint() -> CGPoint {
+            let x = CGFloat(drand48())
+            let y = CGFloat(drand48())
+            return CGPoint(x: x, y: y)
+        }
+       func randomCurve() -> CubicCurve {
+            return CubicCurve(p0: randomPoint(),
+                              p1: randomPoint(),
+                              p2: randomPoint(),
+                              p3: randomPoint())
+       }
+        var curves: [CubicCurve] = []
+        while curves.count < count {
+            let curve = randomCurve()
+            if curve.selfIntersects == selfIntersect {
+                curves.append(curve)
+            }
+        }
+        return curves
+    }
+
+    func testCubicSelfIntersectionsPerformance1() {
+        // test the performance of `selfIntersections` when the curves DO NOT self-intersect
+        let curves = generateRandomCurves(count: 100000, selfIntersect: false, reseed: 0)
+        self.measure {
+            for curve in curves {
+                XCTAssertEqual(curve.selfIntersections(accuracy: 1.0e-5).count, 0)
+            }
+        }
+    }
+
+    func testCubicSelfIntersectionsPerformance2() {
+        // test the performance of `selfIntersections` when the curves self-intersect
+        let curves = generateRandomCurves(count: 1000, selfIntersect: true, reseed: 1)
+        self.measure {
+            for curve in curves {
+                XCTAssertEqual(curve.selfIntersections(accuracy: 1.0e-5).count, 1)
+            }
+        }
     }
 }
