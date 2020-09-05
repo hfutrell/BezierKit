@@ -124,11 +124,8 @@ internal class Utils {
     }
 
     static func map(_ v: CGFloat, _ ds: CGFloat, _ de: CGFloat, _ ts: CGFloat, _ te: CGFloat) -> CGFloat {
-        let d1 = de-ds
-        let d2 = te-ts
-        let v2 = v-ds
-        let r = v2/d1
-        return ts + d2*r
+        let t = (v - ds) / (de - ds)
+        return t * te + (1 - t) * ts
     }
 
     static func approximately(_ a: Double, _ b: Double, precision: Double) -> Bool {
