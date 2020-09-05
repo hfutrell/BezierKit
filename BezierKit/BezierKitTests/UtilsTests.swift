@@ -100,4 +100,14 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual([1, 3, 1].sortedAndUniqued(), [1, 3])
         XCTAssertEqual([1, 2, 4, 5, 5, 6].sortedAndUniqued(), [1, 2, 4, 5, 6])
     }
+
+    func testMap() {
+        XCTAssertEqual(Utils.map(5, 4, 6, 8, 12), 10, "midpoint of [4, 6] should map to midpoint of [8, 12] (which is 10)")
+        XCTAssertEqual(Utils.map(0.75, 0, 1, 4, 8), 7, "75% the way between 0 and 1 should map to 75% between 4 and 8 (which is 7)")
+        // might fail for precision reasons
+        let tStart: CGFloat = 0.16559884114811005
+        let tEnd: CGFloat = 0.45268493225341283
+        XCTAssertEqual(Utils.map(0, 0, 1, tStart, tEnd), tStart, "start of first interval (0) should map to start of second interval exactly (tStart)")
+        XCTAssertEqual(Utils.map(1, 0, 1, tStart, tEnd), tEnd, "end of first interval (1) should map to end of second interval exactly (tEnd)")
+    }
 }
