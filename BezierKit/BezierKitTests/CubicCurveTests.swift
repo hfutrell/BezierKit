@@ -156,6 +156,22 @@ class CubicCurveTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.curve(s, matchesCurve: c, overInterval: Interval(start: t1, end: t2), tolerance: epsilon))
     }
 
+    func testSplitFromToSameLocation() {
+        // when splitting with same `from` and `to` parameter, we should get a point back.
+        // but if we aren't careful round-off error will give us something slightly different.
+        let cubic = CubicCurve(p0: CGPoint(x: 0.041630344771878214, y: 0.45449244472862915),
+                               p1: CGPoint(x: 0.8348172181669149, y: 0.33598603014520023),
+                               p2: CGPoint(x: 0.5654894035661364, y: 0.001766912391744313),
+                               p3: CGPoint(x: 0.18758951699996018, y: 0.9904340799376641))
+        let t: CGFloat = 0.920134
+        let result = cubic.split(from: t, to: t)
+        let expectedPoint = cubic.point(at: t)
+        XCTAssertEqual(result.p0, expectedPoint)
+        XCTAssertEqual(result.p1, expectedPoint)
+        XCTAssertEqual(result.p2, expectedPoint)
+        XCTAssertEqual(result.p3, expectedPoint)
+    }
+
     func testSplitContinuous() {
         // if I call split(from: a, to: b) and split(from: b, to: c)
         // then the two subcurves should be continuous. However, from lack of precision that might not happen unless we are careful!
