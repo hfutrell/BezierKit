@@ -200,13 +200,9 @@ internal class Utils {
             callback(root1)
             if root2 > root1 {
                 callback(root2)
-            } else {
-                print("huh")
             }
             if root3 > root2 {
                 callback(root3)
-            } else {
-                print("huh2")
             }
         } else if discriminant > smallValue {
             let sd = sqrt(discriminant)
