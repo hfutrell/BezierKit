@@ -101,16 +101,11 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
-        // compute the coordinates of a new curve where t' = t1 + (t2 - t1) * t
-        // the coefficients q_xy represent the entry at the xth row and yth column of the matrix Q
-        // see 'Deriving new hull coordinates' https://pomax.github.io/bezierinfo/#matrixsplit
-        let t1 = Double(t1)
-        let t2 = Double(t2)
-        let q10 = CGFloat(1 - t1 - t2 + t1*t2)
-        let q11 = CGFloat(t1 + t2 - 2*t1*t2)
-        let q12 = CGFloat(t1*t2)
-        let p1 = q10 * self.p0 + q11 * self.p1 + q12 * self.p2
-        return QuadraticCurve(p0: self.point(at: CGFloat(t1)), p1: p1, p2: self.point(at: CGFloat(t2)))
+        let k = (t2 - t1) / 2
+        let p0 = self.point(at: t1)
+        let p2 = self.point(at: t2)
+        let p1 = (p0 + p2) / 2 + k / 2 * (self.derivative(at: t1) - self.derivative(at: t2))
+        return QuadraticCurve(p0: p0, p1: p1, p2: p2)
     }
 
     public func split(at t: CGFloat) -> (left: QuadraticCurve, right: QuadraticCurve) {
