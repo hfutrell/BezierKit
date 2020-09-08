@@ -173,39 +173,26 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
 
 extension CubicCurve {
     public var selfIntersects: Bool {
+        let d1 = self.p1 - self.p0
+        let d2 = self.p2 - self.p0
         // https://pomax.github.io/bezierinfo/#canonical
-        // map first point to (0, 0)
-        let p0 = self.p0
-        var transform = CGAffineTransform(translationX: -p0.x, y: -p0.y)
-
-        // sheer so that second point falls on x = 0
-        let u2 = self.p1.applying(transform)
-        let sheerTransform1 = CGAffineTransform(a: 1, b: 0, c: -u2.x / u2.y, d: 1, tx: 0, ty: 0)
-        transform = transform.concatenating(sheerTransform1)
-
-        // scale points so that second point falls on (0, 1) and third point falls on x = 1
-        let v2 = self.p1.applying(transform)
-        let v3 = self.p2.applying(transform)
-        let scaleTransform = CGAffineTransform(scaleX: 1 / v3.x, y: 1 / v2.y)
-        transform = transform.concatenating(scaleTransform)
-
-        // sheer so that third point falls at (1, 1)
-        let w3 = self.p2.applying(transform)
-        let sheerTransform2 = CGAffineTransform(a: 1, b: (1 - w3.y) / w3.x, c: 0, d: 1, tx: 0, ty: 0)
-        transform = transform.concatenating(sheerTransform2)
-
-        let canonicalPoint = self.p3.applying(transform)
-
-        let x = canonicalPoint.x
-        let y = canonicalPoint.y
-
+        // we'll use cramer's rule to find a matrix M that maps d1 -> (1, 0) and d2 -> (0, 1)
+        // then compute the transform to canonical form as [[0, 1], [1, 1]] * M
+        let a = d1.x
+        let c = d1.y
+        let b = d2.x
+        let d = d2.y
+        let det = a * d - b * c
+        guard det != 0 else { return false }
+        let d3 = self.p3 - self.p0
+        // find the coordinates of the last point in canonical form
+        let x = (1 / det) * (-c * d3.x + a * d3.y)
+        let y = (1 / det) * ((d - c) * d3.x + (a - b) * d3.y)
+        // use the coordinates of the last point to determine if any self-intersections exist
         guard x < 1 else { return false }
-
         let xSquared = x * x
         let cuspEdge = (-xSquared + 2 * x + 3) / 4
-
         guard y < cuspEdge else { return false }
-
         if x <= 0 {
             let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
             guard y >= loopAtTZeroEdge else { return false }

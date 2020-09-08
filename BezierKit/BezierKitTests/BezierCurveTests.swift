@@ -350,21 +350,31 @@ class BezierCurveTests: XCTestCase {
 
     func testCubicSelfIntersectionsPerformance1() {
         // test the performance of `selfIntersections` when the curves DO NOT self-intersect
-        let curves = generateRandomCurves(count: 100000, selfIntersect: false, reseed: 0)
+        // -Onone 0.046 seconds
+        // -Os 0.04 seconds
+        let dataCount = 100000
+        let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 0)
         self.measure {
+            var count = 0
             for curve in curves {
-                XCTAssertEqual(curve.selfIntersections(accuracy: 1.0e-5).count, 0)
+                count += curve.selfIntersections(accuracy: 1.0e-5).count
             }
+            XCTAssertEqual(count, 0)
         }
     }
 
     func testCubicSelfIntersectionsPerformance2() {
         // test the performance of `selfIntersections` when the curves self-intersect
-        let curves = generateRandomCurves(count: 1000, selfIntersect: true, reseed: 1)
+        // -Onone 0.911 seconds
+        // -Os 0.129 seconds
+        let dataCount = 1000
+        let curves = generateRandomCurves(count: dataCount, selfIntersect: true, reseed: 1)
         self.measure {
+            var count = 0
             for curve in curves {
-                XCTAssertEqual(curve.selfIntersections(accuracy: 1.0e-5).count, 1)
+                count += curve.selfIntersections(accuracy: 1.0e-5).count
             }
+            XCTAssertEqual(count, dataCount)
         }
     }
 }
