@@ -237,14 +237,144 @@ class BezierCurveTests: XCTestCase {
         XCTAssertEqual(i[1].t2, 0.0)
     }
 
+    private func curveSelfIntersects(_ curve: CubicCurve) -> Bool {
+        let epsilon: CGFloat = 1.0e-5
+        let result = curve.selfIntersects
+        if result == true {
+            // check consistency
+            let intersections = curve.selfIntersections(accuracy: epsilon)
+            XCTAssertEqual(intersections.count, 1)
+            XCTAssertTrue(distance(curve.point(at: intersections[0].t1),
+                                   curve.point(at: intersections[0].t2)) < epsilon)
+        }
+        return result
+    }
+
     func testCubicSelfIntersection() {
-        let epsilon: CGFloat = 1.0e-3
-        let curve = CubicCurve(p0: CGPoint(x: 0.0, y: 0.0),
-                                     p1: CGPoint(x: 2.0, y: 1.0),
-                                     p2: CGPoint(x: -1.0, y: 1.0),
-                                     p3: CGPoint(x: 1.0, y: 0.0))
-        let i = curve.selfIntersections(accuracy: epsilon)
-        XCTAssertEqual(i.count, 1, "wrong number of intersections!")
-        XCTAssert( distance(curve.point(at: i[0].t1), curve.point(at: i[0].t2)) < epsilon, "wrong or inaccurate intersection!" )
+
+        var curve = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                               p1: CGPoint(x: 0, y: 1),
+                               p2: CGPoint(x: 1, y: 1),
+                               p3: CGPoint(x: 1, y: 1))
+
+        func selfIntersectsWithEndpointMoved(to point: CGPoint) -> Bool {
+            var copy = curve
+            copy.p3 = point
+            return curveSelfIntersects(copy)
+        }
+
+        // check basic cases with no self-intersections
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.5, y: 2)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.5, y: 0.5)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.5, y: -1)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: -1)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: 0.5)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: 2)))
+
+        // check basic cases with self-intersections
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.25, y: 0.75)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: -0.5)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: 0.25)))
+
+        // check edge cases around (0, 0.75)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.76)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.75)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.74)))
+
+        // check for edge cases around (-1, 0)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1.01, y: 0)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -1, y: 0)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.99, y: 0)))
+
+        // check for edge cases around (-0.5, 0.58)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: -0.59)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.5, y: -0.58)))
+
+        // check for edge cases around (0,0)
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.01, y: 0)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: 0.01)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: -0.01, y: 0)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0, y: -0.01)))
+
+        // check for edge cases around (1,1)
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 1, y: 1)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9991)))
+        XCTAssertTrue(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9993)))
+        XCTAssertFalse(selfIntersectsWithEndpointMoved(to: CGPoint(x: 0.95, y: 0.9995)))
+
+        // check degenerate case where all points equal
+        let point = CGPoint(x: 3, y: 4)
+        let degenerateCurve = CubicCurve(p0: point, p1: point, p2: point, p3: point)
+        XCTAssertFalse(curveSelfIntersects(degenerateCurve))
+
+        // check line segment case
+        let lineSegment = CubicCurve(lineSegment: LineSegment(p0: CGPoint(x: 1, y: 2), p1: CGPoint(x: 3, y: 4)))
+        XCTAssertFalse(curveSelfIntersects(lineSegment))
+    }
+
+    func testCubicSelfIntersectionEdgeCase() {
+        // this curve nearly has a "cusp" which causes `reduce()` to fail
+        // this failure could prevent detection of the self-intersection in practice
+        let curve = CubicCurve(p0: CGPoint(x: 0.6699848912467168, y: 0.6276580745456783),
+                                p1: CGPoint(x: 0.3985029248079961, y: 0.6770972104768092),
+                                p2: CGPoint(x: 0.6414685401578772, y: 0.8591306876578386),
+                                p3: CGPoint(x: 0.4385385980761747, y: 0.3866255870526274))
+        XCTAssertTrue(curveSelfIntersects(curve))
+    }
+
+    private func generateRandomCurves(count: Int, selfIntersect: Bool, reseed: Int? = nil) -> [CubicCurve] {
+        if let reseed = reseed {
+            srand48(reseed) // seed with zero so that "random" values are actually the same across test runs
+        }
+        func randomPoint() -> CGPoint {
+            let x = CGFloat(drand48())
+            let y = CGFloat(drand48())
+            return CGPoint(x: x, y: y)
+        }
+       func randomCurve() -> CubicCurve {
+            return CubicCurve(p0: randomPoint(),
+                              p1: randomPoint(),
+                              p2: randomPoint(),
+                              p3: randomPoint())
+       }
+        var curves: [CubicCurve] = []
+        while curves.count < count {
+            let curve = randomCurve()
+            if curve.selfIntersects == selfIntersect {
+                curves.append(curve)
+            }
+        }
+        return curves
+    }
+
+    func testCubicSelfIntersectionsPerformance1() {
+        // test the performance of `selfIntersections` when the curves DO NOT self-intersect
+        // -Onone 0.046 seconds
+        // -Os 0.04 seconds
+        let dataCount = 100000
+        let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 0)
+        self.measure {
+            var count = 0
+            for curve in curves {
+                count += curve.selfIntersections(accuracy: 1.0e-5).count
+            }
+            XCTAssertEqual(count, 0)
+        }
+    }
+
+    func testCubicSelfIntersectionsPerformance2() {
+        // test the performance of `selfIntersections` when the curves self-intersect
+        // -Onone 0.911 seconds
+        // -Os 0.129 seconds
+        let dataCount = 1000
+        let curves = generateRandomCurves(count: dataCount, selfIntersect: true, reseed: 1)
+        self.measure {
+            var count = 0
+            for curve in curves {
+                count += curve.selfIntersections(accuracy: 1.0e-5).count
+            }
+            XCTAssertEqual(count, dataCount)
+        }
     }
 }

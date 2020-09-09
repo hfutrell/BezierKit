@@ -28,7 +28,6 @@ internal class Utils {
     // float precision significant decimal
     static let epsilon: Double = 1.0e-5
     static let tau: Double = 2.0 * Double.pi
-    static let quart: Double = Double.pi / 2.0
 
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     static let Tvalues: ContiguousArray<CGFloat> = [
@@ -124,11 +123,8 @@ internal class Utils {
     }
 
     static func map(_ v: CGFloat, _ ds: CGFloat, _ de: CGFloat, _ ts: CGFloat, _ te: CGFloat) -> CGFloat {
-        let d1 = de-ds
-        let d2 = te-ts
-        let v2 = v-ds
-        let r = v2/d1
-        return ts + d2*r
+        let t = (v - ds) / (de - ds)
+        return t * te + (1 - t) * ts
     }
 
     static func approximately(_ a: Double, _ b: Double, precision: Double) -> Bool {
@@ -172,7 +168,7 @@ internal class Utils {
         let p2 = Double(p2)
         let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
-        let smallValue: Double = 1.0e-8
+        let smallValue: Double = 1.0e-6
         guard abs(d) >= smallValue else {
             // solve the quadratic polynomial at^2 + bt + c instead
             let a = (3 * p0 - 6 * p1 + 3 * p2)
@@ -198,10 +194,13 @@ internal class Utils {
             let root1 = CGFloat(t1 * cos((phi + tau) / 3) - a / 3)
             let root2 = CGFloat(t1 * cos((phi + 2 * tau) / 3) - a / 3)
             let root3 = CGFloat(t1 * cos(phi / 3) - a / 3)
-            assert(root1 < root2 && root2 < root3)
             callback(root1)
-            callback(root2)
-            callback(root3)
+            if root2 > root1 {
+                callback(root2)
+            }
+            if root3 > root2 {
+                callback(root3)
+            }
         } else if discriminant > smallValue {
             let sd = sqrt(discriminant)
             let u1 = crt(-q2 + sd)

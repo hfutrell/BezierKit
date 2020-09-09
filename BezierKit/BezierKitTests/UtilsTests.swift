@@ -40,7 +40,7 @@ class UtilsTests: XCTestCase {
         return roots
     }
 
-    func testDrootsCubicWorldIssue() {
+    func testDrootsCubicWorldIssue1() {
         var points: [CGPoint] = [
             CGPoint(x: 523.4257521858988, y: 691.8949684622992),
             CGPoint(x: 523.1393916834338, y: 691.8714265856051),
@@ -53,6 +53,21 @@ class UtilsTests: XCTestCase {
         let filtered = r.filter { $0 >= 0 && $0 <= 1 }
         XCTAssertEqual(filtered.count, 1)
         XCTAssertEqual(filtered.first!, CGFloat(0.1499651773565319), accuracy: 1.0e-3)
+    }
+
+    func testDrootsCubicWorldIssue2() {
+        // this data is actually very close to a quadratic. It may get the wrong
+        // answer is if is recognized as a cubic
+        let points: [CGFloat] = [
+            0.0000010000090924222604,
+            0.0000013261883395898622,
+            -0.1484297874302456,
+            -0.44529201466082213
+        ]
+        let r = drootsCubicTestHelper(points[0], points[1], points[2], points[3])
+        let filtered = r.filter { $0 >= 0 && $0 <= 1 }
+        XCTAssertEqual(filtered.count, 1)
+        XCTAssertEqual(filtered.first!, CGFloat(0.00149972), accuracy: 1.0e-4)
     }
 
     func testDrootsQuadratic() {
@@ -99,5 +114,15 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual([1, 1].sortedAndUniqued(), [1])
         XCTAssertEqual([1, 3, 1].sortedAndUniqued(), [1, 3])
         XCTAssertEqual([1, 2, 4, 5, 5, 6].sortedAndUniqued(), [1, 2, 4, 5, 6])
+    }
+
+    func testMap() {
+        XCTAssertEqual(Utils.map(5, 4, 6, 8, 12), 10, "midpoint of [4, 6] should map to midpoint of [8, 12] (which is 10)")
+        XCTAssertEqual(Utils.map(0.75, 0, 1, 4, 8), 7, "75% the way between 0 and 1 should map to 75% between 4 and 8 (which is 7)")
+        // might fail for precision reasons
+        let tStart: CGFloat = 0.16559884114811005
+        let tEnd: CGFloat = 0.45268493225341283
+        XCTAssertEqual(Utils.map(0, 0, 1, tStart, tEnd), tStart, "start of first interval (0) should map to start of second interval exactly (tStart)")
+        XCTAssertEqual(Utils.map(1, 0, 1, tStart, tEnd), tEnd, "end of first interval (1) should map to end of second interval exactly (tEnd)")
     }
 }

@@ -22,17 +22,17 @@ public extension BezierCurve {
     func selfIntersections() -> [Intersection] {
         return self.selfIntersections(accuracy: BezierKit.defaultIntersectionAccuracy)
     }
-    func selfIntersects() -> Bool {
-        return self.selfIntersects(accuracy: BezierKit.defaultIntersectionAccuracy)
-    }
-    func selfIntersects(accuracy: CGFloat) -> Bool {
-        return !self.selfIntersections(accuracy: accuracy).isEmpty
-    }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty
     }
     func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool {
         return !self.intersections(with: curve, accuracy: accuracy).isEmpty
+    }
+    var selfIntersects: Bool {
+        return false
+    }
+    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+        return []
     }
 }
 
@@ -171,6 +171,69 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
 
 // MARK: - extensions to support intersection
 
+extension CubicCurve {
+    public var selfIntersects: Bool {
+        let d1 = self.p1 - self.p0
+        let d2 = self.p2 - self.p0
+        // https://pomax.github.io/bezierinfo/#canonical
+        // we'll use cramer's rule to find a matrix M that maps d1 -> (1, 0) and d2 -> (0, 1)
+        // then compute the transform to canonical form as [[0, 1], [1, 1]] * M
+        let a = d1.x
+        let c = d1.y
+        let b = d2.x
+        let d = d2.y
+        let det = a * d - b * c
+        guard det != 0 else { return false }
+        let d3 = self.p3 - self.p0
+        // find the coordinates of the last point in canonical form
+        let x = (1 / det) * (-c * d3.x + a * d3.y)
+        let y = (1 / det) * ((d - c) * d3.x + (a - b) * d3.y)
+        // use the coordinates of the last point to determine if any self-intersections exist
+        guard x < 1 else { return false }
+        let xSquared = x * x
+        let cuspEdge = (-xSquared + 2 * x + 3) / 4
+        guard y < cuspEdge else { return false }
+        if x <= 0 {
+            let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
+            guard y >= loopAtTZeroEdge else { return false }
+        } else {
+            let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
+            guard y >= loopAtTOneEdge else { return false }
+        }
+        return true
+    }
+    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+        guard self.selfIntersects else {
+            // call to `selfIntersects` is much faster than actually locating points of intersection, so check this first
+            return []
+        }
+        let reduced = self.reduce()
+        // "simple" curves cannot intersect with their direct
+        // neighbour, so for each segment X we check whether
+        // it intersects [0:x-2][x+2:last].
+        let len=reduced.count-2
+        var results: [Intersection] = []
+        if len > 0 {
+            for i in 0..<len {
+                let left = reduced[i]
+                if reduced[i+1].curve.simple == false {
+                    // this codepath is rarely needed (about 0.1% of the time)
+                    // because `reduce()` should return simple curves
+                    // but sometimes does return non-simple curves due to `BezierKit.reduceStepSize`
+                    let result = helperIntersectsCurveCurve(left, reduced[i+1], accuracy: accuracy).filter { $0.t1 < 1 && $0.t1 != $0.t2 }
+                    if result.isEmpty == false {
+                        results += result
+                    }
+                }
+                for j in i+2..<reduced.count {
+                    results += helperIntersectsCurveCurve(left, reduced[j], accuracy: accuracy)
+                }
+            }
+        }
+        return results
+    }
+}
+
 extension NonlinearBezierCurve {
     public func intersections(with line: LineSegment) -> [Intersection] {
         return helperIntersectsCurveLine(self, line)
@@ -186,29 +249,6 @@ extension NonlinearBezierCurve {
         default:
             fatalError("unsupported")
         }
-    }
-    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        let reduced = self.reduce()
-        // "simple" curves cannot intersect with their direct
-        // neighbour, so for each segment X we check whether
-        // it intersects [0:x-2][x+2:last].
-        let len=reduced.count-2
-        var results: [Intersection] = []
-        if len > 0 {
-            for i in 0..<len {
-                let left = reduced[i]
-                for j in i+2..<reduced.count {
-                    results += helperIntersectsCurveCurve(left, reduced[j], accuracy: accuracy)
-                }
-            }
-        }
-        return results
-    }
-}
-
-public extension QuadraticCurve {
-    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        return []
     }
 }
 
@@ -297,8 +337,5 @@ public extension LineSegment {
             return [] // t2 out of interval [0, 1]
         }
         return [Intersection(t1: t1, t2: t2)]
-    }
-    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        return []
     }
 }
