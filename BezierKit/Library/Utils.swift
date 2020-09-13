@@ -168,7 +168,7 @@ internal class Utils {
         let p2 = Double(p2)
         let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
-        let smallValue: Double = 1.0e-6
+        let smallValue: Double = 1.0e-8
         guard abs(d) >= smallValue else {
             // solve the quadratic polynomial at^2 + bt + c instead
             let a = (3 * p0 - 6 * p1 + 3 * p2)
