@@ -842,14 +842,16 @@ class PathTests: XCTestCase {
         let path1 = Path(cgPath: p1)
         let path2 = Path(cgPath: p2)
 
-        XCTAssertTrue(path1.contains(point1, using: .evenOdd))
-        XCTAssertFalse(path2.contains(point1, using: .evenOdd))
-        XCTAssertFalse(path1.contains(point2, using: .evenOdd))
-        XCTAssertTrue(path2.contains(point2, using: .evenOdd))
+        let rule: PathFillRule = .evenOdd
+
+        XCTAssertTrue(path1.contains(point1, using: rule))
+        XCTAssertFalse(path2.contains(point1, using: rule))
+        XCTAssertFalse(path1.contains(point2, using: rule))
+        XCTAssertTrue(path2.contains(point2, using: rule))
 
         let result = path1.union(path2, accuracy: 0.5)
-        XCTAssertTrue(result.contains(point1, using: .evenOdd), "point1 is in path1 so it should be in the union")
-        XCTAssertTrue(result.contains(point2, using: .evenOdd), "point2 is in path2 so it should be in the union")
+        XCTAssertTrue(result.contains(point1, using: rule), "point1 is in path1 so it should be in the union")
+        XCTAssertTrue(result.contains(point2, using: rule), "point2 is in path2 so it should be in the union")
     }
 
     func testUnionSelf() {
