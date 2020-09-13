@@ -799,6 +799,59 @@ class PathTests: XCTestCase {
         )
     }
 
+    func testUnionRealWorldIssue() {
+        // this test data has an intersection that is very close to the end of a path element
+        // in practice there was an issue where if the intersection were not computed precisely
+        // the classification of the edge beginning at that intersection could be incorrect
+        let p1 = CGMutablePath()
+        p1.move(to: CGPoint(x: 160.30770651563628, y: 827.7553004653367))
+        p1.addCurve(to: CGPoint(x: 110.26942663248718, y: 568.5268524837642),
+                    control1: CGPoint(x: 181.33161356383755, y: 737.7466984152248),
+                    control2: CGPoint(x: 164.05060972624904, y: 653.3356412085424))
+        p1.addCurve(to: CGPoint(x: 68.86790851824688, y: 559.2578558910238),
+                    control1: CGPoint(x: 101.39627582752009, y: 554.534576214393),
+                    control2: CGPoint(x: 82.86018478761805, y: 550.3847050860568))
+        p1.addCurve(to: CGPoint(x: 59.59891192550654, y: 600.6593740052641),
+                    control1: CGPoint(x: 54.875632248875704, y: 568.1310066959909),
+                    control2: CGPoint(x: 50.725761120539445, y: 586.667097735893))
+        p1.addCurve(to: CGPoint(x: 101.88038125865839, y: 814.1080420111522),
+                    control1: CGPoint(x: 105.11513351206828, y: 672.4349541994575),
+                    control2: CGPoint(x: 119.06082214735332, y: 740.5542794564268))
+        p1.addCurve(to: CGPoint(x: 124.27041466005505, y: 850.1453338667334),
+                    control1: CGPoint(x: 98.11179489803564, y: 830.2423023675684),
+                    control2: CGPoint(x: 108.13615430363883, y: 846.3767475061106))
+        p1.addCurve(to: CGPoint(x: 160.30770651563628, y: 827.7553004653367),
+                    control1: CGPoint(x: 140.40467501647126, y: 853.9139202273561),
+                    control2: CGPoint(x: 156.53912015501353, y: 843.889560821753))
+
+        let p2 = CGMutablePath()
+        p2.move(to: CGPoint(x: 110.01560660410875, y: 568.1334199999095))
+        p2.addCurve(to: CGPoint(x: -34.46691786355873, y: 426.72807843882487),
+                    control1: CGPoint(x: 64.94829801467844, y: 499.45942595887277),
+                    control2: CGPoint(x: 20.78869552632778, y: 454.67344613026177))
+        p2.addCurve(to: CGPoint(x: -69.07061390857123, y: 474.860094579322),
+                    control1: CGPoint(x: -65.01464367993249, y: 411.2786538880151),
+                    control2: CGPoint(x: -93.44515961076199, y: 450.82408423410607))
+        p2.addLine(to: CGPoint(x: 63.869824962902115, y: 605.9541384664693))
+        p2.addCurve(to: CGPoint(x: 110.01560660410875, y: 568.1334199999095),
+                    control1: CGPoint(x: 89.4862743247028, y: 631.2148038093562),
+                    control2: CGPoint(x: 129.75430800678396, y: 598.2114411849384))
+
+        let point1 = CGPoint(x: 90, y: 650)
+        let point2 = CGPoint(x: -30, y: 450)
+        let path1 = Path(cgPath: p1)
+        let path2 = Path(cgPath: p2)
+
+        XCTAssertTrue(path1.contains(point1, using: .evenOdd))
+        XCTAssertFalse(path2.contains(point1, using: .evenOdd))
+        XCTAssertFalse(path1.contains(point2, using: .evenOdd))
+        XCTAssertTrue(path2.contains(point2, using: .evenOdd))
+
+        let result = path1.union(path2, accuracy: 0.5)
+        XCTAssertTrue(result.contains(point1, using: .evenOdd), "point1 is in path1 so it should be in the union")
+        XCTAssertTrue(result.contains(point2, using: .evenOdd), "point2 is in path2 so it should be in the union")
+    }
+
     func testUnionSelf() {
         let square = createSquare1()
         let copy = square.independentCopy()
