@@ -6,7 +6,10 @@
 //  Copyright © 2019 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 private func xIntercept<A: BezierCurve>(curve: A, y: CGFloat) -> CGFloat {
     let startingPoint = curve.startingPoint

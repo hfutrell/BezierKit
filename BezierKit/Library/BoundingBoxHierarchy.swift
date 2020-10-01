@@ -6,7 +6,10 @@
 //  Copyright © 2018 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 /// returns the power of two greater than or equal to a given value
 internal func roundUpPowerOfTwo(_ value: Int) -> Int {

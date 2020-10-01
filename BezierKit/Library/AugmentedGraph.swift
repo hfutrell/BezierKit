@@ -6,7 +6,10 @@
 //  Copyright © 2018 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 internal enum BooleanPathOperation {
     case union

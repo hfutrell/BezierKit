@@ -6,7 +6,10 @@
 //  Copyright © 2017 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t1: CGFloat
