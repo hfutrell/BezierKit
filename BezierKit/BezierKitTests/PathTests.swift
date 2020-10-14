@@ -31,8 +31,44 @@ class PathTests: XCTestCase {
         super.tearDown()
     }
 
+    // points on the first square
+    let p0 = CGPoint(x: 0.0, y: 0.0)
+    let p1 = CGPoint(x: 1.0, y: 0.0) // intersection 1
+    let p2 = CGPoint(x: 2.0, y: 0.0)
+    let p3 = CGPoint(x: 2.0, y: 1.0) // intersection 2
+    let p4 = CGPoint(x: 2.0, y: 2.0)
+    let p5 = CGPoint(x: 0.0, y: 2.0)
+
+    // points on the second square
+    let p6 = CGPoint(x: 1.0, y: -1.0)
+    let p7 = CGPoint(x: 3.0, y: -1.0)
+    let p8 = CGPoint(x: 3.0, y: 1.0)
+    let p9 = CGPoint(x: 1.0, y: 1.0)
+
+    private func createSquare1() -> Path {
+        return Path(components: [PathComponent(curves:
+            [
+                LineSegment(p0: p0, p1: p2),
+                LineSegment(p0: p2, p1: p4),
+                LineSegment(p0: p4, p1: p5),
+                LineSegment(p0: p5, p1: p0)
+            ]
+        )])
+    }
+
+    private func createSquare2() -> Path {
+        return Path(components: [PathComponent(curves:
+        [
+            LineSegment(p0: p6, p1: p7),
+            LineSegment(p0: p7, p1: p8),
+            LineSegment(p0: p8, p1: p9),
+            LineSegment(p0: p9, p1: p6)
+        ]
+    )])
+    }
+
 #if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
-    
+
     func testInitCGPathEmpty() {
         // trivial test of an empty path
         let path = Path(cgPath: CGMutablePath())
@@ -708,42 +744,6 @@ class PathTests: XCTestCase {
             }
         }
         return true
-    }
-
-    // points on the first square
-    let p0 = CGPoint(x: 0.0, y: 0.0)
-    let p1 = CGPoint(x: 1.0, y: 0.0) // intersection 1
-    let p2 = CGPoint(x: 2.0, y: 0.0)
-    let p3 = CGPoint(x: 2.0, y: 1.0) // intersection 2
-    let p4 = CGPoint(x: 2.0, y: 2.0)
-    let p5 = CGPoint(x: 0.0, y: 2.0)
-
-    // points on the second square
-    let p6 = CGPoint(x: 1.0, y: -1.0)
-    let p7 = CGPoint(x: 3.0, y: -1.0)
-    let p8 = CGPoint(x: 3.0, y: 1.0)
-    let p9 = CGPoint(x: 1.0, y: 1.0)
-
-    private func createSquare1() -> Path {
-        return Path(components: [PathComponent(curves:
-            [
-                LineSegment(p0: p0, p1: p2),
-                LineSegment(p0: p2, p1: p4),
-                LineSegment(p0: p4, p1: p5),
-                LineSegment(p0: p5, p1: p0)
-            ]
-        )])
-    }
-
-    private func createSquare2() -> Path {
-        return Path(components: [PathComponent(curves:
-        [
-            LineSegment(p0: p6, p1: p7),
-            LineSegment(p0: p7, p1: p8),
-            LineSegment(p0: p8, p1: p9),
-            LineSegment(p0: p9, p1: p6)
-        ]
-    )])
     }
 
     func testSubtracting() {
@@ -1601,5 +1601,4 @@ class PathTests: XCTestCase {
         XCTAssertEqual(location1.locationInComponent, IndexedPathComponentLocation(elementIndex: location1.elementIndex, t: location1.t))
         XCTAssertEqual(location4, location5)
     }
-
 }
