@@ -7,7 +7,9 @@
 //
 
 import XCTest
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
 @testable import BezierKit
 
 private extension Path {
@@ -29,6 +31,8 @@ class PathTests: XCTestCase {
         super.tearDown()
     }
 
+#if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
+    
     func testInitCGPathEmpty() {
         // trivial test of an empty path
         let path = Path(cgPath: CGMutablePath())
@@ -1568,6 +1572,8 @@ class PathTests: XCTestCase {
         }
     }
 
+    #endif
+    
     func testNSCoder() {
         let l1 = LineSegment(p0: p1, p1: p2)
         let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
@@ -1595,4 +1601,5 @@ class PathTests: XCTestCase {
         XCTAssertEqual(location1.locationInComponent, IndexedPathComponentLocation(elementIndex: location1.elementIndex, t: location1.t))
         XCTAssertEqual(location4, location5)
     }
+
 }
