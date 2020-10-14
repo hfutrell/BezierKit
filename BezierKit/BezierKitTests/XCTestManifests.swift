@@ -365,6 +365,7 @@ extension TransformableTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__TransformableTests = [
+        ("testTransform", testTransform),
         ("testTransformCubicCurve", testTransformCubicCurve),
         ("testTransformLineSegment", testTransformLineSegment),
         ("testTransformPath", testTransformPath),
