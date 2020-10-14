@@ -199,6 +199,16 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         self.init(components: [PathComponent(curve: curve)])
     }
 
+    convenience internal init(rect: CGRect) {
+        let points = [rect.origin,
+                      CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y),
+                      CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height),
+                      CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height),
+                      rect.origin]
+        let component = PathComponent(points: points, orders: [Int](repeating: 1, count: 4))
+        self.init(components: [component])
+    }
+
     // MARK: - NSCoding
     // (cannot be put in extension because init?(coder:) is a designated initializer)
 
