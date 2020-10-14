@@ -6,7 +6,10 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 public struct Intersection: Equatable, Comparable {
     public var t1: CGFloat

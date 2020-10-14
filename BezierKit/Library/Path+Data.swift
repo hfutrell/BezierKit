@@ -7,7 +7,10 @@
 //
 
 import Foundation
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 fileprivate extension Data {
     mutating func appendNativeValue<U>(_ value: U) {

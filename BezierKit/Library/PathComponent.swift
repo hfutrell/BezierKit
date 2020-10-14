@@ -6,7 +6,9 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
 import Foundation
 
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
@@ -105,7 +107,8 @@ import Foundation
     internal func order(at index: Int) -> Int {
         return self.orders[index]
     }
-
+    
+    #if canImport(CoreGraphics)
     internal func appendPath(to mutablePath: CGMutablePath) {
         mutablePath.move(to: self.startingPoint)
         for i in 0..<self.numberOfElements {
@@ -130,6 +133,7 @@ import Foundation
             }
         }
     }
+    #endif
 
     required public init(points: [CGPoint], orders: [Int]) {
         // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
