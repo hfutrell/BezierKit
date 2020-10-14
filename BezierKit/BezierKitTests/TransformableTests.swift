@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import BezierKit
+@testable import BezierKit
 
 class TransformableTests: XCTestCase {
 
