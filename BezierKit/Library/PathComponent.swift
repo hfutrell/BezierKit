@@ -107,7 +107,7 @@ import Foundation
     internal func order(at index: Int) -> Int {
         return self.orders[index]
     }
-    
+
     #if canImport(CoreGraphics)
     internal func appendPath(to mutablePath: CGMutablePath) {
         mutablePath.move(to: self.startingPoint)
