@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
 	set -o pipefail
 	xcodebuild -version
