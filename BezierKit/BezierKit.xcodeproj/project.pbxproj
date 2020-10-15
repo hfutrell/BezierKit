@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		607A8BB525383A1B008B7553 /* PathComponent+Arc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607A8BB425383A1B008B7553 /* PathComponent+Arc.swift */; };
+		607A8BB625383A1B008B7553 /* PathComponent+Arc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607A8BB425383A1B008B7553 /* PathComponent+Arc.swift */; };
 		FD05111820153EAE000D035E /* BoundingBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoundingBoxTests.swift */; };
 		FD05111920153EAE000D035E /* BoundingBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoundingBoxTests.swift */; };
 		FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
@@ -136,6 +138,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		607A8BB425383A1B008B7553 /* PathComponent+Arc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathComponent+Arc.swift"; sourceTree = "<group>"; };
 		FD05111720153EAE000D035E /* BoundingBoxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingBoxTests.swift; sourceTree = "<group>"; };
 		FD06332221E03A58001181B6 /* CGPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPointTests.swift; sourceTree = "<group>"; };
 		FD067AC7246F1200006DA36B /* Polynomial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Polynomial.swift; sourceTree = "<group>"; };
@@ -325,6 +328,7 @@
 				FDC7D7012111323A00A9EEF0 /* Path.swift */,
 				FDCE99A4223C404E00597989 /* Path+Data.swift */,
 				FDB6B3FD1EAFD6DF00001C61 /* PathComponent.swift */,
+				607A8BB425383A1B008B7553 /* PathComponent+Arc.swift */,
 				FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */,
 				FD149EB92135CBFF009E791D /* AugmentedGraph.swift */,
 				FDC859622119274A00AF7642 /* BoundingBoxHierarchy.swift */,
@@ -651,6 +655,7 @@
 				FDB6B4051EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 				FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
+				607A8BB625383A1B008B7553 /* PathComponent+Arc.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -676,6 +681,7 @@
 				FDB6B4041EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 				FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
+				607A8BB525383A1B008B7553 /* PathComponent+Arc.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
