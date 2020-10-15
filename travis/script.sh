@@ -1,6 +1,7 @@
 #!/bin/bash
 
 if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
+	echo "project = $PROJECT, DESTINATION = $DESTINATION"
 	set -o pipefail
 	xcodebuild -version
 	xcodebuild -showsdks
