@@ -86,8 +86,6 @@ class PathTests: XCTestCase {
         let p2 = CGPoint(x: 1.0, y: 0.0)
         let p3 = CGPoint(x: 1.0, y: 2.0)
         let p4 = CGPoint(x: 0.0, y: 2.0)
-        
-        XCTAssertTrue(false)
 
         XCTAssertEqual(path1.components.count, 1)
         XCTAssertEqual(path1.components[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
