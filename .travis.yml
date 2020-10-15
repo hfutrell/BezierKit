@@ -6,7 +6,7 @@ jobs:
 script:
   - export SWIFT_VERSION=swift-5.3-RELEASE    
   - wget https://swift.org/builds/swift-5.3-release/ubuntu1804/${SWIFT_VERSION}/${SWIFT_VERSION}-ubuntu18.04.tar.gz
-  - tar xzf {SWIFT_VERSION}/swift-5.3-RELEASE-ubuntu20.04.tar.gz
+  - tar xzf ${SWIFT_VERSION}/swift-5.3-RELEASE-ubuntu20.04.tar.gz
   - export PATH="${PWD}/${SWIFT_VERSION}-ubuntu14.04/usr/bin:${PATH}"
   - swift build
   - swift test --enable-test-discovery
