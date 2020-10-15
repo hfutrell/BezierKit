@@ -1575,6 +1575,9 @@ class PathTests: XCTestCase {
     #endif
 
     func testNSCoder() {
+        
+        XCTAssertFalse(true)
+        
         let l1 = LineSegment(p0: p1, p1: p2)
         let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
         let l2 = LineSegment(p0: p4, p1: p5)
