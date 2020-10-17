@@ -16,6 +16,7 @@ if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
   		pod spec lint;
     fi
 elif [[ $TRAVIS_OS_NAME = 'linux' ]]; then
+ 	export PATH="${PWD}/${SWIFT_VERSION}-ubuntu18.04/usr/bin:${PATH}"
   	echo "during script."
   	echo $PATH
 	swift test --enable-test-discovery

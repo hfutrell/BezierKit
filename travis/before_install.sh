@@ -8,7 +8,6 @@ elif [[ $TRAVIS_OS_NAME = 'linux' ]]; then
   tar xzf ${SWIFT_VERSION}-ubuntu18.04.tar.gz
   echo "before altering."
   echo $PATH
-  export PATH="${PWD}/${SWIFT_VERSION}-ubuntu18.04/usr/bin:${PATH}"
   echo "after altering."
   echo $PATH
 fi
