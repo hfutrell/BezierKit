@@ -12,6 +12,7 @@ jobs:
   - name: Linux SPM
     os: linux
     dist: bionic
+    env: SWIFT_VERSION=swift-5.3-RELEASE
   - name: iOS Min System
     os: osx
     osx_image: xcode11.2

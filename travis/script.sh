@@ -16,5 +16,7 @@ if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
   		pod spec lint;
     fi
 elif [[ $TRAVIS_OS_NAME = 'linux' ]]; then
+  	echo "during script."
+  	echo $PATH
 	swift test --enable-test-discovery
 fi
