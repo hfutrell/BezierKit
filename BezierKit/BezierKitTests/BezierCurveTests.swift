@@ -252,7 +252,7 @@ class BezierCurveTests: XCTestCase {
 
     func testCubicSelfIntersection() {
 
-        var curve = CubicCurve(p0: CGPoint(x: 0, y: 0),
+        let curve = CubicCurve(p0: CGPoint(x: 0, y: 0),
                                p1: CGPoint(x: 0, y: 1),
                                p2: CGPoint(x: 1, y: 1),
                                p3: CGPoint(x: 1, y: 1))

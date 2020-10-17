@@ -9,6 +9,8 @@
 import XCTest
 @testable import BezierKit
 
+#if canImport(CoreGraphics)
+
 class DrawTests: XCTestCase {
 
     override func setUp() {
@@ -48,3 +50,5 @@ class DrawTests: XCTestCase {
         XCTAssertEqual(b, 0.75, accuracy: epsilon)
     }
 }
+
+#endif

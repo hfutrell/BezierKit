@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import BezierKit
+@testable import BezierKit
 
 class TransformableTests: XCTestCase {
 
@@ -15,11 +15,16 @@ class TransformableTests: XCTestCase {
     let transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: -1, ty: 1)
 
     override func setUp() {
-        // assert(CGPoint(x: 1, y: 0).applying(transform) == CGPoint(x: -1, y: 2))
+
     }
 
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
+    }
+
+    func testTransform() {
+        // test that the `transform` itself does what we think it does
+        XCTAssertEqual(CGPoint(x: 1, y: 0).applying(transform), CGPoint(x: -1, y: 2))
     }
 
     func testTransformLineSegment() {

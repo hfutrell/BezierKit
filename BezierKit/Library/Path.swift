@@ -6,7 +6,9 @@
 //  Copyright © 2018 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
 import Foundation
 
 @objc(BezierKitPathFillRule) public enum PathFillRule: NSInteger {
@@ -52,6 +54,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }
 
+    #if canImport(CoreGraphics)
     @objc(CGPath) public var cgPath: CGPath {
         return self.lock.sync { self._cgPath }
     }
@@ -63,6 +66,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         return mutablePath.copy()!
     }()
+    #endif
 
     @objc public var isEmpty: Bool {
         return self.components.isEmpty // components are not allowed to be empty
@@ -138,6 +142,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         self.components = components
     }
 
+    #if canImport(CoreGraphics)
     @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
         let context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
@@ -188,9 +193,20 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         context.completeComponentIfNeededAndClearPointsAndOrders()
         self.init(components: context.components)
     }
+    #endif
 
     convenience public init(curve: BezierCurve) {
         self.init(components: [PathComponent(curve: curve)])
+    }
+
+    convenience internal init(rect: CGRect) {
+        let points = [rect.origin,
+                      CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y),
+                      CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height),
+                      CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height),
+                      rect.origin]
+        let component = PathComponent(points: points, orders: [Int](repeating: 1, count: 4))
+        self.init(components: [component])
     }
 
     // MARK: - NSCoding

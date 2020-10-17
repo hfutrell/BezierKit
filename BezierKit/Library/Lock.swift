@@ -8,6 +8,7 @@
 
 import Foundation
 
+#if canImport(Darwin)
 internal class UnfairLock {
     private let lockPointer: UnsafeMutablePointer<os_unfair_lock>
     init() {
@@ -23,3 +24,13 @@ internal class UnfairLock {
         return try f()
     }
 }
+#else
+internal class UnfairLock {
+    private let lock = NSLock()
+    func sync<T>(_ f: () throws -> T) rethrows -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return try f()
+    }
+}
+#endif

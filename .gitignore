@@ -24,3 +24,5 @@ xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+.swiftpm/
+.build/

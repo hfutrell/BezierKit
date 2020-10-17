@@ -9,6 +9,8 @@
 import XCTest
 @testable import BezierKit
 
+#if canImport(CoreGraphics)
+
 private struct CGPathElementRecord: Equatable {
     var type: CGPathElementType
     var pointsArray: [CGPoint]
@@ -49,7 +51,11 @@ fileprivate extension CGPath {
     }
 }
 
+#endif
+
 class PathDataTests: XCTestCase {
+
+    #if canImport(CoreGraphics)
 
     private func pathHasEqualElementsToCGPath(_ path1: Path, _ path2: CGPath) -> Bool {
         return cgPathsHaveEqualCGPathElements(Path(data: path1.data)!.cgPath, path2)
@@ -177,12 +183,17 @@ class PathDataTests: XCTestCase {
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
+    #endif
+
     func testEmptyData() {
         let path = Path(data: Data())
         XCTAssertEqual(path, nil)
     }
 
-    let simpleRectangle = Path(cgPath: CGPath(rect: CGRect(x: 1, y: 2, width: 3, height: 4), transform: nil))
+    let simpleRectangle = {
+        Path(rect: CGRect(x: 1, y: 2, width: 3, height: 4))
+    }()
+
     let expectedSimpleRectangleData = Data(base64Encoded: "JbPlSAUAAAAAAQEBAQAAAAAAAPA/AAAAAAAAAEAAAAAAAAAQQAAAAAAAAABAAAAAAAAAEEAAAAAAAAAYQAAAAAAAAPA/AAAAAAAAGEAAAAAAAADwPwAAAAAAAABA")!
 
     func testSimpleRectangle() {

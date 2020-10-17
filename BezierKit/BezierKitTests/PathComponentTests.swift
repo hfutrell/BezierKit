@@ -100,7 +100,9 @@ class PathComponentTests: XCTestCase {
     }
 
     let pointPathComponent = PathComponent(points: [CGPoint(x: 3.145, y: -8.34)], orders: [0]) // just a single point
-    let circlePathComponent = Path(cgPath: CGPath.init(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
+
+    #if canImport(CoreGraphics)
+    let circlePathComponent = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
 
     func testStartingEndingPointAt() {
         XCTAssertEqual(circlePathComponent.startingPointForElement(at: 0), circlePathComponent.curves[0].startingPoint)
@@ -182,4 +184,5 @@ class PathComponentTests: XCTestCase {
         XCTAssertEqual(arrayByEnumerating(component: circlePathComponent, includeControlPoints: false), expectedCirclePoints)
         XCTAssertEqual(arrayByEnumerating(component: circlePathComponent, includeControlPoints: true), circlePathComponent.points)
     }
+    #endif
 }
