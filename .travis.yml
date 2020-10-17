@@ -1,4 +1,7 @@
 language: swift
+os:
+    - linux
+    - osx
 env:
   global:
     - LC_CTYPE=en_US.UTF-8
@@ -10,16 +13,19 @@ env:
     - OSX_SDK=macosx10.15
 jobs:
   include:
-  - os: linux
+  - name: Linux SPM
+    os: linux
     dist: bionic
-    sudo: required
-  - os: osx
+  - name: iOS Min System
+    os: osx
     osx_image: xcode11.2
     env: DESTINATION="OS=10.3.1,name=iPhone 5" SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-  - os: osx
+  - name: iOS
+    os: osx
     osx_image: xcode11.2
     env: DESTINATION="OS=13.2.2,name=iPad Pro (12.9-inch) (3rd generation)" SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"     RUN_TESTS="YES" POD_LINT="NO"
-  - os: osx
+  - name: MacOS
+    os: osx
     osx_image: xcode11.2
     env: DESTINATION="arch=x86_64"SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"     RUN_TESTS="YES" POD_LINT="NO"
 before_install:
