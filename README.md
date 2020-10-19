@@ -9,7 +9,7 @@ BezierKit is a comprehensive Bezier Path library written in Swift.
 
 - [Warning! Prerelease software!](#warning-prerelease-software)
 - [Features](#features)
-- [Installation](#installation-with-cocoapods)
+- [Installation](#installation)
 - [Usage](#usage)
 - [License](#license)
 
@@ -31,9 +31,9 @@ Please note that BezierKit is currently pre-release software. Its releases follo
 - [ ] Comprehensive Unit and Integration Test Coverage
 - [ ] Complete Documentation
 
-## Installation with CocoaPods
+## Installation
 
-The recommended way to install BezierKit is via CocoaPods, however you may also find that dropping the contents of `Library` into your project also works.
+### CocoaPods
 
 [CocoaPods](http://cocoapods.org) is a dependency manager for Cocoa projects. You can install it with the following command:
 
@@ -55,7 +55,7 @@ Then, run the following command:
 $ pod install
 ```
 
-## Installation with Swift Package Manager
+### Swift Package Manager
 
 The [Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler.
 Once you have your Swift package set up, adding BezierKit as a dependency is as easy as adding it to the `dependencies` value of your `Package.swift`.
