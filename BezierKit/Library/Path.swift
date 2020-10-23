@@ -24,8 +24,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-@objc(BezierKitPath) open class Path: NSObject, NSCoding {
-
+@objc(BezierKitPath) open class Path: NSObject, NSSecureCoding {
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
@@ -211,6 +210,10 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     // MARK: - NSCoding
     // (cannot be put in extension because init?(coder:) is a designated initializer)
+
+    public static var supportsSecureCoding: Bool {
+        return true
+    }
 
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.data)

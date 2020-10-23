@@ -290,8 +290,18 @@ class PathTests: XCTestCase {
     func testEncodeDecode() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path = Path(cgPath: CGPath(rect: rect, transform: nil))
-        let data = NSKeyedArchiver.archivedData(withRootObject: path)
-        let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
+        let decodedPath: Path?
+        if #available(OSX 10.13, iOS 11.0, *) {
+            if let data = try? NSKeyedArchiver.archivedData(withRootObject: path, requiringSecureCoding: true) {
+                decodedPath = try? NSKeyedUnarchiver.unarchivedObject(ofClass: Path.self, from: data)
+            } else {
+                decodedPath = nil
+            }
+        } else {
+            // Fallback on earlier versions
+            let data = NSKeyedArchiver.archivedData(withRootObject: path)
+            decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as? Path
+        }
         XCTAssertEqual(decodedPath, path)
     }
 
@@ -1581,8 +1591,18 @@ class PathTests: XCTestCase {
         let c1 = CubicCurve(p0: p5, p1: p6, p2: p7, p3: p8)
         let path = Path(components: [PathComponent(curves: [l1, q1, l2, c1])])
 
-        let data = NSKeyedArchiver.archivedData(withRootObject: path)
-        let decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as! Path
+        let decodedPath: Path?
+        if #available(OSX 10.13, iOS 11.0, *) {
+            if let data = try? NSKeyedArchiver.archivedData(withRootObject: path, requiringSecureCoding: true) {
+                decodedPath = try? NSKeyedUnarchiver.unarchivedObject(ofClass: Path.self, from: data)
+            } else {
+                decodedPath = nil
+            }
+        } else {
+            // Fallback on earlier versions
+            let data = NSKeyedArchiver.archivedData(withRootObject: path)
+            decodedPath = NSKeyedUnarchiver.unarchiveObject(with: data) as? Path
+        }
         XCTAssertEqual(path, decodedPath)
     }
 
