@@ -6,7 +6,10 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 internal extension Array where Element: Comparable {
     func sortedAndUniqued() -> [Element] {
@@ -373,3 +376,28 @@ internal class Utils {
         return q
     }
 }
+
+#if !canImport(CoreGraphics)
+public typealias NSInteger = Int
+public typealias CGAffineTransform = AffineTransform
+
+extension CGPoint {
+    func applying(_ t: CGAffineTransform) -> CGPoint {
+        t.transform(self)
+    }
+}
+
+extension CGAffineTransform {
+    init(scaleX sx: CGFloat, y sy: CGFloat) {
+        self.init(scaleByX: sx, byY: sy)
+    }
+
+    init(translationX tx: CGFloat, y ty: CGFloat) {
+        self.init(translationByX: tx, byY: ty)
+    }
+
+    init(a: CGFloat, b: CGFloat, c: CGFloat, d: CGFloat, tx: CGFloat, ty: CGFloat) {
+        self.init(m11: a, m12: b, m21: c, m22: d, tX: tx, tY: ty)
+    }
+}
+#endif

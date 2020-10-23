@@ -6,6 +6,8 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
+
 #if os(macOS)
 import AppKit
 #elseif os(iOS)
@@ -284,3 +286,5 @@ public class Draw {
         context.drawPath(using: .fillStroke)
     }
 }
+
+#endif
