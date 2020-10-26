@@ -10,6 +10,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/hfutrell/BezierKit"
   s.license      = "MIT"
   s.author       = { "Holmes Futrell" => "holmesfutrell@gmail.com" }
+  s.swift_version = "5.3"
 
   s.ios.deployment_target = "10.0"
   s.osx.deployment_target = "10.12"
