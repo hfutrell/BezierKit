@@ -6,9 +6,7 @@
 //  Copyright © 2016 Holmes Futrell. All rights reserved.
 //
 
-#if canImport(CoreGraphics)
 import CoreGraphics
-#endif
 import Foundation
 
 @objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
@@ -108,7 +106,6 @@ import Foundation
         return self.orders[index]
     }
 
-    #if canImport(CoreGraphics)
     internal func appendPath(to mutablePath: CGMutablePath) {
         mutablePath.move(to: self.startingPoint)
         for i in 0..<self.numberOfElements {
@@ -133,7 +130,6 @@ import Foundation
             }
         }
     }
-    #endif
 
     required public init(points: [CGPoint], orders: [Int]) {
         // TODO: I don't like that this constructor is exposed, but for certain performance critical things you need it
@@ -450,7 +446,7 @@ import Foundation
     }
 
     public func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
-        return self.split(range: PathComponentRange(start: start, end: end))
+        return self.split(range: PathComponentRange(from: start, to: end))
     }
 
     open func reversed() -> Self {
@@ -484,8 +480,12 @@ public struct PathComponentIntersection {
 }
 
 public struct PathComponentRange: Equatable {
-    public let start: IndexedPathComponentLocation
-    public let end: IndexedPathComponentLocation
+    public var start: IndexedPathComponentLocation
+    public var end: IndexedPathComponentLocation
+    public init(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) {
+        self.start = start
+        self.end = end
+    }
     var isStandardized: Bool {
         return self == self.standardized
     }
@@ -510,6 +510,6 @@ public struct PathComponentRange: Equatable {
                 }
             }
         }
-        return PathComponentRange(start: start, end: end)
+        return PathComponentRange(from: start, to: end)
     }
 }
