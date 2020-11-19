@@ -17,36 +17,32 @@ class PolynomialTests: XCTestCase {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
         defer { scratchPad.deallocate() }
 
-        XCTAssertEqual([].f(0, scratchPad), 0)
-        XCTAssertEqual([].derivative, [])
-        XCTAssertEqual([].analyticalRoots(between: 0, and: 1), [])
-
-        let point = [3.0]
+        let point = BerenStein0(b0: 3.0)
         XCTAssertEqual(point.f(0, scratchPad), 3)
         XCTAssertEqual(point.f(0.5, scratchPad), 3)
         XCTAssertEqual(point.f(1, scratchPad), 3)
-        XCTAssertEqual(point.derivative, [])
+        //XCTAssertEqual(point.derivative, [])
         XCTAssertEqual(point.analyticalRoots(between: 0, and: 1), [])
 
-        let line = [2.0, 4.0]
+        let line = BerenStein1(b0: 2.0, b1: 4.0)
         XCTAssertEqual(line.f(0, scratchPad), 2)
         XCTAssertEqual(line.f(0.5, scratchPad), 3)
         XCTAssertEqual(line.f(1, scratchPad), 4)
-        XCTAssertEqual(line.derivative, [2])
+        XCTAssertEqual(line.derivative, BerenStein0(b0: 2))
         XCTAssertEqual(line.analyticalRoots(between: -2, and: 1), [-1])
         XCTAssertEqual(line.analyticalRoots(between: 0, and: 1), [])
 
-        let quad = [-1, 1.0, 0.0]
+        let quad = BerenStein2(b0: -1, b1: 1.0, b2: 0.0)
         XCTAssertEqual(quad.f(0, scratchPad), -1)
         XCTAssertEqual(quad.f(0.5, scratchPad), 0.25)
         XCTAssertEqual(quad.f(1, scratchPad), 0)
-        XCTAssertEqual(quad.derivative, [4, -2])
+        XCTAssertEqual(quad.derivative, BerenStein1(b0: 4, b1: -2))
     }
 
     func testDegree1() {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 2)
         defer { scratchPad.deallocate() }
-        let polynomial: [Double] = [-3, 2]
+        let polynomial = BerenStein1(b0: -3, b1: 2)
         let roots = findRoots(of: polynomial, between: -1, and: 1, scratchPad: scratchPad)
         XCTAssertEqual(roots.count, 1)
         XCTAssertEqual(roots[0], 0.6, accuracy: accuracy)
@@ -55,7 +51,7 @@ class PolynomialTests: XCTestCase {
     func testDegree2() {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 3)
         defer { scratchPad.deallocate() }
-        let polynomial: [Double] = [-5, -6, -4]
+        let polynomial = BerenStein2(b0: -5, b1: -6, b2: -4)
         let roots = findRoots(of: polynomial, between: -10, and: 10, scratchPad: scratchPad)
         XCTAssertEqual(roots[0], -1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 1.0 + 2.0 / 3.0, accuracy: accuracy)
@@ -65,7 +61,7 @@ class PolynomialTests: XCTestCase {
         // x^3 - 6x^2 + 11x - 6
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 4)
         defer { scratchPad.deallocate() }
-        let polynomial: [Double] = [-6, -7.0 / 3.0, -2.0 / 3.0, 0]
+        let polynomial = BerenStein3(b0: -6, b1: -7.0 / 3.0, b2: -2.0 / 3.0, b3: 0)
         let roots = findRoots(of: polynomial, between: 0, and: 4, scratchPad: scratchPad)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
@@ -77,7 +73,7 @@ class PolynomialTests: XCTestCase {
         // repeated root at x = 1
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 4)
         defer { scratchPad.deallocate() }
-        let polynomial = [-2, -1.0 / 3.0, 0, 0]
+        let polynomial = BerenStein3(b0: -2, b1: -1.0 / 3.0, b2: 0, b3: 0)
         let roots = findRoots(of: polynomial, between: -1, and: 3, scratchPad: scratchPad)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
@@ -87,7 +83,7 @@ class PolynomialTests: XCTestCase {
         // x^4 - 2.44x^2 + 1.44
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
         defer { scratchPad.deallocate() }
-        let polynomial = [1.44, 1.44, 1.44 - 1.22 / 3, 0.22, 0]
+        let polynomial = BerenStein4(b0: 1.44, b1: 1.44, b2: 1.44 - 1.22 / 3, b3: 0.22, b4: 0)
         let roots = findRoots(of: polynomial, between: -2, and: 2, scratchPad: scratchPad)
         XCTAssertEqual(roots[0], -1.2, accuracy: accuracy)
         XCTAssertEqual(roots[1], -1, accuracy: accuracy)
@@ -99,7 +95,7 @@ class PolynomialTests: XCTestCase {
         // x^4 - 2x^2 + 1
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
         defer { scratchPad.deallocate() }
-        let polynomial: [Double] = [1, 1, 2.0 / 3.0, 0, 0]
+        let polynomial = BerenStein4(b0: 1, b1: 1, b2: 2.0 / 3.0, b3: 0, b4: 0)
         let roots = findRoots(of: polynomial, between: -2, and: 2, scratchPad: scratchPad)
         XCTAssertEqual(roots.count, 2)
         XCTAssertEqual(roots[0], -1, accuracy: accuracy)
@@ -110,7 +106,7 @@ class PolynomialTests: XCTestCase {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 6)
         defer { scratchPad.deallocate() }
         // 0.2x^5 - 0.813333x^3 - 8.56x
-        let polynomial = [0, -1.712, -3.424, -5.2173333, -7.1733332, -9.173333]
+        let polynomial = BerenStein5(b0: 0, b1: -1.712, b2: -3.424, b3: -5.2173333, b4: -7.1733332, b5: -9.173333)
         let roots = findRoots(of: polynomial, between: -4, and: 4, scratchPad: scratchPad)
         XCTAssertEqual(polynomial.analyticalRoots(between: -5, and: 5), nil, "shouldn't be possible to solve analytically")
         XCTAssertEqual(roots[0], -2.9806382, accuracy: accuracy)
@@ -121,7 +117,7 @@ class PolynomialTests: XCTestCase {
     func testDegree4RealWorldIssue() {
         let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
         defer { scratchPad.deallocate() }
-        let polynomial = [1819945.4373168945, -3353335.8194732666, 3712712.6330566406, -2836657.1703338623, 2483314.5947265625]
+        let polynomial = BerenStein4(b0: 1819945.4373168945, b1: -3353335.8194732666, b2: 3712712.6330566406, b3: -2836657.1703338623, b4: 2483314.5947265625)
         let roots = findRoots(of: polynomial, between: 0, and: 1, scratchPad: scratchPad)
         XCTAssertEqual(roots.count, 2)
         XCTAssertEqual(roots[0], 0.15977874432923783, accuracy: 1.0e-5)

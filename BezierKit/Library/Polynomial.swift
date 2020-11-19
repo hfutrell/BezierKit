@@ -11,56 +11,126 @@ import CoreGraphics
 #endif
 import Foundation
 
-protocol Polynomial {
-    associatedtype Derivative: Polynomial
-    func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double
-    var derivative: Derivative { get }
-    var order: Int { get }
-    func analyticalRoots(between start: Double, and end: Double) -> [Double]?
+protocol Differenceable {
+    associatedtype Difference: BerenStein
+    func difference(a1: Double, a2: Double) -> Difference
 }
 
-extension Array: Polynomial where Element == Double {
-    typealias Derivative = Self
-    var order: Int { return self.count - 1 }
-    func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
-        assert(scratchPad.count >= self.count, "scratchpad will fail here.")
-        let count = self.count
-        guard count > 0 else { return 0 }
-        let oneMinusX = 1.0 - x
-        self.withUnsafeBufferPointer { (points: UnsafeBufferPointer<Double>) in
-            var i = 0
-            while i < count {
-                scratchPad[i] = points[i]
-                i += 1
-            }
-            i = count - 1
-            while i > 0 {
-                var j = 0
-                repeat {
-                    scratchPad[j] = oneMinusX * scratchPad[j] + x * scratchPad[j+1]
-                    j += 1
-                } while j < i
-                i -= 1
-            }
-        }
-        return scratchPad[0]
+extension Differenceable where Self.Difference: Reduceable {
+    func reduce(a1: Double, a2: Double) -> Double {
+        return self.difference(a1: a1, a2: a2).reduce(a1: a1, a2: a2)
     }
-    var derivative: [Double] {
-        let bufferCapacity = self.order
-        guard bufferCapacity > 0 else { return [] }
-        let n = Double(bufferCapacity)
-        return [Double](unsafeUninitializedCapacity: bufferCapacity) { (buffer: inout UnsafeMutableBufferPointer<Double>, count: inout Int) in
-            for i in 0..<bufferCapacity {
-                buffer[i] = n * (self[i+1] - self[i])
-            }
-            count = bufferCapacity
-        }
+}
+
+protocol Reduceable {
+    func reduce(a1: Double, a2: Double) -> Double
+}
+
+extension Reduceable {
+    func f(_ x: Double) -> Double {
+        let oneMinusX = 1.0 - x
+        return self.reduce(a1: oneMinusX, a2: x)
+    }
+}
+
+protocol BerenStein: Equatable, Differenceable, Reduceable {
+    func f(_ x: Double) -> Double
+    var order: Int { get }
+    var coefficients: [Double] { get }
+}
+
+extension BerenStein where Self: Differenceable {
+    var derivative: Difference {
+        let order = Double(self.order)
+        return self.difference(a1: -order, a2: order)
+    }
+}
+
+struct BerenStein0: BerenStein, Differenceable, Reduceable {
+    var b0: Double
+    var coefficients: [Double] { return [b0] }
+    func f(_ x: Double) -> Double {
+        return b0
+    }
+    var order: Int { return 0 }
+    func reduce(a1: Double, a2: Double) -> Double { return 0.0 }
+    func difference(a1: Double, a2: Double) -> BerenStein0 {
+        return BerenStein0(b0: 0.0)
+    }
+}
+
+struct BerenStein1: BerenStein, Differenceable, Reduceable {
+    typealias Difference = BerenStein0
+    var b0, b1: Double
+    var coefficients: [Double] { return [b0, b1] }
+    func reduce(a1: Double, a2: Double) -> Double {
+        return a1 * b0 + a2 * b1
+    }
+    func difference(a1: Double, a2: Double) -> BerenStein0 {
+        return BerenStein0(b0: self.reduce(a1: a1, a2: a2))
+    }
+    var order: Int { return 1 }
+}
+
+struct BerenStein2: BerenStein, Differenceable, Reduceable {
+    typealias Difference = BerenStein1
+    var b0, b1, b2: Double
+    var coefficients: [Double] { return [b0, b1, b2] }
+    func difference(a1: Double, a2: Double) -> BerenStein1 {
+        return BerenStein1(b0: a1 * b0 + a2 * b1,
+                           b1: a1 * b1 + a2 * b2)
+    }
+    var order: Int { return 2 }
+}
+
+struct BerenStein3: BerenStein, Differenceable, Reduceable {
+    typealias Difference = BerenStein2
+    var b0, b1, b2, b3: Double
+    var coefficients: [Double] { return [b0, b1, b2, b3] }
+    func difference(a1: Double, a2: Double) -> BerenStein2 {
+        return BerenStein2(b0: a1 * b0 + a2 * b1,
+                           b1: a1 * b1 + a2 * b2,
+                           b2: a1 * b2 + a2 * b3)
+    }
+    var order: Int { return 3 }
+}
+
+struct BerenStein4: BerenStein, Differenceable, Reduceable {
+    typealias Difference = BerenStein3
+    var b0, b1, b2, b3, b4: Double
+    var coefficients: [Double] { return [b0, b1, b2, b3, b4] }
+    func difference(a1: Double, a2: Double) -> BerenStein3 {
+        return BerenStein3(b0: a1 * b0 + a2 * b1,
+                           b1: a1 * b1 + a2 * b2,
+                           b2: a1 * b2 + a2 * b3,
+                           b3: a1 * b3 + a2 * b4)
+    }
+    var order: Int { return 4 }
+}
+
+struct BerenStein5: BerenStein, Differenceable, Reduceable {
+    typealias Difference = BerenStein4
+    var b0, b1, b2, b3, b4, b5: Double
+    var coefficients: [Double] { return [b0, b1, b2, b3, b4, b5] }
+    func difference(a1: Double, a2: Double) -> BerenStein4 {
+        return BerenStein4(b0: a1 * b0 + a2 * b1,
+                           b1: a1 * b1 + a2 * b2,
+                           b2: a1 * b2 + a2 * b3,
+                           b3: a1 * b3 + a2 * b4,
+                           b4: a1 * b4 + a2 * b5)
+    }
+    var order: Int { return 5 }
+}
+
+extension BerenStein {
+    func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+        return self.f(x)
     }
     func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
         guard order > 0 else { return [] }
         guard order < 4 else { return nil } // cannot solve
-        return Utils.droots(self.map { CGFloat($0) }).compactMap {
+        return Utils.droots(self.coefficients.map { CGFloat($0) }).compactMap {
             let t = Double($0)
             guard t > start, t < end else { return nil }
             return t
@@ -68,7 +138,7 @@ extension Array: Polynomial where Element == Double {
     }
 }
 
-private func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, guess: Double, relaxation: Double = 1, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+private func newton<P: BerenStein>(polynomial: P, derivative: P.Difference, guess: Double, relaxation: Double = 1, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
@@ -83,7 +153,7 @@ private func newton<P: Polynomial>(polynomial: P, derivative: P.Derivative, gues
     return x
 }
 
-private func findRootBisection<P: Polynomial>(of polynomial: P, start: Double, end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
     var guess = (start + end) / 2
     var low = start
     var high = end
@@ -110,7 +180,8 @@ private func findRootBisection<P: Polynomial>(of polynomial: P, start: Double, e
     return guess
 }
 
-func findRoots<P: Polynomial>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
+
+func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
     assert(start < end)
     if let roots = polynomial.analyticalRoots(between: start, and: end) {
         return roots
