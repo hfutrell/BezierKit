@@ -343,9 +343,6 @@ struct BerenStein5: BerenStein, Differenceable, Reduceable {
 }
 
 extension BerenStein {
-    func f(_ x: Double, _ scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
-        return self.f(x)
-    }
     func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
         guard order > 0 else { return [] }
@@ -358,13 +355,13 @@ extension BerenStein {
     }
 }
 
-private func newton<P: BerenStein>(polynomial: P, derivative: P.Difference, guess: Double, relaxation: Double = 1, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+private func newton<P: BerenStein>(polynomial: P, derivative: P.Difference, guess: Double, relaxation: Double = 1) -> Double {
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
-        let f = polynomial.f(x, scratchPad)
+        let f = polynomial.f(x)
         guard f != 0.0 else { break }
-        let fPrime = derivative.f(x, scratchPad)
+        let fPrime = derivative.f(x)
         let delta = relaxation * f / fPrime
         let previous = x
         x -= delta
@@ -373,19 +370,19 @@ private func newton<P: BerenStein>(polynomial: P, derivative: P.Difference, gues
     return x
 }
 
-private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> Double {
+private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, end: Double) -> Double {
     var guess = (start + end) / 2
     var low = start
     var high = end
-    let lowSign = polynomial.f(low, scratchPad).sign
-    let highSign = polynomial.f(high, scratchPad).sign
+    let lowSign = polynomial.f(low).sign
+    let highSign = polynomial.f(high).sign
     assert(lowSign != highSign)
     let maxIterations = 20
     var iterations = 0
     while high - low > 1.0e-5 {
         let midGuess = (low + high) / 2
         guess = midGuess
-        let nextGuessF = polynomial.f(guess, scratchPad)
+        let nextGuessF = polynomial.f(guess)
         if nextGuessF == 0 {
             return guess
         } else if nextGuessF.sign == lowSign {
@@ -400,41 +397,41 @@ private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, e
     return guess
 }
 
-func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
+func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
     assert(start < end)
     if let roots = polynomial.analyticalRoots(between: start, and: end) {
         return roots
     }
     let derivative = polynomial.derivative
-    let criticalPoints: [Double] = findRoots(of: derivative, between: start, and: end, scratchPad: scratchPad)
+    let criticalPoints: [Double] = findRoots(of: derivative, between: start, and: end)
     let intervals: [Double] = [start] + criticalPoints + [end]
     var lastFoundRoot: Double?
     let roots = (0..<intervals.count-1).compactMap { (i: Int) -> Double? in
         let start   = intervals[i]
         let end     = intervals[i+1]
-        let fStart  = polynomial.f(start, scratchPad)
-        let fEnd    = polynomial.f(end, scratchPad)
+        let fStart  = polynomial.f(start)
+        let fEnd    = polynomial.f(end)
         let root: Double
         if fStart * fEnd < 0 {
             // TODO: if a critical point is a root we take this
             // codepath due to roundoff and  converge only linearly to one end of interval
             let guess = (start + end) / 2
-            let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess, scratchPad: scratchPad)
+            let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess)
             if start < newtonRoot, newtonRoot < end {
                 root = newtonRoot
             } else {
                 // newton's method failed / converged to the wrong root!
                 // rare, but can happen roughly 5% of the time
                 // see unit test: `testDegree4RealWorldIssue`
-                root = findRootBisection(of: polynomial, start: start, end: end, scratchPad: scratchPad)
+                root = findRootBisection(of: polynomial, start: start, end: end)
             }
         } else {
             let guess = end
-            let value = newton(polynomial: polynomial, derivative: derivative, guess: guess, scratchPad: scratchPad)
+            let value = newton(polynomial: polynomial, derivative: derivative, guess: guess)
             guard abs(value - guess) < 1.0e-5 else {
                 return nil // did not converge near guess
             }
-            guard abs(polynomial.f(value, scratchPad)) < 1.0e-10 else {
+            guard abs(polynomial.f(value)) < 1.0e-10 else {
                 return nil // not actually a root
             }
             root = value
@@ -450,7 +447,7 @@ func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: 
     return roots
 }
 
-//func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
+//func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
 //    assert(start < end)
 //
 //    var tMin: Double = Double.infinity
@@ -505,9 +502,9 @@ func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: 
 //        // split the polynomial in two and find solutions in each half
 //        let mid = (start + end) / 2
 //        let left = polynomial.split(to: 0.5)
-//        let solutionsLeft = findRoots(of: left, between: start, and: mid, scratchPad: scratchPad)
+//        let solutionsLeft = findRoots(of: left, between: start, and: mid)
 //        let right = polynomial.split(from: 0.5)
-//        var solutionsRight = findRoots(of: right, between: mid, and: end, scratchPad: scratchPad)
+//        var solutionsRight = findRoots(of: right, between: mid, and: end)
 //        if let lastLeft = solutionsLeft.last {
 //            // filter out double-roots
 //            solutionsRight = solutionsRight.filter { $0 - lastLeft > 1.0e-7 }
@@ -519,6 +516,5 @@ func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: 
 //    let clippedPolynomial = polynomial.split(from: tMin, to: tMax)
 //    return findRoots(of: clippedPolynomial,
 //                     between: adjustedStart,
-//                     and: adjustedEnd,
-//                     scratchPad: scratchPad)
+//                     and: adjustedEnd)
 //}
