@@ -14,9 +14,6 @@ class PolynomialTests: XCTestCase {
     let accuracy = 1.0e-5
 
     func testEvaluation() {
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
-        defer { scratchPad.deallocate() }
-
         let point = BerenStein0(b0: 3.0)
         XCTAssertEqual(point.f(0), 3)
         XCTAssertEqual(point.f(0.5), 3)
@@ -40,8 +37,6 @@ class PolynomialTests: XCTestCase {
     }
 
     func testDegree1() {
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 2)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein1(b0: -3, b1: 2)
         let roots = findRoots(of: polynomial, between: -1, and: 1)
         XCTAssertEqual(roots.count, 1)
@@ -49,8 +44,6 @@ class PolynomialTests: XCTestCase {
     }
 
     func testDegree2() {
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 3)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein2(b0: -5, b1: -6, b2: -4)
         let roots = findRoots(of: polynomial, between: -10, and: 10)
         XCTAssertEqual(roots[0], -1, accuracy: accuracy)
@@ -59,8 +52,6 @@ class PolynomialTests: XCTestCase {
 
     func testDegree3() {
         // x^3 - 6x^2 + 11x - 6
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 4)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein3(b0: -6, b1: -7.0 / 3.0, b2: -2.0 / 3.0, b3: 0)
         let roots = findRoots(of: polynomial, between: 0, and: 4)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
@@ -71,8 +62,6 @@ class PolynomialTests: XCTestCase {
     func testDegree3RepeatedRoot() {
         // x^3 - 4x^2 + 5x - 2
         // repeated root at x = 1
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 4)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein3(b0: -2, b1: -1.0 / 3.0, b2: 0, b3: 0)
         let roots = findRoots(of: polynomial, between: -1, and: 3)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
@@ -81,8 +70,6 @@ class PolynomialTests: XCTestCase {
 
     func testDegree4() {
         // x^4 - 2.44x^2 + 1.44
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein4(b0: 1.44, b1: 1.44, b2: 1.44 - 1.22 / 3, b3: 0.22, b4: 0)
         let roots = findRoots(of: polynomial, between: -2, and: 2)
         XCTAssertEqual(roots[0], -1.2, accuracy: accuracy)
@@ -93,8 +80,6 @@ class PolynomialTests: XCTestCase {
 
     func testDegree4RepeatedRoots() {
         // x^4 - 2x^2 + 1
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein4(b0: 1, b1: 1, b2: 2.0 / 3.0, b3: 0, b4: 0)
         let roots = findRoots(of: polynomial, between: -2, and: 2)
         XCTAssertEqual(roots.count, 2)
@@ -103,8 +88,6 @@ class PolynomialTests: XCTestCase {
     }
 
     func testDegree5() {
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 6)
-        defer { scratchPad.deallocate() }
         // 0.2x^5 - 0.813333x^3 - 8.56x
         let polynomial = BerenStein5(b0: 0, b1: -1.712, b2: -3.424, b3: -5.2173333, b4: -7.1733332, b5: -9.173333)
         let roots = findRoots(of: polynomial, between: -4, and: 4)
@@ -115,8 +98,6 @@ class PolynomialTests: XCTestCase {
     }
 
     func testDegree4RealWorldIssue() {
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: 5)
-        defer { scratchPad.deallocate() }
         let polynomial = BerenStein4(b0: 1819945.4373168945, b1: -3353335.8194732666, b2: 3712712.6330566406, b3: -2836657.1703338623, b4: 2483314.5947265625)
         let roots = findRoots(of: polynomial, between: 0, and: 1)
         XCTAssertEqual(roots.count, 2)
