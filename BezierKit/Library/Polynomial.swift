@@ -14,6 +14,12 @@ import Foundation
 protocol Differenceable {
     associatedtype Difference: BerenStein
     func difference(a1: Double, a2: Double) -> Difference
+    init(_ d: Difference, last: Double)
+    init(first: Double, _ d: Difference)
+    func reversed() -> Self
+    func split(to x: Double) -> Self
+    func split(from x: Double) -> Self
+    func split(from tMin: Double, to tMax: Double) -> Self
 }
 
 extension Differenceable where Self.Difference: Reduceable {
@@ -37,6 +43,9 @@ protocol BerenStein: Equatable, Differenceable, Reduceable {
     func f(_ x: Double) -> Double
     var order: Int { get }
     var coefficients: [Double] { get }
+    var last: Double { get }
+    var first: Double { get }
+    func enumerated(block: (Int, Double) -> Void)
 }
 
 extension BerenStein where Self: Differenceable {
@@ -44,9 +53,49 @@ extension BerenStein where Self: Differenceable {
         let order = Double(self.order)
         return self.difference(a1: -order, a2: order)
     }
+    func split(to x: Double) -> Self {
+        let oneMinusX = 1.0 - x
+        let difference = self.difference(a1: oneMinusX, a2: x)
+        let differenceSplit: Difference = difference.split(to: x)
+        return Self(first: self.first, differenceSplit)
+    }
+    func split(from x: Double) -> Self {
+        let oneMinusX = 1.0 - x
+        let difference = self.difference(a1: oneMinusX, a2: x)
+        let differenceSplit: Difference = difference.split(from: x)
+        return Self(differenceSplit, last: self.last)
+    }
+    func split(from tMin: Double, to tMax: Double) -> Self {
+        guard tMax > tMin else {
+            return self.reversed().split(from: 1.0 - tMin, to: 1.0 - tMax)
+        }
+        var clippedPolynomial = self.split(to: tMax)
+        guard tMax > 0 else {
+            return clippedPolynomial
+        }
+        let tMinPrime = tMin / tMax
+        clippedPolynomial = clippedPolynomial.split(from: tMinPrime)
+        return clippedPolynomial
+    }
+    func reversed() -> Self {
+        let differenceReversed = self.difference(a1: 1, a2: 0).reversed()
+        return Self(first: self.last, differenceReversed)
+    }
 }
 
 struct BerenStein0: BerenStein, Differenceable, Reduceable {
+
+    func enumerated(block: (Int, Double) -> Void) {
+        block(0, b0)
+    }
+
+    var last: Double { return b0 }
+    var first: Double { return b0 }
+
+    init(_ d: BerenStein0, last: Double) { self.b0 = last }
+    init(first: Double, _ d: BerenStein0) { self.b0 = first }
+    init(b0: Double) { self.b0 = b0 }
+
     var b0: Double
     var coefficients: [Double] { return [b0] }
     func f(_ x: Double) -> Double {
@@ -57,9 +106,37 @@ struct BerenStein0: BerenStein, Differenceable, Reduceable {
     func difference(a1: Double, a2: Double) -> BerenStein0 {
         return BerenStein0(b0: 0.0)
     }
+    func reversed() -> BerenStein0 { return self }
+    func split(to x: Double) -> Self { return self }
+    func split(from x: Double) -> Self { return self }
 }
 
 struct BerenStein1: BerenStein, Differenceable, Reduceable {
+
+    func enumerated(block: (Int, Double) -> Void) {
+        block(0, b0)
+        block(1, b1)
+    }
+
+    var last: Double { return b1 }
+
+    var first: Double { return b0 }
+
+    init(_ d: BerenStein0, last: Double) {
+        self.b0 = d.b0
+        self.b1 = last
+    }
+
+    init(first: Double, _ d: BerenStein0) {
+        self.b0 = first
+        self.b1 = d.b0
+    }
+
+    init(b0: Double, b1: Double) {
+        self.b0 = b0
+        self.b1 = b1
+    }
+
     typealias Difference = BerenStein0
     var b0, b1: Double
     var coefficients: [Double] { return [b0, b1] }
@@ -70,9 +147,40 @@ struct BerenStein1: BerenStein, Differenceable, Reduceable {
         return BerenStein0(b0: self.reduce(a1: a1, a2: a2))
     }
     var order: Int { return 1 }
+    func reversed() -> BerenStein1 { BerenStein1(b0: b1, b1: b0) }
+
 }
 
 struct BerenStein2: BerenStein, Differenceable, Reduceable {
+
+    func enumerated(block: (Int, Double) -> Void) {
+        block(0, b0)
+        block(1, b1)
+        block(2, b2)
+    }
+
+    var last: Double { return b2 }
+
+    var first: Double { return b0 }
+
+    init(_ d: BerenStein1, last: Double) {
+        self.b0 = d.b0
+        self.b1 = d.b1
+        self.b2 = last
+    }
+
+    init(first: Double, _ d: BerenStein1) {
+        self.b0 = first
+        self.b1 = d.b0
+        self.b2 = d.b1
+    }
+
+    init(b0: Double, b1: Double, b2: Double) {
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+    }
+
     typealias Difference = BerenStein1
     var b0, b1, b2: Double
     var coefficients: [Double] { return [b0, b1, b2] }
@@ -84,8 +192,42 @@ struct BerenStein2: BerenStein, Differenceable, Reduceable {
 }
 
 struct BerenStein3: BerenStein, Differenceable, Reduceable {
+
+    func enumerated(block: (Int, Double) -> Void) {
+        block(0, b0)
+        block(1, b1)
+        block(2, b2)
+        block(3, b3)
+    }
+
     typealias Difference = BerenStein2
     var b0, b1, b2, b3: Double
+
+    var last: Double { return b3 }
+
+    var first: Double { return b0 }
+
+    init(_ d: BerenStein2, last: Double) {
+        self.b0 = d.b0
+        self.b1 = d.b1
+        self.b2 = d.b2
+        self.b3 = last
+    }
+
+    init(first: Double, _ d: BerenStein2) {
+        self.b0 = first
+        self.b1 = d.b0
+        self.b2 = d.b1
+        self.b3 = d.b2
+    }
+
+    init(b0: Double, b1: Double, b2: Double, b3: Double) {
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+        self.b3 = b3
+    }
+
     var coefficients: [Double] { return [b0, b1, b2, b3] }
     func difference(a1: Double, a2: Double) -> BerenStein2 {
         return BerenStein2(b0: a1 * b0 + a2 * b1,
@@ -96,6 +238,43 @@ struct BerenStein3: BerenStein, Differenceable, Reduceable {
 }
 
 struct BerenStein4: BerenStein, Differenceable, Reduceable {
+
+    func enumerated(block: (Int, Double) -> Void) {
+        block(0, b0)
+        block(1, b1)
+        block(2, b2)
+        block(3, b3)
+        block(4, b4)
+    }
+
+    var last: Double { return b4 }
+
+    var first: Double { return b0 }
+
+    init(_ d: BerenStein3, last: Double) {
+        self.b0 = d.b0
+        self.b1 = d.b1
+        self.b2 = d.b2
+        self.b3 = d.b3
+        self.b4 = last
+    }
+
+    init(first: Double, _ d: BerenStein3) {
+        self.b0 = first
+        self.b1 = d.b0
+        self.b2 = d.b1
+        self.b3 = d.b2
+        self.b4 = d.b3
+    }
+
+    init(b0: Double, b1: Double, b2: Double, b3: Double, b4: Double) {
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+        self.b3 = b3
+        self.b4 = b4
+    }
+
     typealias Difference = BerenStein3
     var b0, b1, b2, b3, b4: Double
     var coefficients: [Double] { return [b0, b1, b2, b3, b4] }
@@ -109,6 +288,47 @@ struct BerenStein4: BerenStein, Differenceable, Reduceable {
 }
 
 struct BerenStein5: BerenStein, Differenceable, Reduceable {
+
+    func enumerated(block: (Int, Double) -> Void) {
+        block(0, b0)
+        block(1, b1)
+        block(2, b2)
+        block(3, b3)
+        block(4, b4)
+        block(5, b5)
+    }
+
+    var last: Double { return b5 }
+
+    var first: Double { return b0 }
+
+    init(_ d: BerenStein4, last: Double) {
+        self.b0 = d.b0
+        self.b1 = d.b1
+        self.b2 = d.b2
+        self.b3 = d.b3
+        self.b4 = d.b4
+        self.b5 = last
+    }
+
+    init(first: Double, _ d: BerenStein4) {
+        self.b0 = first
+        self.b1 = d.b0
+        self.b2 = d.b1
+        self.b3 = d.b2
+        self.b4 = d.b3
+        self.b5 = d.b4
+    }
+
+    init(b0: Double, b1: Double, b2: Double, b3: Double, b4: Double, b5: Double) {
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+        self.b3 = b3
+        self.b4 = b4
+        self.b5 = b5
+    }
+
     typealias Difference = BerenStein4
     var b0, b1, b2, b3, b4, b5: Double
     var coefficients: [Double] { return [b0, b1, b2, b3, b4, b5] }
@@ -180,7 +400,6 @@ private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, e
     return guess
 }
 
-
 func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
     assert(start < end)
     if let roots = polynomial.analyticalRoots(between: start, and: end) {
@@ -230,3 +449,76 @@ func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: 
     }
     return roots
 }
+
+//func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double, scratchPad: UnsafeMutableBufferPointer<Double>) -> [Double] {
+//    assert(start < end)
+//
+//    var tMin: Double = Double.infinity
+//    var tMax: Double = -Double.infinity
+//    var intersected = false
+//
+//    func x(_ i: Int) -> Double {
+//        return Double(i) / Double(polynomial.order)
+//    }
+//    // compute the intersections of each pair of lines with the x axis
+//    polynomial.enumerated { i, c1 in
+//        polynomial.enumerated { j, c2 in
+//            guard j > i else { return }
+//            let x1 = x(i)
+//            let x2 = x(j)
+//            let yDifference = c2 - c1
+//            guard yDifference != 0 else { return }
+//            guard c1 <= 0 || c2 <= 0 else { return }
+//            guard c1 >= 0 || c2 >= 0 else { return }
+//            intersected = true
+//            let tLine = -c1 / (c2 - c1)
+//            let t = x1 * (1 - tLine) + x2 * tLine
+//            if t < tMin {
+//                tMin = t
+//            }
+//            if t > tMax {
+//                tMax = t
+//            }
+//        }
+//    }
+//
+//    guard intersected == true else {
+//        return [] // no intersections with convex hull
+//    }
+//
+//    assert(tMin >= 0 && tMin <= 1)
+//    assert(tMax >= 0 && tMax <= 1)
+//    assert(tMax >= tMin)
+//
+//    // find [adjustedStart, adjustedEnd] range represented by [tMin, tMax] in original polynomial
+//    func adjustedT(_ t: Double) -> Double {
+//        return start * (1.0 - t) + end * t
+//    }
+//    let adjustedStart = adjustedT(tMin)
+//    let adjustedEnd = adjustedT(tMax)
+//    guard adjustedEnd > adjustedStart else {
+//        return [(adjustedStart + adjustedEnd) / 2.0]
+//    }
+//
+//    guard tMax - tMin <= 0.8 else {
+//        // we didn't clip enough of the polynomial off
+//        // split the polynomial in two and find solutions in each half
+//        let mid = (start + end) / 2
+//        let left = polynomial.split(to: 0.5)
+//        let solutionsLeft = findRoots(of: left, between: start, and: mid, scratchPad: scratchPad)
+//        let right = polynomial.split(from: 0.5)
+//        var solutionsRight = findRoots(of: right, between: mid, and: end, scratchPad: scratchPad)
+//        if let lastLeft = solutionsLeft.last {
+//            // filter out double-roots
+//            solutionsRight = solutionsRight.filter { $0 - lastLeft > 1.0e-7 }
+//        }
+//        return solutionsLeft + solutionsRight
+//    }
+//
+//    // clip the polynomial to [tMin, tMax]
+//    let clippedPolynomial = polynomial.split(from: tMin, to: tMax)
+//    return findRoots(of: clippedPolynomial,
+//                     between: adjustedStart,
+//                     and: adjustedEnd,
+//                     scratchPad: scratchPad)
+//}
