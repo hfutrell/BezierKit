@@ -450,7 +450,7 @@ import Foundation
     }
 
     public func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
-        return self.split(range: PathComponentRange(start: start, end: end))
+        return self.split(range: PathComponentRange(from: start, to: end))
     }
 
     open func reversed() -> Self {
@@ -484,8 +484,12 @@ public struct PathComponentIntersection {
 }
 
 public struct PathComponentRange: Equatable {
-    public let start: IndexedPathComponentLocation
-    public let end: IndexedPathComponentLocation
+    public var start: IndexedPathComponentLocation
+    public var end: IndexedPathComponentLocation
+    public init(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) {
+        self.start = start
+        self.end = end
+    }
     var isStandardized: Bool {
         return self == self.standardized
     }
@@ -510,6 +514,6 @@ public struct PathComponentRange: Equatable {
                 }
             }
         }
-        return PathComponentRange(start: start, end: end)
+        return PathComponentRange(from: start, to: end)
     }
 }

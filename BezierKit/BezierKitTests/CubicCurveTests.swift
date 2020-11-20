@@ -288,13 +288,27 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(p7.t, t, accuracy: epsilon)
     }
 
+    func testProjectRealWorldIssue() {
+        // this issue occurred when using the Bezier Clipping approach
+        // to root solving due to some kind of issue with the limits of precision
+        // one idea is to look at the .split() functions and make sure there are no cracks
+        // another idea is to look at the start and end points and actually require the call to produce a solution
+        let epsilon: CGFloat = 1.0e-5
+        let c = CubicCurve(p0: CGPoint(x: 100, y: 25),
+                           p1: CGPoint(x: 10, y: 90),
+                           p2: CGPoint(x: 50, y: 185),
+                           p3: CGPoint(x: 170, y: 175))
+        let t = c.project(CGPoint(x: 8.3359375, y: -49.10546875)).t
+        XCTAssertEqual(t, 0.0575491, accuracy: epsilon)
+    }
+
     func testProjectPerformance() {
         let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
                            p1: CGPoint(x: 3, y: 1),
                            p2: CGPoint(x: -3, y: 1),
                            p3: CGPoint(x: 1, y: -1))
         self.measure {
-            // roughly 0.060 -Onone, 0.007 with -Ospeed
+            // roughly 0.029 -Onone, 0.004 with -Ospeed
             for theta in stride(from: 0, to: 2*Double.pi, by: 0.01) {
                 _ = c.project(CGPoint(x: cos(theta), y: sin(theta)))
             }
