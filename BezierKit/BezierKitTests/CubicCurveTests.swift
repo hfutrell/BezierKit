@@ -308,8 +308,8 @@ class CubicCurveTests: XCTestCase {
                            p2: CGPoint(x: -3, y: 1),
                            p3: CGPoint(x: 1, y: -1))
         self.measure {
-            // 0.256 with -Ospeed
-            for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
+            // roughly 0.029 -Onone, 0.004 with -Ospeed
+            for theta in stride(from: 0, to: 2*Double.pi, by: 0.01) {
                 _ = c.project(CGPoint(x: cos(theta), y: sin(theta)))
             }
         }
