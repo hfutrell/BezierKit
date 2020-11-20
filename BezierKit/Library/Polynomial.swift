@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-protocol BernsteinPolynomial: Equatable {
+internal protocol BernsteinPolynomial: Equatable {
     func f(_ x: Double) -> Double
     var order: Int { get }
     var coefficients: [Double] { get }
@@ -30,7 +30,7 @@ protocol BernsteinPolynomial: Equatable {
 //    func split(from tMin: Double, to tMax: Double) -> Self
 }
 
-extension BernsteinPolynomial {
+internal extension BernsteinPolynomial {
     func f(_ x: Double) -> Double {
         let oneMinusX = 1.0 - x
         return self.reduce(a1: oneMinusX, a2: x)
@@ -72,7 +72,7 @@ extension BernsteinPolynomial {
 //    }
 }
 
-struct BernsteinPolynomial0: BernsteinPolynomial {
+internal struct BernsteinPolynomial0: BernsteinPolynomial {
 //    func enumerated(block: (Int, Double) -> Void) {
 //        block(0, b0)
 //    }
@@ -96,7 +96,7 @@ struct BernsteinPolynomial0: BernsteinPolynomial {
     }
 }
 
-struct BernsteinPolynomial1: BernsteinPolynomial {
+internal struct BernsteinPolynomial1: BernsteinPolynomial {
 //    func enumerated(block: (Int, Double) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -131,7 +131,7 @@ struct BernsteinPolynomial1: BernsteinPolynomial {
     var order: Int { return 1 }
 }
 
-struct BernsteinPolynomial2: BernsteinPolynomial {
+internal struct BernsteinPolynomial2: BernsteinPolynomial {
 //    func enumerated(block: (Int, Double) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -164,7 +164,7 @@ struct BernsteinPolynomial2: BernsteinPolynomial {
     var order: Int { return 2 }
 }
 
-struct BernsteinPolynomial3: BernsteinPolynomial {
+internal struct BernsteinPolynomial3: BernsteinPolynomial {
 //    func enumerated(block: (Int, Double) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -202,7 +202,7 @@ struct BernsteinPolynomial3: BernsteinPolynomial {
     var order: Int { return 3 }
 }
 
-struct BernsteinPolynomial4: BernsteinPolynomial {
+internal struct BernsteinPolynomial4: BernsteinPolynomial {
 //    func enumerated(block: (Int, Double) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -245,7 +245,7 @@ struct BernsteinPolynomial4: BernsteinPolynomial {
     var order: Int { return 4 }
 }
 
-struct BernsteinPolynomial5: BernsteinPolynomial {
+internal struct BernsteinPolynomial5: BernsteinPolynomial {
 //    func enumerated(block: (Int, Double) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -293,7 +293,7 @@ struct BernsteinPolynomial5: BernsteinPolynomial {
     var order: Int { return 5 }
 }
 
-extension BernsteinPolynomial {
+internal extension BernsteinPolynomial {
     func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
         guard order > 0 else { return [] }
@@ -348,7 +348,7 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     return guess
 }
 
-func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
+internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
     assert(start < end)
     if let roots = polynomial.analyticalRoots(between: start, and: end) {
         return roots
@@ -398,7 +398,7 @@ func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, 
     return roots
 }
 
-//func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
+//internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
 //    assert(start < end)
 //
 //    var tMin: Double = Double.infinity
