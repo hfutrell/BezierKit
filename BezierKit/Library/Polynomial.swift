@@ -11,91 +11,79 @@ import CoreGraphics
 #endif
 import Foundation
 
-protocol Differenceable {
-    associatedtype Difference: BerenStein
+protocol BernsteinPolynomial: Equatable {
+    func f(_ x: Double) -> Double
+    var order: Int { get }
+    var coefficients: [Double] { get }
+//    var last: Double { get }
+//    var first: Double { get }
+//    func enumerated(block: (Int, Double) -> Void)
+    associatedtype Difference: BernsteinPolynomial
     func difference(a1: Double, a2: Double) -> Difference
-    init(_ d: Difference, last: Double)
-    init(first: Double, _ d: Difference)
-    func reversed() -> Self
-    func split(to x: Double) -> Self
-    func split(from x: Double) -> Self
-    func split(from tMin: Double, to tMax: Double) -> Self
-}
-
-extension Differenceable where Self.Difference: Reduceable {
-    func reduce(a1: Double, a2: Double) -> Double {
-        return self.difference(a1: a1, a2: a2).reduce(a1: a1, a2: a2)
-    }
-}
-
-protocol Reduceable {
     func reduce(a1: Double, a2: Double) -> Double
+    var derivative: Difference { get }
+//    init(_ d: Difference, last: Double)
+//    init(first: Double, _ d: Difference)
+//    func reversed() -> Self
+//    func split(to x: Double) -> Self
+//    func split(from x: Double) -> Self
+//    func split(from tMin: Double, to tMax: Double) -> Self
 }
 
-extension Reduceable {
+extension BernsteinPolynomial {
     func f(_ x: Double) -> Double {
         let oneMinusX = 1.0 - x
         return self.reduce(a1: oneMinusX, a2: x)
     }
-}
-
-protocol BerenStein: Equatable, Differenceable, Reduceable {
-    func f(_ x: Double) -> Double
-    var order: Int { get }
-    var coefficients: [Double] { get }
-    var last: Double { get }
-    var first: Double { get }
-    func enumerated(block: (Int, Double) -> Void)
-}
-
-extension BerenStein where Self: Differenceable {
     var derivative: Difference {
         let order = Double(self.order)
         return self.difference(a1: -order, a2: order)
     }
-    func split(to x: Double) -> Self {
-        let oneMinusX = 1.0 - x
-        let difference = self.difference(a1: oneMinusX, a2: x)
-        let differenceSplit: Difference = difference.split(to: x)
-        return Self(first: self.first, differenceSplit)
+    func reduce(a1: Double, a2: Double) -> Double {
+        return self.difference(a1: a1, a2: a2).reduce(a1: a1, a2: a2)
     }
-    func split(from x: Double) -> Self {
-        let oneMinusX = 1.0 - x
-        let difference = self.difference(a1: oneMinusX, a2: x)
-        let differenceSplit: Difference = difference.split(from: x)
-        return Self(differenceSplit, last: self.last)
-    }
-    func split(from tMin: Double, to tMax: Double) -> Self {
-        guard tMax > tMin else {
-            return self.reversed().split(from: 1.0 - tMin, to: 1.0 - tMax)
-        }
-        var clippedPolynomial = self.split(to: tMax)
-        guard tMax > 0 else {
-            return clippedPolynomial
-        }
-        let tMinPrime = tMin / tMax
-        clippedPolynomial = clippedPolynomial.split(from: tMinPrime)
-        return clippedPolynomial
-    }
-    func reversed() -> Self {
-        let differenceReversed = self.difference(a1: 1, a2: 0).reversed()
-        return Self(first: self.last, differenceReversed)
-    }
+//    func split(to x: Double) -> Self {
+//        let oneMinusX = 1.0 - x
+//        let difference = self.difference(a1: oneMinusX, a2: x)
+//        let differenceSplit: Difference = difference.split(to: x)
+//        return Self(first: self.first, differenceSplit)
+//    }
+//    func split(from x: Double) -> Self {
+//        let oneMinusX = 1.0 - x
+//        let difference = self.difference(a1: oneMinusX, a2: x)
+//        let differenceSplit: Difference = difference.split(from: x)
+//        return Self(differenceSplit, last: self.last)
+//    }
+//    func split(from tMin: Double, to tMax: Double) -> Self {
+//        guard tMax > tMin else {
+//            return self.reversed().split(from: 1.0 - tMin, to: 1.0 - tMax)
+//        }
+//        var clippedPolynomial = self.split(to: tMax)
+//        guard tMax > 0 else {
+//            return clippedPolynomial
+//        }
+//        let tMinPrime = tMin / tMax
+//        clippedPolynomial = clippedPolynomial.split(from: tMinPrime)
+//        return clippedPolynomial
+//    }
+//    func reversed() -> Self {
+//        let differenceReversed = self.difference(a1: 1, a2: 0).reversed()
+//        return Self(first: self.last, differenceReversed)
+//    }
 }
 
-struct BerenStein0: BerenStein, Differenceable, Reduceable {
-
-    func enumerated(block: (Int, Double) -> Void) {
-        block(0, b0)
-    }
-
-    var last: Double { return b0 }
-    var first: Double { return b0 }
-
-    init(_ d: BerenStein0, last: Double) { self.b0 = last }
-    init(first: Double, _ d: BerenStein0) { self.b0 = first }
+struct BernsteinPolynomial0: BernsteinPolynomial {
+//    func enumerated(block: (Int, Double) -> Void) {
+//        block(0, b0)
+//    }
+//    var last: Double { return b0 }
+//    var first: Double { return b0 }
+//    init(_ d: BernsteinPolynomial0, last: Double) { self.b0 = last }
+//    init(first: Double, _ d: BernsteinPolynomial0) { self.b0 = first }
+//    func reversed() -> BernsteinPolynomial0 { return self }
+//    func split(to x: Double) -> Self { return self }
+//    func split(from x: Double) -> Self { return self }
     init(b0: Double) { self.b0 = b0 }
-
     var b0: Double
     var coefficients: [Double] { return [b0] }
     func f(_ x: Double) -> Double {
@@ -103,170 +91,141 @@ struct BerenStein0: BerenStein, Differenceable, Reduceable {
     }
     var order: Int { return 0 }
     func reduce(a1: Double, a2: Double) -> Double { return 0.0 }
-    func difference(a1: Double, a2: Double) -> BerenStein0 {
-        return BerenStein0(b0: 0.0)
+    func difference(a1: Double, a2: Double) -> BernsteinPolynomial0 {
+        return BernsteinPolynomial0(b0: 0.0)
     }
-    func reversed() -> BerenStein0 { return self }
-    func split(to x: Double) -> Self { return self }
-    func split(from x: Double) -> Self { return self }
 }
 
-struct BerenStein1: BerenStein, Differenceable, Reduceable {
-
-    func enumerated(block: (Int, Double) -> Void) {
-        block(0, b0)
-        block(1, b1)
-    }
-
-    var last: Double { return b1 }
-
-    var first: Double { return b0 }
-
-    init(_ d: BerenStein0, last: Double) {
-        self.b0 = d.b0
-        self.b1 = last
-    }
-
-    init(first: Double, _ d: BerenStein0) {
-        self.b0 = first
-        self.b1 = d.b0
-    }
-
+struct BernsteinPolynomial1: BernsteinPolynomial {
+//    func enumerated(block: (Int, Double) -> Void) {
+//        block(0, b0)
+//        block(1, b1)
+//    }
+//
+//    var last: Double { return b1 }
+//    var first: Double { return b0 }
+//
+//    init(_ d: BernsteinPolynomial0, last: Double) {
+//        self.b0 = d.b0
+//        self.b1 = last
+//    }
+//
+//    init(first: Double, _ d: BernsteinPolynomial0) {
+//        self.b0 = first
+//        self.b1 = d.b0
+//    }
+//    func reversed() -> BernsteinPolynomial1 { BernsteinPolynomial1(b0: b1, b1: b0) }
     init(b0: Double, b1: Double) {
         self.b0 = b0
         self.b1 = b1
     }
-
-    typealias Difference = BerenStein0
+    typealias Difference = BernsteinPolynomial0
     var b0, b1: Double
     var coefficients: [Double] { return [b0, b1] }
     func reduce(a1: Double, a2: Double) -> Double {
         return a1 * b0 + a2 * b1
     }
-    func difference(a1: Double, a2: Double) -> BerenStein0 {
-        return BerenStein0(b0: self.reduce(a1: a1, a2: a2))
+    func difference(a1: Double, a2: Double) -> BernsteinPolynomial0 {
+        return BernsteinPolynomial0(b0: self.reduce(a1: a1, a2: a2))
     }
     var order: Int { return 1 }
-    func reversed() -> BerenStein1 { BerenStein1(b0: b1, b1: b0) }
-
 }
 
-struct BerenStein2: BerenStein, Differenceable, Reduceable {
-
-    func enumerated(block: (Int, Double) -> Void) {
-        block(0, b0)
-        block(1, b1)
-        block(2, b2)
-    }
-
-    var last: Double { return b2 }
-
-    var first: Double { return b0 }
-
-    init(_ d: BerenStein1, last: Double) {
-        self.b0 = d.b0
-        self.b1 = d.b1
-        self.b2 = last
-    }
-
-    init(first: Double, _ d: BerenStein1) {
-        self.b0 = first
-        self.b1 = d.b0
-        self.b2 = d.b1
-    }
-
+struct BernsteinPolynomial2: BernsteinPolynomial {
+//    func enumerated(block: (Int, Double) -> Void) {
+//        block(0, b0)
+//        block(1, b1)
+//        block(2, b2)
+//    }
+//    var last: Double { return b2 }
+//    var first: Double { return b0 }
+//    init(_ d: BernsteinPolynomial1, last: Double) {
+//        self.b0 = d.b0
+//        self.b1 = d.b1
+//        self.b2 = last
+//    }
+//    init(first: Double, _ d: BernsteinPolynomial1) {
+//        self.b0 = first
+//        self.b1 = d.b0
+//        self.b2 = d.b1
+//    }
     init(b0: Double, b1: Double, b2: Double) {
         self.b0 = b0
         self.b1 = b1
         self.b2 = b2
     }
-
-    typealias Difference = BerenStein1
+    typealias Difference = BernsteinPolynomial1
     var b0, b1, b2: Double
     var coefficients: [Double] { return [b0, b1, b2] }
-    func difference(a1: Double, a2: Double) -> BerenStein1 {
-        return BerenStein1(b0: a1 * b0 + a2 * b1,
+    func difference(a1: Double, a2: Double) -> BernsteinPolynomial1 {
+        return BernsteinPolynomial1(b0: a1 * b0 + a2 * b1,
                            b1: a1 * b1 + a2 * b2)
     }
     var order: Int { return 2 }
 }
 
-struct BerenStein3: BerenStein, Differenceable, Reduceable {
-
-    func enumerated(block: (Int, Double) -> Void) {
-        block(0, b0)
-        block(1, b1)
-        block(2, b2)
-        block(3, b3)
-    }
-
-    typealias Difference = BerenStein2
-    var b0, b1, b2, b3: Double
-
-    var last: Double { return b3 }
-
-    var first: Double { return b0 }
-
-    init(_ d: BerenStein2, last: Double) {
-        self.b0 = d.b0
-        self.b1 = d.b1
-        self.b2 = d.b2
-        self.b3 = last
-    }
-
-    init(first: Double, _ d: BerenStein2) {
-        self.b0 = first
-        self.b1 = d.b0
-        self.b2 = d.b1
-        self.b3 = d.b2
-    }
-
+struct BernsteinPolynomial3: BernsteinPolynomial {
+//    func enumerated(block: (Int, Double) -> Void) {
+//        block(0, b0)
+//        block(1, b1)
+//        block(2, b2)
+//        block(3, b3)
+//    }
+//    var last: Double { return b3 }
+//    var first: Double { return b0 }
+//    init(_ d: BernsteinPolynomial2, last: Double) {
+//        self.b0 = d.b0
+//        self.b1 = d.b1
+//        self.b2 = d.b2
+//        self.b3 = last
+//    }
+//    init(first: Double, _ d: BernsteinPolynomial2) {
+//        self.b0 = first
+//        self.b1 = d.b0
+//        self.b2 = d.b1
+//        self.b3 = d.b2
+//    }
     init(b0: Double, b1: Double, b2: Double, b3: Double) {
         self.b0 = b0
         self.b1 = b1
         self.b2 = b2
         self.b3 = b3
     }
-
+    typealias Difference = BernsteinPolynomial2
+    var b0, b1, b2, b3: Double
     var coefficients: [Double] { return [b0, b1, b2, b3] }
-    func difference(a1: Double, a2: Double) -> BerenStein2 {
-        return BerenStein2(b0: a1 * b0 + a2 * b1,
+    func difference(a1: Double, a2: Double) -> BernsteinPolynomial2 {
+        return BernsteinPolynomial2(b0: a1 * b0 + a2 * b1,
                            b1: a1 * b1 + a2 * b2,
                            b2: a1 * b2 + a2 * b3)
     }
     var order: Int { return 3 }
 }
 
-struct BerenStein4: BerenStein, Differenceable, Reduceable {
-
-    func enumerated(block: (Int, Double) -> Void) {
-        block(0, b0)
-        block(1, b1)
-        block(2, b2)
-        block(3, b3)
-        block(4, b4)
-    }
-
-    var last: Double { return b4 }
-
-    var first: Double { return b0 }
-
-    init(_ d: BerenStein3, last: Double) {
-        self.b0 = d.b0
-        self.b1 = d.b1
-        self.b2 = d.b2
-        self.b3 = d.b3
-        self.b4 = last
-    }
-
-    init(first: Double, _ d: BerenStein3) {
-        self.b0 = first
-        self.b1 = d.b0
-        self.b2 = d.b1
-        self.b3 = d.b2
-        self.b4 = d.b3
-    }
-
+struct BernsteinPolynomial4: BernsteinPolynomial {
+//    func enumerated(block: (Int, Double) -> Void) {
+//        block(0, b0)
+//        block(1, b1)
+//        block(2, b2)
+//        block(3, b3)
+//        block(4, b4)
+//    }
+//    var last: Double { return b4 }
+//    var first: Double { return b0 }
+//    init(_ d: BernsteinPolynomial3, last: Double) {
+//        self.b0 = d.b0
+//        self.b1 = d.b1
+//        self.b2 = d.b2
+//        self.b3 = d.b3
+//        self.b4 = last
+//    }
+//    init(first: Double, _ d: BernsteinPolynomial3) {
+//        self.b0 = first
+//        self.b1 = d.b0
+//        self.b2 = d.b1
+//        self.b3 = d.b2
+//        self.b4 = d.b3
+//    }
     init(b0: Double, b1: Double, b2: Double, b3: Double, b4: Double) {
         self.b0 = b0
         self.b1 = b1
@@ -274,12 +233,11 @@ struct BerenStein4: BerenStein, Differenceable, Reduceable {
         self.b3 = b3
         self.b4 = b4
     }
-
-    typealias Difference = BerenStein3
+    typealias Difference = BernsteinPolynomial3
     var b0, b1, b2, b3, b4: Double
     var coefficients: [Double] { return [b0, b1, b2, b3, b4] }
-    func difference(a1: Double, a2: Double) -> BerenStein3 {
-        return BerenStein3(b0: a1 * b0 + a2 * b1,
+    func difference(a1: Double, a2: Double) -> BernsteinPolynomial3 {
+        return BernsteinPolynomial3(b0: a1 * b0 + a2 * b1,
                            b1: a1 * b1 + a2 * b2,
                            b2: a1 * b2 + a2 * b3,
                            b3: a1 * b3 + a2 * b4)
@@ -287,39 +245,33 @@ struct BerenStein4: BerenStein, Differenceable, Reduceable {
     var order: Int { return 4 }
 }
 
-struct BerenStein5: BerenStein, Differenceable, Reduceable {
-
-    func enumerated(block: (Int, Double) -> Void) {
-        block(0, b0)
-        block(1, b1)
-        block(2, b2)
-        block(3, b3)
-        block(4, b4)
-        block(5, b5)
-    }
-
-    var last: Double { return b5 }
-
-    var first: Double { return b0 }
-
-    init(_ d: BerenStein4, last: Double) {
-        self.b0 = d.b0
-        self.b1 = d.b1
-        self.b2 = d.b2
-        self.b3 = d.b3
-        self.b4 = d.b4
-        self.b5 = last
-    }
-
-    init(first: Double, _ d: BerenStein4) {
-        self.b0 = first
-        self.b1 = d.b0
-        self.b2 = d.b1
-        self.b3 = d.b2
-        self.b4 = d.b3
-        self.b5 = d.b4
-    }
-
+struct BernsteinPolynomial5: BernsteinPolynomial {
+//    func enumerated(block: (Int, Double) -> Void) {
+//        block(0, b0)
+//        block(1, b1)
+//        block(2, b2)
+//        block(3, b3)
+//        block(4, b4)
+//        block(5, b5)
+//    }
+//    var last: Double { return b5 }
+//    var first: Double { return b0 }
+//    init(_ d: BernsteinPolynomial4, last: Double) {
+//        self.b0 = d.b0
+//        self.b1 = d.b1
+//        self.b2 = d.b2
+//        self.b3 = d.b3
+//        self.b4 = d.b4
+//        self.b5 = last
+//    }
+//    init(first: Double, _ d: BernsteinPolynomial4) {
+//        self.b0 = first
+//        self.b1 = d.b0
+//        self.b2 = d.b1
+//        self.b3 = d.b2
+//        self.b4 = d.b3
+//        self.b5 = d.b4
+//    }
     init(b0: Double, b1: Double, b2: Double, b3: Double, b4: Double, b5: Double) {
         self.b0 = b0
         self.b1 = b1
@@ -328,12 +280,11 @@ struct BerenStein5: BerenStein, Differenceable, Reduceable {
         self.b4 = b4
         self.b5 = b5
     }
-
-    typealias Difference = BerenStein4
+    typealias Difference = BernsteinPolynomial4
     var b0, b1, b2, b3, b4, b5: Double
     var coefficients: [Double] { return [b0, b1, b2, b3, b4, b5] }
-    func difference(a1: Double, a2: Double) -> BerenStein4 {
-        return BerenStein4(b0: a1 * b0 + a2 * b1,
+    func difference(a1: Double, a2: Double) -> BernsteinPolynomial4 {
+        return BernsteinPolynomial4(b0: a1 * b0 + a2 * b1,
                            b1: a1 * b1 + a2 * b2,
                            b2: a1 * b2 + a2 * b3,
                            b3: a1 * b3 + a2 * b4,
@@ -342,7 +293,7 @@ struct BerenStein5: BerenStein, Differenceable, Reduceable {
     var order: Int { return 5 }
 }
 
-extension BerenStein {
+extension BernsteinPolynomial {
     func analyticalRoots(between start: Double, and end: Double) -> [Double]? {
         let order = self.order
         guard order > 0 else { return [] }
@@ -355,7 +306,7 @@ extension BerenStein {
     }
 }
 
-private func newton<P: BerenStein>(polynomial: P, derivative: P.Difference, guess: Double, relaxation: Double = 1) -> Double {
+private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.Difference, guess: Double, relaxation: Double = 1) -> Double {
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
@@ -370,7 +321,7 @@ private func newton<P: BerenStein>(polynomial: P, derivative: P.Difference, gues
     return x
 }
 
-private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, end: Double) -> Double {
+private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: Double, end: Double) -> Double {
     var guess = (start + end) / 2
     var low = start
     var high = end
@@ -397,7 +348,7 @@ private func findRootBisection<P: BerenStein>(of polynomial: P, start: Double, e
     return guess
 }
 
-func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
+func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
     assert(start < end)
     if let roots = polynomial.analyticalRoots(between: start, and: end) {
         return roots
@@ -447,7 +398,7 @@ func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: 
     return roots
 }
 
-//func findRoots<P: BerenStein>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
+//func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: Double, and end: Double) -> [Double] {
 //    assert(start < end)
 //
 //    var tMin: Double = Double.infinity
