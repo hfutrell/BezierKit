@@ -88,6 +88,35 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
         }
     }
+    
+    func project(_ point: CGPoint) -> (point: CGPoint, indexedPathLocation: IndexedPathLocation)? {
+        var tuples: [(component: PathComponent, index: Int, lowerBound: CGFloat, upperBound: CGFloat)] = self.components.enumerated().map { i, component in
+            let boundingBox = component.boundingBox
+            let lower = boundingBox.lowerBoundOfDistance(to: point)
+            let upper = boundingBox.upperBoundOfDistance(to: point)
+            return (component: component, index: i, lowerBound: lower, upperBound: upper)
+        }.sorted(by: { $0.upperBound < $1.upperBound })
+        #warning("move these three vars to a tuple")
+        let bestPoint: CGPoint?
+        let bestDistance: CGFloat?
+        let bestLocation: IndexedPathLocation?
+        tuples.forEach {
+            let component = $0.component
+            if let bestDistance = bestDistance {
+                if $0.lowerBound > bestDistance {
+                    return // the best result we could get is worse than one we already have
+                }
+            }
+            let (componentPoint, componentLocation) = component.project(point)
+            let componentDistance = distance(point, componentPoint)
+            if (bestDistance != nil && componentDistance < bestDistance!) || (bestDistance == nil) {
+                bestPoint = componentPoint
+                bestDistance = componentDistance
+                bestLocation = IndexedPathLocation(componentIndex: $0.componentIndex, locationInComponent: componentLocation)
+            }
+        }
+        return (bestPoint, bestLocation)
+    }
 
     @objc(selfIntersectsWithAccuracy:) public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.selfIntersections(accuracy: accuracy).isEmpty
