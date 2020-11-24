@@ -31,11 +31,10 @@ public extension Path {
             let candidate = (point: projection.point,
                              location: IndexedPathLocation(componentIndex: next.index, locationInComponent: projection.location),
                              distance: distance(point, projection.point))
-            if let bestSoFar = bestSoFar, bestSoFar.distance < candidate.distance {
+            if let bestSoFar = bestSoFar, bestSoFar.distance <= candidate.distance {
                 return bestSoFar
-            } else {
-                return candidate
             }
+            return candidate
         }
         // return the best answer
         if let best = best {
