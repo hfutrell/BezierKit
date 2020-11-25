@@ -214,23 +214,6 @@ import Foundation
         return PathComponent(curves: offsetCurves)
     }
 
-    public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
-        var found = false
-        self.bvh.visit { node, _ in
-            let boundingBox = node.boundingBox
-            if boundingBox.upperBoundOfDistance(to: p) <= d {
-                found = true
-            } else if case let .leaf(elementIndex) = node.type {
-                let curve = self.element(at: elementIndex)
-                if distance(p, curve.project(p).point) < d {
-                    found = true
-                }
-            }
-            return !found && node.boundingBox.lowerBoundOfDistance(to: p) <= d
-        }
-        return found
-    }
-
     private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
         switch p2.order(at: i2) {
         case 0:

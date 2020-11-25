@@ -221,14 +221,13 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         }
         // the roots represent the values at which the curve and its derivative are perpendicular
         // ie, the dot product of q and l is equal to zero
-        let points: [Double] = [p0.x + p0.y,
-                                p1.x + p1.y,
-                                p2.x + p2.y,
-                                p3.x + p3.y,
-                                p4.x + p4.y,
-                                p5.x + p5.y].map { Double($0) }
-        let scratchPad = UnsafeMutableBufferPointer<Double>.allocate(capacity: points.count)
-        for t in findRoots(of: points, between: 0, and: 1, scratchPad: scratchPad) {
+        let points = BernsteinPolynomial5(b0: Double(p0.x + p0.y),
+                                          b1: Double(p1.x + p1.y),
+                                          b2: Double(p2.x + p2.y),
+                                          b3: Double(p3.x + p3.y),
+                                          b4: Double(p4.x + p4.y),
+                                          b5: Double(p5.x + p5.y))
+        for t in findRoots(of: points, between: 0, and: 1) {
             guard t > 0.0, t < 1.0 else { break }
             let point = c.point(at: CGFloat(t))
             let distanceSquared = point.lengthSquared
@@ -237,7 +236,6 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
                 minimumT = CGFloat(t)
             }
         }
-        scratchPad.deallocate()
         return (point: self.point(at: minimumT), t: minimumT)
     }
 

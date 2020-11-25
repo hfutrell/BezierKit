@@ -83,12 +83,6 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     @objc public let components: [PathComponent]
 
-    @objc(point:isWithinDistanceOfBoundary:) public func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
-        return self.components.contains {
-            $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
-        }
-    }
-
     @objc(selfIntersectsWithAccuracy:) public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.selfIntersections(accuracy: accuracy).isEmpty
     }
