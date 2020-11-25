@@ -12,16 +12,14 @@ public extension Path {
     private typealias ComponentTuple = (component: PathComponent, index: Int, lowerBound: CGFloat, upperBound: CGFloat)
     private typealias Candidate = (point: CGPoint, location: IndexedPathLocation)
     private func searchForClosestLocation(to point: CGPoint, maximumDistance: CGFloat, requireBest: Bool) -> (point: CGPoint, location: IndexedPathLocation)? {
-        let tuples: [ComponentTuple]
-        // TODO: do we really need to map and sort a bunch of components that we might not even need to search?
         // sort the components by proximity to avoid searching distant components later on
-        tuples = self.components.enumerated().map { i, component in
+        let tuples: [ComponentTuple] = self.components.enumerated().map { i, component in
             let boundingBox = component.boundingBox
             let lower = boundingBox.lowerBoundOfDistance(to: point)
             let upper = boundingBox.upperBoundOfDistance(to: point)
             return (component: component, index: i, lowerBound: lower, upperBound: upper)
         }.sorted(by: { $0.upperBound < $1.upperBound })
-        // iterate through each component and find the closest point
+        // iterate through each component and search for closest point
         var bestSoFar: Candidate?
         var maximumDistance = maximumDistance
         for next in tuples {
@@ -33,7 +31,8 @@ public extension Path {
             let projectionDistance = distance(point, projection.point)
             assert(projectionDistance <= maximumDistance)
             let candidate = (point: projection.point,
-                             location: IndexedPathLocation(componentIndex: next.index, locationInComponent: projection.location))
+                             location: IndexedPathLocation(componentIndex: next.index,
+                                                           locationInComponent: projection.location))
             maximumDistance = projectionDistance
             bestSoFar = candidate
         }
@@ -89,7 +88,7 @@ public extension PathComponent {
                     bestSoFar = IndexedPathComponentLocation(elementIndex: elementIndex, t: projection.t)
                 }
             }
-            return true // visit chidlren (if they exist)
+            return true // visit children (if they exist)
         }
         if let bestSoFar = bestSoFar {
             return (point: self.point(at: bestSoFar), location: bestSoFar)
