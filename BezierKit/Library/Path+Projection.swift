@@ -9,15 +9,14 @@
 import Foundation
 
 public extension Path {
-    private typealias ComponentTuple = (component: PathComponent, index: Int, lowerBound: CGFloat, upperBound: CGFloat)
+    private typealias ComponentTuple = (component: PathComponent, index: Int, upperBound: CGFloat)
     private typealias Candidate = (point: CGPoint, location: IndexedPathLocation)
     private func searchForClosestLocation(to point: CGPoint, maximumDistance: CGFloat, requireBest: Bool) -> (point: CGPoint, location: IndexedPathLocation)? {
         // sort the components by proximity to avoid searching distant components later on
         let tuples: [ComponentTuple] = self.components.enumerated().map { i, component in
             let boundingBox = component.boundingBox
-            let lower = boundingBox.lowerBoundOfDistance(to: point)
             let upper = boundingBox.upperBoundOfDistance(to: point)
-            return (component: component, index: i, lowerBound: lower, upperBound: upper)
+            return (component: component, index: i, upperBound: upper)
         }.sorted(by: { $0.upperBound < $1.upperBound })
         // iterate through each component and search for closest point
         var bestSoFar: Candidate?
