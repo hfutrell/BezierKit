@@ -8,10 +8,15 @@
 
 import Foundation
 
+private enum SearchCriteria: Equatable {
+    case best
+    case lessThanOrEqualTo(distance: CGFloat)
+}
+
 public extension Path {
     private typealias ComponentTuple = (component: PathComponent, index: Int, lowerBound: CGFloat, upperBound: CGFloat)
     private typealias Candidate = (point: CGPoint, location: IndexedPathLocation, distance: CGFloat)
-    func project(_ point: CGPoint) -> (point: CGPoint, location: IndexedPathLocation)? {
+    private func searchForClosestLocation(to point: CGPoint, criteria: SearchCriteria) -> (point: CGPoint, location: IndexedPathLocation)? {
         let tuples: [ComponentTuple]
         // TODO: do we really need to map and sort a bunch of components that we might not even need to search?
         // sort the components by proximity to avoid searching distant components later on
@@ -39,13 +44,87 @@ public extension Path {
         // return the best answer
         if let best = best {
             return (point: best.point, location: best.location)
+        }
+        return nil
+    }
+    func project(_ point: CGPoint) -> (point: CGPoint, location: IndexedPathLocation)? {
+        return self.searchForClosestLocation(to: point, criteria: .best)
+    }
+    @objc(point:isWithinDistanceOfBoundary:) func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
+        guard let result = self.searchForClosestLocation(to: point, criteria: .lessThanOrEqualTo(distance: distance)) else {
+            return false
+        }
+        return BezierKit.distance(result.point, point) <= distance
+    }
+}
+
+public extension PathComponent {
+    private func anyLocation(in node: BoundingBoxHierarchy.Node) -> IndexedPathComponentLocation {
+        switch node.type {
+        case .leaf(let elementIndex):
+            return IndexedPathComponentLocation(elementIndex: elementIndex, t: 0)
+        case .internal(let startingElementIndex, _):
+            return IndexedPathComponentLocation(elementIndex: startingElementIndex, t: 0)
+        }
+    }
+    private func searchForClosestLocation(to point: CGPoint, criteria: SearchCriteria) -> (point: CGPoint, location: IndexedPathComponentLocation)? {
+        var bestSoFar: IndexedPathComponentLocation?
+        var bestUpperBoundSoFar: CGFloat = CGFloat.infinity
+        var done = false
+        if case let .lessThanOrEqualTo(distance) = criteria {
+            bestUpperBoundSoFar = distance
+        }
+        self.bvh.visit { node, _ in
+            let boundingBox = node.boundingBox
+            let lowerBound = boundingBox.lowerBoundOfDistance(to: point)
+            guard !done else {
+                return false
+            }
+            guard lowerBound < bestUpperBoundSoFar else {
+                return false
+            }
+            let upperBound = boundingBox.upperBoundOfDistance(to: point)
+            if upperBound < bestUpperBoundSoFar {
+                bestUpperBoundSoFar = upperBound
+                bestSoFar = self.anyLocation(in: node)
+                if case .lessThanOrEqualTo(_) = criteria {
+                    done = true
+                    return false
+                }
+            }
+            if case .leaf(let elementIndex) = node.type {
+                let curve = self.element(at: elementIndex)
+                let projection = curve.project(point)
+                let distanceToCurve = distance(point, projection.point)
+                if distanceToCurve < bestUpperBoundSoFar {
+                    bestUpperBoundSoFar = distanceToCurve
+                    bestSoFar = IndexedPathComponentLocation(elementIndex: elementIndex, t: projection.t)
+                    if case .lessThanOrEqualTo(_) = criteria {
+                        done = true
+                        return false
+                    }
+                }
+            }
+            return true // visit chidlren
+        }
+        if let bestSoFar = bestSoFar {
+            return (point: self.point(at: bestSoFar), location: bestSoFar)
         } else {
+            assert(criteria != .best, "unexpectedly empty result")
             return nil
         }
     }
-    @objc(point:isWithinDistanceOfBoundary:) func pointIsWithinDistanceOfBoundary(point p: CGPoint, distance d: CGFloat) -> Bool {
-        return self.components.contains {
-            $0.pointIsWithinDistanceOfBoundary(point: p, distance: d)
+    func project(_ point: CGPoint) -> (point: CGPoint, location: IndexedPathComponentLocation) {
+        guard let result = self.searchForClosestLocation(to: point, criteria: .best) else {
+            assertionFailure("expected non-empty result")
+            return (point: self.startingPoint, self.startingIndexedLocation)
         }
+        return result
+    }
+    @objc(point:isWithinDistanceOfBoundary:) func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
+        guard let result = self.searchForClosestLocation(to: point, criteria: .lessThanOrEqualTo(distance: distance)) else {
+            return false
+        }
+        return BezierKit.distance(result.point, point) <= distance
     }
 }

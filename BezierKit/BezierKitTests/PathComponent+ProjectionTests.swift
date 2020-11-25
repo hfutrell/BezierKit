@@ -11,7 +11,7 @@ import Foundation
 import XCTest
 
 class PathComponentProjectionTests: XCTestCase {
-    func testProject {
+    func testProject() {
         XCTAssertFalse(true, "placeholder")
     }
 }

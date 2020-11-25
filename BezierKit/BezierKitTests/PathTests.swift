@@ -256,11 +256,11 @@ class PathTests: XCTestCase {
         let p3 = CGPoint(x: 0.75, y: 0.75)
         let p4 = CGPoint(x: 0.5, y: 0.5)
 
-        XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(point: p1, distance: d)) // no, path bounding box isn't even within that distance
-        XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(point: p2, distance: d)) // no, within bounding box, but no individual curves are within that distance
-        XCTAssertTrue(circlePath.pointIsWithinDistanceOfBoundary(point: p3, distance: d))  // yes, one of the curves that makes up the circle is within that distance
-        XCTAssertTrue(circlePath.pointIsWithinDistanceOfBoundary(point: p3, distance: CGFloat(10.0)))  // yes, so obviously within that distance implementation should early return yes
-        XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(point: p4, distance: d)) // no, we are inside the path but too far from the boundary
+        XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(p1, distance: d)) // no, path bounding box isn't even within that distance
+        XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(p2, distance: d)) // no, within bounding box, but no individual curves are within that distance
+        XCTAssertTrue(circlePath.pointIsWithinDistanceOfBoundary(p3, distance: d))  // yes, one of the curves that makes up the circle is within that distance
+        XCTAssertTrue(circlePath.pointIsWithinDistanceOfBoundary(p3, distance: CGFloat(10.0)))  // yes, so obviously within that distance implementation should early return yes
+        XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(p4, distance: d)) // no, we are inside the path but too far from the boundary
 
     }
 
