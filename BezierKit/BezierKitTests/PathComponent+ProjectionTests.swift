@@ -6,12 +6,16 @@
 //  Copyright © 2020 Holmes Futrell. All rights reserved.
 //
 
-import BezierKit
+@testable import BezierKit
 import Foundation
 import XCTest
 
 class PathComponentProjectionTests: XCTestCase {
     func testProject() {
-        XCTAssertFalse(true, "placeholder")
+        let rectangle = Path(rect: CGRect(x: 1, y: 2, width: 8, height: 4))
+        let result = rectangle.components.first!.project(CGPoint(x: 3, y: 3))
+        XCTAssertEqual(result.point, CGPoint(x: 3, y: 2))
+        XCTAssertEqual(result.location.t, 0.25)
+        XCTAssertEqual(result.location.elementIndex, 0)
     }
 }
