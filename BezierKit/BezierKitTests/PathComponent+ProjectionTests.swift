@@ -7,8 +7,10 @@
 //
 
 @testable import BezierKit
-import Foundation
 import XCTest
+
+#if canImport(CoreGraphics)
+import CoreGraphics
 
 class PathComponentProjectionTests: XCTestCase {
     func testProject() {
@@ -93,3 +95,5 @@ class PathComponentProjectionTests: XCTestCase {
         }
     }
 }
+
+#endif
