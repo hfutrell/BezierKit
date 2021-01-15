@@ -343,3 +343,18 @@ public extension Flatness {
         return sqrt(flatnessSquared)
     }
 }
+
+public extension LineSegment {
+    var xPolynomial: BernsteinPolynomial1 { return BernsteinPolynomial1(b0: self.p0.x, b1: self.p1.x) }
+    var yPolynomial: BernsteinPolynomial1 { return BernsteinPolynomial1(b0: self.p0.y, b1: self.p1.y) }
+}
+
+public extension QuadraticCurve {
+    var xPolynomial: BernsteinPolynomial2 { return BernsteinPolynomial2(b0: self.p0.x, b1: self.p1.x, b2: self.p2.x) }
+    var yPolynomial: BernsteinPolynomial2 { return BernsteinPolynomial2(b0: self.p0.y, b1: self.p1.y, b2: self.p2.y) }
+}
+
+public extension CubicCurve {
+    var xPolynomial: BernsteinPolynomial3 { return BernsteinPolynomial3(b0: self.p0.x, b1: self.p1.x, b2: self.p2.x, b3: self.p3.x) }
+    var yPolynomial: BernsteinPolynomial3 { return BernsteinPolynomial3(b0: self.p0.y, b1: self.p1.y, b2: self.p2.y, b3: self.p3.y) }
+}

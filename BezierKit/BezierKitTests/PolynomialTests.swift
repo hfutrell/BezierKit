@@ -11,7 +11,7 @@ import XCTest
 
 class PolynomialTests: XCTestCase {
 
-    let accuracy = 1.0e-5
+    let accuracy: CGFloat = 1.0e-5
 
     func testEvaluation() {
         let point = BernsteinPolynomial0(b0: 3.0)
@@ -44,7 +44,7 @@ class PolynomialTests: XCTestCase {
         let polynomial = BernsteinPolynomial1(b0: -3, b1: 2)
         let roots = findRoots(of: polynomial, between: -1, and: 1)
         XCTAssertEqual(roots.count, 1)
-        XCTAssertEqual(roots[0], 0.6, accuracy: accuracy)
+        XCTAssertEqual(roots[0], CGFloat(0.6), accuracy: accuracy)
     }
 
     func testDegree2() {
@@ -57,7 +57,7 @@ class PolynomialTests: XCTestCase {
     func testDegree3() {
         // x^3 - 6x^2 + 11x - 6
         let polynomial = BernsteinPolynomial3(b0: -6, b1: -7.0 / 3.0, b2: -2.0 / 3.0, b3: 0)
-        XCTAssertEqual(polynomial.coefficients, [-6, -7.0 / 3.0, -2.0 / 3.0, 0.0])
+        XCTAssertEqual(polynomial.coefficients, [-6, CGFloat(-7.0 / 3.0), CGFloat(-2.0 / 3.0), 0.0])
         let roots = findRoots(of: polynomial, between: 0, and: 4)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
@@ -75,8 +75,8 @@ class PolynomialTests: XCTestCase {
 
     func testDegree4() {
         // x^4 - 2.44x^2 + 1.44
-        let polynomial = BernsteinPolynomial4(b0: 1.44, b1: 1.44, b2: 1.44 - 1.22 / 3, b3: 0.22, b4: 0)
-        XCTAssertEqual(polynomial.coefficients, [1.44, 1.44, 1.44 - 1.22 / 3, 0.22, 0])
+        let polynomial = BernsteinPolynomial4(b0: 1.44, b1: 1.44, b2: CGFloat(1.44 - 1.22 / 3), b3: 0.22, b4: 0)
+        XCTAssertEqual(polynomial.coefficients, [1.44, 1.44, CGFloat(1.44 - 1.22 / 3), 0.22, 0])
         let roots = findRoots(of: polynomial, between: -2, and: 2)
         XCTAssertEqual(roots[0], -1.2, accuracy: accuracy)
         XCTAssertEqual(roots[1], -1, accuracy: accuracy)
