@@ -70,6 +70,17 @@ class UtilsTests: XCTestCase {
 //        XCTAssertEqual(filtered.first!, CGFloat(0.00149972), accuracy: 1.0e-4)
 //    }
 
+    func testDrootsCubicWorldIssue3() {
+        // this data causes issue #81 on GitHub
+        // discriminant is positive but very close to zero (8.46e-10)
+        // https://github.com/hfutrell/BezierKit/issues/81
+        let firstValue: CGFloat = -14.999127297400882
+        let otherValues: CGFloat = 0.00087270259911775838
+        let roots = drootsCubicTestHelper(firstValue, otherValues, otherValues, otherValues)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], CGFloat(0.961251), accuracy: 1.0e-4)
+    }
+
     func testDrootsQuadratic() {
         let a: CGFloat = 0.36159566118413977
         let b: CGFloat = -3.2979288390483816
