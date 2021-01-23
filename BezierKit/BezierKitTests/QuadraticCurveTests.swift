@@ -100,7 +100,7 @@ class QuadraticCurveTests: XCTestCase {
 //    func testLength() {
 //    }
 //
-    
+
     func testProject() {
         let epsilon: CGFloat = 1.0e-5
         let q = QuadraticCurve(p0: CGPoint(x: 1, y: 1),

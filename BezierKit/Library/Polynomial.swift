@@ -30,6 +30,49 @@ public protocol BernsteinPolynomial: Equatable {
 //    func split(from tMin: CGFloat, to tMax: CGFloat) -> Self
 }
 
+internal protocol AnalyticRoots {
+    func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat]
+}
+
+extension BernsteinPolynomial0: AnalyticRoots {
+    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+        return []
+    }
+}
+
+extension BernsteinPolynomial1: AnalyticRoots {
+    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+        var result: [CGFloat] = []
+        Utils.droots(self.b0, self.b1) {
+            guard $0 >= start, $0 <= end else { return }
+            result.append($0)
+        }
+        return result
+    }
+}
+
+extension BernsteinPolynomial2: AnalyticRoots {
+    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+        var result: [CGFloat] = []
+        Utils.droots(self.b0, self.b1, self.b2) {
+            guard $0 >= start, $0 <= end else { return }
+            result.append($0)
+        }
+        return result
+    }
+}
+
+extension BernsteinPolynomial3: AnalyticRoots {
+    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+        var result: [CGFloat] = []
+        Utils.droots(self.b0, self.b1, self.b2, self.b3) {
+            guard $0 >= start, $0 <= end else { return }
+            result.append($0)
+        }
+        return result
+    }
+}
+
 public extension BernsteinPolynomial {
     func f(_ x: CGFloat) -> CGFloat {
         let oneMinusX = 1.0 - x
@@ -294,19 +337,6 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
     public var order: Int { return 5 }
 }
 
-internal extension BernsteinPolynomial {
-    func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat]? {
-        let order = self.order
-        guard order > 0 else { return [] }
-        guard order < 4 else { return nil } // cannot solve
-        return Utils.droots(self.coefficients.map { CGFloat($0) }).compactMap {
-            let t = CGFloat($0)
-            guard t >= start, t <= end else { return nil }
-            return t
-        }
-    }
-}
-
 private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.Difference, guess: CGFloat, relaxation: CGFloat = 1) -> CGFloat {
     let maxIterations = 20
     var x = guess
@@ -355,8 +385,8 @@ public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomia
 
 internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
     assert(start < end)
-    if let roots = polynomial.analyticalRoots(between: start, and: end) {
-        return roots
+    if let analytical = polynomial as? AnalyticRoots {
+        return analytical.analyticalRoots(between: start, and: end)
     }
     let derivative = polynomial.derivative
     let criticalPoints: [CGFloat] = findRoots(of: derivative, between: start, and: end)

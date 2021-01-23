@@ -108,7 +108,6 @@ class PolynomialTests: XCTestCase {
         let polynomial = BernsteinPolynomial5(b0: 0, b1: -1.712, b2: -3.424, b3: -5.2173333, b4: -7.1733332, b5: -9.173333)
         XCTAssertEqual(polynomial.coefficients, [0, -1.712, -3.424, -5.2173333, -7.1733332, -9.173333])
         let roots = findRoots(of: polynomial, between: -4, and: 4)
-        XCTAssertEqual(polynomial.analyticalRoots(between: -5, and: 5), nil, "shouldn't be possible to solve analytically")
         XCTAssertEqual(roots[0], -2.9806382, accuracy: accuracy)
         XCTAssertEqual(roots[1], 0, accuracy: accuracy)
         XCTAssertEqual(roots[2], 2.9806382, accuracy: accuracy)
