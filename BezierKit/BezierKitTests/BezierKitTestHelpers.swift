@@ -76,6 +76,14 @@ class BezierKitTestHelpers {
         return sum
     }
 
+    static func quadraticCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> QuadraticCurve {
+        precondition(f.count == 3 && g.count == 3)
+        let curve = QuadraticCurve(p0: CGPoint(x: f[2], y: g[2]),
+                                   p1: CGPoint(x: 0.5 * f[1] + f[2], y: 0.5 * g[1] + g[2]),
+                                   p2: CGPoint(x: f[0] + f[1] + f[2], y: g[0] + g[1] + g[2]))
+        return curve
+    }
+
     static func cubicCurveFromPolynomials(_ f: [CGFloat], _ g: [CGFloat]) -> CubicCurve {
         precondition(f.count == 4 && g.count == 4)
         // create a cubic bezier curve from two polynomials
@@ -89,12 +97,7 @@ class BezierKitTestHelpers {
         let b = r / 3.0 + a
         let c = q / 3.0 + 2.0 * b - a
         let d = p + a - 3.0 * b + 3.0 * c
-        // check that it worked
-        let curve = CubicCurve(p0: a, p1: b, p2: c, p3: d)
-        for t: CGFloat in stride(from: 0, through: 1, by: 0.1) {
-            assert(distance(curve.point(at: t), CGPoint(x: evaluatePolynomial(f, at: t), y: evaluatePolynomial(g, at: t))) < 0.001, "internal error! failed to fit polynomial!")
-        }
-        return curve
+        return CubicCurve(p0: a, p1: b, p2: c, p3: d)
     }
 
     static func isSatisfactoryReduceResult<A>(_ result: [Subcurve<A>], for curve: A) -> Bool {

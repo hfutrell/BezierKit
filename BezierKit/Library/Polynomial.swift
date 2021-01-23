@@ -301,7 +301,7 @@ internal extension BernsteinPolynomial {
         guard order < 4 else { return nil } // cannot solve
         return Utils.droots(self.coefficients.map { CGFloat($0) }).compactMap {
             let t = CGFloat($0)
-            guard t > start, t < end else { return nil }
+            guard t >= start, t <= end else { return nil }
             return t
         }
     }
