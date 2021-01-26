@@ -187,7 +187,8 @@ internal class Utils {
         let q = (2 * a * a * a - 9 * a * b + 27 * c) / 27
         let q2 = q/2
         let discriminant = q2 * q2 + p * p * p / 27
-        if discriminant < -smallValue {
+        let tinyValue = 1.0e-14
+        if discriminant < -tinyValue {
             let r = sqrt(-p * p * p / 27)
             let t = -q / (2 * r)
             let cosphi = t < -1 ? -1 : t > 1 ? 1 : t
@@ -204,7 +205,7 @@ internal class Utils {
             if root3 > root2 {
                 callback(root3)
             }
-        } else if discriminant > smallValue {
+        } else if discriminant > tinyValue {
             let sd = sqrt(discriminant)
             let u1 = crt(-q2 + sd)
             let v1 = crt(q2 + sd)
@@ -259,23 +260,6 @@ internal class Utils {
     static func droots(_ p0: CGFloat, _ p1: CGFloat, callback: (CGFloat) -> Void) {
         guard p0 != p1 else { return }
         callback(p0 / (p0 - p1))
-    }
-
-    static func droots(_ p: [CGFloat]) -> [CGFloat] {
-        // quadratic roots are easy
-        var result: [CGFloat] = []
-        let callback = { result.append($0) }
-        switch p.count {
-        case 4:
-            droots(p[0], p[1], p[2], p[3], callback: callback)
-        case 3:
-            droots(p[0], p[1], p[2], callback: callback)
-        case 2:
-            droots(p[0], p[1], callback: callback)
-        default:
-            fatalError("unsupported")
-        }
-        return result
     }
 
     static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {

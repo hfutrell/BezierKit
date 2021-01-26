@@ -66,27 +66,6 @@ extension BezierCurve {
         return Utils.length({(_ t: CGFloat) in self.derivative(at: t)})
     }
 
-    public func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat]) {
-        func sequentialDifference<T>(_ array: [T]) -> [T] where T: FloatingPoint {
-            return (1..<array.count).map { array[$0] - array[$0 - 1] }
-        }
-        func rootsForDimension(_ dimension: Int) -> [CGFloat] {
-            let values = self.points.map { $0[dimension] }
-            let firstOrderDiffs = sequentialDifference(values)
-            var roots = Utils.droots(firstOrderDiffs)
-            if self.order >= 3 {
-                let secondOrderDiffs = sequentialDifference(firstOrderDiffs)
-                roots += Utils.droots(secondOrderDiffs)
-            }
-            return roots.filter({$0 >= 0 && $0 <= 1}).sortedAndUniqued()
-        }
-        guard self.order > 1 else { return (x: [], y: [], all: []) }
-        let xRoots = rootsForDimension(0)
-        let yRoots = rootsForDimension(1)
-        let allRoots = (xRoots + yRoots).sortedAndUniqued()
-        return (x: xRoots, y: yRoots, all: allRoots)
-    }
-
     // MARK: -
     public func hull(_ t: CGFloat) -> [CGPoint] {
         return Utils.hull(self.points, t)
