@@ -19,7 +19,9 @@ public protocol BernsteinPolynomial: Equatable {
 //    var first: CGFloat { get }
 //    func enumerated(block: (Int, CGFloat) -> Void)
     associatedtype Difference: BernsteinPolynomial
+    /// a polynomial of the next lower order where each coefficient `b[i]` is defined by `a1 * b[i] + a2 * b[i+1]`
     func difference(a1: CGFloat, a2: CGFloat) -> Difference
+    /// reduces the polynomial by repeatedly applying `difference` until left with a constant value
     func reduce(a1: CGFloat, a2: CGFloat) -> CGFloat
     var derivative: Difference { get }
 //    init(_ d: Difference, last: CGFloat)

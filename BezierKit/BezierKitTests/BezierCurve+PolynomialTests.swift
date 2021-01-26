@@ -24,7 +24,7 @@ class BezierCurve_PolynomialTests: XCTestCase {
         XCTAssertEqual(quadratic.xPolynomial, BernsteinPolynomial2(b0: 1, b1: 2, b2: 3))
         XCTAssertEqual(quadratic.yPolynomial, BernsteinPolynomial2(b0: 0, b1: -2, b2: -1))
     }
-    
+
     func testPolynomialCubic() {
         let cubic = CubicCurve(p0: CGPoint(x: 1, y: 0),
                                p1: CGPoint(x: 2, y: 2),
