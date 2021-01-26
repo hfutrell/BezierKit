@@ -30,18 +30,18 @@ public protocol BernsteinPolynomial: Equatable {
 //    func split(from tMin: CGFloat, to tMax: CGFloat) -> Self
 }
 
-internal protocol AnalyticRoots {
-    func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat]
+internal protocol AnalyticalRoots {
+    func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat]
 }
 
-extension BernsteinPolynomial0: AnalyticRoots {
-    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+extension BernsteinPolynomial0: AnalyticalRoots {
+    internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         return []
     }
 }
 
-extension BernsteinPolynomial1: AnalyticRoots {
-    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+extension BernsteinPolynomial1: AnalyticalRoots {
+    internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1) {
             guard $0 >= start, $0 <= end else { return }
@@ -51,8 +51,8 @@ extension BernsteinPolynomial1: AnalyticRoots {
     }
 }
 
-extension BernsteinPolynomial2: AnalyticRoots {
-    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+extension BernsteinPolynomial2: AnalyticalRoots {
+    internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2) {
             guard $0 >= start, $0 <= end else { return }
@@ -62,8 +62,8 @@ extension BernsteinPolynomial2: AnalyticRoots {
     }
 }
 
-extension BernsteinPolynomial3: AnalyticRoots {
-    internal func analyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+extension BernsteinPolynomial3: AnalyticalRoots {
+    internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2, self.b3) {
             guard $0 >= start, $0 <= end else { return }
@@ -380,16 +380,16 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
 }
 
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
-    return findRoots(of: polynomial, between: 0, and: 1)
+    return findDistinctRoots(of: polynomial, between: 0, and: 1)
 }
 
-internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
     assert(start < end)
-    if let analytical = polynomial as? AnalyticRoots {
-        return analytical.analyticalRoots(between: start, and: end)
+    if let analytical = polynomial as? AnalyticalRoots {
+        return analytical.distinctAnalyticalRoots(between: start, and: end)
     }
     let derivative = polynomial.derivative
-    let criticalPoints: [CGFloat] = findRoots(of: derivative, between: start, and: end)
+    let criticalPoints: [CGFloat] = findDistinctRoots(of: derivative, between: start, and: end)
     let intervals: [CGFloat] = [start] + criticalPoints + [end]
     var lastFoundRoot: CGFloat?
     let roots = (0..<intervals.count-1).compactMap { (i: Int) -> CGFloat? in
