@@ -250,22 +250,6 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(c1.length(), 5.0, accuracy: epsilon)
     }
 
-    func testExtrema() {
-        let f: [CGFloat] = [1, -1, 0, 0] // f(t) = t^3 - t^2, which has two local minimum at t=0, t=2/3 and an inflection point t=1/3
-        let g: [CGFloat] = [0, 3, -2, 0] // g(t) = 3t^2 - 2t, which has a local minimum at t=1/3
-        let c = BezierKitTestHelpers.cubicCurveFromPolynomials(f, g)
-        let (x, y, all) = c.extrema()
-        XCTAssertEqual(all.count, 3)
-        XCTAssertEqual(all[0], 0.0)
-        XCTAssertEqual(all[1], 1.0 / 3.0)
-        XCTAssertEqual(all[2], 2.0 / 3.0)
-        XCTAssertEqual(x[0], 0.0)
-        XCTAssertEqual(x[1], 1.0 / 3.0)
-        XCTAssertEqual(x[2], 2.0 / 3.0)
-        XCTAssertEqual(y.count, 1)
-        XCTAssertEqual(y[0], 1.0 / 3.0)
-    }
-
     func testProject() {
         let epsilon: CGFloat = 1.0e-5
         // test a cubic

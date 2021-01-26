@@ -262,23 +262,6 @@ internal class Utils {
         callback(p0 / (p0 - p1))
     }
 
-    static func droots(_ p: [CGFloat]) -> [CGFloat] {
-        // quadratic roots are easy
-        var result: [CGFloat] = []
-        let callback = { result.append($0) }
-        switch p.count {
-        case 4:
-            droots(p[0], p[1], p[2], p[3], callback: callback)
-        case 3:
-            droots(p[0], p[1], p[2], callback: callback)
-        case 2:
-            droots(p[0], p[1], callback: callback)
-        default:
-            fatalError("unsupported")
-        }
-        return result
-    }
-
     static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {
         return v1 + r * (v2 - v1)
     }

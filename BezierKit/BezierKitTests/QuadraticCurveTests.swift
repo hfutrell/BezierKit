@@ -100,8 +100,6 @@ class QuadraticCurveTests: XCTestCase {
 //    func testLength() {
 //    }
 //
-//    func testExtrema() {
-//    }
 
     func testProject() {
         let epsilon: CGFloat = 1.0e-5

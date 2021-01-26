@@ -100,14 +100,6 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(l.length(), 5.0)
     }
 
-    func testExtrema() {
-        let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
-        let (x, y, all) = l.extrema()
-        XCTAssertTrue(x.isEmpty)
-        XCTAssertTrue(y.isEmpty)
-        XCTAssertTrue(all.isEmpty)
-    }
-
     func testProject() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
         let p1 = l.project(CGPoint(x: 0.0, y: 0.0)) // should project to p0
