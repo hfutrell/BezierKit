@@ -18,12 +18,12 @@ public protocol BernsteinPolynomial: Equatable {
 //    var last: CGFloat { get }
 //    var first: CGFloat { get }
 //    func enumerated(block: (Int, CGFloat) -> Void)
-    associatedtype Difference: BernsteinPolynomial
+    associatedtype NextLowerOrderPolynomial: BernsteinPolynomial
     /// a polynomial of the next lower order where each coefficient `b[i]` is defined by `a1 * b[i] + a2 * b[i+1]`
-    func difference(a1: CGFloat, a2: CGFloat) -> Difference
+    func difference(a1: CGFloat, a2: CGFloat) -> NextLowerOrderPolynomial
     /// reduces the polynomial by repeatedly applying `difference` until left with a constant value
     func reduce(a1: CGFloat, a2: CGFloat) -> CGFloat
-    var derivative: Difference { get }
+    var derivative: NextLowerOrderPolynomial { get }
 //    init(_ d: Difference, last: CGFloat)
 //    init(first: CGFloat, _ d: Difference)
 //    func reversed() -> Self
@@ -80,7 +80,7 @@ public extension BernsteinPolynomial {
         let oneMinusX = 1.0 - x
         return self.reduce(a1: oneMinusX, a2: x)
     }
-    var derivative: Difference {
+    var derivative: NextLowerOrderPolynomial {
         let order = CGFloat(self.order)
         return self.difference(a1: -order, a2: order)
     }
@@ -165,7 +165,7 @@ public struct BernsteinPolynomial1: BernsteinPolynomial {
         self.b0 = b0
         self.b1 = b1
     }
-    public typealias Difference = BernsteinPolynomial0
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial0
     public var b0, b1: CGFloat
     public var coefficients: [CGFloat] { return [b0, b1] }
     public func reduce(a1: CGFloat, a2: CGFloat) -> CGFloat {
@@ -200,7 +200,7 @@ public struct BernsteinPolynomial2: BernsteinPolynomial {
         self.b1 = b1
         self.b2 = b2
     }
-    public typealias Difference = BernsteinPolynomial1
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial1
     public var b0, b1, b2: CGFloat
     public var coefficients: [CGFloat] { return [b0, b1, b2] }
     public func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomial1 {
@@ -237,7 +237,7 @@ public struct BernsteinPolynomial3: BernsteinPolynomial {
         self.b2 = b2
         self.b3 = b3
     }
-    public typealias Difference = BernsteinPolynomial2
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial2
     public var b0, b1, b2, b3: CGFloat
     public var coefficients: [CGFloat] { return [b0, b1, b2, b3] }
     public func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomial2 {
@@ -279,7 +279,7 @@ public struct BernsteinPolynomial4: BernsteinPolynomial {
         self.b3 = b3
         self.b4 = b4
     }
-    public typealias Difference = BernsteinPolynomial3
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial3
     public var b0, b1, b2, b3, b4: CGFloat
     public var coefficients: [CGFloat] { return [b0, b1, b2, b3, b4] }
     public func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomial3 {
@@ -326,7 +326,7 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
         self.b4 = b4
         self.b5 = b5
     }
-    public typealias Difference = BernsteinPolynomial4
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial4
     public var b0, b1, b2, b3, b4, b5: CGFloat
     public var coefficients: [CGFloat] { return [b0, b1, b2, b3, b4, b5] }
     public func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomial4 {
@@ -339,7 +339,7 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
     public var order: Int { return 5 }
 }
 
-private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.Difference, guess: CGFloat, relaxation: CGFloat = 1) -> CGFloat {
+private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.NextLowerOrderPolynomial, guess: CGFloat, relaxation: CGFloat = 1) -> CGFloat {
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
