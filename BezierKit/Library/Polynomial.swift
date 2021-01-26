@@ -12,7 +12,7 @@ import CoreGraphics
 import Foundation
 
 public protocol BernsteinPolynomial: Equatable {
-    func f(_ x: CGFloat) -> CGFloat
+    func value(at x: CGFloat) -> CGFloat
     var order: Int { get }
     var coefficients: [CGFloat] { get }
 //    var last: CGFloat { get }
@@ -74,7 +74,7 @@ extension BernsteinPolynomial3: AnalyticalRoots {
 }
 
 public extension BernsteinPolynomial {
-    func f(_ x: CGFloat) -> CGFloat {
+    func value(at x: CGFloat) -> CGFloat {
         let oneMinusX = 1.0 - x
         return self.reduce(a1: oneMinusX, a2: x)
     }
@@ -130,7 +130,7 @@ public struct BernsteinPolynomial0: BernsteinPolynomial {
     public init(b0: CGFloat) { self.b0 = b0 }
     public var b0: CGFloat
     public var coefficients: [CGFloat] { return [b0] }
-    public func f(_ x: CGFloat) -> CGFloat {
+    public func value(at x: CGFloat) -> CGFloat {
         return b0
     }
     public var order: Int { return 0 }
@@ -341,9 +341,9 @@ private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.Differe
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
-        let f = polynomial.f(x)
+        let f = polynomial.value(at: x)
         guard f != 0.0 else { break }
-        let fPrime = derivative.f(x)
+        let fPrime = derivative.value(at: x)
         let delta = relaxation * f / fPrime
         let previous = x
         x -= delta
@@ -356,15 +356,15 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     var guess = (start + end) / 2
     var low = start
     var high = end
-    let lowSign = polynomial.f(low).sign
-    let highSign = polynomial.f(high).sign
+    let lowSign = polynomial.value(at: low).sign
+    let highSign = polynomial.value(at: high).sign
     assert(lowSign != highSign)
     let maxIterations = 20
     var iterations = 0
     while high - low > 1.0e-5 {
         let midGuess = (low + high) / 2
         guess = midGuess
-        let nextGuessF = polynomial.f(guess)
+        let nextGuessF = polynomial.value(at: guess)
         if nextGuessF == 0 {
             return guess
         } else if nextGuessF.sign == lowSign {
@@ -395,8 +395,8 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
     let roots = (0..<intervals.count-1).compactMap { (i: Int) -> CGFloat? in
         let start   = intervals[i]
         let end     = intervals[i+1]
-        let fStart  = polynomial.f(start)
-        let fEnd    = polynomial.f(end)
+        let fStart  = polynomial.value(at: start)
+        let fEnd    = polynomial.value(at: end)
         let root: CGFloat
         if fStart * fEnd < 0 {
             // TODO: if a critical point is a root we take this
@@ -417,7 +417,7 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
             guard abs(value - guess) < 1.0e-5 else {
                 return nil // did not converge near guess
             }
-            guard abs(polynomial.f(value)) < 1.0e-10 else {
+            guard abs(polynomial.value(at: value)) < 1.0e-10 else {
                 return nil // not actually a root
             }
             root = value
