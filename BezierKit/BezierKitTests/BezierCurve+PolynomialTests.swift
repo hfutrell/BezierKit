@@ -11,6 +11,29 @@ import XCTest
 
 class BezierCurve_PolynomialTests: XCTestCase {
 
+    func testPolynomialLineSegment() {
+        let lineSegment = LineSegment(p0: CGPoint(x: 3, y: 4), p1: CGPoint(x: 5, y: 6))
+        XCTAssertEqual(lineSegment.xPolynomial, BernsteinPolynomial1(b0: 3, b1: 5))
+        XCTAssertEqual(lineSegment.yPolynomial, BernsteinPolynomial1(b0: 4, b1: 6))
+    }
+
+    func testPolynomialQuadratic() {
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 1, y: 0),
+                                       p1: CGPoint(x: 2, y: -2),
+                                       p2: CGPoint(x: 3, y: -1))
+        XCTAssertEqual(quadratic.xPolynomial, BernsteinPolynomial2(b0: 1, b1: 2, b2: 3))
+        XCTAssertEqual(quadratic.yPolynomial, BernsteinPolynomial2(b0: 0, b1: -2, b2: -1))
+    }
+    
+    func testPolynomialCubic() {
+        let cubic = CubicCurve(p0: CGPoint(x: 1, y: 0),
+                               p1: CGPoint(x: 2, y: 2),
+                               p2: CGPoint(x: 3, y: 1),
+                               p3: CGPoint(x: 4, y: -1))
+        XCTAssertEqual(cubic.xPolynomial, BernsteinPolynomial3(b0: 1, b1: 2, b2: 3, b3: 4))
+        XCTAssertEqual(cubic.yPolynomial, BernsteinPolynomial3(b0: 0, b1: 2, b2: 1, b3: -1))
+    }
+
     func testExtremaLine() {
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 4.0, y: 6.0))
         let (x1, y1, all1) = l1.extrema()
