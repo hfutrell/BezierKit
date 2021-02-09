@@ -82,9 +82,9 @@ private class Edge {
     }
     func visitCoincidentEdges() {
         let component = self.component
-        let nextEdge = component.element(at: 0)
-        let point = nextEdge.point(at: 0.5)
-        let normal = nextEdge.normal(at: 0.5)
+        let location = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
+        let point = component.point(at: location)
+        let normal = component.normal(at: location)
         let smallDistance: CGFloat = AugmentedGraph.smallDistance
         let point1 = point + smallDistance * normal
         let point2 = point - smallDistance * normal
@@ -236,9 +236,9 @@ private extension AugmentedGraph {
         func classifyEdge(_ edge: Edge) {
             // TODO: we use a crummy point location
             let component = edge.component
-            let nextEdge = component.element(at: 0)
-            let point = nextEdge.point(at: 0.5)
-            let normal = nextEdge.normal(at: 0.5)
+            let location = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
+            let point = component.point(at: location)
+            let normal = component.normal(at: location)
             let smallDistance: CGFloat = AugmentedGraph.smallDistance
             let point1 = point + smallDistance * normal
             let point2 = point - smallDistance * normal
