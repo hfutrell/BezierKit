@@ -11,6 +11,15 @@ import CoreGraphics
 #endif
 import Foundation
 
+private extension Array {
+    /// if an array has unused capacity returns a new array where `self.count == self.capacity`
+    /// used to save unused memory if an array is not modified after creation
+    var copyByTrimmingReservedCapacity: Self {
+        guard self.capacity > self.count else { return self }
+        return withUnsafeBufferPointer { Self($0) }
+    }
+}
+
 @objc(BezierKitPathFillRule) public enum PathFillRule: NSInteger {
     case winding=0, evenOdd
 }
@@ -41,7 +50,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
                 if currentComponentOrders.isEmpty == true {
                     currentComponentOrders.append(0)
                 }
-                components.append(PathComponent(points: currentComponentPoints, orders: currentComponentOrders))
+                components.append(PathComponent(points: currentComponentPoints.copyByTrimmingReservedCapacity,
+                                                orders: currentComponentOrders.copyByTrimmingReservedCapacity))
             }
             currentComponentPoints = []
             currentComponentOrders = []
@@ -228,14 +238,23 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.components == otherPath.components
     }
 
-    // MARK: - vector boolean operations
-
-    public func point(at location: IndexedPathLocation) -> CGPoint {
-        return self.elementAtComponentIndex(location.componentIndex, elementIndex: location.elementIndex).point(at: location.t)
+    private func assertValidComponent(_ location: IndexedPathLocation) {
+        assert(location.componentIndex >= 0 && location.componentIndex < self.components.count)
     }
 
-    internal func elementAtComponentIndex(_ componentIndex: Int, elementIndex: Int) -> BezierCurve {
-        return self.components[componentIndex].element(at: elementIndex)
+    public func point(at location: IndexedPathLocation) -> CGPoint {
+        self.assertValidComponent(location)
+        return self.components[location.componentIndex].point(at: location.locationInComponent)
+    }
+
+    public func derivative(at location: IndexedPathLocation) -> CGPoint {
+        self.assertValidComponent(location)
+        return self.components[location.componentIndex].derivative(at: location.locationInComponent)
+    }
+
+    public func normal(at location: IndexedPathLocation) -> CGPoint {
+        self.assertValidComponent(location)
+        return self.components[location.componentIndex].normal(at: location.locationInComponent)
     }
 
     internal func windingCount(_ point: CGPoint, ignoring: PathComponent? = nil) -> Int {
@@ -272,36 +291,6 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return Path(components: self.components.compactMap {
             $0.offset(distance: d)
         })
-    }
-
-    private func performBooleanOperation(_ operation: BooleanPathOperation, with other: Path, accuracy: CGFloat) -> Path {
-        let intersections = self.intersections(with: other, accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: other, intersections: intersections, operation: operation)
-        return augmentedGraph.performOperation()
-    }
-
-    @objc(subtractPath:accuracy:) public func subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
-        return self.performBooleanOperation(.subtract, with: other.reversed(), accuracy: accuracy)
-    }
-
-    @objc(unionPath:accuracy:) public func `union`(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
-        guard self.isEmpty == false else {
-            return other
-        }
-        guard other.isEmpty == false else {
-            return self
-        }
-        return self.performBooleanOperation(.union, with: other, accuracy: accuracy)
-    }
-
-    @objc(intersectPath:accuracy:) public func intersect(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
-        return self.performBooleanOperation(.intersect, with: other, accuracy: accuracy)
-    }
-
-    @objc(crossingsRemovedWithAccuracy:) public func crossingsRemoved(accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
-        let intersections = self.selfIntersections(accuracy: accuracy)
-        let augmentedGraph = AugmentedGraph(path1: self, path2: self, intersections: intersections, operation: .removeCrossings)
-        return augmentedGraph.performOperation()
     }
 
     @objc public func disjointComponents() -> [Path] {
