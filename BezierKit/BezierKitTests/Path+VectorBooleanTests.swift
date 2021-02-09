@@ -16,7 +16,7 @@ private extension Path {
     }
 }
 
-class Path_VectorBooleanTests: XCTestCase {
+class PathVectorBooleanTests: XCTestCase {
 
     // points on the first square
     let p0 = CGPoint(x: 0.0, y: 0.0)
