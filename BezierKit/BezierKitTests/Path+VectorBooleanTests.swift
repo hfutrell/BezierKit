@@ -95,6 +95,8 @@ class PathVectorBooleanTests: XCTestCase {
         )
     }
 
+    #if canImport(CoreGraphics)
+
     func testSubtractingWinding() {
         // subtracting should use .evenOdd fill, if it doesn't this test can *add* an inner square instead of doing nothing
         let path = Path(cgPath: {
@@ -109,6 +111,8 @@ class PathVectorBooleanTests: XCTestCase {
         let result = path.subtract(subtractionPath) // since `subtract` uses .evenOdd rule it does nothing
         XCTAssertEqual(result, path)
     }
+
+    #endif
 
     func testUnion() {
         let expectedResult = Path(components: [PathComponent(curves:
