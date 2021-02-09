@@ -58,11 +58,27 @@ private class Node {
         self.forwardEdge = nil
         self.backwardEdge = nil
     }
+    var allIncidentEdges: [(Edge, Bool)] {
+        var result: [(Edge, Bool)] = []
+        func callback(_ node: Node) {
+            if let forward = node.forwardEdge { result.append((forward, true)) }
+            if let backward = node.backwardEdge { result.append((backward, false)) }
+        }
+        callback(self)
+        neighbors.forEach { callback($0) }
+        return result
+    }
 }
 
 private class Edge {
+    enum Solution {
+        case no
+        case clockwise
+        case counterClockwise
+    }
     var visited: Bool = false
-    var inSolution: Bool = false
+    var inSolution: Solution = .no
+    
     let endingNode: Node
     let startingNode: Node
     init(startingNode: Node, endingNode: Node) {
@@ -70,7 +86,7 @@ private class Edge {
         self.endingNode = endingNode
     }
     var needsVisiting: Bool {
-        return self.visited == false && self.inSolution == true
+        return self.visited == false && self.inSolution != .no
     }
     var component: PathComponent {
         let parentComponent = self.endingNode.pathComponent
@@ -151,6 +167,12 @@ private class PathComponentGraph {
     func forEachNode(callback: (_ node: Node) -> Void) {
         self.nodes.forEach { callback($0) }
     }
+    func forEachEdge(callback: (_ edge: Edge) -> Void) {
+        self.forEachNode { node in
+            guard let edge = node.forwardEdge else { return }
+            callback(edge)
+        }
+    }
     deinit {
         self.forEachNode { $0.unlink() }
     }
@@ -212,8 +234,10 @@ internal class AugmentedGraph {
     func performOperation() -> Path {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
             graph.components.forEach {
-                $0.forEachNode { node in
-                    guard let path = findUnvisitedPath(from: node, to: node) else { return }
+                $0.forEachEdge { edge in
+                    guard edge.needsVisiting else { return }
+                    let node = edge.startingNode
+                    guard let path = findUnvisitedPath(from: node, to: node, preferring: edge.inSolution) else { return }
                     guard path.count > 0 else { return }
                     list.append(self.createComponent(using: path))
                 }
@@ -244,13 +268,15 @@ private extension AugmentedGraph {
             let point2 = point - smallDistance * normal
             let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
             let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
-            edge.inSolution = (included1 != included2)
+            if included1 != included2 {
+                // if in solution is .clockwise we should take the hardest left turn possible when given a choice
+                // otherwise take the hardest right turn
+                edge.inSolution = included1 ? .clockwise : .counterClockwise
+            }
         }
         func classifyComponentEdges(in component: PathComponentGraph) {
-            component.forEachNode {
-                if let edge = $0.forwardEdge {
-                    classifyEdge(edge)
-                }
+            component.forEachEdge { edge in
+                classifyEdge(edge)
             }
         }
         graph.components.forEach { classifyComponentEdges(in: $0) }
@@ -285,27 +311,48 @@ private extension AugmentedGraph {
         }
         nodes = Array(nodes[0...currentUniqueIndex])
     }
-    func findUnvisitedPath(from node: Node, to goal: Node) -> [(Edge, Bool)]? {
+    func findUnvisitedPath(from node: Node, to goal: Node, preferring: Edge.Solution) -> [(Edge, Bool)]? {
+        let preferredDirection: Edge.Solution = (preferring == .clockwise) ? .clockwise : .counterClockwise
+        let nonPreferredDirection: Edge.Solution = (preferring == .clockwise) ? .counterClockwise : .clockwise
         func pathUsingEdge(_ edge: Edge?, from node: Node, forwards: Bool) -> [(Edge, Bool)]? {
             guard let edge = edge, edge.needsVisiting else { return nil }
             edge.visited = true
             edge.visitCoincidentEdges()
             let nextNode = forwards ? edge.endingNode : edge.startingNode
-            if let path = findUnvisitedPath(from: nextNode, to: goal) {
+            // we know which direction we went and our preferred winding direction, we can keep the same way
+            let nextPreferring = forwards ? preferredDirection : nonPreferredDirection
+            if let path = findUnvisitedPath(from: nextNode, to: goal, preferring: nextPreferring) {
                 return [(edge, forwards)] + path
             } else {
                 return nil
             }
         }
-        // we prefer to keep the direction of the path the same which is why
-        // we try all the possible forward edges before any back edges
-        if let result = pathUsingEdge(node.forwardEdge, from: node, forwards: true) { return result }
-        for neighbor in node.neighbors {
-            if let result = pathUsingEdge(neighbor.forwardEdge, from: neighbor, forwards: true) { return result }
+        func priority(_ tuple: (edge: Edge, forwards: Bool)) -> Int {
+            let edge = tuple.edge
+            let forwards = tuple.forwards
+            if forwards, edge.inSolution == preferredDirection {
+                return 3
+            } else if !forwards, edge.inSolution == nonPreferredDirection {
+                return 2
+            } else if forwards {
+                return 1
+            } else {
+                return 0
+            }
         }
-        if let result = pathUsingEdge(node.backwardEdge, from: node, forwards: false) { return result }
-        for neighbor in node.neighbors {
-            if let result = pathUsingEdge(neighbor.backwardEdge, from: neighbor, forwards: false) { return result }
+        // go through all unvisited edges in the solution
+        // if we prefer clockwise take any foward edges with .clockwise, or backwards edges with .counterClockwise
+        // if we prefer counterClockwise take any forward edges with .counterClockwise, or backwards edges with .clockWise
+        var candidateList = node.allIncidentEdges
+        candidateList.sort { priority($1) > priority($0) }
+        while let last = candidateList.last {
+            let edge: Edge = last.0
+            let forwards: Bool = last.1
+            let from: Node = forwards ? edge.startingNode : edge.endingNode
+            if let result = pathUsingEdge(edge, from: from, forwards: forwards) {
+                return result
+            }
+            candidateList.removeLast()
         }
         if node === goal || node.neighborsContain(goal) { return [] }
         return nil
