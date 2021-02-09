@@ -6,6 +6,9 @@
 //  Copyright © 2021 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 import Foundation
 
 public extension Path {
