@@ -13,7 +13,7 @@ import Foundation
 
 private extension Array {
     /// if an array has unused capacity returns a new array where `self.count == self.capacity`
-    /// used to save unused memory if an array is not modified after creation
+    /// can save memory when an array is immutable after adding some initial items
     var copyByTrimmingReservedCapacity: Self {
         guard self.capacity > self.count else { return self }
         return withUnsafeBufferPointer { Self($0) }
