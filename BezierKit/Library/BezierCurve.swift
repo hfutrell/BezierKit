@@ -289,11 +289,11 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var endingPoint: CGPoint { get set }
     var order: Int { get }
     init(points: [CGPoint])
+    func point(at t: CGFloat) -> CGPoint
     func derivative(at t: CGFloat) -> CGPoint
     func normal(at t: CGFloat) -> CGPoint
     func split(from t1: CGFloat, to t2: CGFloat) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
-    func point(at t: CGFloat) -> CGPoint
     func length() -> CGFloat
     func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat])
     func lookupTable(steps: Int) -> [CGPoint]
