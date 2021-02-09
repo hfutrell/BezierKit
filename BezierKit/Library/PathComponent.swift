@@ -364,7 +364,7 @@ import Foundation
     private func assertionFailureBadCurveOrder(_ order: Int) {
         assertionFailure("unexpected curve order \(order). Expected between 0 (point) and 3 (cubic curve).")
     }
-    
+
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
         assertLocationHasValidElementIndex(location)
         let elementIndex = location.elementIndex

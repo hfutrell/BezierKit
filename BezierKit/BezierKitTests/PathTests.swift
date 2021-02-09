@@ -120,6 +120,73 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path4.components[1].element(at: 0) as! LineSegment, LineSegment(p0: p3, p1: p4))
     }
 
+    func testGeometricProperties() {
+        // create a path with two components
+        let path: Path = {
+            let mutablePath = CGMutablePath()
+            mutablePath.move(to: CGPoint(x: 2, y: 1))
+            mutablePath.addLine(to: CGPoint(x: 3, y: 1))
+            mutablePath.addQuadCurve(to: CGPoint(x: 4, y: 2),
+                                     control: CGPoint(x: 4, y: 1))
+            mutablePath.addCurve(to: CGPoint(x: 2, y: 1),
+                                 control1: CGPoint(x: 4, y: 3),
+                                 control2: CGPoint(x: 2, y: 3))
+            mutablePath.move(to: CGPoint(x: 1, y: 1))
+            return Path(cgPath: mutablePath)
+        }()
+
+        XCTAssertEqual(path.components.count, 2)
+
+        // test the first element of the first component, which is a line
+        let lineLocation = IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0)
+        let expectedLinePosition = CGPoint(x: 2, y: 1)
+        let expectedLineDerivative = CGPoint(x: 1, y: 0)
+        let expectedLineNormal = CGPoint(x: 0, y: 1)
+        XCTAssertEqual(path.point(at: lineLocation), expectedLinePosition)
+        XCTAssertEqual(path.components[0].point(at: lineLocation.locationInComponent), expectedLinePosition)
+        XCTAssertEqual(path.derivative(at: lineLocation), expectedLineDerivative)
+        XCTAssertEqual(path.components[0].derivative(at: lineLocation.locationInComponent), expectedLineDerivative)
+        XCTAssertEqual(path.normal(at: lineLocation), expectedLineNormal)
+        XCTAssertEqual(path.components[0].normal(at: lineLocation.locationInComponent), expectedLineNormal)
+
+        // test the second element of the first component, which is a quad
+        let quadraticLocation = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.25)
+        let expectedQuadraticPosition = CGPoint(x: 3.4375, y: 1.0625)
+        let expectedQuadraticDerivative = CGPoint(x: 1.5, y: 0.5)
+        let expectedQuadraticNormal = CGPoint(x: -0.316, y: 0.949)
+        XCTAssertEqual(path.point(at: quadraticLocation), expectedQuadraticPosition)
+        XCTAssertEqual(path.components[0].point(at: quadraticLocation.locationInComponent), expectedQuadraticPosition)
+        XCTAssertEqual(path.derivative(at: quadraticLocation), expectedQuadraticDerivative)
+        XCTAssertEqual(path.components[0].derivative(at: quadraticLocation.locationInComponent), expectedQuadraticDerivative)
+        XCTAssertTrue(distance(path.normal(at: quadraticLocation), expectedQuadraticNormal) < 1.0e-2)
+        XCTAssertTrue(distance(path.components[0].normal(at: quadraticLocation.locationInComponent), expectedQuadraticNormal) < 1.0e-2)
+
+        // test the third element of the first component, which is a cubic
+        let cubicLocation = IndexedPathLocation(componentIndex: 0, elementIndex: 2, t: 1)
+        let expectedCubicPosition = CGPoint(x: 2, y: 1)
+        let expectedCubicDerivative = CGPoint(x: 0, y: -6)
+        let expectedCubicNormal = CGPoint(x: 1, y: 0)
+        XCTAssertEqual(path.point(at: cubicLocation), expectedCubicPosition)
+        XCTAssertEqual(path.components[0].point(at: cubicLocation.locationInComponent), expectedCubicPosition)
+        XCTAssertEqual(path.derivative(at: cubicLocation), expectedCubicDerivative)
+        XCTAssertEqual(path.components[0].derivative(at: cubicLocation.locationInComponent), expectedCubicDerivative)
+        XCTAssertEqual(path.normal(at: cubicLocation), expectedCubicNormal)
+        XCTAssertEqual(path.components[0].normal(at: cubicLocation.locationInComponent), expectedCubicNormal)
+
+        // test the second component, which is just a point
+        let firstComponentLocation = IndexedPathLocation(componentIndex: 1, elementIndex: 0, t: 0)
+        let expectedPointPosition = CGPoint(x: 1, y: 1)
+        let expectedPointDerivative = CGPoint.zero
+        XCTAssertEqual(path.point(at: firstComponentLocation), expectedPointPosition)
+        XCTAssertEqual(path.components[1].point(at: firstComponentLocation.locationInComponent), expectedPointPosition)
+        XCTAssertEqual(path.derivative(at: firstComponentLocation), expectedPointDerivative)
+        XCTAssertEqual(path.components[1].derivative(at: firstComponentLocation.locationInComponent), expectedPointDerivative)
+        XCTAssertTrue(path.normal(at: firstComponentLocation).x.isNaN)
+        XCTAssertTrue(path.normal(at: firstComponentLocation).y.isNaN)
+        XCTAssertTrue(path.components[1].normal(at: firstComponentLocation.locationInComponent).x.isNaN)
+        XCTAssertTrue(path.components[1].normal(at: firstComponentLocation.locationInComponent).y.isNaN)
+    }
+
     func testIntersections() {
         let circleCGPath = CGPath(ellipseIn: CGRect(x: 2.0, y: 3.0, width: 2.0, height: 2.0), transform: nil)
         let circlePath = Path(cgPath: circleCGPath) // a circle centered at (3, 4) with radius 2
