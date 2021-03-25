@@ -357,8 +357,72 @@ import Foundation
 
     // MARK: -
 
+    private func assertLocationHasValidElementIndex(_ location: IndexedPathComponentLocation) {
+        assert(location.elementIndex >= 0 && location.elementIndex < self.numberOfElements)
+    }
+
+    private func assertionFailureBadCurveOrder(_ order: Int) {
+        assertionFailure("unexpected curve order \(order). Expected between 0 (point) and 3 (cubic curve).")
+    }
+
     public func point(at location: IndexedPathComponentLocation) -> CGPoint {
-        return self.element(at: location.elementIndex).point(at: location.t)
+        assertLocationHasValidElementIndex(location)
+        let elementIndex = location.elementIndex
+        let t = location.t
+        let order = self.orders[elementIndex]
+        switch self.orders[elementIndex] {
+        case 3:
+            return cubic(at: elementIndex).point(at: t)
+        case 2:
+            return quadratic(at: elementIndex).point(at: t)
+        case 1:
+            return line(at: elementIndex).point(at: t)
+        case 0:
+            return points[offsets[elementIndex]]
+        default:
+            assertionFailureBadCurveOrder(order)
+            return points[offsets[elementIndex]]
+        }
+    }
+
+    public func derivative(at location: IndexedPathComponentLocation) -> CGPoint {
+        assertLocationHasValidElementIndex(location)
+        let elementIndex = location.elementIndex
+        let t = location.t
+        let order = self.orders[elementIndex]
+        switch order {
+        case 3:
+            return cubic(at: elementIndex).derivative(at: t)
+        case 2:
+            return quadratic(at: elementIndex).derivative(at: t)
+        case 1:
+            return line(at: elementIndex).derivative(at: t)
+        case 0:
+            return .zero
+        default:
+            assertionFailureBadCurveOrder(order)
+            return .zero
+        }
+    }
+
+    public func normal(at location: IndexedPathComponentLocation) -> CGPoint {
+        assertLocationHasValidElementIndex(location)
+        let elementIndex = location.elementIndex
+        let t = location.t
+        let order = self.orders[elementIndex]
+        switch order {
+        case 3:
+            return cubic(at: elementIndex).normal(at: t)
+        case 2:
+            return quadratic(at: elementIndex).normal(at: t)
+        case 1:
+            return line(at: elementIndex).normal(at: t)
+        case 0:
+            return CGPoint(x: CGFloat.nan, y: CGFloat.nan)
+        default:
+            assertionFailureBadCurveOrder(order)
+            return CGPoint(x: CGFloat.nan, y: CGFloat.nan)
+        }
     }
 
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
