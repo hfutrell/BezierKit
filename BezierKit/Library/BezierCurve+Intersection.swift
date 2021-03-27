@@ -206,34 +206,31 @@ extension CubicCurve {
         return true
     }
     public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        guard self.selfIntersects else {
-            // call to `selfIntersects` is much faster than actually locating points of intersection, so check this first
-            return []
-        }
-        let reduced = self.reduce()
-        // "simple" curves cannot intersect with their direct
-        // neighbour, so for each segment X we check whether
-        // it intersects [0:x-2][x+2:last].
-        let len=reduced.count-2
-        var results: [Intersection] = []
-        if len > 0 {
-            for i in 0..<len {
-                let left = reduced[i]
-                if reduced[i+1].curve.simple == false {
-                    // this codepath is rarely needed (about 0.1% of the time)
-                    // because `reduce()` should return simple curves
-                    // but sometimes does return non-simple curves due to `BezierKit.reduceStepSize`
-                    let result = helperIntersectsCurveCurve(left, reduced[i+1], accuracy: accuracy).filter { $0.t1 < 1 && $0.t1 != $0.t2 }
-                    if result.isEmpty == false {
-                        results += result
-                    }
-                }
-                for j in i+2..<reduced.count {
-                    results += helperIntersectsCurveCurve(left, reduced[j], accuracy: accuracy)
-                }
-            }
-        }
-        return results
+        // convert the cubic curve to power basis
+        // we solve for t ≠ u such that
+        // b(t) = a3 * t^3 + a2 * t^2 + a1 * t + a0
+        // equal to
+        // b(u) = a3 * u^3 + a2 * u^2 + a1 * u + a0
+        let a3 = -self.p0 + 3 * self.p1 - 3 * self.p2 + self.p3
+        let a2 = 3 * self.p0 - 6 * self.p1 + 3 * self.p2
+        let a1 = -3 * self.p0 + 3 * self.p1
+        // equations reduce to linear system, find solutions p and q where
+        // p = t^2 + t * u + u^2
+        // q = t + u
+        let determinant = a3.x * a2.y - a2.x * a3.y
+        guard determinant != 0 else { return [] }
+        let p = (-a1.x * a2.y + a2.x * a1.y) / determinant
+        let q = (a3.x * -a1.y + a1.x * a3.y) / determinant
+        // substitute t = q - u into equation t^2 + t*u + u^2 - p = 0
+        // then apply quadratic formula to solve for u
+        let discriminant = 4 * p - 3 * q * q
+        guard discriminant >= 0 else { return [] }
+        let u = 0.5 * (q - sqrt(discriminant))
+        let t = q - u
+        assert(u <= t)
+        // ensure u and t in [0, 1]
+        guard t >= 0, t <= 1, u >= 0, u <= 1 else { return [] }
+        return [Intersection(t1: u, t2: t)]
     }
 }
 
