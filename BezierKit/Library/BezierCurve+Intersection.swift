@@ -194,8 +194,8 @@ extension CubicCurve {
         // use the coordinates of the last point to determine if any self-intersections exist
         guard x < 1 else { return false }
         let xSquared = x * x
-        let cuspEdge = (-xSquared + 2 * x + 3) / 4
-        guard y < cuspEdge else { return false }
+        let cuspEdge = -3 * xSquared + 6 * x - 12 * y + 9
+        guard cuspEdge > 0 else { return false }
         if x <= 0 {
             let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
             guard y >= loopAtTZeroEdge else { return false }
@@ -218,7 +218,7 @@ extension CubicCurve {
         
         // TODO: discriminant2 being positive is EXACTLY the cusp edge condition being satisfied
         let discriminant2 = -3 * xSquared + 6 * x - 12 * y + 9
-        let u2 = (0.5 / determinant) * (3 - sqrt(discriminant2))
+        let u2 = (0.5 / determinant) * (3 - x - sqrt(discriminant2))
         
         
         guard discriminant >= 0 else { return false }
