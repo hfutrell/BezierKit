@@ -204,28 +204,10 @@ extension CubicCurve {
             guard y >= loopAtTOneEdge else { return false }
         }
 
-        // equations reduce to linear system, find solutions p and q where
-        // p = t^2 + t * u + u^2
-        // q = t + u
-        let determinant = 3 - x - y
-        guard determinant != 0 else { return false }
-        let p = 3 / determinant
-        let q = (3 - x) / determinant
-        
-        // substitute t = q - u into equation t^2 + t*u + u^2 - p = 0
-        // then apply quadratic formula to solve for u
-        let discriminant = 4 * p - 3 * q * q
-        
-        // TODO: discriminant2 being positive is EXACTLY the cusp edge condition being satisfied
-        let discriminant2 = -3 * xSquared + 6 * x - 12 * y + 9
-        let u2 = (0.5 / determinant) * (3 - x - sqrt(discriminant2))
-        
-        
-        guard discriminant >= 0 else { return false }
-        let u = 0.5 * (q - sqrt(discriminant))
-        let t = q - u
-        assert(u <= t)
-        // ensure u and t in [0, 1]
+        let radical = sqrt(cuspEdge)
+        let denominator = (3 - x - y)
+        let u = 0.5 * (3 - x - radical) / denominator
+        let t = 0.5 * (3 - x + radical) / denominator
         guard t >= 0, t <= 1, u >= 0, u <= 1 else { return false }
         
         return true
