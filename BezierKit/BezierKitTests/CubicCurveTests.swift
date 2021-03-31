@@ -502,6 +502,40 @@ class CubicCurveTests: XCTestCase {
             XCTAssertTrue(distance(c1.point(at: i2.t1), c2.point(at: i2.t2)) < accuracy)
         }
     }
+    
+    func testBasicTangentIntersection() {
+        let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                            p1: CGPoint(x: 0, y: 3),
+                            p2: CGPoint(x: 6, y: 9),
+                            p3: CGPoint(x: 9, y: 9))
+        let c2 = CubicCurve(p0: CGPoint(x: 9, y: 9),
+                            p1: CGPoint(x: 8, y: 9),
+                            p2: CGPoint(x: 6, y: 7),
+                            p3: CGPoint(x: 6, y: 6))
+        let expectedIntersections = [Intersection(t1: 1, t2: 0)]
+        XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5), expectedIntersections)
+        XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
+    }
+    
+    func testRealWorldNearlyCoincidentCurvesIntersection() {
+        // these curves are nearly coincident over from c1's t = 0.278 to 1.0
+        // staying roughly 0.0002 distance of eachother
+        // but they do actually appear to have real interesctions also
+        let c1 = CubicCurve(p0: CGPoint(x: 0.9435597332840757, y: 0.16732142729460975),
+                            p1: CGPoint(x: 0.6459474292317964, y: 0.22174990722896837),
+                            p2: CGPoint(x: 0.3434479689753971, y: 0.2624874219291087),
+                            p3: CGPoint(x: 0.036560070230819974, y: 0.28765861655756453))
+        let c2 = CubicCurve(p0: CGPoint(x: 0.036560070230819974, y: 0.28765861655756453),
+                            p1: CGPoint(x: 0.25665707912767743, y: 0.26960608118315577),
+                            p2: CGPoint(x: 0.4760155370276209, y: 0.24346330678827144),
+                            p3: CGPoint(x: 0.6941905032971079, y: 0.20928332065477662))
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-2)
+        XCTAssertEqual(intersections.count, 2)
+        XCTAssertEqual(intersections[0].t1, 0.73204, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[0].t2, 0.37268, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[0].t1, 1)
+        XCTAssertEqual(intersections[0].t2, 0)
+    }
 
     func testCubicIntersectsLine() {
         let epsilon: CGFloat = 0.00001
