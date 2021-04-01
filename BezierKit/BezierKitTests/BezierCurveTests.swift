@@ -242,7 +242,7 @@ class BezierCurveTests: XCTestCase {
         let result = curve.selfIntersects
         if result == true {
             // check consistency
-            let intersections = curve.selfIntersections(accuracy: epsilon)
+            let intersections = curve.selfIntersections
             XCTAssertEqual(intersections.count, 1)
             XCTAssertTrue(distance(curve.point(at: intersections[0].t1),
                                    curve.point(at: intersections[0].t2)) < epsilon)
@@ -357,7 +357,7 @@ class BezierCurveTests: XCTestCase {
         self.measure {
             var count = 0
             for curve in curves {
-                count += curve.selfIntersections(accuracy: 1.0e-5).count
+                count += curve.selfIntersections.count
             }
             XCTAssertEqual(count, 0)
         }
@@ -372,7 +372,7 @@ class BezierCurveTests: XCTestCase {
         self.measure {
             var count = 0
             for curve in curves {
-                count += curve.selfIntersections(accuracy: 1.0e-5).count
+                count += curve.selfIntersections.count
             }
             XCTAssertEqual(count, dataCount)
         }

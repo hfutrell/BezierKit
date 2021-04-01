@@ -145,7 +145,7 @@ class LineSegmentTests: XCTestCase {
 
     func testSelfIntersections() {
         let l = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 5.0, y: 6.0))
-        XCTAssert(l.selfIntersections().count == 0) // lines never self-intersect
+        XCTAssert(l.selfIntersections.count == 0) // lines never self-intersect
     }
 
     // -- MARK: - line-line intersection tests

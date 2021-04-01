@@ -22,9 +22,6 @@ public extension BezierCurve {
     func intersections(with curve: BezierCurve) -> [Intersection] {
         return self.intersections(with: curve, accuracy: BezierKit.defaultIntersectionAccuracy)
     }
-    func selfIntersections() -> [Intersection] {
-        return self.selfIntersections(accuracy: BezierKit.defaultIntersectionAccuracy)
-    }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty
     }
@@ -34,7 +31,7 @@ public extension BezierCurve {
     var selfIntersects: Bool {
         return false
     }
-    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+    var selfIntersections: [Intersection] {
         return []
     }
 }
@@ -211,7 +208,7 @@ extension CubicCurve {
         return self.selfIntersectionInfo != nil
     }
 
-    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+    public var selfIntersections: [Intersection] {
         guard let info = self.selfIntersectionInfo else { return [] }
         let discriminant = info.discriminant
         let x = info.canonicalPoint.x
