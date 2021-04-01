@@ -175,7 +175,8 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
 // MARK: - extensions to support intersection
 
 extension CubicCurve {
-    public var selfIntersects: Bool {
+
+    private var selfIntersectionInfo: (discriminant: CGFloat, canonicalPoint: CGPoint)? {
         let d1 = self.p1 - self.p0
         let d2 = self.p2 - self.p0
         // https://pomax.github.io/bezierinfo/#canonical
@@ -186,58 +187,41 @@ extension CubicCurve {
         let b = d2.x
         let d = d2.y
         let det = a * d - b * c
-        guard det != 0 else { return false }
+        guard det != 0 else { return nil }
         let d3 = self.p3 - self.p0
         // find the coordinates of the last point in canonical form
         let x = (1 / det) * (-c * d3.x + a * d3.y)
         let y = (1 / det) * ((d - c) * d3.x + (a - b) * d3.y)
         // use the coordinates of the last point to determine if any self-intersections exist
-        guard x < 1 else { return false }
+        guard x < 1 else { return nil }
         let xSquared = x * x
         let cuspEdge = -3 * xSquared + 6 * x - 12 * y + 9
-        guard cuspEdge > 0 else { return false }
+        guard cuspEdge > 0 else { return nil }
         if x <= 0 {
             let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
-            guard y >= loopAtTZeroEdge else { return false }
+            guard y >= loopAtTZeroEdge else { return nil }
         } else {
             let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
-            guard y >= loopAtTOneEdge else { return false }
+            guard y >= loopAtTOneEdge else { return nil }
         }
-
-        let radical = sqrt(cuspEdge)
-        let denominator = (3 - x - y)
-        let u = 0.5 * (3 - x - radical) / denominator
-        let t = 0.5 * (3 - x + radical) / denominator
-        guard t >= 0, t <= 1, u >= 0, u <= 1 else { return false }
-        
-        return true
+        return (discriminant: cuspEdge, canonicalPoint: CGPoint(x: x, y: y))
     }
+
+    public var selfIntersects: Bool {
+        return self.selfIntersectionInfo != nil
+    }
+
     public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        // convert the cubic curve to power basis
-        // we solve for t ≠ u such that
-        // b(t) = a3 * t^3 + a2 * t^2 + a1 * t + a0
-        // equal to
-        // b(u) = a3 * u^3 + a2 * u^2 + a1 * u + a0
-        let a3 = -self.p0 + 3 * self.p1 - 3 * self.p2 + self.p3
-        let a2 = 3 * self.p0 - 6 * self.p1 + 3 * self.p2
-        let a1 = -3 * self.p0 + 3 * self.p1
-        // equations reduce to linear system, find solutions p and q where
-        // p = t^2 + t * u + u^2
-        // q = t + u
-        let determinant = a3.x * a2.y - a2.x * a3.y
-        guard determinant != 0 else { return [] }
-        let p = (-a1.x * a2.y + a2.x * a1.y) / determinant
-        let q = (a3.x * -a1.y + a1.x * a3.y) / determinant
-        // substitute t = q - u into equation t^2 + t*u + u^2 - p = 0
-        // then apply quadratic formula to solve for u
-        let discriminant = 4 * p - 3 * q * q
-        guard discriminant >= 0 else { return [] }
-        let u = 0.5 * (q - sqrt(discriminant))
-        let t = q - u
-        assert(u <= t)
-        // ensure u and t in [0, 1]
-        guard t >= 0, t <= 1, u >= 0, u <= 1 else { return [] }
-        return [Intersection(t1: u, t2: t)]
+        guard let info = self.selfIntersectionInfo else { return [] }
+        let discriminant = info.discriminant
+        let x = info.canonicalPoint.x
+        let y = info.canonicalPoint.y
+        let radical = sqrt(discriminant)
+        let denominator = (3 - x - y)
+        let t1 = 0.5 * (3 - x - radical) / denominator
+        let t2 = 0.5 * (3 - x + radical) / denominator
+        return [Intersection(t1: Utils.clamp(t1, 0, 1),
+                             t2: Utils.clamp(t2, 0, 1))]
     }
 }
 
