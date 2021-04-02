@@ -78,20 +78,44 @@ public struct ImplicitPolynomial {
     }
 }
 
-extension QuadraticCurve: Implicitize {
-    
-    private func l(_ i: Int, _ j: Int) -> ImplicitPolynomial {
+private extension BezierCurve {
+    func l(_ i: Int, _ j: Int) -> ImplicitPolynomial {
         let n = self.order
         let pi = points[i]
         let pj = points[j]
         let b = CGFloat(binomialCoefficient(n, choose: i) * binomialCoefficient(n, choose: j))
         return b * ImplicitPolynomial.line(pi.y - pj.y, pj.x - pi.x, pi.x * pj.y - pj.x * pi.y)
     }
+}
 
+extension QuadraticCurve: Implicitize {
     public var implicitPolynomial: ImplicitPolynomial {
         let l20 = l(2, 0)
         let l21 = l(2, 1)
         let l10 = l(1, 0)
         return l21 * l10 - l20 * l20
+    }
+}
+
+extension CubicCurve: Implicitize {
+    public var implicitPolynomial: ImplicitPolynomial {
+        let l32 = l(3, 2)
+        let l31 = l(3, 1)
+        let l30 = l(3, 0)
+        let l21 = l(2, 1)
+        let l20 = l(2, 0)
+        let l10 = l(1, 0)
+        let m00 = l32
+        let m01 = l31
+        let m02 = l30
+        let m10 = l31
+        let m11 = l30 + l21
+        let m12 = l20
+        let m20 = l30
+        let m21 = l20
+        let m22 = l10
+        return m00 * (m11 * m22 - m12 * m21)
+            - m01 * (m10 * m22 - m12 * m20)
+            + m02 * (m10 * m21 - m11 * m20)
     }
 }
