@@ -330,14 +330,14 @@ class Demos {
                                     Draw.drawShape(context, shape: shape)
                                 }
     })
-    static let demo18 = Demo(title: ".selfIntersections()",
+    static let demo18 = Demo(title: ".selfIntersections",
                              quadraticControlPoints: quadraticControlPoints,
                              cubicControlPoints: [CGPoint(x: 100, y: 25), CGPoint(x: 10, y: 180), CGPoint(x: 170, y: 165), CGPoint(x: 65, y: 70)],
                              drawFunction: {(context: CGContext, demoState: DemoState) in
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                for intersection in curve.selfIntersections() {
+                                for intersection in curve.selfIntersections {
                                     Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
                                 }
                                 if demoState.quadratic {

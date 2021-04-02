@@ -308,7 +308,7 @@ import Foundation
             if i1 == i2 {
                 // we are intersecting a path element against itself (only possible with cubic or higher order)
                 if self.order(at: i1) == 3 {
-                    elementIntersections = self.cubic(at: i1).selfIntersections(accuracy: accuracy)
+                    elementIntersections = self.cubic(at: i1).selfIntersections
                 }
             } else if i1 < i2 {
                 // we are intersecting two distinct path elements

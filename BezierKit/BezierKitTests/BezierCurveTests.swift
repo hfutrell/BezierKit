@@ -242,7 +242,7 @@ class BezierCurveTests: XCTestCase {
         let result = curve.selfIntersects
         if result == true {
             // check consistency
-            let intersections = curve.selfIntersections(accuracy: epsilon)
+            let intersections = curve.selfIntersections
             XCTAssertEqual(intersections.count, 1)
             XCTAssertTrue(distance(curve.point(at: intersections[0].t1),
                                    curve.point(at: intersections[0].t2)) < epsilon)
@@ -350,14 +350,14 @@ class BezierCurveTests: XCTestCase {
 
     func testCubicSelfIntersectionsPerformance1() {
         // test the performance of `selfIntersections` when the curves DO NOT self-intersect
-        // -Onone 0.046 seconds
-        // -Os 0.04 seconds
+        // -Onone 0.036 seconds
+        // -Os 0.004 seconds
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 0)
         self.measure {
             var count = 0
             for curve in curves {
-                count += curve.selfIntersections(accuracy: 1.0e-5).count
+                count += curve.selfIntersections.count
             }
             XCTAssertEqual(count, 0)
         }
@@ -365,14 +365,14 @@ class BezierCurveTests: XCTestCase {
 
     func testCubicSelfIntersectionsPerformance2() {
         // test the performance of `selfIntersections` when the curves self-intersect
-        // -Onone 0.911 seconds
-        // -Os 0.129 seconds
-        let dataCount = 1000
+        // -Onone 0.048 seconds
+        // -Os 0.014 seconds
+        let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: true, reseed: 1)
         self.measure {
             var count = 0
             for curve in curves {
-                count += curve.selfIntersections(accuracy: 1.0e-5).count
+                count += curve.selfIntersections.count
             }
             XCTAssertEqual(count, dataCount)
         }
