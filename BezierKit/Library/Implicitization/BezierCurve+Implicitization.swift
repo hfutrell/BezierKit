@@ -130,6 +130,9 @@ extension QuadraticCurve: Implicitize {
         let l10 = l(1, 0)
         return l21 * l10 - l20 * l20
     }
+    public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
+        return (numerator: l(2, 0), denominator: l(2, 0) - l(2, 1))
+    }
 }
 
 extension CubicCurve: Implicitize {
@@ -152,5 +155,20 @@ extension CubicCurve: Implicitize {
         return m00 * (m11 * m22 - m12 * m21)
             - m01 * (m10 * m22 - m12 * m20)
             + m02 * (m10 * m21 - m11 * m20)
+    }
+    public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
+        let points = self.points
+        func det(_ i: Int, _ j: Int, _ k: Int) -> CGFloat {
+            let pi = points[i]
+            let pj = points[j]
+            let pk = points[k]
+            return pj.cross(pk) - pi.cross(pk) + pi.cross(pj)
+        }
+        let det123 = det(1, 2, 3)
+        let c1 = det(0, 1, 3) / (3 * det123)
+        let c2 = -det(0, 2, 3) / (3 * det123)
+        let la = c1 * l(3, 1) + c2 * (l(3, 0) + l(2, 1)) + l(2, 0)
+        let lb = c1 * l(3, 0) + c2 * l(2, 0) + l(1, 0)
+        return (numerator: lb, denominator: lb - la)
     }
 }

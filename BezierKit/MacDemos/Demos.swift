@@ -383,14 +383,24 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve2)
                                 Draw.setColor(context, color: Draw.black)
                                 
-                                if let cubic1 = curve as? QuadraticCurve, let cubic2 = curve2 as? QuadraticCurve {
+                                if let cubic1 = curve as? CubicCurve, let cubic2 = curve2 as? CubicCurve {
                                     let xPolynomial = BernsteinPolynomialN(coefficients: cubic1.xPolynomial.coefficients)
                                     let yPolynomial = BernsteinPolynomialN(coefficients: cubic1.yPolynomial.coefficients)
                                     let equation: BernsteinPolynomialN = cubic2.implicitPolynomial.value(xPolynomial, yPolynomial)
                                     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
                                     
                                     for root in roots {
-                                        Draw.drawPoint(context, origin: cubic1.point(at: root))
+                                        
+                                        let inverse = cubic2.inverse
+                                        let numerator = inverse.numerator
+                                        let deonominator = inverse.denominator
+                                        
+                                        let p = curve.point(at: root)
+                                        
+                                        let t = numerator.value(p) / deonominator.value(p)
+                                        guard t >= 0, t <= 1 else { continue }
+                                        
+                                        Draw.drawPoint(context, origin: cubic2.point(at: t))
                                     }
 
                                 }
