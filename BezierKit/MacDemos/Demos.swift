@@ -41,6 +41,11 @@ class Demos {
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
+                                
+                                if let quadratic = curve as? QuadraticCurve, let mouse = demoState.lastInputLocation {
+                                    let implicit = quadratic.implicitPolynomial
+                                    print("implicit value = \(implicit.value(mouse))")
+                                }
 
     })
     static let demo2 = Demo(title: "Bezier.quadraticFromPoints",
