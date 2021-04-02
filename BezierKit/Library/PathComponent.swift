@@ -214,7 +214,7 @@ import Foundation
         return PathComponent(curves: offsetCurves)
     }
 
-    private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve {
+    private static func intersectionBetween<U>(_ curve: U, _ i2: Int, _ p2: PathComponent, accuracy: CGFloat) -> [Intersection] where U: Implicitizeable & ComponentPolynomials & NonlinearBezierCurve {
         switch p2.order(at: i2) {
         case 0:
             return []

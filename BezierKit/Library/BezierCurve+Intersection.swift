@@ -111,14 +111,22 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
 }
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-    let lb = curve1.curve.boundingBox
-    let rb = curve2.curve.boundingBox
-    var intersections: [Intersection] = []
-    Utils.pairiteration(curve1, curve2, lb, rb, &intersections, accuracy)
-    if intersections.count >= curve1.curve.order * curve2.curve.order {
-        if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
-            return coincidence
-        }
+    
+    let xPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.xPolynomial.coefficients)
+    let yPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.yPolynomial.coefficients)
+    let equation: BernsteinPolynomialN = curve2.curve.implicitPolynomial.value(xPolynomial, yPolynomial)
+    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+    
+    let inverse = curve2.curve.inverse
+    let numerator = inverse.numerator
+    let deonominator = inverse.denominator
+    
+    let intersections = roots.compactMap { t1 -> Intersection? in
+        let point = curve1.curve.point(at: t1)
+        #warning("todo: handle double point here")
+        let t2 = numerator.value(point) / deonominator.value(point)
+        guard t2 >= 0, t2 <= 1 else { return nil }
+        return Intersection(t1: t1, t2: t2)
     }
     return intersections.sortedAndUniqued()
 }

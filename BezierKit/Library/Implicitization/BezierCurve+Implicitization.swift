@@ -8,8 +8,9 @@
 
 import Foundation
 
-public protocol Implicitize {
+public protocol Implicitizeable {
     var implicitPolynomial: ImplicitPolynomial { get }
+    var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) { get }
 }
 
 public struct ImplicitPolynomial {
@@ -123,7 +124,7 @@ private extension BezierCurve {
     }
 }
 
-extension QuadraticCurve: Implicitize {
+extension QuadraticCurve: Implicitizeable {
     public var implicitPolynomial: ImplicitPolynomial {
         let l20 = l(2, 0)
         let l21 = l(2, 1)
@@ -135,7 +136,7 @@ extension QuadraticCurve: Implicitize {
     }
 }
 
-extension CubicCurve: Implicitize {
+extension CubicCurve: Implicitizeable {
     public var implicitPolynomial: ImplicitPolynomial {
         let l32 = l(3, 2)
         let l31 = l(3, 1)

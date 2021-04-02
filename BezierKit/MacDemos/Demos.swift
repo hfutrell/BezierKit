@@ -42,14 +42,6 @@ class Demos {
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
 
-                                if let quadratic = curve as? QuadraticCurve, let mouse = demoState.lastInputLocation {
-                                    let implicit = quadratic.implicitPolynomial
-                                    print("implicit value = \(implicit.value(mouse))")
-                                } else if let cubic = curve as? CubicCurve, let mouse = demoState.lastInputLocation {
-                                    let implicit = cubic.implicitPolynomial
-                                    print("implicit value = \(implicit.value(mouse))")
-                                }
-
     })
     static let demo2 = Demo(title: "Bezier.quadraticFromPoints",
                             quadraticControlPoints: [],
@@ -382,30 +374,9 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawCurve(context, curve: curve2)
                                 Draw.setColor(context, color: Draw.black)
-                                
-                                if let cubic1 = curve as? CubicCurve, let cubic2 = curve2 as? CubicCurve {
-                                    let xPolynomial = BernsteinPolynomialN(coefficients: cubic1.xPolynomial.coefficients)
-                                    let yPolynomial = BernsteinPolynomialN(coefficients: cubic1.yPolynomial.coefficients)
-                                    let equation: BernsteinPolynomialN = cubic2.implicitPolynomial.value(xPolynomial, yPolynomial)
-                                    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
-                                    
-                                    for root in roots {
-                                        
-                                        let inverse = cubic2.inverse
-                                        let numerator = inverse.numerator
-                                        let deonominator = inverse.denominator
-                                        
-                                        let p = curve.point(at: root)
-                                        
-                                        let t = numerator.value(p) / deonominator.value(p)
-                                        guard t >= 0, t <= 1 else { continue }
-                                        
-                                        Draw.drawPoint(context, origin: cubic2.point(at: t))
-                                    }
-
+                                for intersection in curve.intersections(with: curve2) {
+                                    Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
                                 }
-                                
-                                
     })
     static let demo21 = Demo(title: "CGPath interoperability",
                              quadraticControlPoints: [],
