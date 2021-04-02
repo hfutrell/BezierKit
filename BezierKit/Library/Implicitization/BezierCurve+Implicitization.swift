@@ -28,6 +28,41 @@ public struct ImplicitPolynomial {
         return ImplicitPolynomial(coefficients: [c, b, a, 0], order: 1)
     }
 
+    public func value(_ x: BernsteinPolynomialN, _ y: BernsteinPolynomialN) -> BernsteinPolynomialN {
+
+        var xPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
+        var yPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
+        for i in 1...order {
+            xPowers.append(xPowers[i - 1] * x)
+            yPowers.append(yPowers[i - 1] * y)
+        }
+
+        let resultOrder = order * order
+        var sum: BernsteinPolynomialN = BernsteinPolynomialN(coefficients: [CGFloat](repeating: 0, count: resultOrder + 1))
+        for i in 0...order {
+            let xPower: BernsteinPolynomialN = xPowers[i]
+            for j in 0...order {
+                let yPower: BernsteinPolynomialN = yPowers[j]
+
+                var term: BernsteinPolynomialN = (xPower * yPower)
+
+                let k = resultOrder - xPower.order - yPower.order
+                if k > 0 {
+                    // bring the term up to degree k
+                    term = term * BernsteinPolynomialN(coefficients: [CGFloat](repeating: 1, count: k + 1))
+                } else if k < 0 {
+                    assert(coefficient(i, j) == 0)
+                    continue
+                }
+                // swiftlint:disable shorthand_operator
+                let c: CGFloat = coefficient(i, j)
+                sum = sum + c * term
+                // swiftlint:enable shorthand_operator
+            }
+        }
+        return sum
+    }
+
     public func value(_ point: CGPoint) -> CGFloat {
         let x = point.x
         let y = point.y

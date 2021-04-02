@@ -382,9 +382,20 @@ class Demos {
                                 Draw.setColor(context, color: Draw.red)
                                 Draw.drawCurve(context, curve: curve2)
                                 Draw.setColor(context, color: Draw.black)
-                                for intersection in curve.intersections(with: curve2) {
-                                    Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
+                                
+                                if let cubic1 = curve as? QuadraticCurve, let cubic2 = curve2 as? QuadraticCurve {
+                                    let xPolynomial = BernsteinPolynomialN(coefficients: cubic1.xPolynomial.coefficients)
+                                    let yPolynomial = BernsteinPolynomialN(coefficients: cubic1.yPolynomial.coefficients)
+                                    let equation: BernsteinPolynomialN = cubic2.implicitPolynomial.value(xPolynomial, yPolynomial)
+                                    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+                                    
+                                    for root in roots {
+                                        Draw.drawPoint(context, origin: cubic1.point(at: root))
+                                    }
+
                                 }
+                                
+                                
     })
     static let demo21 = Demo(title: "CGPath interoperability",
                              quadraticControlPoints: [],
