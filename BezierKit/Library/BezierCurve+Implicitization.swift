@@ -43,20 +43,23 @@ public struct ImplicitPolynomial {
         for i in 0...order {
             let xPower: BernsteinPolynomialN = xPowers[i]
             for j in 0...order {
+
+                let c: CGFloat = coefficient(i, j)
+                guard c != 0 else { continue }
+
                 let yPower: BernsteinPolynomialN = yPowers[j]
+
+                let k = resultOrder - xPower.order - yPower.order
 
                 var term: BernsteinPolynomialN = (xPower * yPower)
 
-                let k = resultOrder - xPower.order - yPower.order
+                // swiftlint:disable shorthand_operator
                 if k > 0 {
                     // bring the term up to degree k
                     term = term * BernsteinPolynomialN(coefficients: [CGFloat](repeating: 1, count: k + 1))
-                } else if k < 0 {
-                    assert(coefficient(i, j) == 0)
-                    continue
+                } else {
+                    assert(k == 0, "for k < 0 we should have c == 0")
                 }
-                // swiftlint:disable shorthand_operator
-                let c: CGFloat = coefficient(i, j)
                 sum = sum + c * term
                 // swiftlint:enable shorthand_operator
             }

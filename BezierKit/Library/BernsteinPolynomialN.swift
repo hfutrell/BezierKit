@@ -7,14 +7,20 @@
 
 import CoreGraphics
 
-func binomialCoefficient(_ n: Int, choose k: Int) -> Int {
-    precondition(n >= 0 && k >= 0)
-    var result = 1
-    for i in 0..<k {
-      result *= (n - i)
-      result /= (i + 1)
-    }
-    return result
+private let binomialTable: [[CGFloat]] = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                          [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                                          [1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
+                                          [1, 3, 3, 1, 0, 0, 0, 0, 0, 0],
+                                          [1, 4, 6, 4, 1, 0, 0, 0, 0, 0],
+                                          [1, 5, 10, 10, 5, 1, 0, 0, 0, 0],
+                                          [1, 6, 15, 20, 15, 6, 1, 0, 0, 0],
+                                          [1, 7, 21, 35, 35, 21, 7, 1, 0, 0],
+                                          [1, 8, 28, 56, 70, 56, 28, 8, 1, 0],
+                                          [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]]
+
+func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
+    precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+    return binomialTable[n][k]
 }
 
 func linearInterpolate(_ first: CGFloat, _ second: CGFloat, _ t: CGFloat) -> CGFloat {
@@ -99,10 +105,9 @@ extension BernsteinPolynomialN {
         // from normal polynomial multiplication. For a discussion of how this works see
         // "Computer Aided Geometric Design" by T.W. Sederberg,
         // 9.3 Multiplication of Polynomials in Bernstein Form
-        var points: [CGFloat] = []
         let m = left.order
         let n = right.order
-        for k in 0...m + n {
+        let points = (0...m + n).map { k -> CGFloat in
             let start = max(k - n, 0)
             let end = min(m, k)
             let sum = (start...end).reduce(CGFloat.zero) { totalSoFar, i  in
@@ -110,7 +115,7 @@ extension BernsteinPolynomialN {
                 return totalSoFar + CGFloat(binomialCoefficient(m, choose: i) * binomialCoefficient(n, choose: j)) * left.coefficients[i] * right.coefficients[j]
             }
             let divisor = CGFloat(binomialCoefficient(m + n, choose: k))
-            points.append(sum / divisor)
+            return sum / divisor
         }
         return BernsteinPolynomialN(coefficients: points)
     }
