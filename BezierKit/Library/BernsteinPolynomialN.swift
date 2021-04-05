@@ -7,13 +7,27 @@
 
 import CoreGraphics
 
+func binomialCoefficient(_ n: Int, choose k: Int) -> Int {
+    precondition(n >= 0 && k >= 0)
+    var result = 1
+    for i in 0..<k {
+      result *= (n - i)
+      result /= (i + 1)
+    }
+    return result
+}
+
+func linearInterpolate(_ first: CGFloat, _ second: CGFloat, _ t: CGFloat) -> CGFloat {
+    return (1 - t) * first + t * second
+}
+
 public struct BernsteinPolynomialN: BernsteinPolynomial {
     public let coefficients: [CGFloat]
-    
+
     public func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomialN {
         fatalError("unimplemented.")
     }
-    
+
     public var order: Int { return coefficients.count - 1 }
     public init(coefficients: [CGFloat]) {
         precondition(coefficients.isEmpty == false, "Bezier curves require at least one point")

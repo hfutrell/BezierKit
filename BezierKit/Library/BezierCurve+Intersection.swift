@@ -108,16 +108,16 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
 }
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-    
+
     let xPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.xPolynomial.coefficients)
     let yPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.yPolynomial.coefficients)
     let equation: BernsteinPolynomialN = curve2.curve.implicitPolynomial.value(xPolynomial, yPolynomial)
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
-    
+
     let inverse = curve2.curve.inverse
     let numerator = inverse.numerator
     let deonominator = inverse.denominator
-    
+
     let intersections = roots.compactMap { t1 -> Intersection? in
         let point = curve1.curve.point(at: t1)
         #warning("todo: handle double point here")
