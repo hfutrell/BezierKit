@@ -502,7 +502,7 @@ class CubicCurveTests: XCTestCase {
             XCTAssertTrue(distance(c1.point(at: i2.t1), c2.point(at: i2.t2)) < accuracy)
         }
     }
-    
+
     func testBasicTangentIntersection() {
         let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
                             p1: CGPoint(x: 0, y: 3),
@@ -516,7 +516,7 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5), expectedIntersections)
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
     }
-    
+
     func testRealWorldNearlyCoincidentCurvesIntersection() {
         // these curves are nearly coincident over from c1's t = 0.278 to 1.0
         // staying roughly 0.0002 distance of eachother
