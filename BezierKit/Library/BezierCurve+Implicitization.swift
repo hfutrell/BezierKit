@@ -18,6 +18,24 @@ public struct ImplicitPolynomial {
     fileprivate let coefficients: [CGFloat]
     public let order: Int
 
+    fileprivate init(_ lineProduct: ImplicitLineProduct) {
+        coefficients = [lineProduct.a00, lineProduct.a01, lineProduct.a02,
+                        lineProduct.a10, lineProduct.a11, 0,
+                        lineProduct.a20, 0, 0]
+        order = 2
+    }
+
+    fileprivate init(_ line: ImplicitLine) {
+        coefficients = [line.a00, line.a01, line.a10, 0]
+        order = 1
+    }
+
+    init(coefficients: [CGFloat], order: Int) {
+        assert(coefficients.count == (order + 1) * (order + 1))
+        self.coefficients = coefficients
+        self.order = order
+    }
+
     /// get the coefficient aij for x^i y^j
     public func coefficient(_ i: Int, _ j: Int) -> CGFloat {
         assert(i >= 0 && i <= order && j >= 0 && j <= order)
@@ -117,13 +135,77 @@ public struct ImplicitPolynomial {
     }
 }
 
+private struct ImplicitLineProduct {
+    var a20, a11, a10, a02, a01, a00: CGFloat
+    static func * (left: ImplicitLine, right: ImplicitLineProduct) -> ImplicitPolynomial {
+        let a00 = left.a00 * right.a00
+        let a10 = left.a00 * right.a10 + left.a10 * right.a00
+        let a20 = left.a10 * right.a10 + left.a00 * right.a20
+        let a30 = left.a10 * right.a20
+
+        let a01 = left.a01 * right.a00 + left.a00 * right.a01
+        let a11 = left.a10 * right.a01 + left.a00 * right.a11 + left.a01 * right.a10
+        let a21 = left.a01 * right.a20 + left.a10 * right.a11
+        let a31 = CGFloat.zero
+
+        let a02 = left.a01 * right.a01 + left.a00 * right.a02
+        let a12 = left.a10 * right.a02 + left.a01 * right.a11
+        let a22 = CGFloat.zero
+        let a32 = CGFloat.zero
+
+        let a03 = left.a01 * right.a02
+        let a13 = CGFloat.zero
+        let a23 = CGFloat.zero
+        let a33 = CGFloat.zero
+
+        return ImplicitPolynomial(coefficients: [a00, a01, a02, a03,
+                                                 a10, a11, a12, a13,
+                                                 a20, a21, a22, a23,
+                                                 a30, a31, a32, a33
+        ], order: 3)
+    }
+    static func - (left: ImplicitLineProduct, right: ImplicitLineProduct) -> ImplicitLineProduct {
+        return ImplicitLineProduct(a20: left.a20 - right.a20,
+                                   a11: left.a11 - right.a11,
+                                   a10: left.a10 - right.a10,
+                                   a02: left.a02 - right.a02,
+                                   a01: left.a01 - right.a01,
+                                   a00: left.a00 - right.a00)
+    }
+}
+
+private struct ImplicitLine {
+    var a10, a01, a00: CGFloat
+    static func * (left: ImplicitLine, right: ImplicitLine) -> ImplicitLineProduct {
+        return ImplicitLineProduct(a20: left.a10 * right.a10,
+                                   a11: left.a01 * right.a10 + left.a10 * right.a01,
+                                   a10: left.a10 * right.a00 + left.a00 * right.a10,
+                                   a02: left.a01 * right.a01,
+                                   a01: left.a01 * right.a00 + left.a00 * right.a01,
+                                   a00: left.a00 * right.a00)
+    }
+    static func * (left: CGFloat, right: ImplicitLine) -> ImplicitLine {
+        return ImplicitLine(a10: left * right.a10, a01: left * right.a01, a00: left * right.a00)
+    }
+    static func - (left: ImplicitLine, right: ImplicitLine) -> ImplicitLine {
+        return ImplicitLine(a10: left.a10 - right.a10,
+                            a01: left.a01 - right.a01,
+                            a00: left.a00 - right.a00)
+    }
+    static func + (left: ImplicitLine, right: ImplicitLine) -> ImplicitLine {
+        return ImplicitLine(a10: left.a10 + right.a10,
+                            a01: left.a01 + right.a01,
+                            a00: left.a00 + right.a00)
+    }
+}
+
 private extension BezierCurve {
-    func l(_ i: Int, _ j: Int) -> ImplicitPolynomial {
+    func l(_ i: Int, _ j: Int) -> ImplicitLine {
         let n = self.order
         let pi = points[i]
         let pj = points[j]
         let b = CGFloat(binomialCoefficient(n, choose: i) * binomialCoefficient(n, choose: j))
-        return b * ImplicitPolynomial.line(pi.y - pj.y, pj.x - pi.x, pi.x * pj.y - pj.x * pi.y)
+        return b * ImplicitLine(a10: pi.y - pj.y, a01: pj.x - pi.x, a00: pi.x * pj.y - pj.x * pi.y)
     }
 }
 
@@ -132,10 +214,13 @@ extension QuadraticCurve: Implicitizeable {
         let l20 = l(2, 0)
         let l21 = l(2, 1)
         let l10 = l(1, 0)
-        return l21 * l10 - l20 * l20
+        let lineProduct = l21 * l10 - l20 * l20
+        return ImplicitPolynomial(lineProduct)
     }
     public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
-        return (numerator: l(2, 0), denominator: l(2, 0) - l(2, 1))
+        let numerator = ImplicitPolynomial(l(2, 0))
+        let denominator = ImplicitPolynomial(l(2, 0) - l(2, 1))
+        return (numerator: numerator, denominator: denominator)
     }
 }
 
@@ -173,6 +258,6 @@ extension CubicCurve: Implicitizeable {
         let c2 = -det(0, 2, 3) / (3 * det123)
         let la = c1 * l(3, 1) + c2 * (l(3, 0) + l(2, 1)) + l(2, 0)
         let lb = c1 * l(3, 0) + c2 * l(2, 0) + l(1, 0)
-        return (numerator: lb, denominator: lb - la)
+        return (numerator: ImplicitPolynomial(lb), denominator: ImplicitPolynomial(lb - la))
     }
 }
