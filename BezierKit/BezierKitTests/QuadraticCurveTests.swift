@@ -218,6 +218,28 @@ class QuadraticCurveTests: XCTestCase {
         }
     }
 
+    func testIntersectionQuadraticColinearControlPoints() {
+        // this test presents two challenges
+        // 1. if we use implicitization there is a double-root at t=0.75
+        // which can be missed by root finding algorithms.
+        // 2. the numerator and denominator of the inverse equation is zero for any point
+        // that falls on `quadraticWithColinearControlPoints`, which yields NaN
+        let epsilon: CGFloat = 1.0e-5
+        let quadraticWithColinearControlPoints = QuadraticCurve(p0: CGPoint(x: 1, y: 1),
+                                p1: CGPoint(x: 3, y: 3),
+                                p2: CGPoint(x: 2, y: 2))
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
+                                       p1: CGPoint(x: 1, y: 4),
+                                       p2: CGPoint(x: 2, y: 0))
+        let intersections = quadratic.intersections(with: quadraticWithColinearControlPoints, accuracy: epsilon)
+        guard intersections.count == 1 else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(intersections[0].t1, 0.75)
+        XCTAssertEqual(intersections[0].t2, 0.13962, accuracy: 1.0e-5)
+    }
+
     // MARK: -
 
     func testEquatable() {
