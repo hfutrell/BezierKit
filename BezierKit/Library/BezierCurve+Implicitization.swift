@@ -42,11 +42,6 @@ public struct ImplicitPolynomial {
         return coefficients[(order + 1) * i + j]
     }
 
-    // the equation for the line a * x + b * y + c = 0
-    public static func line(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat) -> ImplicitPolynomial {
-        return ImplicitPolynomial(coefficients: [c, b, a, 0], order: 1)
-    }
-
     public func value(_ x: BernsteinPolynomialN, _ y: BernsteinPolynomialN) -> BernsteinPolynomialN {
 
         var xPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]

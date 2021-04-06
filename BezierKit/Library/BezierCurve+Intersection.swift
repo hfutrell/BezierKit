@@ -118,13 +118,54 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let numerator = inverse.numerator
     let deonominator = inverse.denominator
 
-    let intersections = roots.compactMap { t1 -> Intersection? in
-        let point = curve1.curve.point(at: t1)
+    #warning("clean up")
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 1.0e-10) {
+        return coincidence
+    }
+
+    var intersections = roots.compactMap { t1 -> Intersection? in
+       
+        #warning("clean up")
+        var adjustedT1 = t1
+        if Utils.approximately(Double(adjustedT1), 0.0, precision: Utils.epsilon) {
+            adjustedT1 = 0.0
+        } else if Utils.approximately(Double(adjustedT1), 1.0, precision: Utils.epsilon) {
+            adjustedT1 = 1.0
+        }
+
+        
+        let point = curve1.curve.point(at: adjustedT1)
         #warning("todo: handle double point here")
         let t2 = numerator.value(point) / deonominator.value(point)
-        guard t2 >= 0, t2 <= 1 else { return nil }
-        return Intersection(t1: t1, t2: t2)
+     
+        #warning("clean up")
+        var adjustedT2 = t2
+        if Utils.approximately(Double(adjustedT2), 0.0, precision: Utils.epsilon) {
+            adjustedT2 = 0.0
+        } else if Utils.approximately(Double(adjustedT2), 1.0, precision: Utils.epsilon) {
+            adjustedT2 = 1.0
+        }
+
+        
+        guard adjustedT2 >= 0, adjustedT2 <= 1 else { return nil }
+        return Intersection(t1: adjustedT1, t2: adjustedT2)
     }
+    
+    #warning("clean up")
+    if intersections.contains(where: { $0.t1 == 0 }) == false {
+        let projection = curve2.curve.project(curve1.curve.startingPoint)
+        if distance(projection.point, curve1.curve.startingPoint) < 1.0e-7 {
+            intersections.insert(Intersection(t1: 0, t2: projection.t), at: 0)
+        }
+    }
+    
+    if intersections.contains(where: { $0.t1 == 1 }) == false {
+        let projection = curve2.curve.project(curve1.curve.endingPoint)
+        if distance(projection.point, curve1.curve.endingPoint) < 1.0e-7 {
+            intersections.append(Intersection(t1: 1, t2: projection.t))
+        }
+    }
+    
     return intersections.sortedAndUniqued()
 }
 
