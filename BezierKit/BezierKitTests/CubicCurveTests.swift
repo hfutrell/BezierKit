@@ -533,8 +533,8 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(intersections.count, 2)
         XCTAssertEqual(intersections[0].t1, 0.73204, accuracy: 1.0e-5)
         XCTAssertEqual(intersections[0].t2, 0.37268, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections[0].t1, 1)
-        XCTAssertEqual(intersections[0].t2, 0)
+        XCTAssertEqual(intersections[1].t1, 1)
+        XCTAssertEqual(intersections[1].t2, 0)
     }
 
     func testCubicIntersectsLine() {
