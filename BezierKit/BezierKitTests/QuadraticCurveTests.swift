@@ -14,6 +14,7 @@ class QuadraticCurveTests: XCTestCase {
     // TODO: we still have a LOT of missing unit tests for QuadraticCurve's API entry points
 
     override func setUp() {
+        self.continueAfterFailure = false
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
@@ -232,12 +233,26 @@ class QuadraticCurveTests: XCTestCase {
                                        p1: CGPoint(x: 1, y: 4),
                                        p2: CGPoint(x: 2, y: 0))
         let intersections = quadratic.intersections(with: quadraticWithColinearControlPoints, accuracy: epsilon)
-        guard intersections.count == 1 else {
-            XCTFail()
-            return
-        }
+        XCTAssertEqual(intersections.count, 1)
         XCTAssertEqual(intersections[0].t1, 0.75)
         XCTAssertEqual(intersections[0].t2, 0.13962, accuracy: 1.0e-5)
+    }
+
+    func testIntersectionQuadraticActuallyLinear() {
+        // this test presents a challenge for an implicitization based approach
+        // if the linearity of the so-called "quadratic" is not detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be detected
+        let epsilon: CGFloat = 1.0e-5
+        let quadraticButActuallyLinear = QuadraticCurve(p0: CGPoint(x: 2, y: 1),
+                                                        p1: CGPoint(x: 3, y: 2),
+                                                        p2: CGPoint(x: 4, y: 3))
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
+                                       p1: CGPoint(x: 3.5, y: 5),
+                                       p2: CGPoint(x: 7, y: 0))
+        let intersections = quadratic.intersections(with: quadraticButActuallyLinear, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 1)
+        XCTAssertEqual(intersections[0].t1, 0.5)
+        XCTAssertEqual(intersections[0].t2, 0.75)
     }
 
     // MARK: -
