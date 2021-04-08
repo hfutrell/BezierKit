@@ -44,6 +44,8 @@ public struct ImplicitPolynomial {
 
     public func value(_ x: BernsteinPolynomialN, _ y: BernsteinPolynomialN) -> BernsteinPolynomialN {
 
+        assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
+        let polynomialOrder = x.order
         var xPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
         var yPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
         for i in 1...order {
@@ -51,7 +53,7 @@ public struct ImplicitPolynomial {
             yPowers.append(yPowers[i - 1] * y)
         }
 
-        let resultOrder = order * order
+        let resultOrder = order * polynomialOrder
         var sum: BernsteinPolynomialN = BernsteinPolynomialN(coefficients: [CGFloat](repeating: 0, count: resultOrder + 1))
         for i in 0...order {
             let xPower: BernsteinPolynomialN = xPowers[i]
