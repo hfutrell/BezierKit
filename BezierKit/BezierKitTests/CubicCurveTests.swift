@@ -12,6 +12,7 @@ import XCTest
 class CubicCurveTests: XCTestCase {
 
     override func setUp() {
+        self.continueAfterFailure = false
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
@@ -501,6 +502,44 @@ class CubicCurveTests: XCTestCase {
             let i2 = intersections[1]
             XCTAssertTrue(distance(c1.point(at: i2.t1), c2.point(at: i2.t2)) < accuracy)
         }
+    }
+
+    func testIntersectionsCubicButActuallyLinear() {
+        // this test presents a challenge for an implicitization based approach
+        // if the linearity of the so-called "cubic" is not detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be found
+        let epsilon: CGFloat = 1.0e-5
+        let cubicButActuallyLinear = CubicCurve(p0: CGPoint(x: 3, y: 2),
+                                                p1: CGPoint(x: 4, y: 3),
+                                                p2: CGPoint(x: 5, y: 4),
+                                                p3: CGPoint(x: 6, y: 5))
+        let cubic = CubicCurve(p0: CGPoint(x: 1, y: 0),
+                               p1: CGPoint(x: 3, y: 6),
+                               p2: CGPoint(x: 5, y: 2),
+                               p3: CGPoint(x: 7, y: 0))
+        let intersections = cubic.intersections(with: cubicButActuallyLinear, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 1)
+        XCTAssertEqual(intersections[0].t1, 0.5)
+        XCTAssertEqual(intersections[0].t2, 1.0 / 3.0, accuracy: 1.0e-5)
+    }
+
+    func testIntersectionsCubicButActuallyQuadratic() {
+        // this test presents a challenge for an implicitization based approach
+        // if the quadratic nature of the so-called "cubic" is not detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be found
+        let epsilon: CGFloat = 1.0e-5
+        let cubicButActuallyQuadratic = CubicCurve(p0: CGPoint(x: 1, y: 1),
+                                                   p1: CGPoint(x: 2, y: 4),
+                                                   p2: CGPoint(x: 3, y: 4),
+                                                   p3: CGPoint(x: 4, y: 1))
+        let cubic = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                               p1: CGPoint(x: 2, y: 4),
+                               p2: CGPoint(x: 4, y: 3),
+                               p3: CGPoint(x: 6, y: 3))
+        let intersections = cubic.intersections(with: cubicButActuallyQuadratic, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 1)
+        XCTAssertEqual(intersections[0].t1, 0.5)
+        XCTAssertEqual(intersections[0].t2, 2.0 / 3.0, accuracy: 1.0e-5)
     }
 
     func testCubicIntersectsLine() {

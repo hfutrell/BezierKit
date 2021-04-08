@@ -238,10 +238,10 @@ class QuadraticCurveTests: XCTestCase {
         XCTAssertEqual(intersections[0].t2, 0.13962, accuracy: 1.0e-5)
     }
 
-    func testIntersectionQuadraticActuallyLinear() {
+    func testIntersectionQuadraticButActuallyLinear() {
         // this test presents a challenge for an implicitization based approach
         // if the linearity of the so-called "quadratic" is not detected
-        // the implicit equation will be f(x, y) = 0 and no intersections will be detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be found
         let epsilon: CGFloat = 1.0e-5
         let quadraticButActuallyLinear = QuadraticCurve(p0: CGPoint(x: 2, y: 1),
                                                         p1: CGPoint(x: 3, y: 2),
