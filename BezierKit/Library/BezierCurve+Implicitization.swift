@@ -206,6 +206,17 @@ private extension BezierCurve {
     }
 }
 
+extension LineSegment: Implicitizeable {
+    public var implicitPolynomial: ImplicitPolynomial {
+        return ImplicitPolynomial(l(0, 1))
+    }
+    public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
+        let delta = p1 - p0
+        let numerator = ImplicitLine(a10: delta.x, a01: delta.y, a00: -p0.dot(delta))
+        return (numerator: ImplicitPolynomial(numerator), denominator: ImplicitPolynomial(coefficients: [delta.dot(delta)], order: 0))
+    }
+}
+
 extension QuadraticCurve: Implicitizeable {
     public var implicitPolynomial: ImplicitPolynomial {
         let l20 = l(2, 0)

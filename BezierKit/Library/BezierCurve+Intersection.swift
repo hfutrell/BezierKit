@@ -111,10 +111,13 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
 
     let xPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.xPolynomial.coefficients)
     let yPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.yPolynomial.coefficients)
-    let equation: BernsteinPolynomialN = curve2.curve.implicitPolynomial.value(xPolynomial, yPolynomial)
+    
+    let c2 = curve2.curve.downgradedIfPossible(maximumError: 1.0e-7)
+    
+    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(xPolynomial, yPolynomial)
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
 
-    let inverse = curve2.curve.inverse
+    let inverse = c2.inverse
     let numerator = inverse.numerator
     let deonominator = inverse.denominator
 
@@ -153,14 +156,14 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     
     #warning("clean up")
     if intersections.contains(where: { $0.t1 == 0 }) == false {
-        let projection = curve2.curve.project(curve1.curve.startingPoint)
+        let projection = c2.project(curve1.curve.startingPoint)
         if distance(projection.point, curve1.curve.startingPoint) < 1.0e-7 {
             intersections.insert(Intersection(t1: 0, t2: projection.t), at: 0)
         }
     }
     
     if intersections.contains(where: { $0.t1 == 1 }) == false {
-        let projection = curve2.curve.project(curve1.curve.endingPoint)
+        let projection = c2.project(curve1.curve.endingPoint)
         if distance(projection.point, curve1.curve.endingPoint) < 1.0e-7 {
             intersections.append(Intersection(t1: 1, t2: projection.t))
         }
@@ -268,6 +271,33 @@ extension CubicCurve {
         let t2 = 0.5 * (3 - x + radical) / denominator
         return [Intersection(t1: Utils.clamp(t1, 0, 1),
                              t2: Utils.clamp(t2, 0, 1))]
+    }
+}
+
+extension BezierCurve {
+    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve {
+        switch self.order {
+        case 3:
+            let cubic = (self as! CubicCurve)
+            let (line, lineError) = cubic.downgradedToLineSegment
+            if lineError <= maximumError {
+                return line
+            }
+            let (quadratic, quadraticError) = cubic.downgradedToQuadratic
+            if quadraticError <= maximumError {
+                return quadratic
+            }
+            return self
+        case 2:
+            let quadratic = (self as! QuadraticCurve)
+            let (line, lineError) = quadratic.downgradedToLineSegment
+            if lineError <= maximumError {
+                return line
+            }
+            return self
+        default:
+            return self
+        }
     }
 }
 
