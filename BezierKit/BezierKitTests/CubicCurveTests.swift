@@ -615,6 +615,8 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(line.intersections(with: curve), [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)], "curve and line should be fully coincident")
     }
 
+    #warning("add unit tests for precision issues that can happen with curve intersection far into a document.")
+    
     // MARK: -
 
     func testEquatable() {

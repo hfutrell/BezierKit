@@ -109,11 +109,14 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
-    let xPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.xPolynomial.coefficients)
-    let yPolynomial = BernsteinPolynomialN(coefficients: curve1.curve.yPolynomial.coefficients)
     
-    let c2 = curve2.curve.downgradedIfPossible(maximumError: 1.0e-7)
+    let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
+    let c2 = curve2.curve.downgradedIfPossible(maximumError: 1.0e-7).copy(using: transform)
     
+    let c1 = curve1.curve.copy(using: transform)
+    let xPolynomial = BernsteinPolynomialN(coefficients: c1.xPolynomial.coefficients)
+    let yPolynomial = BernsteinPolynomialN(coefficients: c1.yPolynomial.coefficients)
+
     let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(xPolynomial, yPolynomial)
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
 
@@ -137,7 +140,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         }
 
         
-        let point = curve1.curve.point(at: adjustedT1)
+        let point = c1.point(at: adjustedT1)
         #warning("todo: handle double point here")
         let t2 = numerator.value(point) / deonominator.value(point)
      
@@ -156,15 +159,15 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     
     #warning("clean up")
     if intersections.contains(where: { $0.t1 == 0 }) == false {
-        let projection = c2.project(curve1.curve.startingPoint)
-        if distance(projection.point, curve1.curve.startingPoint) < 1.0e-7 {
+        let projection = c2.project(c1.startingPoint)
+        if distance(projection.point, c1.startingPoint) < 1.0e-7 {
             intersections.insert(Intersection(t1: 0, t2: projection.t), at: 0)
         }
     }
     
     if intersections.contains(where: { $0.t1 == 1 }) == false {
-        let projection = c2.project(curve1.curve.endingPoint)
-        if distance(projection.point, curve1.curve.endingPoint) < 1.0e-7 {
+        let projection = c2.project(c1.endingPoint)
+        if distance(projection.point, c1.endingPoint) < 1.0e-7 {
             intersections.append(Intersection(t1: 1, t2: projection.t))
         }
     }
