@@ -578,6 +578,24 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(intersections[1].t2, 2.0 / 3.0, accuracy: epsilon)
     }
 
+    func testRealWorldPrecisionIssue() {
+        // this issue seems to happen because the implicit equation of c2
+        // says f(x, y) = -8.177[...]e-10 for c1's starting point (instead of zero)
+        // for a t1 = 0.000012060505980311977
+        // the inverse expression says t2 = 1.0000005567957639 which gets rounded back to 1
+        let c1 = CubicCurve(p0: CGPoint(x: 94.9790542640437, y: 96.49280906706511),
+                            p1: CGPoint(x: 94.53950656843848, y: 97.22786538484215),
+                            p2: CGPoint(x: 93.58730187717677, y: 97.46742245525438),
+                            p3: CGPoint(x: 92.85224555939973, y: 97.02787475964917))
+        let c2 = CubicCurve(p0: CGPoint(x: 123.54200084128175, y: 48.71908399606449),
+            p1: CGPoint(x: 114.021065782688, y: 64.64877149606448),
+            p2: CGPoint(x: 104.49998932263745, y: 80.57093406706511),
+            p3: CGPoint(x: 94.9790542640437, y: 96.49280906706511))
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections, [Intersection(t1: 0, t2: 1)])
+        print(intersections)
+    }
+
     func testCubicIntersectsLine() {
         let epsilon: CGFloat = 0.00001
         let c: CubicCurve = CubicCurve(p0: CGPoint(x: -1, y: 0),
