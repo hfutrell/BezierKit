@@ -553,8 +553,8 @@ class CubicCurveTests: XCTestCase {
                                p3: CGPoint(x: 7, y: 0))
         let intersections = cubic.intersections(with: cubicButActuallyLinear, accuracy: epsilon)
         XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t1, 0.5)
-        XCTAssertEqual(intersections[0].t2, 1.0 / 3.0, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[0].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(intersections[0].t2, 1.0 / 3.0, accuracy: epsilon)
     }
 
     func testIntersectionsCubicButActuallyQuadratic() {
@@ -572,10 +572,10 @@ class CubicCurveTests: XCTestCase {
                                p3: CGPoint(x: 6, y: 3))
         let intersections = cubic.intersections(with: cubicButActuallyQuadratic, accuracy: epsilon)
         XCTAssertEqual(intersections.count, 2)
-        XCTAssertEqual(intersections[0].t1, 0.23607, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections[0].t2, 0.13880, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections[1].t1, 0.5)
-        XCTAssertEqual(intersections[1].t2, 2.0 / 3.0, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[0].t1, 0.23607, accuracy: epsilon)
+        XCTAssertEqual(intersections[0].t2, 0.13880, accuracy: epsilon)
+        XCTAssertEqual(intersections[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(intersections[1].t2, 2.0 / 3.0, accuracy: epsilon)
     }
 
     func testCubicIntersectsLine() {
