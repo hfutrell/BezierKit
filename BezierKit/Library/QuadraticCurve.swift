@@ -32,6 +32,12 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
     }
 
+    func downgradeToLine(error: inout CGFloat) -> LineSegment {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        error = 0.5 * (self.p1 - line.point(at: 0.5)).length
+        return line
+    }
+
     public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
