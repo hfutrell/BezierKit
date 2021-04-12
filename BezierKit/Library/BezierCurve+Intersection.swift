@@ -151,8 +151,16 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         }
 
         let point = c1.point(at: adjustedT1)
+        guard c2.boundingBox.contains(point) else {
+            return nil
+        }
+
         #warning("todo: handle double point here")
-        let t2 = numerator.value(point) / deonominator.value(point)
+        let t2 = c2.project(point).t // numerator.value(point) / deonominator.value(point)
+
+        guard distance(point, c2.point(at: t2)) < accuracy else {
+            return nil
+        }
 
         #warning("clean up")
         var adjustedT2 = t2
