@@ -593,9 +593,23 @@ class CubicCurveTests: XCTestCase {
             p3: CGPoint(x: 94.9790542640437, y: 96.49280906706511))
         let intersections = c1.intersections(with: c2, accuracy: 1.0e-5)
         XCTAssertEqual(intersections, [Intersection(t1: 0, t2: 1)])
-        print(intersections)
     }
 
+    func testRealWorldInversionIssue() {
+        // this issue appears / appeared to occur because the inverse method
+        // was unstable when c2 was downgraded to a cubic with nearly parallel control points
+        let c1 = CubicCurve(p0: CGPoint(x: 314.9306297035616, y: 2211.1494686514056),
+                            p1: CGPoint(x: 315.4305682688995, y: 2211.87791339535),
+                            p2: CGPoint(x: 315.24532741089774, y: 2212.8737148198643),
+                            p3: CGPoint(x: 314.5168826669535, y: 2213.373653385202))
+        let c2 = CubicCurve(p0: CGPoint(x: 314.8254662024578, y: 2210.9959498495646),
+                            p1: CGPoint(x: 314.8606224524578, y: 2211.0472193808146),
+                            p2: CGPoint(x: 314.89544293598345, y: 2211.0981991201556),
+                            p3: CGPoint(x: 314.9306297035616, y: 2211.1494686514056))
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-4)
+        XCTAssertEqual(intersections, [Intersection(t1: 0, t2: 1)])
+    }
+    
     func testCubicIntersectsLine() {
         let epsilon: CGFloat = 0.00001
         let c: CubicCurve = CubicCurve(p0: CGPoint(x: -1, y: 0),
