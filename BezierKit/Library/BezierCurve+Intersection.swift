@@ -107,12 +107,20 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
+fileprivate extension BezierCurve {
+    var derivativeBounds: CGFloat {
+        let points = self.points
+        let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
+        return CGFloat(self.order) * speeds.max()!
+    }
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
-    
+    let insignificantDistance: CGFloat = 0.5 * accuracy
     let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
-    let c2 = curve2.curve.downgradedIfPossible(maximumError: 1.0e-7).copy(using: transform)
-    
+    let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
+
     let c1 = curve1.curve.copy(using: transform)
     let xPolynomial = BernsteinPolynomialN(coefficients: c1.xPolynomial.coefficients)
     let yPolynomial = BernsteinPolynomialN(coefficients: c1.yPolynomial.coefficients)
@@ -125,53 +133,54 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let deonominator = inverse.denominator
 
     #warning("clean up")
-    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 1.0e-10) {
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * insignificantDistance) {
         return coincidence
     }
 
+    let t1Tolerance = insignificantDistance / c1.derivativeBounds
+    let t2Tolerance = insignificantDistance / c2.derivativeBounds
+
     var intersections = roots.compactMap { t1 -> Intersection? in
-       
+
         #warning("clean up")
         var adjustedT1 = t1
-        if Utils.approximately(Double(adjustedT1), 0.0, precision: Utils.epsilon) {
+        if adjustedT1 < t1Tolerance {
             adjustedT1 = 0.0
-        } else if Utils.approximately(Double(adjustedT1), 1.0, precision: Utils.epsilon) {
+        } else if adjustedT1 > 1.0 - t1Tolerance {
             adjustedT1 = 1.0
         }
 
-        
         let point = c1.point(at: adjustedT1)
         #warning("todo: handle double point here")
         let t2 = numerator.value(point) / deonominator.value(point)
-     
+
         #warning("clean up")
         var adjustedT2 = t2
-        if Utils.approximately(Double(adjustedT2), 0.0, precision: Utils.epsilon) {
+        if Utils.approximately(Double(adjustedT2), 0.0, precision: Double(t2Tolerance)) {
             adjustedT2 = 0.0
-        } else if Utils.approximately(Double(adjustedT2), 1.0, precision: Utils.epsilon) {
+        } else if Utils.approximately(Double(adjustedT2), 1.0, precision: Double(t2Tolerance)) {
             adjustedT2 = 1.0
         }
 
-        
         guard adjustedT2 >= 0, adjustedT2 <= 1 else { return nil }
         return Intersection(t1: adjustedT1, t2: adjustedT2)
     }
-    
+
     #warning("clean up")
     if intersections.contains(where: { $0.t1 == 0 }) == false {
         let projection = c2.project(c1.startingPoint)
-        if distance(projection.point, c1.startingPoint) < 1.0e-7 {
+        if distance(projection.point, c1.startingPoint) < insignificantDistance {
             intersections.insert(Intersection(t1: 0, t2: projection.t), at: 0)
         }
     }
-    
+
     if intersections.contains(where: { $0.t1 == 1 }) == false {
         let projection = c2.project(c1.endingPoint)
-        if distance(projection.point, c1.endingPoint) < 1.0e-7 {
+        if distance(projection.point, c1.endingPoint) < insignificantDistance {
             intersections.append(Intersection(t1: 1, t2: projection.t))
         }
     }
-    
+
     return intersections.sortedAndUniqued()
 }
 

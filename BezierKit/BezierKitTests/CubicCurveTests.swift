@@ -530,7 +530,7 @@ class CubicCurveTests: XCTestCase {
                             p1: CGPoint(x: 0.25665707912767743, y: 0.26960608118315577),
                             p2: CGPoint(x: 0.4760155370276209, y: 0.24346330678827144),
                             p3: CGPoint(x: 0.6941905032971079, y: 0.20928332065477662))
-        let intersections = c1.intersections(with: c2, accuracy: 1.0e-2)
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-5)
         XCTAssertEqual(intersections.count, 2)
         XCTAssertEqual(intersections[0].t1, 0.73204, accuracy: 1.0e-5)
         XCTAssertEqual(intersections[0].t2, 0.37268, accuracy: 1.0e-5)

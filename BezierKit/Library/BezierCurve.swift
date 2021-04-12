@@ -307,7 +307,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Imp
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol NonlinearBezierCurve: BezierCurve, Implicitizeable, ComponentPolynomials {
+internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials {
     // intentionally empty, just declare conformance if you're not a line
 }
 
