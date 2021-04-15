@@ -134,4 +134,19 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots.count, 1)
         XCTAssertEqual(roots[0], 0.44454, accuracy: 1.0e-5)
     }
+
+    func testDegreeNRealWorldIssue() {
+        // this input would cause a stack overflow if the division step of the interval
+        // occurred before checking the interval's size
+        // the equation has 1st, 2nd, 3rd, and 4th derivative equal to zero
+        // which means that only a small portion of the interval can be clipped
+        // off. This means the code always takes the divide and conquer path.
+        let accuracy: CGFloat = 1.0e-5
+        let polynomial = BernsteinPolynomialN(coefficients: [0, 0, 0, 0, 0, -1])
+        let roots = polynomial.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: accuracy))
+        XCTAssertEqual(roots.count, 1)
+        if roots.isEmpty == false {
+            XCTAssertEqual(roots[0], 0, accuracy: accuracy)
+        }
+    }
 }
