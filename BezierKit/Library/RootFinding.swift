@@ -60,6 +60,14 @@ extension BernsteinPolynomialN {
         }
         // if the range is empty then convex hull doesn't intersect x-Axis, so we're done.
         guard lowerBound.isFinite, upperBound.isFinite else { return [] }
+        // if the range is small enough that it's within the accuracy threshold
+        // we've narrowed it down to a root and we're done
+        let nextRangeStart = linearInterpolate(rangeStart, rangeEnd, lowerBound)
+        let nextRangeEnd = linearInterpolate(rangeStart, rangeEnd, upperBound)
+        guard nextRangeEnd - nextRangeStart > configuration.errorThreshold else {
+            let nextRangeMid = linearInterpolate(nextRangeStart, nextRangeEnd, 0.5)
+            return [nextRangeMid]
+        }
         // if the range where the convex hull intersects the x-Axis is too large
         // we aren't converging quickly, perhaps due to multiple roots.
         // split the curve in half and handle each half separately.
@@ -70,14 +78,6 @@ extension BernsteinPolynomialN {
             curveRoots += rootsOfCurveMappedToRange(left, start: rangeStart, end: rangeMid, configuration: configuration)
             curveRoots += rootsOfCurveMappedToRange(right, start: rangeMid, end: rangeEnd, configuration: configuration)
             return curveRoots
-        }
-        // if the range is small enough that it's within the accuracy threshold
-        // we've narrowed it down to a root and we're done
-        let nextRangeStart = linearInterpolate(rangeStart, rangeEnd, lowerBound)
-        let nextRangeEnd = linearInterpolate(rangeStart, rangeEnd, upperBound)
-        guard nextRangeEnd - nextRangeStart > configuration.errorThreshold else {
-            let nextRangeMid = linearInterpolate(nextRangeStart, nextRangeEnd, 0.5)
-            return [nextRangeMid]
         }
         // split the curve over the range where the convex hull intersected the
         // x-Axis and iterate.
