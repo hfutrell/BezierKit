@@ -125,19 +125,6 @@ class QuadraticCurveTests: XCTestCase {
         XCTAssertTrue(distance(result4.point, expectedPoint) < epsilon)
     }
 
-    func testProjectPerformance() {
-        let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
-                               p1: CGPoint(x: 0, y: 2),
-                               p2: CGPoint(x: 1, y: -1))
-        self.measure {
-            // roughly 0.043 -Onone, 0.022 with -Ospeed
-            // if comparing with cubic performance, be sure to note `by` parameter in stride
-            for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
-                _ = q.project(CGPoint(x: cos(theta), y: sin(theta)))
-            }
-        }
-    }
-
 //
 //    func testHull() {
 //    }
