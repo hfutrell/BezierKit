@@ -96,6 +96,22 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+    func testCubicIntersectionsPerformance() {
+        // test the performance of `intersections(with:,accuracy:)`
+        // -Onone 0.46 seconds
+        // -Os 0.060 seconds
+        let dataCount = 50
+        let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 1)
+        self.measure {
+            var count = 0
+            for curve1 in curves {
+                for curve2 in curves {
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
+            }
+        }
+    }
+
     func testQuadraticCurveProjectPerformance() {
         let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
                                p1: CGPoint(x: 0, y: 2),
