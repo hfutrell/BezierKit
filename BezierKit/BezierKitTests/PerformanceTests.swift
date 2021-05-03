@@ -11,7 +11,7 @@ import XCTest
 
 private extension PerformanceTests {
 
-    func generateRandomCurves(count: Int, selfIntersect: Bool, reseed: Int? = nil) -> [CubicCurve] {
+    func generateRandomCurves(count: Int, selfIntersect: Bool? = nil, reseed: Int? = nil) -> [CubicCurve] {
         if let reseed = reseed {
             srand48(reseed) // seed with zero so that "random" values are actually the same across test runs
         }
@@ -29,7 +29,7 @@ private extension PerformanceTests {
         var curves: [CubicCurve] = []
         while curves.count < count {
             let curve = randomCurve()
-            if curve.selfIntersects == selfIntersect {
+            if selfIntersect == nil || curve.selfIntersects == selfIntersect {
                 curves.append(curve)
             }
         }
@@ -101,7 +101,7 @@ class PerformanceTests: XCTestCase {
         // -Onone 0.46 seconds
         // -Os 0.060 seconds
         let dataCount = 50
-        let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 1)
+        let curves = generateRandomCurves(count: dataCount, reseed: 2)
         self.measure {
             var count = 0
             for curve1 in curves {
@@ -111,7 +111,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-
+    
     func testQuadraticCurveProjectPerformance() {
         let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
                                p1: CGPoint(x: 0, y: 2),
