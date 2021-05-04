@@ -112,6 +112,27 @@ class PerformanceTests: XCTestCase {
         }
     }
     
+    func testCubicIntersectionsPerformanceTangentEndpoint() {
+        // test the performance of `intersections(with:,accuracy:)`
+        // TODO: put performance results here
+        let dataCount = 2500
+        let curves = generateRandomCurves(count: dataCount, reseed: 3)
+        self.measure {
+            var count = 0
+            for curve1 in curves {
+                // create a curve that starts at the other curve's endpoint
+                // and whose first tangent double's back on the curve
+                // this is a difficult edge case for divide-and-conquer
+                // algorithms
+                let curve2 = CubicCurve(p0: curve1.endingPoint,
+                                        p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                        p2: CGPoint(x: drand48(), y: drand48()),
+                                        p3: CGPoint(x: drand48(), y: drand48()))
+                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            }
+        }
+    }
+    
     func testQuadraticCurveProjectPerformance() {
         let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
                                p1: CGPoint(x: 0, y: 2),

@@ -115,9 +115,24 @@ fileprivate extension BezierCurve {
     }
 }
 
+var total = 0
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
     let insignificantDistance: CGFloat = 0.5 * accuracy
+
+    let lb = curve1.curve.boundingBox
+    let rb = curve2.curve.boundingBox
+    var pairIntersections: [Intersection] = []
+    var iterations = 0
+    #warning("curve1.curve.order * curve2.curve.order also appears in Utils, it should probably be part of the config")
+    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &iterations),
+       pairIntersections.count < curve1.curve.order * curve2.curve.order {
+        return pairIntersections.sortedAndUniqued()
+    }
+    
+    total += 1
+    
     let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
     let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
 
