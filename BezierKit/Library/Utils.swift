@@ -318,24 +318,24 @@ internal class Utils {
         } else if shouldRecurse1, shouldRecurse2 {
             let cc1 = c1.split(at: 0.5)
             let cc2 = c2.split(at: 0.5)
-            let cc1lb = cc1.left.curve.boundingBox
-            let cc1rb = cc1.right.curve.boundingBox
-            let cc2lb = cc2.left.curve.boundingBox
-            let cc2rb = cc2.right.curve.boundingBox
+            let cc1lb = cc1.left.boundingBox
+            let cc1rb = cc1.right.boundingBox
+            let cc2lb = cc2.left.boundingBox
+            let cc2rb = cc2.right.boundingBox
             Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy)
             Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy)
             Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy)
             Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy)
         } else if shouldRecurse1 {
             let cc1 = c1.split(at: 0.5)
-            let cc1lb = cc1.left.curve.boundingBox
-            let cc1rb = cc1.right.curve.boundingBox
+            let cc1lb = cc1.left.boundingBox
+            let cc1rb = cc1.right.boundingBox
             Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy)
             Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy)
         } else if shouldRecurse2 {
             let cc2 = c2.split(at: 0.5)
-            let cc2lb = cc2.left.curve.boundingBox
-            let cc2rb = cc2.right.curve.boundingBox
+            let cc2lb = cc2.left.boundingBox
+            let cc2rb = cc2.right.boundingBox
             Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy)
             Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy)
         }

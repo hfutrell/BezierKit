@@ -53,6 +53,8 @@
 		FDA03FD625D2182C005F7795 /* Path+VectorBooleanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA03FD425D2182C005F7795 /* Path+VectorBooleanTests.swift */; };
 		FDA03FE025D21B9C005F7795 /* Path+VectorBoolean.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA03FDF25D21B9C005F7795 /* Path+VectorBoolean.swift */; };
 		FDA03FE125D21B9C005F7795 /* Path+VectorBoolean.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA03FDF25D21B9C005F7795 /* Path+VectorBoolean.swift */; };
+		FDA0C33D2641F20900FFE153 /* Monotonicity.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA0C33C2641F20900FFE153 /* Monotonicity.swift */; };
+		FDA0C33E2641F20900FFE153 /* Monotonicity.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA0C33C2641F20900FFE153 /* Monotonicity.swift */; };
 		FDA727591ED5035300011871 /* CubicCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicCurveTests.swift */; };
 		FDA7275A1ED5035300011871 /* CubicCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicCurveTests.swift */; };
 		FDB6011B25BB9B3700BAB067 /* BezierCurve+Polynomial.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB6011A25BB9B3700BAB067 /* BezierCurve+Polynomial.swift */; };
@@ -182,6 +184,7 @@
 		FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathComponent+WindingCount.swift"; sourceTree = "<group>"; };
 		FDA03FD425D2182C005F7795 /* Path+VectorBooleanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+VectorBooleanTests.swift"; sourceTree = "<group>"; };
 		FDA03FDF25D21B9C005F7795 /* Path+VectorBoolean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+VectorBoolean.swift"; sourceTree = "<group>"; };
+		FDA0C33C2641F20900FFE153 /* Monotonicity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Monotonicity.swift; sourceTree = "<group>"; };
 		FDA727581ED5035300011871 /* CubicCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicCurveTests.swift; sourceTree = "<group>"; };
 		FDB6011A25BB9B3700BAB067 /* BezierCurve+Polynomial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BezierCurve+Polynomial.swift"; sourceTree = "<group>"; };
 		FDB6012125BBA06600BAB067 /* BezierCurve+PolynomialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BezierCurve+PolynomialTests.swift"; sourceTree = "<group>"; };
@@ -351,6 +354,7 @@
 				FDB6B3F91EAFD6DF00001C61 /* Draw.swift */,
 				FDE6CD8B1EC8F2F800FAB479 /* LineSegment.swift */,
 				FDC2EB492298735C007768FC /* Lock.swift */,
+				FDA0C33C2641F20900FFE153 /* Monotonicity.swift */,
 				FDC7D7012111323A00A9EEF0 /* Path.swift */,
 				FDA03FDF25D21B9C005F7795 /* Path+VectorBoolean.swift */,
 				FDCE99A4223C404E00597989 /* Path+Data.swift */,
@@ -684,6 +688,7 @@
 				FDB6B4131EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4031EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
 				FDB6B4051EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
+				FDA0C33E2641F20900FFE153 /* Monotonicity.swift in Sources */,
 				FDE6CD8D1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 				FD149EBB2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
 			);
@@ -712,6 +717,7 @@
 				FDB6B4121EAFD6DF00001C61 /* Types.swift in Sources */,
 				FDB6B4021EAFD6DF00001C61 /* BezierCurve.swift in Sources */,
 				FDB6B4041EAFD6DF00001C61 /* CubicCurve.swift in Sources */,
+				FDA0C33D2641F20900FFE153 /* Monotonicity.swift in Sources */,
 				FDE6CD8C1EC8F2F800FAB479 /* LineSegment.swift in Sources */,
 				FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */,
 			);

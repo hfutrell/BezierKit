@@ -107,6 +107,19 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
+//internal func monotonicComponents<T>(_ curve: Subcurve<T>) -> [Subcurve<T>] where T: BezierCurve {
+//    var extrema = curve.curve.extrema().all
+//    if extrema.last != 1 {
+//        extrema.append(1)
+//    }
+//    var previousT: CGFloat = 0
+//    return extrema.map { t -> Subcurve<T> in
+//        let component = curve.split(from: previousT, to: t, flags: .knownMonotonic)
+//        previousT = t
+//        return component
+//    }
+//}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
@@ -117,6 +130,13 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
             return coincidence
         }
     }
+//    let leftCurves = monotonicComponents(curve1).filter { $0.boundingBox.overlaps(curve2.boundingBox) }
+//    let rightCurves = monotonicComponents(curve2).filter { $0.boundingBox.overlaps(curve2.boundingBox) }
+//     for left in leftCurves {
+//         for right in rightCurves {
+//             Utils.pairiteration(left, right, left.boundingBox, right.boundingBox, &intersections, accuracy)
+//         }
+//     }
     return intersections.sortedAndUniqued()
 }
 

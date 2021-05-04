@@ -11,43 +11,81 @@ import CoreGraphics
 #endif
 import Foundation
 
+internal struct SubcurveFlags: OptionSet {
+    init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+    let rawValue: Int
+    /// if this flag is set the curve is monotonic over the subcurve's range
+    /// creating further subcurves from this curve therefore also creates monotonic curves
+    static let knownMonotonic = SubcurveFlags(rawValue: 1 << 0)
+}
+
+private func flagsForSubcurves<T>(of subcurve: Subcurve<T>) -> SubcurveFlags where T: ComponentMonotonicity {
+    if subcurve.flags.contains(.knownMonotonic) {
+        return .knownMonotonic
+    }
+    return subcurve.curve.xMonotonic && subcurve.curve.yMonotonic ? .knownMonotonic : []
+}
+
 public struct Subcurve<CurveType> where CurveType: BezierCurve {
+
     public let t1: CGFloat
     public let t2: CGFloat
     public let curve: CurveType
+
+    internal let flags: SubcurveFlags
 
     internal var canSplit: Bool {
         let mid = 0.5 * (self.t1 + self.t2)
         return mid > self.t1 && mid < self.t2
     }
 
-    internal init(curve: CurveType) {
+    internal init(curve: CurveType, flags: SubcurveFlags = []) {
         self.t1 = 0.0
         self.t2 = 1.0
         self.curve = curve
+        self.flags = flags
     }
 
-    internal init(t1: CGFloat, t2: CGFloat, curve: CurveType) {
+    internal init(t1: CGFloat, t2: CGFloat, curve: CurveType, flags: SubcurveFlags = []) {
         self.t1 = t1
         self.t2 = t2
         self.curve = curve
+        self.flags = flags
     }
 
     internal func split(from t1: CGFloat, to t2: CGFloat) -> Subcurve<CurveType> {
+        return split(from: t1, to: t2, flags: flagsForSubcurves(of: self))
+    }
+
+    internal func split(from t1: CGFloat, to t2: CGFloat, flags: SubcurveFlags) -> Subcurve<CurveType> {
         let curve: CurveType = self.curve.split(from: t1, to: t2)
         return Subcurve<CurveType>(t1: Utils.map(t1, 0, 1, self.t1, self.t2),
                                    t2: Utils.map(t2, 0, 1, self.t1, self.t2),
-                                   curve: curve)
+                                   curve: curve, flags: flags)
     }
 
     internal func split(at t: CGFloat) -> (left: Subcurve<CurveType>, right: Subcurve<CurveType>) {
+        return split(at: t, flags: flagsForSubcurves(of: self))
+    }
+
+    internal func split(at t: CGFloat, flags: SubcurveFlags) -> (left: Subcurve<CurveType>, right: Subcurve<CurveType>) {
         let (left, right) = curve.split(at: t)
         let t1 = self.t1
         let t2 = self.t2
         let tSplit = Utils.map(t, 0, 1, t1, t2)
-        let subcurveLeft = Subcurve<CurveType>(t1: t1, t2: tSplit, curve: left)
-        let subcurveRight = Subcurve<CurveType>(t1: tSplit, t2: t2, curve: right)
+        let subcurveFlags = flagsForSubcurves(of: self)
+        let subcurveLeft = Subcurve<CurveType>(t1: t1, t2: tSplit, curve: left, flags: subcurveFlags)
+        let subcurveRight = Subcurve<CurveType>(t1: tSplit, t2: t2, curve: right, flags: subcurveFlags)
         return (left: subcurveLeft, right: subcurveRight)
+    }
+
+    internal var boundingBox: BoundingBox {
+        guard flags.contains(.knownMonotonic) else { return curve.boundingBox }
+        let startingPoint = curve.startingPoint
+        let endingPoint = curve.endingPoint
+        return BoundingBox(p1: startingPoint, p2: endingPoint)
     }
 }
 
@@ -282,7 +320,7 @@ public protocol Reversible {
     func reversed() -> Self
 }
 
-public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
+public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, ComponentMonotonicity {
     var simple: Bool { get }
     var points: [CGPoint] { get }
     var startingPoint: CGPoint { get set }
