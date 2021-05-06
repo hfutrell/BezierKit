@@ -282,7 +282,7 @@ public protocol Reversible {
     func reversed() -> Self
 }
 
-public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Implicitizeable {
+public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var simple: Bool { get }
     var points: [CGPoint] { get }
     var startingPoint: CGPoint { get set }
@@ -307,7 +307,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Imp
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials {
+internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable {
     // intentionally empty, just declare conformance if you're not a line
 }
 

@@ -6,17 +6,22 @@
 //  Copyright © 2021 Holmes Futrell. All rights reserved.
 //
 
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 import Foundation
 
-public protocol Implicitizeable {
+internal protocol Implicitizeable {
     var implicitPolynomial: ImplicitPolynomial { get }
-    var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) { get }
 }
 
-public struct ImplicitPolynomial {
+/// represents an implicit polynomial, otherwise known as an algebraic curve.
+/// The values on the polynomial are the zero set of the polynomial f(x, y) = 0
+internal struct ImplicitPolynomial {
 
-    fileprivate let coefficients: [CGFloat]
-    public let order: Int
+    private let coefficients: [CGFloat]
+
+    private let order: Int
 
     fileprivate init(_ lineProduct: ImplicitLineProduct) {
         coefficients = [lineProduct.a00, lineProduct.a01, lineProduct.a02,
@@ -30,19 +35,19 @@ public struct ImplicitPolynomial {
         order = 1
     }
 
-    init(coefficients: [CGFloat], order: Int) {
+    fileprivate init(coefficients: [CGFloat], order: Int) {
         assert(coefficients.count == (order + 1) * (order + 1))
         self.coefficients = coefficients
         self.order = order
     }
 
     /// get the coefficient aij for x^i y^j
-    public func coefficient(_ i: Int, _ j: Int) -> CGFloat {
+    private func coefficient(_ i: Int, _ j: Int) -> CGFloat {
         assert(i >= 0 && i <= order && j >= 0 && j <= order)
         return coefficients[(order + 1) * i + j]
     }
 
-    public func value(_ x: BernsteinPolynomialN, _ y: BernsteinPolynomialN) -> BernsteinPolynomialN {
+    func value(_ x: BernsteinPolynomialN, _ y: BernsteinPolynomialN) -> BernsteinPolynomialN {
 
         assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
         let polynomialOrder = x.order
@@ -82,7 +87,7 @@ public struct ImplicitPolynomial {
         return sum
     }
 
-    public func value(_ point: CGPoint) -> CGFloat {
+    func value(at point: CGPoint) -> CGFloat {
         let x = point.x
         let y = point.y
         var sum: CGFloat = 0
@@ -94,21 +99,21 @@ public struct ImplicitPolynomial {
         return sum
     }
 
-    public static func * (left: CGFloat, right: ImplicitPolynomial) -> ImplicitPolynomial {
+    static func * (left: CGFloat, right: ImplicitPolynomial) -> ImplicitPolynomial {
         return ImplicitPolynomial(coefficients: right.coefficients.map { left * $0 }, order: right.order)
     }
 
-    public static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
+    static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(+), order: left.order)
     }
 
-    public static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
+    static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(-), order: left.order)
     }
 
-    public static func * (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
+    static func * (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         let order = left.order + right.order
         var coefficients = [CGFloat](repeating: CGFloat.zero, count: (order+1)*(order+1))
         for i in 0...order {
@@ -207,33 +212,23 @@ private extension BezierCurve {
 }
 
 extension LineSegment: Implicitizeable {
-    public var implicitPolynomial: ImplicitPolynomial {
+    internal var implicitPolynomial: ImplicitPolynomial {
         return ImplicitPolynomial(l(0, 1))
-    }
-    public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
-        let delta = p1 - p0
-        let numerator = ImplicitLine(a10: delta.x, a01: delta.y, a00: -p0.dot(delta))
-        return (numerator: ImplicitPolynomial(numerator), denominator: ImplicitPolynomial(coefficients: [delta.dot(delta)], order: 0))
     }
 }
 
 extension QuadraticCurve: Implicitizeable {
-    public var implicitPolynomial: ImplicitPolynomial {
+    internal var implicitPolynomial: ImplicitPolynomial {
         let l20 = l(2, 0)
         let l21 = l(2, 1)
         let l10 = l(1, 0)
         let lineProduct = l21 * l10 - l20 * l20
         return ImplicitPolynomial(lineProduct)
     }
-    public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
-        let numerator = ImplicitPolynomial(l(2, 0))
-        let denominator = ImplicitPolynomial(l(2, 0) - l(2, 1))
-        return (numerator: numerator, denominator: denominator)
-    }
 }
 
 extension CubicCurve: Implicitizeable {
-    public var implicitPolynomial: ImplicitPolynomial {
+    internal var implicitPolynomial: ImplicitPolynomial {
         let l32 = l(3, 2)
         let l31 = l(3, 1)
         let l30 = l(3, 0)
@@ -252,20 +247,5 @@ extension CubicCurve: Implicitizeable {
         return m00 * (m11 * m22 - m12 * m21)
             - m01 * (m10 * m22 - m12 * m20)
             + m02 * (m10 * m21 - m11 * m20)
-    }
-    public var inverse: (numerator: ImplicitPolynomial, denominator: ImplicitPolynomial) {
-        let points = self.points
-        func det(_ i: Int, _ j: Int, _ k: Int) -> CGFloat {
-            let pi = points[i]
-            let pj = points[j]
-            let pk = points[k]
-            return pj.cross(pk) - pi.cross(pk) + pi.cross(pj)
-        }
-        let det123 = det(1, 2, 3)
-        let c1 = det(0, 1, 3) / (3 * det123)
-        let c2 = -det(0, 2, 3) / (3 * det123)
-        let la = c1 * l(3, 1) + c2 * (l(3, 0) + l(2, 1)) + l(2, 0)
-        let lb = c1 * l(3, 0) + c2 * l(2, 0) + l(1, 0)
-        return (numerator: ImplicitPolynomial(lb), denominator: ImplicitPolynomial(lb - la))
     }
 }

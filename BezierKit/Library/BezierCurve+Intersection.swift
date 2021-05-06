@@ -143,10 +143,6 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(xPolynomial, yPolynomial)
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
 
-    let inverse = c2.inverse
-    let numerator = inverse.numerator
-    let deonominator = inverse.denominator
-
     #warning("clean up")
     if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * insignificantDistance) {
         return coincidence
@@ -309,8 +305,8 @@ extension CubicCurve {
     }
 }
 
-extension BezierCurve {
-    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve {
+extension BezierCurve where Self: NonlinearBezierCurve {
+    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve & Implicitizeable {
         switch self.order {
         case 3:
             let cubic = (self as! CubicCurve)
