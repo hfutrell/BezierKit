@@ -7,15 +7,15 @@
 
 import CoreGraphics
 
-public struct RootFindingConfiguration {
-    public static let defaultErrorThreshold: CGFloat = 1e-5
-    public static let minimumErrorThreshold: CGFloat = 1e-12
+struct RootFindingConfiguration {
+    static let defaultErrorThreshold: CGFloat = 1e-5
+    static let minimumErrorThreshold: CGFloat = 1e-12
     private(set) var errorThreshold: CGFloat
-    public init(errorThreshold: CGFloat) {
+    init(errorThreshold: CGFloat) {
         precondition(errorThreshold >= RootFindingConfiguration.minimumErrorThreshold)
         self.errorThreshold = errorThreshold
     }
-    public static var `default`: RootFindingConfiguration {
+    static var `default`: RootFindingConfiguration {
         return Self(errorThreshold: RootFindingConfiguration.defaultErrorThreshold)
     }
 }
@@ -24,7 +24,7 @@ extension BernsteinPolynomialN {
     /// Returns the unique, ordered real roots of the curve that fall within the unit interval `0 <= t <= 1`
     /// the roots are unique and ordered so that for  `i < j` they satisfy `root[i] < root[j]`
     /// - Returns: the array of roots
-    public func distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration = .default) -> [CGFloat] {
+    func distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration = .default) -> [CGFloat] {
         guard coefficients.contains(where: { $0 != .zero }) else { return [] }
         let result = BernsteinPolynomialN.rootsOfCurveMappedToRange(self, start: 0, end: 1, configuration: configuration)
         guard result.isEmpty == false else { return [] }
