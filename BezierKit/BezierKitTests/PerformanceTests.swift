@@ -114,9 +114,9 @@ class PerformanceTests: XCTestCase {
 
     func testCubicIntersectionsPerformanceTangentEndpoint() {
         // test the performance of `intersections(with:,accuracy:)`
-        // -Onone 23.46 seconds
-        // -Os 2.938 seconds
-        let dataCount = 2500
+        // -Onone 0.89 seconds
+        // -Os 0.059 seconds
+        let dataCount = 250
         let curves = generateRandomCurves(count: dataCount, reseed: 3)
         self.measure {
             var count = 0
