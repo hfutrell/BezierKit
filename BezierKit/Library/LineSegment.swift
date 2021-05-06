@@ -71,7 +71,7 @@ public struct LineSegment: BezierCurve, Equatable {
     public func split(at t: CGFloat) -> (left: LineSegment, right: LineSegment) {
         let p0  = self.p0
         let p1  = self.p1
-        let mid = Utils.lerp(t, p0, p1)
+        let mid = Utils.linearInterpolate(p0, p1, t)
         let left = LineSegment(p0: p0, p1: mid)
         let right = LineSegment(p0: mid, p1: p1)
         return (left: left, right: right)
@@ -89,7 +89,7 @@ public struct LineSegment: BezierCurve, Equatable {
         } else if t == 1 {
             return self.p1
         } else {
-            return Utils.lerp(t, self.p0, self.p1)
+            return Utils.linearInterpolate(self.p0, self.p1, t)
         }
     }
 

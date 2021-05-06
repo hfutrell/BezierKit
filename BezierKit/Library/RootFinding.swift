@@ -52,7 +52,7 @@ extension BernsteinPolynomialN {
                 }
                 let tLine = -p1.y / (p2.y - p1.y)
                 if tLine >= 0, tLine <= 1 {
-                    let t = linearInterpolate(p1.x, p2.x, tLine)
+                    let t = Utils.linearInterpolate(p1.x, p2.x, tLine)
                     if t < lowerBound { lowerBound = t }
                     if t > upperBound { upperBound = t }
                 }
@@ -62,17 +62,17 @@ extension BernsteinPolynomialN {
         guard lowerBound.isFinite, upperBound.isFinite else { return [] }
         // if the range is small enough that it's within the accuracy threshold
         // we've narrowed it down to a root and we're done
-        let nextRangeStart = linearInterpolate(rangeStart, rangeEnd, lowerBound)
-        let nextRangeEnd = linearInterpolate(rangeStart, rangeEnd, upperBound)
+        let nextRangeStart = Utils.linearInterpolate(rangeStart, rangeEnd, lowerBound)
+        let nextRangeEnd = Utils.linearInterpolate(rangeStart, rangeEnd, upperBound)
         guard nextRangeEnd - nextRangeStart > configuration.errorThreshold else {
-            let nextRangeMid = linearInterpolate(nextRangeStart, nextRangeEnd, 0.5)
+            let nextRangeMid = Utils.linearInterpolate(nextRangeStart, nextRangeEnd, 0.5)
             return [nextRangeMid]
         }
         // if the range where the convex hull intersects the x-Axis is too large
         // we aren't converging quickly, perhaps due to multiple roots.
         // split the curve in half and handle each half separately.
         guard upperBound - lowerBound < 0.8 else {
-            let rangeMid = linearInterpolate(rangeStart, rangeEnd, 0.5)
+            let rangeMid = Utils.linearInterpolate(rangeStart, rangeEnd, 0.5)
             var curveRoots: [CGFloat] = []
             let (left, right) = curve.split(at: 0.5)
             curveRoots += rootsOfCurveMappedToRange(left, start: rangeStart, end: rangeMid, configuration: configuration)

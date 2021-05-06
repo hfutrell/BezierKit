@@ -198,7 +198,7 @@ import Foundation
         for i in 0..<offsetCurves.count-1 {
             let start = offsetCurves[i+1].startingPoint
             let end = offsetCurves[i].endingPoint
-            let average = Utils.lerp(0.5, start, end)
+            let average = Utils.linearInterpolate(start, end, 0.5)
             offsetCurves[i].endingPoint = average
             offsetCurves[i+1].startingPoint = average
         }
@@ -207,7 +207,7 @@ import Foundation
         if self.isClosed {
             let start = offsetCurves[0].startingPoint
             let end = offsetCurves[offsetCurves.count-1].endingPoint
-            let average = Utils.lerp(0.5, start, end)
+            let average = Utils.linearInterpolate(start, end, 0.5)
             offsetCurves[0].startingPoint = average
             offsetCurves[offsetCurves.count-1].endingPoint = average
         }

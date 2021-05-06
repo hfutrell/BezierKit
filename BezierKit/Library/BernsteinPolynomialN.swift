@@ -7,52 +7,32 @@
 
 import CoreGraphics
 
-private let binomialTable: [[CGFloat]] = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                          [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                                          [1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
-                                          [1, 3, 3, 1, 0, 0, 0, 0, 0, 0],
-                                          [1, 4, 6, 4, 1, 0, 0, 0, 0, 0],
-                                          [1, 5, 10, 10, 5, 1, 0, 0, 0, 0],
-                                          [1, 6, 15, 20, 15, 6, 1, 0, 0, 0],
-                                          [1, 7, 21, 35, 35, 21, 7, 1, 0, 0],
-                                          [1, 8, 28, 56, 70, 56, 28, 8, 1, 0],
-                                          [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]]
+struct BernsteinPolynomialN: BernsteinPolynomial {
+    let coefficients: [CGFloat]
 
-func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
-    precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
-    return binomialTable[n][k]
-}
-
-func linearInterpolate(_ first: CGFloat, _ second: CGFloat, _ t: CGFloat) -> CGFloat {
-    return (1 - t) * first + t * second
-}
-
-public struct BernsteinPolynomialN: BernsteinPolynomial {
-    public let coefficients: [CGFloat]
-
-    public func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomialN {
+    func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomialN {
         fatalError("unimplemented.")
     }
 
-    public var order: Int { return coefficients.count - 1 }
-    public init(coefficients: [CGFloat]) {
+    var order: Int { return coefficients.count - 1 }
+    init(coefficients: [CGFloat]) {
         precondition(coefficients.isEmpty == false, "Bezier curves require at least one point")
         self.coefficients = coefficients
     }
     static func * (left: CGFloat, right: BernsteinPolynomialN) -> BernsteinPolynomialN {
         return BernsteinPolynomialN(coefficients: right.coefficients.map { left * $0 })
     }
-    public static func == (left: BernsteinPolynomialN, right: BernsteinPolynomialN) -> Bool {
+    static func == (left: BernsteinPolynomialN, right: BernsteinPolynomialN) -> Bool {
         return left.coefficients == right.coefficients
     }
     func reversed() -> BernsteinPolynomialN {
         return BernsteinPolynomialN(coefficients: coefficients.reversed())
     }
-    public var derivative: BernsteinPolynomialN {
+    var derivative: BernsteinPolynomialN {
         guard order > 0 else { return BernsteinPolynomialN(coefficients: [CGFloat.zero]) }
         return CGFloat(order) * hodograph
     }
-    public func value(at t: CGFloat) -> CGFloat {
+    func value(at t: CGFloat) -> CGFloat {
         return self.split(at: t).left.coefficients.last!
     }
     private var hodograph: BernsteinPolynomialN {
@@ -74,7 +54,7 @@ public struct BernsteinPolynomialN: BernsteinPolynomial {
         rightPoints[n] = scratchPad[n]
         for j in 1...n {
             for i in 0...n - j {
-                scratchPad[i] = linearInterpolate(scratchPad[i], scratchPad[i + 1], t)
+                scratchPad[i] = Utils.linearInterpolate(scratchPad[i], scratchPad[i + 1], t)
             }
             leftPoints[j] = scratchPad[0]
             rightPoints[n - j] = scratchPad[n - j]
@@ -112,9 +92,9 @@ extension BernsteinPolynomialN {
             let end = min(m, k)
             let sum = (start...end).reduce(CGFloat.zero) { totalSoFar, i  in
                 let j = k - i
-                return totalSoFar + CGFloat(binomialCoefficient(m, choose: i) * binomialCoefficient(n, choose: j)) * left.coefficients[i] * right.coefficients[j]
+                return totalSoFar + CGFloat(Utils.binomialCoefficient(m, choose: i) * Utils.binomialCoefficient(n, choose: j)) * left.coefficients[i] * right.coefficients[j]
             }
-            let divisor = CGFloat(binomialCoefficient(m + n, choose: k))
+            let divisor = CGFloat(Utils.binomialCoefficient(m + n, choose: k))
             return sum / divisor
         }
         return BernsteinPolynomialN(coefficients: points)

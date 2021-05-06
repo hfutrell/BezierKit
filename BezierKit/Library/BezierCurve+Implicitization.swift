@@ -206,7 +206,7 @@ private extension BezierCurve {
         let n = self.order
         let pi = points[i]
         let pj = points[j]
-        let b = CGFloat(binomialCoefficient(n, choose: i) * binomialCoefficient(n, choose: j))
+        let b = CGFloat(Utils.binomialCoefficient(n, choose: i) * Utils.binomialCoefficient(n, choose: j))
         return b * ImplicitLine(a10: pi.y - pj.y, a01: pj.x - pi.x, a00: pi.x * pj.y - pj.x * pi.y)
     }
 }

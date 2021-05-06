@@ -28,12 +28,28 @@ internal extension Array where Element: Comparable {
 
 internal class Utils {
 
+    private static let binomialTable: [[CGFloat]] = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                              [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                                              [1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
+                                              [1, 3, 3, 1, 0, 0, 0, 0, 0, 0],
+                                              [1, 4, 6, 4, 1, 0, 0, 0, 0, 0],
+                                              [1, 5, 10, 10, 5, 1, 0, 0, 0, 0],
+                                              [1, 6, 15, 20, 15, 6, 1, 0, 0, 0],
+                                              [1, 7, 21, 35, 35, 21, 7, 1, 0, 0],
+                                              [1, 8, 28, 56, 70, 56, 28, 8, 1, 0],
+                                              [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]]
+
+    static func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
+        precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+        return binomialTable[n][k]
+    }
+    
     // float precision significant decimal
     static let epsilon: Double = 1.0e-5
     static let tau: Double = 2.0 * Double.pi
 
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
-    static let Tvalues: ContiguousArray<CGFloat> = [
+    private static let Tvalues: ContiguousArray<CGFloat> = [
         -0.0640568928626056260850430826247450385909,
         0.0640568928626056260850430826247450385909,
         -0.1911188674736163091586398207570696318404,
@@ -262,10 +278,14 @@ internal class Utils {
         callback(p0 / (p0 - p1))
     }
 
-    static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {
-        return v1 + r * (v2 - v1)
+    static func linearInterpolate(_ v1: CGPoint, _ v2: CGPoint, _ t: CGFloat) -> CGPoint {
+        return v1 + t * (v2 - v1)
     }
 
+    static func linearInterpolate(_ first: CGFloat, _ second: CGFloat, _ t: CGFloat) -> CGFloat {
+        return (1 - t) * first + t * second
+    }
+    
     static func arcfn(_ t: CGFloat, _ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
         let d = derivativeFn(t)
         return d.length
@@ -354,12 +374,12 @@ internal class Utils {
         let c: Int = p.count
         var q: [CGPoint] = p
         q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc
-        // we lerp between all points (in-place), until we have 1 point left.
+        // we linearInterpolate between all points (in-place), until we have 1 point left.
         var start: Int = 0
         for count in (1 ..< c).reversed() {
             let end: Int = start + count
             for i in start ..< end {
-                let pt = Utils.lerp(t, q[i], q[i+1])
+                let pt = Utils.linearInterpolate(q[i], q[i+1], t)
                 q.append(pt)
             }
             start = end + 1

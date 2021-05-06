@@ -203,12 +203,12 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         let h1 = self.p1
         let h2 = self.p2
         let h3 = self.p3
-        let h4 = Utils.lerp(t, h0, h1)
-        let h5 = Utils.lerp(t, h1, h2)
-        let h6 = Utils.lerp(t, h2, h3)
-        let h7 = Utils.lerp(t, h4, h5)
-        let h8 = Utils.lerp(t, h5, h6)
-        let h9 = Utils.lerp(t, h7, h8)
+        let h4 = Utils.linearInterpolate(h0, h1, t)
+        let h5 = Utils.linearInterpolate(h1, h2, t)
+        let h6 = Utils.linearInterpolate(h2, h3, t)
+        let h7 = Utils.linearInterpolate(h4, h5, t)
+        let h8 = Utils.linearInterpolate(h5, h6, t)
+        let h9 = Utils.linearInterpolate(h7, h8, t)
 
         let leftCurve  = CubicCurve(p0: h0, p1: h4, p2: h7, p3: h9)
         let rightCurve = CubicCurve(p0: h9, p1: h8, p2: h6, p3: h3)
