@@ -121,20 +121,6 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 0.407811682610126, accuracy: 1.0e-5)
     }
 
-    func testDegree5RealWorldIssue() {
-        // this case may return a non-root because Newton iteration
-        // does not converge
-        let polynomial = BernsteinPolynomial5(b0: -68686.64586343056,
-                                              b1: 102389.02112160496,
-                                              b2: -163207.59913132348,
-                                              b3: 177077.4933777841,
-                                              b4: -108411.70135107233,
-                                              b5: 57838.81668210728)
-        let roots = findDistinctRootsInUnitInterval(of: polynomial)
-        XCTAssertEqual(roots.count, 1)
-        XCTAssertEqual(roots[0], 0.44454, accuracy: 1.0e-5)
-    }
-
     func testDegreeNRealWorldIssue() {
         // this input would cause a stack overflow if the division step of the interval
         // occurred before checking the interval's size
@@ -143,7 +129,8 @@ class PolynomialTests: XCTestCase {
         // off. This means the code always takes the divide and conquer path.
         let accuracy: CGFloat = 1.0e-5
         let polynomial = BernsteinPolynomialN(coefficients: [0, 0, 0, 0, 0, -1])
-        let roots = polynomial.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: accuracy))
+        let configuration = RootFindingConfiguration(errorThreshold: accuracy)
+        let roots = polynomial.distinctRealRootsInUnitInterval(configuration: configuration)
         XCTAssertEqual(roots.count, 1)
         if roots.isEmpty == false {
             XCTAssertEqual(roots[0], 0, accuracy: accuracy)
