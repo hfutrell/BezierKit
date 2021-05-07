@@ -81,17 +81,6 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(roots[0], CGFloat(0.961251), accuracy: 1.0e-4)
     }
 
-    func testDrootsCubicWorldIssue4() {
-        // this test was failing due to round-off it seems
-        let roots = drootsCubicTestHelper(117.11706850363589,
-                                          39.0399142482629,
-                                          -2.3525217329734005e-06,
-                                          -2.352663614146877e-06)
-        let filtered = roots.filter { $0 >= 0 && $0 <= 1 }
-        XCTAssertEqual(filtered.count, 1)
-        XCTAssertEqual(filtered.first!, CGFloat(0.99985797), accuracy: 1.0e-5)
-    }
-
     func testDrootsQuadratic() {
         let a: CGFloat = 0.36159566118413977
         let b: CGFloat = -3.2979288390483816

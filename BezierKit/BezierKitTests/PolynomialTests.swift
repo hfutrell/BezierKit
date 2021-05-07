@@ -120,18 +120,4 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[0], 0.15977874432923783, accuracy: 1.0e-5)
         XCTAssertEqual(roots[1], 0.407811682610126, accuracy: 1.0e-5)
     }
-
-    func testDegree5RealWorldIssue() {
-        // this case may return a non-root because Newton iteration
-        // does not converge
-        let polynomial = BernsteinPolynomial5(b0: -68686.64586343056,
-                                              b1: 102389.02112160496,
-                                              b2: -163207.59913132348,
-                                              b3: 177077.4933777841,
-                                              b4: -108411.70135107233,
-                                              b5: 57838.81668210728)
-        let roots = findDistinctRootsInUnitInterval(of: polynomial)
-        XCTAssertEqual(roots.count, 1)
-        XCTAssertEqual(roots[0], 0.44454, accuracy: 1.0e-5)
-    }
 }
