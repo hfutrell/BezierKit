@@ -47,10 +47,12 @@ internal struct ImplicitPolynomial {
         return coefficients[(order + 1) * i + j]
     }
 
-    func value(_ x: BernsteinPolynomialN, _ y: BernsteinPolynomialN) -> BernsteinPolynomialN {
+    func value<P: BernsteinPolynomial>(_ x: P, _ y: P) -> BernsteinPolynomialN {
 
         assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
         let polynomialOrder = x.order
+        let x = BernsteinPolynomialN(coefficients: x.coefficients)
+        let y = BernsteinPolynomialN(coefficients: y.coefficients)
         var xPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
         var yPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
         for i in 1...order {
@@ -99,10 +101,6 @@ internal struct ImplicitPolynomial {
         return sum
     }
 
-    static func * (left: CGFloat, right: ImplicitPolynomial) -> ImplicitPolynomial {
-        return ImplicitPolynomial(coefficients: right.coefficients.map { left * $0 }, order: right.order)
-    }
-
     static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(+), order: left.order)
@@ -111,29 +109,6 @@ internal struct ImplicitPolynomial {
     static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(-), order: left.order)
-    }
-
-    static func * (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
-        let order = left.order + right.order
-        var coefficients = [CGFloat](repeating: CGFloat.zero, count: (order+1)*(order+1))
-        for i in 0...order {
-            for j in 0...order {
-                // for each entry in left, see if there is an entry in right such that the power of the x term sums to i
-                // and the power of the y term sums to j
-                var sum: CGFloat = 0
-                for iil in 0...left.order {
-                    for jjl in 0...left.order {
-                        let iir = i - iil
-                        let jjr = j - jjl
-                        guard iir >= 0, iir <= right.order else { continue }
-                        guard jjr >= 0, jjr <= right.order else { continue }
-                        sum += left.coefficient(iil, jjl) * right.coefficient(iir, jjr)
-                    }
-                }
-                coefficients[(order + 1) * i + j] = sum
-            }
-        }
-        return ImplicitPolynomial(coefficients: coefficients, order: order)
     }
 }
 
@@ -188,11 +163,6 @@ private struct ImplicitLine {
     }
     static func * (left: CGFloat, right: ImplicitLine) -> ImplicitLine {
         return ImplicitLine(a10: left * right.a10, a01: left * right.a01, a00: left * right.a00)
-    }
-    static func - (left: ImplicitLine, right: ImplicitLine) -> ImplicitLine {
-        return ImplicitLine(a10: left.a10 - right.a10,
-                            a01: left.a01 - right.a01,
-                            a00: left.a00 - right.a00)
     }
     static func + (left: ImplicitLine, right: ImplicitLine) -> ImplicitLine {
         return ImplicitLine(a10: left.a10 + right.a10,

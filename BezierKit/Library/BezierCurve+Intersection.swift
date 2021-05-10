@@ -137,10 +137,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
 
     let c1 = curve1.curve.copy(using: transform)
-    let xPolynomial = BernsteinPolynomialN(coefficients: c1.xPolynomial.coefficients)
-    let yPolynomial = BernsteinPolynomialN(coefficients: c1.yPolynomial.coefficients)
-
-    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(xPolynomial, yPolynomial)
+    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
 
     #warning("clean up")
