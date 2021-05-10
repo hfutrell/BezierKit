@@ -46,7 +46,8 @@ internal struct ImplicitPolynomial {
         assert(i >= 0 && i <= order && j >= 0 && j <= order)
         return coefficients[(order + 1) * i + j]
     }
-
+    /// composes the implicit polynomial with a parametric polynomial whose coordinates are x(t) and y(t)
+    /// the roots of the resulting polynomial are the intersection between the implicit and parametric polynomials
     func value<P: BernsteinPolynomial>(_ x: P, _ y: P) -> BernsteinPolynomialN {
 
         assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
