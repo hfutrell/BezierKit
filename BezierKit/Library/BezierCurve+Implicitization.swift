@@ -101,12 +101,12 @@ internal struct ImplicitPolynomial {
         return sum
     }
 
-    static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
+    fileprivate static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(+), order: left.order)
     }
 
-    static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
+    fileprivate static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(-), order: left.order)
     }
