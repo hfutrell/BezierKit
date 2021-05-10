@@ -5,7 +5,10 @@
 //  Created by Holmes Futrell on 2/19/21.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 struct BernsteinPolynomialN: BernsteinPolynomial {
     let coefficients: [CGFloat]
