@@ -5,7 +5,10 @@
 //  Created by Holmes Futrell on 2/23/21.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
+import Foundation
 
 struct RootFindingConfiguration {
     static let defaultErrorThreshold: CGFloat = 1e-5
