@@ -107,16 +107,73 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
+fileprivate extension BezierCurve {
+    var derivativeBounds: CGFloat {
+        let points = self.points
+        let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
+        return CGFloat(self.order) * speeds.max()!
+    }
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+
+    // try intersecting using subdivision
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
-    var intersections: [Intersection] = []
-    Utils.pairiteration(curve1, curve2, lb, rb, &intersections, accuracy)
-    if intersections.count >= curve1.curve.order * curve2.curve.order {
-        if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
-            return coincidence
+    var pairIntersections: [Intersection] = []
+    var subdivisionIterations = 0
+    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
+        return pairIntersections.sortedAndUniqued()
+    }
+
+    // subdivision failed, check if the curves are coincident
+    let insignificantDistance: CGFloat = 0.5 * accuracy
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        return coincidence
+    }
+
+    // find any intersections using curve implicitization
+    let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
+    let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
+
+    let c1 = curve1.curve.copy(using: transform)
+    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
+    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+
+    let t1Tolerance = insignificantDistance / c1.derivativeBounds
+    let t2Tolerance = insignificantDistance / c2.derivativeBounds
+
+    func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {
+        let point = c1.point(at: t1)
+        guard c2.boundingBox.contains(point) else { return nil }
+        var t2 = c2.project(point).t
+        if t2 < t2Tolerance {
+            t2 = 0
+        } else if t2 > 1 - t2Tolerance {
+            t2 = 1
+        }
+        guard distance(point, c2.point(at: t2)) < accuracy else { return nil }
+        return Intersection(t1: t1, t2: t2)
+    }
+    var intersections = roots.compactMap { t1 -> Intersection? in
+        if t1 < t1Tolerance {
+            return nil // (t1 near 0 handled explicitly)
+        } else if t1 > 1 - t1Tolerance {
+            return nil // (t1 near 1 handled explicitly)
+        }
+        return intersectionIfCloseEnough(at: t1)
+    }
+    if intersections.contains(where: { $0.t1 == 0 }) == false {
+        if let intersection = intersectionIfCloseEnough(at: 0) {
+            intersections.append(intersection)
         }
     }
+    if intersections.contains(where: { $0.t1 == 1 }) == false {
+        if let intersection = intersectionIfCloseEnough(at: 1) {
+            intersections.append(intersection)
+        }
+    }
+    // TODO: handle case where curve2 self-intersects and curve intersects it there
     return intersections.sortedAndUniqued()
 }
 
@@ -219,6 +276,33 @@ extension CubicCurve {
         let t2 = 0.5 * (3 - x + radical) / denominator
         return [Intersection(t1: Utils.clamp(t1, 0, 1),
                              t2: Utils.clamp(t2, 0, 1))]
+    }
+}
+
+extension BezierCurve where Self: NonlinearBezierCurve {
+    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve & Implicitizeable {
+        switch self.order {
+        case 3:
+            let cubic = (self as! CubicCurve)
+            let (line, lineError) = cubic.downgradedToLineSegment
+            if lineError <= maximumError {
+                return line
+            }
+            let (quadratic, quadraticError) = cubic.downgradedToQuadratic
+            if quadraticError <= maximumError {
+                return quadratic
+            }
+            return self
+        case 2:
+            let quadratic = (self as! QuadraticCurve)
+            let (line, lineError) = quadratic.downgradedToLineSegment
+            if lineError <= maximumError {
+                return line
+            }
+            return self
+        default:
+            return self
+        }
     }
 }
 

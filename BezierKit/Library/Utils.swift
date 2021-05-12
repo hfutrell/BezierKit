@@ -28,12 +28,28 @@ internal extension Array where Element: Comparable {
 
 internal class Utils {
 
+    private static let binomialTable: [[CGFloat]] = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                              [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                                              [1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
+                                              [1, 3, 3, 1, 0, 0, 0, 0, 0, 0],
+                                              [1, 4, 6, 4, 1, 0, 0, 0, 0, 0],
+                                              [1, 5, 10, 10, 5, 1, 0, 0, 0, 0],
+                                              [1, 6, 15, 20, 15, 6, 1, 0, 0, 0],
+                                              [1, 7, 21, 35, 35, 21, 7, 1, 0, 0],
+                                              [1, 8, 28, 56, 70, 56, 28, 8, 1, 0],
+                                              [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]]
+
+    static func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
+        precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+        return binomialTable[n][k]
+    }
+
     // float precision significant decimal
     static let epsilon: Double = 1.0e-5
     static let tau: Double = 2.0 * Double.pi
 
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
-    static let Tvalues: ContiguousArray<CGFloat> = [
+    private static let Tvalues: ContiguousArray<CGFloat> = [
         -0.0640568928626056260850430826247450385909,
         0.0640568928626056260850430826247450385909,
         -0.1911188674736163091586398207570696318404,
@@ -262,8 +278,12 @@ internal class Utils {
         callback(p0 / (p0 - p1))
     }
 
-    static func lerp(_ r: CGFloat, _ v1: CGPoint, _ v2: CGPoint) -> CGPoint {
-        return v1 + r * (v2 - v1)
+    static func linearInterpolate(_ v1: CGPoint, _ v2: CGPoint, _ t: CGFloat) -> CGPoint {
+        return v1 + t * (v2 - v1)
+    }
+
+    static func linearInterpolate(_ first: CGFloat, _ second: CGFloat, _ t: CGFloat) -> CGFloat {
+        return (1 - t) * first + t * second
     }
 
     static func arcfn(_ t: CGFloat, _ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
@@ -294,10 +314,16 @@ internal class Utils {
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],
-                                      _ accuracy: CGFloat) {
+                                      _ accuracy: CGFloat,
+                                      _ totalIterations: inout Int) -> Bool {
 
-        guard results.count < c1.curve.order * c2.curve.order else { return }
-        guard c1b.overlaps(c2b) else { return }
+        let maximumIterations = 900
+        let maximumIntersections = c1.curve.order * c2.curve.order
+
+        totalIterations += 1
+        guard totalIterations <= maximumIterations else { return false }
+        guard results.count <= maximumIntersections else { return false }
+        guard c1b.overlaps(c2b) else { return true }
 
         let canSplit1 = c1.canSplit
         let canSplit2 = c2.canSplit
@@ -310,7 +336,7 @@ internal class Utils {
             // subcurves are small enough or we simply cannot recurse any more
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-            guard let intersection = l1.intersections(with: l2, checkCoincidence: false).first else { return }
+            guard let intersection = l1.intersections(with: l2, checkCoincidence: false).first else { return true }
             let t1 = intersection.t1
             let t2 = intersection.t2
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
@@ -322,23 +348,24 @@ internal class Utils {
             let cc1rb = cc1.right.curve.boundingBox
             let cc2lb = cc2.left.curve.boundingBox
             let cc2rb = cc2.right.curve.boundingBox
-            Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy)
-            Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy)
-            Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy)
-            Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy)
+            guard Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy, &totalIterations) else { return false }
         } else if shouldRecurse1 {
             let cc1 = c1.split(at: 0.5)
             let cc1lb = cc1.left.curve.boundingBox
             let cc1rb = cc1.right.curve.boundingBox
-            Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy)
-            Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy)
+            guard Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy, &totalIterations) else { return false }
         } else if shouldRecurse2 {
             let cc2 = c2.split(at: 0.5)
             let cc2lb = cc2.left.curve.boundingBox
             let cc2rb = cc2.right.curve.boundingBox
-            Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy)
-            Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy)
+            guard Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy, &totalIterations) else { return false }
         }
+        return true
     }
 
     // swiftlint:enable function_parameter_count
@@ -347,12 +374,12 @@ internal class Utils {
         let c: Int = p.count
         var q: [CGPoint] = p
         q.reserveCapacity(c * (c+1) / 2) // reserve capacity ahead of time to avoid re-alloc
-        // we lerp between all points (in-place), until we have 1 point left.
+        // we linearInterpolate between all points (in-place), until we have 1 point left.
         var start: Int = 0
         for count in (1 ..< c).reversed() {
             let end: Int = start + count
             for i in start ..< end {
-                let pt = Utils.lerp(t, q[i], q[i+1])
+                let pt = Utils.linearInterpolate(q[i], q[i+1], t)
                 q.append(pt)
             }
             start = end + 1

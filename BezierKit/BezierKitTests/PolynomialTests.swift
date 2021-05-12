@@ -120,4 +120,31 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[0], 0.15977874432923783, accuracy: 1.0e-5)
         XCTAssertEqual(roots[1], 0.407811682610126, accuracy: 1.0e-5)
     }
+
+    func testDegreeN() {
+        // 2x^2 + 2x + 1
+        let polynomial = BernsteinPolynomialN(coefficients: [1, 2, 5])
+        XCTAssertEqual(polynomial.derivative, BernsteinPolynomialN(coefficients: [2, 6]))
+        XCTAssertEqual(polynomial.reversed(), BernsteinPolynomialN(coefficients: [5, 2, 1]))
+        // some edge cases
+        XCTAssertEqual(BernsteinPolynomialN(coefficients: [42]).split(from: 0.1, to: 0.9),
+                       BernsteinPolynomialN(coefficients: [42]))
+        XCTAssertEqual(polynomial.split(from: 1, to: 0), polynomial.reversed())
+    }
+
+    func testDegreeNRealWorldIssue() {
+        // this input would cause a stack overflow if the division step of the interval
+        // occurred before checking the interval's size
+        // the equation has 1st, 2nd, 3rd, and 4th derivative equal to zero
+        // which means that only a small portion of the interval can be clipped
+        // off. This means the code always takes the divide and conquer path.
+        let accuracy: CGFloat = 1.0e-5
+        let polynomial = BernsteinPolynomialN(coefficients: [0, 0, 0, 0, 0, -1])
+        let configuration = RootFindingConfiguration(errorThreshold: accuracy)
+        let roots = polynomial.distinctRealRootsInUnitInterval(configuration: configuration)
+        XCTAssertEqual(roots.count, 1)
+        if roots.isEmpty == false {
+            XCTAssertEqual(roots[0], 0, accuracy: accuracy)
+        }
+    }
 }

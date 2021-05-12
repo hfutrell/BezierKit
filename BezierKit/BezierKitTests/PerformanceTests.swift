@@ -36,6 +36,8 @@ private extension PerformanceTests {
         return curves
     }
 
+    #if canImport(CoreGraphics)
+
     func parametricPath(numCurves: Int,
                         theta: (_: CGFloat) -> CGFloat,
                         dthetadt: (_: CGFloat) -> CGFloat,
@@ -62,6 +64,8 @@ private extension PerformanceTests {
         }
         return Path(cgPath: cgPath)
     }
+
+    #endif
 }
 
 class PerformanceTests: XCTestCase {
@@ -114,9 +118,9 @@ class PerformanceTests: XCTestCase {
 
     func testCubicIntersectionsPerformanceTangentEndpoint() {
         // test the performance of `intersections(with:,accuracy:)`
-        // -Onone 23.46 seconds
-        // -Os 2.938 seconds
-        let dataCount = 2500
+        // -Onone 0.89 seconds
+        // -Os 0.059 seconds
+        let dataCount = 250
         let curves = generateRandomCurves(count: dataCount, reseed: 3)
         self.measure {
             var count = 0
@@ -159,6 +163,8 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
+
+    #if canImport(CoreGraphics)
 
     func testPathProjectPerformance() {
         let k: CGFloat = 2.0 * CGFloat.pi * 10
@@ -220,4 +226,6 @@ class PerformanceTests: XCTestCase {
             _ = path1.subtract(path2, accuracy: 1.0e-3)
         }
     }
+
+    #endif
 }
