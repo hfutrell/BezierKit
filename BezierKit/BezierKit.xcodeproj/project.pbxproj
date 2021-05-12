@@ -351,16 +351,6 @@
 			path = BezierKit_Mac;
 			sourceTree = "<group>";
 		};
-		FD7205BF2616870F007B0585 /* Implicitization */ = {
-			isa = PBXGroup;
-			children = (
-				FD07BC1E261BC97400ED39FF /* BernsteinPolynomialN.swift */,
-				FD07BC1F261BC97400ED39FF /* BezierCurve+Implicitization.swift */,
-				FD07BC1D261BC97400ED39FF /* RootFinding.swift */,
-			);
-			path = Implicitization;
-			sourceTree = "<group>";
-		};
 		FDB6B3F61EAFD6DF00001C61 /* Library */ = {
 			isa = PBXGroup;
 			children = (
@@ -368,7 +358,9 @@
 				FDC859622119274A00AF7642 /* BoundingBoxHierarchy.swift */,
 				FDB6B3F71EAFD6DF00001C61 /* BezierCurve.swift */,
 				FDB6011A25BB9B3700BAB067 /* BezierCurve+Polynomial.swift */,
-				FD7205BF2616870F007B0585 /* Implicitization */,
+				FD07BC1E261BC97400ED39FF /* BernsteinPolynomialN.swift */,
+				FD07BC1F261BC97400ED39FF /* BezierCurve+Implicitization.swift */,
+				FD07BC1D261BC97400ED39FF /* RootFinding.swift */,
 				FD5CF14B22400FCA00FE15A6 /* BezierCurve+Intersection.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicCurve.swift */,
 				FDB6B3FC1EAFD6DF00001C61 /* CGPoint+Overloads.swift */,

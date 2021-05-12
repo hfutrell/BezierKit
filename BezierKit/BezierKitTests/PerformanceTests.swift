@@ -35,7 +35,7 @@ private extension PerformanceTests {
         }
         return curves
     }
-    
+
     #if canImport(CoreGraphics)
 
     func parametricPath(numCurves: Int,
@@ -64,7 +64,7 @@ private extension PerformanceTests {
         }
         return Path(cgPath: cgPath)
     }
-    
+
     #endif
 }
 
@@ -163,9 +163,9 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     #if canImport(CoreGraphics)
-    
+
     func testPathProjectPerformance() {
         let k: CGFloat = 2.0 * CGFloat.pi * 10
         let maxRadius: CGFloat = 100.0
@@ -226,6 +226,6 @@ class PerformanceTests: XCTestCase {
             _ = path1.subtract(path2, accuracy: 1.0e-3)
         }
     }
-    
+
     #endif
 }

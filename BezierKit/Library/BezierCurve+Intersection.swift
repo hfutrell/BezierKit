@@ -115,24 +115,24 @@ fileprivate extension BezierCurve {
     }
 }
 
-var total = 0
-
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
-    let insignificantDistance: CGFloat = 0.5 * accuracy
-
+    // try intersecting using subdivision
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var pairIntersections: [Intersection] = []
-    var iterations = 0
-    #warning("curve1.curve.order * curve2.curve.order also appears in Utils, it should probably be part of the config")
-    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &iterations),
-       pairIntersections.count < curve1.curve.order * curve2.curve.order {
+    var subdivisionIterations = 0
+    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
         return pairIntersections.sortedAndUniqued()
     }
-    
-    total += 1
-    
+
+    // subdivision failed, check if the curves are coincident
+    let insignificantDistance: CGFloat = 0.5 * accuracy
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        return coincidence
+    }
+
+    // find any intersections using curve implicitization
     let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
     let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
 
@@ -140,63 +140,40 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
 
-    #warning("clean up")
-    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * insignificantDistance) {
-        return coincidence
-    }
-
     let t1Tolerance = insignificantDistance / c1.derivativeBounds
     let t2Tolerance = insignificantDistance / c2.derivativeBounds
 
+    func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {
+        let point = c1.point(at: t1)
+        guard c2.boundingBox.contains(point) else { return nil }
+        var t2 = c2.project(point).t
+        if t2 < t2Tolerance {
+            t2 = 0
+        } else if t2 > 1 - t2Tolerance {
+            t2 = 1
+        }
+        guard distance(point, c2.point(at: t2)) < accuracy else { return nil }
+        return Intersection(t1: t1, t2: t2)
+    }
     var intersections = roots.compactMap { t1 -> Intersection? in
-
-        #warning("clean up")
-        var adjustedT1 = t1
-        if adjustedT1 < t1Tolerance {
-            adjustedT1 = 0.0
-        } else if adjustedT1 > 1.0 - t1Tolerance {
-            adjustedT1 = 1.0
+        if t1 < t1Tolerance {
+            return nil // (t1 near 0 handled explicitly)
+        } else if t1 > 1 - t1Tolerance {
+            return nil // (t1 near 1 handled explicitly)
         }
-
-        let point = c1.point(at: adjustedT1)
-        guard c2.boundingBox.contains(point) else {
-            return nil
-        }
-
-        #warning("todo: handle double point here")
-        let t2 = c2.project(point).t // numerator.value(point) / deonominator.value(point)
-
-        guard distance(point, c2.point(at: t2)) < accuracy else {
-            return nil
-        }
-
-        #warning("clean up")
-        var adjustedT2 = t2
-        if Utils.approximately(Double(adjustedT2), 0.0, precision: Double(t2Tolerance)) {
-            adjustedT2 = 0.0
-        } else if Utils.approximately(Double(adjustedT2), 1.0, precision: Double(t2Tolerance)) {
-            adjustedT2 = 1.0
-        }
-
-        guard adjustedT2 >= 0, adjustedT2 <= 1 else { return nil }
-        return Intersection(t1: adjustedT1, t2: adjustedT2)
+        return intersectionIfCloseEnough(at: t1)
     }
-
-    #warning("clean up")
     if intersections.contains(where: { $0.t1 == 0 }) == false {
-        let projection = c2.project(c1.startingPoint)
-        if distance(projection.point, c1.startingPoint) < insignificantDistance {
-            intersections.insert(Intersection(t1: 0, t2: projection.t), at: 0)
+        if let intersection = intersectionIfCloseEnough(at: 0) {
+            intersections.append(intersection)
         }
     }
-
     if intersections.contains(where: { $0.t1 == 1 }) == false {
-        let projection = c2.project(c1.endingPoint)
-        if distance(projection.point, c1.endingPoint) < insignificantDistance {
-            intersections.append(Intersection(t1: 1, t2: projection.t))
+        if let intersection = intersectionIfCloseEnough(at: 1) {
+            intersections.append(intersection)
         }
     }
-
+    // TODO: handle case where curve2 self-intersects and curve intersects it there
     return intersections.sortedAndUniqued()
 }
 

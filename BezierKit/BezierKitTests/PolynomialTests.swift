@@ -121,6 +121,17 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 0.407811682610126, accuracy: 1.0e-5)
     }
 
+    func testDegreeN() {
+        // 2x^2 + 2x + 1
+        let polynomial = BernsteinPolynomialN(coefficients: [1, 2, 5])
+        XCTAssertEqual(polynomial.derivative, BernsteinPolynomialN(coefficients: [2, 6]))
+        XCTAssertEqual(polynomial.reversed(), BernsteinPolynomialN(coefficients: [5, 2, 1]))
+        // some edge cases
+        XCTAssertEqual(BernsteinPolynomialN(coefficients: [42]).split(from: 0.1, to: 0.9),
+                       BernsteinPolynomialN(coefficients: [42]))
+        XCTAssertEqual(polynomial.split(from: 1, to: 0), polynomial.reversed())
+    }
+
     func testDegreeNRealWorldIssue() {
         // this input would cause a stack overflow if the division step of the interval
         // occurred before checking the interval's size

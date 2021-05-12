@@ -43,7 +43,7 @@ internal class Utils {
         precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
         return binomialTable[n][k]
     }
-    
+
     // float precision significant decimal
     static let epsilon: Double = 1.0e-5
     static let tau: Double = 2.0 * Double.pi
@@ -285,7 +285,7 @@ internal class Utils {
     static func linearInterpolate(_ first: CGFloat, _ second: CGFloat, _ t: CGFloat) -> CGFloat {
         return (1 - t) * first + t * second
     }
-    
+
     static func arcfn(_ t: CGFloat, _ derivativeFn: (_ t: CGFloat) -> CGPoint) -> CGFloat {
         let d = derivativeFn(t)
         return d.length
@@ -317,12 +317,12 @@ internal class Utils {
                                       _ accuracy: CGFloat,
                                       _ totalIterations: inout Int) -> Bool {
 
+        let maximumIterations = 900
+        let maximumIntersections = c1.curve.order * c2.curve.order
+
         totalIterations += 1
-        if totalIterations > 900 {
-            return false
-        }
-        
-        guard results.count < c1.curve.order * c2.curve.order else { return true }
+        guard totalIterations <= maximumIterations else { return false }
+        guard results.count <= maximumIntersections else { return false }
         guard c1b.overlaps(c2b) else { return true }
 
         let canSplit1 = c1.canSplit
