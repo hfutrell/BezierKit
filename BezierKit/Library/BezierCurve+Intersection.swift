@@ -22,9 +22,6 @@ public extension BezierCurve {
     func intersections(with curve: BezierCurve) -> [Intersection] {
         return self.intersections(with: curve, accuracy: BezierKit.defaultIntersectionAccuracy)
     }
-    func selfIntersections() -> [Intersection] {
-        return self.selfIntersections(accuracy: BezierKit.defaultIntersectionAccuracy)
-    }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty
     }
@@ -34,7 +31,7 @@ public extension BezierCurve {
     var selfIntersects: Bool {
         return false
     }
-    func selfIntersections(accuracy: CGFloat) -> [Intersection] {
+    var selfIntersections: [Intersection] {
         return []
     }
 }
@@ -110,16 +107,73 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
+fileprivate extension BezierCurve {
+    var derivativeBounds: CGFloat {
+        let points = self.points
+        let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
+        return CGFloat(self.order) * speeds.max()!
+    }
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+
+    // try intersecting using subdivision
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
-    var intersections: [Intersection] = []
-    Utils.pairiteration(curve1, curve2, lb, rb, &intersections, accuracy)
-    if intersections.count >= curve1.curve.order * curve2.curve.order {
-        if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
-            return coincidence
+    var pairIntersections: [Intersection] = []
+    var subdivisionIterations = 0
+    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
+        return pairIntersections.sortedAndUniqued()
+    }
+
+    // subdivision failed, check if the curves are coincident
+    let insignificantDistance: CGFloat = 0.5 * accuracy
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        return coincidence
+    }
+
+    // find any intersections using curve implicitization
+    let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
+    let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
+
+    let c1 = curve1.curve.copy(using: transform)
+    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
+    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+
+    let t1Tolerance = insignificantDistance / c1.derivativeBounds
+    let t2Tolerance = insignificantDistance / c2.derivativeBounds
+
+    func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {
+        let point = c1.point(at: t1)
+        guard c2.boundingBox.contains(point) else { return nil }
+        var t2 = c2.project(point).t
+        if t2 < t2Tolerance {
+            t2 = 0
+        } else if t2 > 1 - t2Tolerance {
+            t2 = 1
+        }
+        guard distance(point, c2.point(at: t2)) < accuracy else { return nil }
+        return Intersection(t1: t1, t2: t2)
+    }
+    var intersections = roots.compactMap { t1 -> Intersection? in
+        if t1 < t1Tolerance {
+            return nil // (t1 near 0 handled explicitly)
+        } else if t1 > 1 - t1Tolerance {
+            return nil // (t1 near 1 handled explicitly)
+        }
+        return intersectionIfCloseEnough(at: t1)
+    }
+    if intersections.contains(where: { $0.t1 == 0 }) == false {
+        if let intersection = intersectionIfCloseEnough(at: 0) {
+            intersections.append(intersection)
         }
     }
+    if intersections.contains(where: { $0.t1 == 1 }) == false {
+        if let intersection = intersectionIfCloseEnough(at: 1) {
+            intersections.append(intersection)
+        }
+    }
+    // TODO: handle case where curve2 self-intersects and curve intersects it there
     return intersections.sortedAndUniqued()
 }
 
@@ -175,7 +229,8 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
 // MARK: - extensions to support intersection
 
 extension CubicCurve {
-    public var selfIntersects: Bool {
+
+    private var selfIntersectionInfo: (discriminant: CGFloat, canonicalPoint: CGPoint)? {
         let d1 = self.p1 - self.p0
         let d2 = self.p2 - self.p0
         // https://pomax.github.io/bezierinfo/#canonical
@@ -186,54 +241,68 @@ extension CubicCurve {
         let b = d2.x
         let d = d2.y
         let det = a * d - b * c
-        guard det != 0 else { return false }
+        guard det != 0 else { return nil }
         let d3 = self.p3 - self.p0
         // find the coordinates of the last point in canonical form
         let x = (1 / det) * (-c * d3.x + a * d3.y)
         let y = (1 / det) * ((d - c) * d3.x + (a - b) * d3.y)
         // use the coordinates of the last point to determine if any self-intersections exist
-        guard x < 1 else { return false }
+        guard x < 1 else { return nil }
         let xSquared = x * x
-        let cuspEdge = (-xSquared + 2 * x + 3) / 4
-        guard y < cuspEdge else { return false }
+        let cuspEdge = -3 * xSquared + 6 * x - 12 * y + 9
+        guard cuspEdge > 0 else { return nil }
         if x <= 0 {
             let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
-            guard y >= loopAtTZeroEdge else { return false }
+            guard y >= loopAtTZeroEdge else { return nil }
         } else {
             let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
-            guard y >= loopAtTOneEdge else { return false }
+            guard y >= loopAtTOneEdge else { return nil }
         }
-        return true
+        return (discriminant: cuspEdge, canonicalPoint: CGPoint(x: x, y: y))
     }
-    public func selfIntersections(accuracy: CGFloat) -> [Intersection] {
-        guard self.selfIntersects else {
-            // call to `selfIntersects` is much faster than actually locating points of intersection, so check this first
-            return []
-        }
-        let reduced = self.reduce()
-        // "simple" curves cannot intersect with their direct
-        // neighbour, so for each segment X we check whether
-        // it intersects [0:x-2][x+2:last].
-        let len=reduced.count-2
-        var results: [Intersection] = []
-        if len > 0 {
-            for i in 0..<len {
-                let left = reduced[i]
-                if reduced[i+1].curve.simple == false {
-                    // this codepath is rarely needed (about 0.1% of the time)
-                    // because `reduce()` should return simple curves
-                    // but sometimes does return non-simple curves due to `BezierKit.reduceStepSize`
-                    let result = helperIntersectsCurveCurve(left, reduced[i+1], accuracy: accuracy).filter { $0.t1 < 1 && $0.t1 != $0.t2 }
-                    if result.isEmpty == false {
-                        results += result
-                    }
-                }
-                for j in i+2..<reduced.count {
-                    results += helperIntersectsCurveCurve(left, reduced[j], accuracy: accuracy)
-                }
+
+    public var selfIntersects: Bool {
+        return self.selfIntersectionInfo != nil
+    }
+
+    public var selfIntersections: [Intersection] {
+        guard let info = self.selfIntersectionInfo else { return [] }
+        let discriminant = info.discriminant
+        let x = info.canonicalPoint.x
+        let y = info.canonicalPoint.y
+        let radical = sqrt(discriminant)
+        let denominator = (3 - x - y)
+        let t1 = 0.5 * (3 - x - radical) / denominator
+        let t2 = 0.5 * (3 - x + radical) / denominator
+        return [Intersection(t1: Utils.clamp(t1, 0, 1),
+                             t2: Utils.clamp(t2, 0, 1))]
+    }
+}
+
+extension BezierCurve where Self: NonlinearBezierCurve {
+    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve & Implicitizeable {
+        switch self.order {
+        case 3:
+            let cubic = (self as! CubicCurve)
+            let (line, lineError) = cubic.downgradedToLineSegment
+            if lineError <= maximumError {
+                return line
             }
+            let (quadratic, quadraticError) = cubic.downgradedToQuadratic
+            if quadraticError <= maximumError {
+                return quadratic
+            }
+            return self
+        case 2:
+            let quadratic = (self as! QuadraticCurve)
+            let (line, lineError) = quadratic.downgradedToLineSegment
+            if lineError <= maximumError {
+                return line
+            }
+            return self
+        default:
+            return self
         }
-        return results
     }
 }
 

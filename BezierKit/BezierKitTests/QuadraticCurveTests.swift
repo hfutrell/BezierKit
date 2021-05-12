@@ -14,6 +14,7 @@ class QuadraticCurveTests: XCTestCase {
     // TODO: we still have a LOT of missing unit tests for QuadraticCurve's API entry points
 
     override func setUp() {
+        self.continueAfterFailure = false
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
@@ -124,19 +125,6 @@ class QuadraticCurveTests: XCTestCase {
         XCTAssertTrue(distance(result4.point, expectedPoint) < epsilon)
     }
 
-    func testProjectPerformance() {
-        let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
-                               p1: CGPoint(x: 0, y: 2),
-                               p2: CGPoint(x: 1, y: -1))
-        self.measure {
-            // roughly 0.043 -Onone, 0.022 with -Ospeed
-            // if comparing with cubic performance, be sure to note `by` parameter in stride
-            for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
-                _ = q.project(CGPoint(x: cos(theta), y: sin(theta)))
-            }
-        }
-    }
-
 //
 //    func testHull() {
 //    }
@@ -216,6 +204,42 @@ class QuadraticCurveTests: XCTestCase {
             XCTAssertTrue(distance(q1.point(at: intersections[i].t1), expectedResults[i]) < epsilon)
             XCTAssertTrue(distance(q2.point(at: intersections[i].t2), expectedResults[i]) < epsilon)
         }
+    }
+
+    func testIntersectionQuadraticColinearControlPoints() {
+        // this test presents two challenges
+        // 1. if we use implicitization there is a double-root at t=0.75
+        // which can be missed by root finding algorithms.
+        // 2. the numerator and denominator of the inverse equation is zero for any point
+        // that falls on `quadraticWithColinearControlPoints`, which yields NaN
+        let epsilon: CGFloat = 1.0e-5
+        let quadraticWithColinearControlPoints = QuadraticCurve(p0: CGPoint(x: 1, y: 1),
+                                p1: CGPoint(x: 3, y: 3),
+                                p2: CGPoint(x: 2, y: 2))
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
+                                       p1: CGPoint(x: 1, y: 4),
+                                       p2: CGPoint(x: 2, y: 0))
+        let intersections = quadratic.intersections(with: quadraticWithColinearControlPoints, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 1)
+        XCTAssertEqual(intersections[0].t1, 0.75)
+        XCTAssertEqual(intersections[0].t2, 0.13962, accuracy: 1.0e-5)
+    }
+
+    func testIntersectionQuadraticButActuallyLinear() {
+        // this test presents a challenge for an implicitization based approach
+        // if the linearity of the so-called "quadratic" is not detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be found
+        let epsilon: CGFloat = 1.0e-5
+        let quadraticButActuallyLinear = QuadraticCurve(p0: CGPoint(x: 2, y: 1),
+                                                        p1: CGPoint(x: 3, y: 2),
+                                                        p2: CGPoint(x: 4, y: 3))
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
+                                       p1: CGPoint(x: 3.5, y: 5),
+                                       p2: CGPoint(x: 7, y: 0))
+        let intersections = quadratic.intersections(with: quadraticButActuallyLinear, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 1)
+        XCTAssertEqual(intersections[0].t1, 0.5)
+        XCTAssertEqual(intersections[0].t2, 0.75)
     }
 
     // MARK: -

@@ -12,6 +12,7 @@ import XCTest
 class CubicCurveTests: XCTestCase {
 
     override func setUp() {
+        self.continueAfterFailure = false
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
@@ -286,19 +287,6 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(t, 0.0575491, accuracy: epsilon)
     }
 
-    func testProjectPerformance() {
-        let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
-                           p1: CGPoint(x: 3, y: 1),
-                           p2: CGPoint(x: -3, y: 1),
-                           p3: CGPoint(x: 1, y: -1))
-        self.measure {
-            // roughly 0.029 -Onone, 0.004 with -Ospeed
-            for theta in stride(from: 0, to: 2*Double.pi, by: 0.01) {
-                _ = c.project(CGPoint(x: cos(theta), y: sin(theta)))
-            }
-        }
-    }
-
 // TODO: we still have some missing unit tests for CubicCurve's API entry points
 
 //    func testHull() {
@@ -501,6 +489,112 @@ class CubicCurveTests: XCTestCase {
             let i2 = intersections[1]
             XCTAssertTrue(distance(c1.point(at: i2.t1), c2.point(at: i2.t2)) < accuracy)
         }
+    }
+
+    func testBasicTangentIntersection() {
+        let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                            p1: CGPoint(x: 0, y: 3),
+                            p2: CGPoint(x: 6, y: 9),
+                            p3: CGPoint(x: 9, y: 9))
+        let c2 = CubicCurve(p0: CGPoint(x: 9, y: 9),
+                            p1: CGPoint(x: 8, y: 9),
+                            p2: CGPoint(x: 6, y: 7),
+                            p3: CGPoint(x: 6, y: 6))
+        let expectedIntersections = [Intersection(t1: 1, t2: 0)]
+        XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5), expectedIntersections)
+        XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
+    }
+
+    func testRealWorldNearlyCoincidentCurvesIntersection() {
+        // these curves are nearly coincident over from c1's t = 0.278 to 1.0
+        // staying roughly 0.0002 distance of eachother
+        // but they do actually appear to have real interesctions also
+        let c1 = CubicCurve(p0: CGPoint(x: 0.9435597332840757, y: 0.16732142729460975),
+                            p1: CGPoint(x: 0.6459474292317964, y: 0.22174990722896837),
+                            p2: CGPoint(x: 0.3434479689753971, y: 0.2624874219291087),
+                            p3: CGPoint(x: 0.036560070230819974, y: 0.28765861655756453))
+        let c2 = CubicCurve(p0: CGPoint(x: 0.036560070230819974, y: 0.28765861655756453),
+                            p1: CGPoint(x: 0.25665707912767743, y: 0.26960608118315577),
+                            p2: CGPoint(x: 0.4760155370276209, y: 0.24346330678827144),
+                            p3: CGPoint(x: 0.6941905032971079, y: 0.20928332065477662))
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections.count, 2)
+        XCTAssertEqual(intersections[0].t1, 0.73204, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[0].t2, 0.37268, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[1].t1, 1)
+        XCTAssertEqual(intersections[1].t2, 0)
+    }
+
+    func testIntersectionsCubicButActuallyLinear() {
+        // this test presents a challenge for an implicitization based approach
+        // if the linearity of the so-called "cubic" is not detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be found
+        let epsilon: CGFloat = 1.0e-5
+        let cubicButActuallyLinear = CubicCurve(p0: CGPoint(x: 3, y: 2),
+                                                p1: CGPoint(x: 4, y: 3),
+                                                p2: CGPoint(x: 5, y: 4),
+                                                p3: CGPoint(x: 6, y: 5))
+        let cubic = CubicCurve(p0: CGPoint(x: 1, y: 0),
+                               p1: CGPoint(x: 3, y: 6),
+                               p2: CGPoint(x: 5, y: 2),
+                               p3: CGPoint(x: 7, y: 0))
+        let intersections = cubic.intersections(with: cubicButActuallyLinear, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 1)
+        XCTAssertEqual(intersections[0].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(intersections[0].t2, 1.0 / 3.0, accuracy: epsilon)
+    }
+
+    func testIntersectionsCubicButActuallyQuadratic() {
+        // this test presents a challenge for an implicitization based approach
+        // if the quadratic nature of the so-called "cubic" is not detected
+        // the implicit equation will be f(x, y) = 0 and no intersections will be found
+        let epsilon: CGFloat = 1.0e-5
+        let cubicButActuallyQuadratic = CubicCurve(p0: CGPoint(x: 1, y: 1),
+                                                   p1: CGPoint(x: 2, y: 4),
+                                                   p2: CGPoint(x: 3, y: 4),
+                                                   p3: CGPoint(x: 4, y: 1))
+        let cubic = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                               p1: CGPoint(x: 2, y: 4),
+                               p2: CGPoint(x: 4, y: 3),
+                               p3: CGPoint(x: 6, y: 3))
+        let intersections = cubic.intersections(with: cubicButActuallyQuadratic, accuracy: epsilon)
+        XCTAssertEqual(intersections.count, 2)
+        XCTAssertEqual(intersections[0].t1, 0.23607, accuracy: epsilon)
+        XCTAssertEqual(intersections[0].t2, 0.13880, accuracy: epsilon)
+        XCTAssertEqual(intersections[1].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(intersections[1].t2, 2.0 / 3.0, accuracy: epsilon)
+    }
+
+    func testRealWorldPrecisionIssue() {
+        // this issue seems to happen because the implicit equation of c2
+        // says f(x, y) = -8.177[...]e-10 for c1's starting point (instead of zero)
+        // for a t1 = 0.000012060505980311977
+        // the inverse expression says t2 = 1.0000005567957639 which gets rounded back to 1
+        let c1 = CubicCurve(p0: CGPoint(x: 94.9790542640437, y: 96.49280906706511),
+                            p1: CGPoint(x: 94.53950656843848, y: 97.22786538484215),
+                            p2: CGPoint(x: 93.58730187717677, y: 97.46742245525438),
+                            p3: CGPoint(x: 92.85224555939973, y: 97.02787475964917))
+        let c2 = CubicCurve(p0: CGPoint(x: 123.54200084128175, y: 48.71908399606449),
+            p1: CGPoint(x: 114.021065782688, y: 64.64877149606448),
+            p2: CGPoint(x: 104.49998932263745, y: 80.57093406706511),
+            p3: CGPoint(x: 94.9790542640437, y: 96.49280906706511))
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections, [Intersection(t1: 0, t2: 1)])
+    }
+
+    func testRealWorldInversionIssue() {
+        // this issue appears / appeared to occur because the inverse method
+        // was unstable when c2 was downgraded to a cubic with nearly parallel control points
+        let c1 = CubicCurve(p0: CGPoint(x: 314.9306297035616, y: 2211.1494686514056),
+                            p1: CGPoint(x: 315.4305682688995, y: 2211.87791339535),
+                            p2: CGPoint(x: 315.24532741089774, y: 2212.8737148198643),
+                            p3: CGPoint(x: 314.5168826669535, y: 2213.373653385202))
+        let c2 = CubicCurve(p0: CGPoint(x: 314.8254662024578, y: 2210.9959498495646),
+                            p1: CGPoint(x: 314.8606224524578, y: 2211.0472193808146),
+                            p2: CGPoint(x: 314.89544293598345, y: 2211.0981991201556),
+                            p3: CGPoint(x: 314.9306297035616, y: 2211.1494686514056))
+        let intersections = c1.intersections(with: c2, accuracy: 1.0e-4)
+        XCTAssertEqual(intersections, [Intersection(t1: 0, t2: 1)])
     }
 
     func testCubicIntersectsLine() {

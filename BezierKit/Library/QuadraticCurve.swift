@@ -32,6 +32,12 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
     }
 
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        let error = 0.5 * (self.p1 - line.point(at: 0.5)).length
+        return (lineSegment: line, error: error)
+    }
+
     public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {
@@ -116,9 +122,9 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         let h0 = self.p0
         let h1 = self.p1
         let h2 = self.p2
-        let h3 = Utils.lerp(t, h0, h1)
-        let h4 = Utils.lerp(t, h1, h2)
-        let h5 = Utils.lerp(t, h3, h4)
+        let h3 = Utils.linearInterpolate(h0, h1, t)
+        let h4 = Utils.linearInterpolate(h1, h2, t)
+        let h5 = Utils.linearInterpolate(h3, h4, t)
 
         let leftCurve = QuadraticCurve(p0: h0, p1: h3, p2: h5)
         let rightCurve = QuadraticCurve(p0: h5, p1: h4, p2: h2)

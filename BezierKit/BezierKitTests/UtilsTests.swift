@@ -67,7 +67,7 @@ class UtilsTests: XCTestCase {
 //        let r = drootsCubicTestHelper(points[0], points[1], points[2], points[3])
 //        let filtered = r.filter { $0 >= 0 && $0 <= 1 }
 //        XCTAssertEqual(filtered.count, 1)
-//        XCTAssertEqual(filtered.first!, CGFloat(0.00149972), accuracy: 1.0e-4)
+//        XCTAssertEqual(filtered.first!, CGFloat(0.0014849), accuracy: 1.0e-4)
 //    }
 
     func testDrootsCubicWorldIssue3() {
