@@ -196,7 +196,7 @@ extension BezierCurve {
     public func offset(distance d: CGFloat) -> [BezierCurve] {
         // for non-linear curves we need to create a set of curves
         var result: [BezierCurve] = self.reduce().compactMap { $0.curve.scale(distance: d) }
-        ensureContinuous(&result)
+        ensureContinuous(&result, isClosed: false)
         return result
     }
 
@@ -214,15 +214,8 @@ extension BezierCurve {
         return internalOutline(d1: d1, d2: d2)
     }
 
-    private func ensureContinuous(_ curves: inout [BezierCurve]) {
-        for i in 0..<curves.count {
-            if i > 0 {
-                curves[i].startingPoint = curves[i-1].endingPoint
-            }
-            if i < curves.count-1 {
-                curves[i].endingPoint = 0.5 * ( curves[i].endingPoint + curves[i+1].startingPoint )
-            }
-        }
+    private func ensureContinuous(_ curves: inout [BezierCurve], isClosed: Bool) {
+        BezierCurveType.ensureContinuous(&curves, isClosed: isClosed)
     }
 
     private func internalOutline(d1: CGFloat, d2: CGFloat) -> PathComponent {
@@ -230,8 +223,8 @@ extension BezierCurve {
         let length = reduced.count
         var forwardCurves: [BezierCurve] = reduced.compactMap { $0.curve.scale(distance: d1) }
         var backCurves: [BezierCurve] = reduced.compactMap { $0.curve.scale(distance: -d2) }
-        ensureContinuous(&forwardCurves)
-        ensureContinuous(&backCurves)
+        ensureContinuous(&forwardCurves, isClosed: false)
+        ensureContinuous(&backCurves, isClosed: false)
         // reverse the "return" outline
         backCurves = backCurves.reversed().map { $0.reversed() }
         // form the endcaps as lines
@@ -260,6 +253,29 @@ extension BezierCurve {
             shapes.append(shape)
         }
         return shapes
+    }
+}
+
+enum BezierCurveType {
+    static func ensureContinuous(_ curves: inout [BezierCurve], isClosed: Bool) {
+        for i in 0..<curves.count {
+            if i > 0 {
+                curves[i].startingPoint = curves[i-1].endingPoint
+            }
+            if i < curves.count-1 {
+                curves[i].endingPoint = 0.5 * ( curves[i].endingPoint + curves[i+1].startingPoint )
+            }
+        }
+        if isClosed, curves.count > 1 {
+            curves[curves.count - 1].endingPoint = curves[0].startingPoint
+        }
+    }
+}
+extension Array where Element == BezierCurve {
+    public func ensureContinuous(isClosed: Bool) -> [BezierCurve] {
+        var result = Array(self)
+        BezierCurveType.ensureContinuous(&result, isClosed: isClosed)
+        return result
     }
 }
 
