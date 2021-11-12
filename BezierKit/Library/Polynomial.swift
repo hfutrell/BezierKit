@@ -435,7 +435,7 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
     return roots
 }
 
-//internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+// internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
 //    assert(start < end)
 //
 //    var tMin: CGFloat = CGFloat.infinity
@@ -505,4 +505,4 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
 //    return findRoots(of: clippedPolynomial,
 //                     between: adjustedStart,
 //                     and: adjustedEnd)
-//}
+// }

@@ -85,9 +85,20 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return self.lock.sync { self._boundingBox }
     }
 
+    /// the smallest bounding box completely enclosing the points of the path, includings its control points.
+    public var boundingBoxOfPath: BoundingBox {
+        return self.lock.sync { self._boundingBoxOfPath }
+    }
+
     private lazy var _boundingBox: BoundingBox = {
         return self.components.reduce(BoundingBox.empty) {
             BoundingBox(first: $0, second: $1.boundingBox)
+        }
+    }()
+
+    private lazy var _boundingBoxOfPath: BoundingBox = {
+        return self.components.reduce(BoundingBox.empty) {
+            BoundingBox(first: $0, second: $1.boundingBoxOfPath)
         }
     }()
 
@@ -196,6 +207,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         context.completeComponentIfNeededAndClearPointsAndOrders()
         self.init(components: context.components)
     }
+
+    public func apply(info: UnsafeMutableRawPointer?, function: CGPathApplierFunction) {
+        self.components.forEach {
+            $0.apply(info: info, function: function)
+        }
+    }
+
     #endif
 
     convenience public init(curve: BezierCurve) {

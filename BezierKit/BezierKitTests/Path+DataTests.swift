@@ -11,7 +11,7 @@ import XCTest
 
 #if canImport(CoreGraphics)
 
-private struct CGPathElementRecord: Equatable {
+internal struct CGPathElementRecord: Equatable {
     var type: CGPathElementType
     var pointsArray: [CGPoint]
     init(_ pathElement: CGPathElement) {
@@ -33,6 +33,10 @@ private struct CGPathElementRecord: Equatable {
             }
         }()
         self.pointsArray = [CGPoint](UnsafeBufferPointer(start: pathElement.points, count: count))
+    }
+    init(type: CGPathElementType, points: [CGPoint]) {
+        self.type = type
+        self.pointsArray = points
     }
 }
 
@@ -110,6 +114,13 @@ class PathDataTests: XCTestCase {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
         cgPath.addCurve(to: CGPoint(x: 4, y: 5), control1: CGPoint(x: 5, y: 5), control2: CGPoint(x: 6, y: 4))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
+    }
+
+    func testQuadratic() {
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 3, y: 4))
+        cgPath.addQuadCurve(to: CGPoint(x: 4, y: 5), control: CGPoint(x: 3.5, y: 7))
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
