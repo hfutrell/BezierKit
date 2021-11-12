@@ -11,7 +11,7 @@ import XCTest
 
 #if canImport(CoreGraphics)
 
-private struct CGPathElementRecord: Equatable {
+internal struct CGPathElementRecord: Equatable {
     var type: CGPathElementType
     var pointsArray: [CGPoint]
     init(_ pathElement: CGPathElement) {
@@ -33,6 +33,10 @@ private struct CGPathElementRecord: Equatable {
             }
         }()
         self.pointsArray = [CGPoint](UnsafeBufferPointer(start: pathElement.points, count: count))
+    }
+    init(type: CGPathElementType, points: [CGPoint]) {
+        self.type = type
+        self.pointsArray = points
     }
 }
 

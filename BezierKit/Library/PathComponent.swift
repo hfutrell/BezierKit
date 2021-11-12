@@ -120,46 +120,70 @@ import Foundation
 
     #if canImport(CoreGraphics)
 
-    internal func apply(info: UnsafeMutableRawPointer?, function: CGPathApplierFunction) {
+    private func enumerateOrdersAndPoints(_ block: (_ index: Int, _ order: Int, _ points: UnsafeMutablePointer<CGPoint>) -> Void) {
         let numberOfElements = self.numberOfElements
-        let isClosed = self.isClosed
         self.orders.withUnsafeBufferPointer { ordersBuffer in
             self.points.withUnsafeBufferPointer { pointsBuffer in
-
                 var ordersPointer = ordersBuffer.baseAddress!
                 var pointsPointer = UnsafeMutablePointer(mutating: pointsBuffer.baseAddress!)
-
-                var initialMoveTo = CGPathElement(type: .moveToPoint, points: pointsPointer)
-                function(info, &initialMoveTo)
+                block(0, 0, pointsPointer)
                 pointsPointer += 1
-
                 for i in 0..<numberOfElements {
-
-                    let type: CGPathElementType
                     let order = ordersPointer.pointee
-
-                    switch order {
-                    case 0:
-                        continue // do nothing: we already did the move(to:) at the top of the method
-                    case 1:
-                        if i == numberOfElements - 1, isClosed {
-                            type = .closeSubpath
-                        } else {
-                            type = .addLineToPoint
-                        }
-                    case 2:
-                        type = .addQuadCurveToPoint
-                    case 3:
-                        type = .addCurveToPoint
-                    default:
-                        assertionFailureBadCurveOrder(order)
-                        continue
-                    }
-                    var element = CGPathElement(type: type, points: pointsPointer)
-                    function(info, &element)
+                    guard order != 0 else { break }
+                    block(i, order, pointsPointer)
                     pointsPointer += order
                     ordersPointer += 1
                 }
+            }
+        }
+    }
+
+    internal func apply(info: UnsafeMutableRawPointer?, function: CGPathApplierFunction) {
+        let numberOfElements = self.numberOfElements
+        let isClosed = self.isClosed
+        enumerateOrdersAndPoints { i, order, points in
+            let type: CGPathElementType
+            switch order {
+            case 0:
+                type = .moveToPoint
+            case 1:
+                if i == numberOfElements - 1, isClosed {
+                    type = .closeSubpath
+                } else {
+                    type = .addLineToPoint
+                }
+            case 2:
+                type = .addQuadCurveToPoint
+            case 3:
+                type = .addCurveToPoint
+            default:
+                assertionFailureBadCurveOrder(order)
+                return
+            }
+            var element = CGPathElement(type: type, points: points)
+            function(info, &element)
+        }
+    }
+
+    internal func appendPath(to mutablePath: CGMutablePath) {
+        enumerateOrdersAndPoints { i, order, points in
+            switch order {
+            case 0:
+                mutablePath.move(to: points[0])
+            case 1:
+                if i == numberOfElements - 1, isClosed {
+                    mutablePath.closeSubpath()
+                } else {
+                    mutablePath.addLine(to: points[0])
+                }
+            case 2:
+                mutablePath.addQuadCurve(to: points[1], control: points[0])
+            case 3:
+                mutablePath.addCurve(to: points[2], control1: points[0], control2: points[1])
+            default:
+                assertionFailureBadCurveOrder(order)
+                return
             }
         }
     }

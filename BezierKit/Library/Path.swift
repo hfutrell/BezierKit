@@ -69,32 +69,9 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 
     private lazy var _cgPath: CGPath = {
-        func applier(_ info: UnsafeMutableRawPointer?, _ elementPointer: UnsafePointer<CGPathElement>) {
-            guard let info = info else { fatalError("expected info to be non-nil") }
-            let mutablePath = info.assumingMemoryBound(to: CGMutablePath.self).pointee
-            let element = elementPointer.pointee
-            let points = element.points
-            switch element.type {
-            case .moveToPoint:
-                mutablePath.move(to: points[0])
-            case .addLineToPoint:
-                mutablePath.addLine(to: points[0])
-            case .addQuadCurveToPoint:
-                mutablePath.addQuadCurve(to: points[1],
-                                         control: points[0])
-            case .addCurveToPoint:
-                mutablePath.addCurve(to: points[2],
-                                     control1: points[0],
-                                     control2: points[1])
-            case .closeSubpath:
-                mutablePath.closeSubpath()
-            @unknown default:
-                fatalError("unexpected unknown path element type: \(element.type)")
-            }
-        }
-        var mutablePath = CGMutablePath()
-        withUnsafeMutablePointer(to: &mutablePath) { pointer in
-            self.apply(info: pointer, function: applier)
+        let mutablePath = CGMutablePath()
+        self.components.forEach {
+            $0.appendPath(to: mutablePath)
         }
         return mutablePath.copy()!
     }()

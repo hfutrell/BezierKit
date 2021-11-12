@@ -12,6 +12,14 @@ import CoreGraphics
 #endif
 @testable import BezierKit
 
+#if canImport(CoreGraphics)
+private func applierFunction(_ info: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
+    var records = info!.assumingMemoryBound(to: [CGPathElementRecord].self).pointee
+    records.append(CGPathElementRecord(element.pointee))
+    info!.assumingMemoryBound(to: [CGPathElementRecord].self).pointee = records
+}
+#endif
+
 class PathTests: XCTestCase {
 
     override func setUp() {
@@ -826,6 +834,70 @@ class PathTests: XCTestCase {
         expectedPaths.forEach {
             XCTAssert(disjointPaths.contains($0))
         }
+    }
+
+    func testApply() {
+
+        let emptyPath = Path()
+        var records: [CGPathElementRecord] = []
+
+        func clearRecordsAndGetPointer(block: (_: UnsafeMutablePointer<[CGPathElementRecord]>) -> Void) {
+            records.removeAll()
+            withUnsafeMutablePointer(to: &records) { recordsPointer in
+                block(recordsPointer)
+            }
+        }
+
+        // the empty case
+        clearRecordsAndGetPointer { recordsPointer in
+            emptyPath.apply(info: recordsPointer, function: applierFunction)
+        }
+        XCTAssertEqual(records, [])
+
+        // a path component from just a moveTo
+        let pointPathComponent = PathComponent(points: [CGPoint(x: 3, y: 5)], orders: [0])
+        clearRecordsAndGetPointer { recordsPointer in
+            pointPathComponent.apply(info: recordsPointer, function: applierFunction)
+        }
+        XCTAssertEqual(records, [CGPathElementRecord(type: .moveToPoint, points: [CGPoint(x: 3, y: 5)])])
+
+        // a more complex path component
+        let points = [
+            CGPoint(x: -1, y: 2),
+            CGPoint(x: 5, y: -3),
+            CGPoint(x: 3, y: 7),
+            CGPoint(x: -5, y: 2),
+            CGPoint(x: 2, y: 6),
+            CGPoint(x: 1, y: -8),
+            CGPoint(x: -2, y: 1)
+        ]
+        let multiCurveCGPath = CGMutablePath()
+        multiCurveCGPath.move(to: points[0])
+        multiCurveCGPath.addLine(to: points[1])
+        multiCurveCGPath.addQuadCurve(to: points[3], control: points[2])
+        multiCurveCGPath.addCurve(to: points[6], control1: points[4], control2: points[5])
+        multiCurveCGPath.closeSubpath()
+
+        let multiCurvePath = Path(cgPath: multiCurveCGPath)
+        let multiCurvePathComponent = multiCurvePath.components[0]
+
+        let expectedRecords = [
+            CGPathElementRecord(type: .moveToPoint, points: [points[0]]),
+            CGPathElementRecord(type: .addLineToPoint, points: [points[1]]),
+            CGPathElementRecord(type: .addQuadCurveToPoint, points: [points[2], points[3]]),
+            CGPathElementRecord(type: .addCurveToPoint, points: [points[4], points[5], points[6]]),
+            CGPathElementRecord(type: .closeSubpath, points: [])
+        ]
+
+        clearRecordsAndGetPointer { recordsPointer in
+            multiCurvePathComponent.apply(info: recordsPointer, function: applierFunction)
+        }
+        XCTAssertEqual(records, expectedRecords)
+
+        clearRecordsAndGetPointer { recordsPointer in
+            multiCurvePath.apply(info: recordsPointer, function: applierFunction)
+        }
+        XCTAssertEqual(records, expectedRecords)
     }
 
     #endif
