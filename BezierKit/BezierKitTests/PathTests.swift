@@ -296,7 +296,7 @@ class PathTests: XCTestCase {
         let decodedPath: Path?
         if #available(OSX 10.13, iOS 11.0, *) {
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: path, requiringSecureCoding: true) {
-                decodedPath = try? NSKeyedUnarchiver.unarchivedObject(ofClass: Path.self, from: data)
+                decodedPath = try? NSKeyedUnarchiver.unarchivedObject(ofClasses: [Path.self, NSData.self], from: data) as? Path
             } else {
                 decodedPath = nil
             }
@@ -863,7 +863,7 @@ class PathTests: XCTestCase {
         let decodedPath: Path?
         if #available(OSX 10.13, iOS 11.0, *) {
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: path, requiringSecureCoding: true) {
-                decodedPath = try? NSKeyedUnarchiver.unarchivedObject(ofClass: Path.self, from: data)
+                decodedPath = try? NSKeyedUnarchiver.unarchivedObject(ofClasses: [Path.self, NSData.self], from: data) as? Path
             } else {
                 decodedPath = nil
             }
