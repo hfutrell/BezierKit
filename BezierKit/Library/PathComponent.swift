@@ -119,27 +119,47 @@ import Foundation
     }
 
     #if canImport(CoreGraphics)
-    internal func appendPath(to mutablePath: CGMutablePath) {
-        mutablePath.move(to: self.startingPoint)
-        for i in 0..<self.numberOfElements {
-            let order = orders[i]
-            let offset = offsets[i]
-            if i == self.numberOfElements-1, self.isClosed, order == 1 {
-                // special case: if the path ends in a line segment that goes back to the start just emit a closepath
-                mutablePath.closeSubpath()
-                break
-            }
-            switch order {
-            case 0:
-            break // do nothing: we already did the move(to:) at the top of the method
-            case 1:
-                mutablePath.addLine(to: points[offset+1])
-            case 2:
-                mutablePath.addQuadCurve(to: points[offset+2], control: points[offset+1])
-            case 3:
-                mutablePath.addCurve(to: points[offset+3], control1: points[offset+1], control2: points[offset+2])
-            default:
-                fatalError("CGPath does not support curve of order \(order)")
+
+    internal func apply(info: UnsafeMutableRawPointer?, function: CGPathApplierFunction) {
+        let numberOfElements = self.numberOfElements
+        let isClosed = self.isClosed
+        self.orders.withUnsafeBufferPointer { ordersBuffer in
+            self.points.withUnsafeBufferPointer { pointsBuffer in
+
+                var ordersPointer = ordersBuffer.baseAddress!
+                var pointsPointer = UnsafeMutablePointer(mutating: pointsBuffer.baseAddress!)
+
+                var initialMoveTo = CGPathElement(type: .moveToPoint, points: pointsPointer)
+                function(info, &initialMoveTo)
+                pointsPointer += 1
+
+                for i in 0..<numberOfElements {
+
+                    let type: CGPathElementType
+                    let order = ordersPointer.pointee
+
+                    switch order {
+                    case 0:
+                        continue // do nothing: we already did the move(to:) at the top of the method
+                    case 1:
+                        if i == numberOfElements - 1, isClosed {
+                            type = .closeSubpath
+                        } else {
+                            type = .addLineToPoint
+                        }
+                    case 2:
+                        type = .addQuadCurveToPoint
+                    case 3:
+                        type = .addCurveToPoint
+                    default:
+                        assertionFailureBadCurveOrder(order)
+                        continue
+                    }
+                    var element = CGPathElement(type: type, points: pointsPointer)
+                    function(info, &element)
+                    pointsPointer += order
+                    ordersPointer += 1
+                }
             }
         }
     }

@@ -113,6 +113,13 @@ class PathDataTests: XCTestCase {
         XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
     }
 
+    func testQuadratic() {
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 3, y: 4))
+        cgPath.addQuadCurve(to: CGPoint(x: 4, y: 5), control: CGPoint(x: 3.5, y: 7))
+        XCTAssertTrue(pathHasEqualElementsToCGPath(Path(cgPath: cgPath), cgPath))
+    }
+
     func testSingleClosedPathClosePath() {
         let cgPath = CGMutablePath()
         cgPath.move(to: CGPoint(x: 3, y: 4))
