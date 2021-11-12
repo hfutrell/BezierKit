@@ -83,22 +83,36 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertFalse(box1.overlaps(BoundingBox.empty))
     }
 
-    func testUnionEmpty1() {
+    func testUnionBoxEmpty1() {
         var empty1 = BoundingBox.empty
         let empty2 = BoundingBox.empty
         XCTAssertEqual(empty1.union(empty2), BoundingBox.empty)
     }
 
-    func testUnionEmpty2() {
+    func testUnionBoxEmpty2() {
         var empty = BoundingBox.empty
         let box = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
         XCTAssertEqual(empty.union(box), box)
     }
 
-    func testUnion() {
+    func testUnionBox() {
         var box1 = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
         let box2 = BoundingBox(p1: CGPoint(x: 2.5, y: 6.0), p2: CGPoint(x: 3.0, y: 8.0))
         XCTAssertEqual(box1.union(box2), BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 8.0)))
+    }
+
+    func testUnionPointEmpty() {
+        var empty = BoundingBox.empty
+        let point = CGPoint(x: 3, y: 4)
+        XCTAssertEqual(empty.union(point), BoundingBox(p1: point, p2: point))
+    }
+
+    func testUnionPoint() {
+        let box1 = BoundingBox(p1: CGPoint(x: -1, y: -1), p2: CGPoint(x: 3, y: 5))
+        var box2 = box1
+        XCTAssertEqual(box2.union(CGPoint(x: 0, y: -1)), box1)
+        XCTAssertEqual(box2.union(CGPoint(x: -2, y: 0)), BoundingBox(p1: CGPoint(x: -2, y: -1), p2: CGPoint(x: 3, y: 5)))
+        XCTAssertEqual(box2.union(CGPoint(x: 1, y: 7)), BoundingBox(p1: CGPoint(x: -2, y: -1), p2: CGPoint(x: 3, y: 7)))
     }
 
     func testCGRect() {

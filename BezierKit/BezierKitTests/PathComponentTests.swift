@@ -24,6 +24,29 @@ class PathComponentTests: XCTestCase {
         XCTAssertEqual(p.boundingBox, BoundingBox(min: CGPoint(x: 1.0, y: -1.0), max: CGPoint(x: 13.0, y: 5.0))) // just the union of the two bounding boxes
     }
 
+    func testBoundingBoxOfPath() {
+        let point1 = CGPoint(x: 3, y: -2)
+        let pointComponent = PathComponent(points: [point1], orders: [0])
+        XCTAssertEqual(pointComponent.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 3, y: -2), p2: CGPoint(x: 3, y: -2)))
+
+        let line = LineSegment(p0: CGPoint(x: 1, y: 2),
+                               p1: CGPoint(x: 5, y: 3))
+
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 5, y: 3),
+                                       p1: CGPoint(x: 4, y: 4),
+                                       p2: CGPoint(x: 3, y: 6))
+
+        let cubic = CubicCurve(p0: CGPoint(x: 3, y: 6),
+                               p1: CGPoint(x: 2, y: 5),
+                               p2: CGPoint(x: -1, y: 4),
+                               p3: CGPoint(x: 1, y: 2))
+
+        XCTAssertEqual(PathComponent(curve: line).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 5, y: 3)))
+        XCTAssertEqual(PathComponent(curve: quadratic).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 3, y: 3), p2: CGPoint(x: 5, y: 6)))
+        XCTAssertEqual(PathComponent(curve: cubic).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: -1, y: 2), p2: CGPoint(x: 3, y: 6)))
+        XCTAssertEqual(PathComponent(curves: [line, quadratic, cubic]).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: -1, y: 2), p2: CGPoint(x: 5, y: 6)))
+    }
+
     func testOffset() {
         // construct a PathComponent from a split cubic
         let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 2.0, y: 1.0), p2: CGPoint(x: 4.0, y: 0.0))

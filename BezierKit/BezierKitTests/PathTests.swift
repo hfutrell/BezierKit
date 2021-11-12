@@ -830,6 +830,21 @@ class PathTests: XCTestCase {
 
     #endif
 
+    func testBoundingBoxOfPath() {
+        XCTAssertEqual(Path().boundingBoxOfPath, BoundingBox.empty)
+        let quad1 = QuadraticCurve(p0: CGPoint(x: 1, y: 2),
+                                   p1: CGPoint(x: 2, y: 4),
+                                   p2: CGPoint(x: 3, y: 2))
+        let quad2 = QuadraticCurve(p0: CGPoint(x: 3, y: 2),
+                                   p1: CGPoint(x: 2, y: 0),
+                                   p2: CGPoint(x: 1, y: 2))
+        let path1 = Path(curve: quad1)
+        XCTAssertEqual(path1.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 4)))
+        let path2 = Path(components: [PathComponent(curve: quad1),
+                                      PathComponent(curve: quad2)])
+        XCTAssertEqual(path2.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 0), p2: CGPoint(x: 3, y: 4)))
+    }
+
     func testNSCoder() {
         // just some random curves, but we ensure they're continuous
         let l1 = LineSegment(p0: CGPoint(x: 4.9652, y: 8.2774),

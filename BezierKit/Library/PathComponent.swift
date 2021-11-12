@@ -27,6 +27,16 @@ import Foundation
 
     private lazy var _bvh: BoundingBoxHierarchy = BoundingBoxHierarchy(boxes: (0..<self.numberOfElements).map { self.element(at: $0).boundingBox })
 
+    private lazy var _boundingBoxOfPath: BoundingBox = {
+        var boundingBoxOfPath = BoundingBox.empty
+        points.withUnsafeBufferPointer { buffer in
+            for point in buffer {
+                boundingBoxOfPath.union(point)
+            }
+        }
+        return boundingBoxOfPath
+    }()
+
     internal var bvh: BoundingBoxHierarchy {
         return self.lock.sync { self._bvh }
     }
@@ -133,6 +143,7 @@ import Foundation
             }
         }
     }
+
     #endif
 
     required public init(points: [CGPoint], orders: [Int]) {
@@ -183,6 +194,10 @@ import Foundation
 
     public var boundingBox: BoundingBox {
         return self.bvh.boundingBox
+    }
+
+    public var boundingBoxOfPath: BoundingBox {
+        return self.lock.sync { _boundingBoxOfPath }
     }
 
     public var isClosed: Bool {
