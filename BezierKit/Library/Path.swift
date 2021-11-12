@@ -207,6 +207,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         context.completeComponentIfNeededAndClearPointsAndOrders()
         self.init(components: context.components)
     }
+
+    public func apply(info: UnsafeMutableRawPointer?, function: CGPathApplierFunction) {
+        self.components.forEach {
+            $0.apply(info: info, function: function)
+        }
+    }
+
     #endif
 
     convenience public init(curve: BezierCurve) {
