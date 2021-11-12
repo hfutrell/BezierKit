@@ -84,7 +84,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     public var boundingBox: BoundingBox {
         return self.lock.sync { self._boundingBox }
     }
-    
+
     /// the smallest bounding box completely enclosing the points of the path, includings its control points.
     public var boundingBoxOfPath: BoundingBox {
         return self.lock.sync { self._boundingBoxOfPath }
