@@ -523,59 +523,120 @@ import Foundation
         }
     }
 
-    open func split(standardizedRange range: PathComponentRange) -> Self {
+    open func split(standardizedRange range: PathComponentRange, bias: PathComponentBias) -> Self {
         assert(range.isStandardized)
-
         guard !self.isPoint else { return self }
 
-        let start = range.start
-        let end   = range.end
-
-        var resultPoints: [CGPoint] = []
-        var resultOrders: [Int] = []
-
-        func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
+        func splitElement(at index: Int, start: CGFloat, end: CGFloat, includeStart: Bool, includeEnd: Bool) -> (points: [CGPoint], order: Int) {
             assert(includeStart || includeEnd)
-            let element = self.element(at: index).split(from: start, to: end)
+            let element = element(at: index).split(from: start, to: end)
             let startIndex  = includeStart ? 0 : 1
             let endIndex    = includeEnd ? element.order : element.order - 1
-            resultPoints    += element.points[startIndex...endIndex]
-            resultOrders.append(self.orders[index])
+            return (
+                points: Array(element.points[startIndex...endIndex]),
+                order: orders[index]
+            )
         }
-
-        if start.elementIndex == end.elementIndex {
-            // we just need to go from start.t to end.t
-            appendElement(start.elementIndex, start.t, end.t, includeStart: true, includeEnd: true)
-        } else {
+        
+        func splitInner(start: IndexedPathComponentLocation, end: IndexedPathComponentLocation) -> (points: [CGPoint], orders: [Int]) {
+            guard start.elementIndex != end.elementIndex else {
+                // we just need to go from start.t to end.t
+                let (points, order) = splitElement(at: start.elementIndex, start: start.t, end: end.t, includeStart: true, includeEnd: true)
+                return (points, [order])
+            }
+            var resultPoints: [CGPoint] = []
+            var resultOrders: [Int] = []
+            
             // if end.t = 1, append from start.elementIndex+1 through end.elementIndex, otherwise to end.elementIndex
-            let lastFullElementIndex = end.t != 1.0 ? (end.elementIndex-1) : end.elementIndex
-            let firstFullElementIndex = start.t != 0.0 ? (start.elementIndex+1) : start.elementIndex
+            let lastElementIndex = end.t != 1.0 ? (end.elementIndex-1) : end.elementIndex
+            let firstElementIndex = start.t != 0.0 ? (start.elementIndex+1) : start.elementIndex
+            
             // if needed, append start.elementIndex from t=start.t to t=1
-            if firstFullElementIndex != start.elementIndex {
-                appendElement(start.elementIndex, start.t, 1.0, includeStart: true, includeEnd: false)
+            if firstElementIndex != start.elementIndex {
+                let (points, order) = splitElement(at: start.elementIndex, start: start.t, end: 1.0, includeStart: true, includeEnd: false)
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(order)
             }
             // if there exist full elements to copy, use the fast path to get them all in one fell swoop
-            let hasFullElements = firstFullElementIndex <= lastFullElementIndex
+            let hasFullElements = firstElementIndex <= lastElementIndex
             if hasFullElements {
-                resultPoints        += self.points[self.offsets[firstFullElementIndex] ... self.offsets[lastFullElementIndex] + self.orders[lastFullElementIndex]]
-                resultOrders        += self.orders[firstFullElementIndex ... lastFullElementIndex]
+                let points = points[offsets[firstElementIndex] ... offsets[lastElementIndex] + orders[lastElementIndex]]
+                let orders = orders[firstElementIndex ... lastElementIndex]
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(contentsOf: orders)
             }
             // if needed, append from end.elementIndex from t=0, to t=end.t
-            if lastFullElementIndex != end.elementIndex {
-                appendElement(end.elementIndex, 0.0, end.t, includeStart: !hasFullElements, includeEnd: true)
+            if lastElementIndex != end.elementIndex {
+                let (points, order) = splitElement(at: end.elementIndex, start: 0.0, end: end.t, includeStart: !hasFullElements, includeEnd: true)
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(order)
             }
+            return (points: resultPoints, orders: resultOrders)
         }
-        return type(of: self).init(points: resultPoints, orders: resultOrders)
+        
+        func splitOuter(start: IndexedPathComponentLocation, end: IndexedPathComponentLocation) -> (points: [CGPoint], orders: [Int]) {
+            var resultPoints: [CGPoint] = []
+            var resultOrders: [Int] = []
+            
+            // if end.t = 0, append from end.elementIndex+1 through start.elementIndex-1, otherwise from end.elementIndex
+            let lastElementIndex = end.t != 0.0 ? (end.elementIndex+1) : end.elementIndex
+            let firstElementIndex = start.t != 1.0 ? (start.elementIndex-1) : start.elementIndex
+            
+            // if there exist full elements to copy, use the fast path to get them all in one fell swoop
+            let hasFullElementsL = firstElementIndex > 0
+            let hasFullElementsR = lastElementIndex < numberOfElements
+            
+            if lastElementIndex != end.elementIndex { // right splitted curve
+                let includeEndPoint = !(hasFullElementsR || hasFullElementsL)
+                let (points, order) = splitElement(at: end.elementIndex, start: end.t, end: 1.0, includeStart: true, includeEnd: includeEndPoint)
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(order)
+            }
+            if hasFullElementsR {
+                let points = points[offsets[lastElementIndex] ... offsets[numberOfElements - 1] + orders[numberOfElements - 1]]
+                let orders = orders[lastElementIndex ..< numberOfElements]
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(contentsOf: orders)
+            }
+            if hasFullElementsL {
+                let points = points[0 ..< offsets[firstElementIndex] + orders[firstElementIndex] + (hasFullElementsR ? 0 : 1)]
+                let orders = orders[0 ... firstElementIndex]
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(contentsOf: orders)
+            }
+            if firstElementIndex != start.elementIndex { // left splitted curve
+                let (points, order) = splitElement(at: start.elementIndex, start: 0.0, end: start.t, includeStart: false, includeEnd: true)
+                resultPoints.append(contentsOf: points)
+                resultOrders.append(order)
+            }
+            return (points: resultPoints, orders: resultOrders)
+        }
+
+        switch bias {
+        case .inner:
+            let (resultPoints, resultOrders) = splitInner(
+                start: range.start,
+                end: range.end
+            )
+            return type(of: self).init(points: resultPoints, orders: resultOrders)
+
+        case .outer:
+            let (resultPoints, resultOrders) = splitOuter(
+                start: range.start,
+                end: range.end
+            )
+            return type(of: self).init(points: resultPoints, orders: resultOrders)
+        }
     }
 
-    public func split(range: PathComponentRange) -> Self {
+    public func split(range: PathComponentRange, bias: PathComponentBias) -> Self {
         let reverse = range.end < range.start
-        let result = self.split(standardizedRange: range.standardized)
+        let result = self.split(standardizedRange: range.standardized, bias: bias)
         return reverse ? result.reversed() : result
     }
 
-    public func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) -> Self {
-        return self.split(range: PathComponentRange(from: start, to: end))
+    public func split(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation, bias: PathComponentBias = .inner) -> Self {
+        return self.split(range: PathComponentRange(from: start, to: end), bias: bias)
     }
 
     open func reversed() -> Self {
@@ -583,7 +644,7 @@ import Foundation
     }
 
     open func copy(using t: CGAffineTransform) -> Self {
-        return type(of: self).init(points: self.points.map { $0.applying(t) }, orders: self.orders )
+        return type(of: self).init(points: self.points.map { $0.applying(t) }, orders: self.orders)
     }
 }
 
@@ -641,4 +702,9 @@ public struct PathComponentRange: Equatable {
         }
         return PathComponentRange(from: start, to: end)
     }
+}
+
+public enum PathComponentBias: Equatable {
+    case inner
+    case outer
 }
