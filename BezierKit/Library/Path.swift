@@ -102,13 +102,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }()
     
-    private lazy var _hash: Int = {
-        var hasher = Hasher()
-        for component in components {
-            hasher.combine(component)
-        }
-        return hasher.finalize()
-    }()
+    private var _hash: Int?
 
     @objc public let components: [PathComponent]
 
@@ -366,7 +360,16 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 extension Path {
     public override var hash: Int {
         // override is needed because NSObject hashing is independent of Swift's Hashable
-        return _hash
+        if let _hash = _hash { return _hash }
+        return lock.sync {
+            var hasher = Hasher()
+            for component in components {
+                hasher.combine(component)
+            }
+            let h = hasher.finalize()
+            _hash = h
+            return h
+        }
     }
 }
 
