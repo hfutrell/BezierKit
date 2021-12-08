@@ -297,19 +297,22 @@ class PathTests: XCTestCase {
         XCTAssertFalse(path1.isEqual(path2))
         XCTAssertTrue(path1.isEqual(path3))
     }
-    
+
     func testHashing() {
         // two paths that are equal
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
         let path1 = Path(cgPath: CGPath(rect: rect, transform: nil))
         let path2 = Path(cgPath: CGPath(rect: rect, transform: nil))
-        
-        XCTAssert(path1.hash == path2.hash)
-        
+
+        XCTAssertEqual(path1.hash, path2.hash)
+
         // path that is equal should be located in a set
         let path3 = path1.copy(using: CGAffineTransform.identity)
         let set = Set([path1])
         XCTAssert(set.contains(path3))
+
+        // hash values produced from Obj-C hash should match Swift Hashable
+        XCTAssertEqual(path1.hashValue, path2.hashValue)
     }
 
     func testEncodeDecode() {
