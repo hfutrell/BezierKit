@@ -297,6 +297,15 @@ class PathTests: XCTestCase {
         XCTAssertFalse(path1.isEqual(path2))
         XCTAssertTrue(path1.isEqual(path3))
     }
+    
+    func testHashing() {
+        // two paths that are equal
+        let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
+        let path1 = Path(cgPath: CGPath(rect: rect, transform: nil))
+        let path2 = Path(cgPath: CGPath(rect: rect, transform: nil))
+        
+        XCTAssert(path1.hash == path2.hash)
+    }
 
     func testEncodeDecode() {
         let rect = CGRect(origin: CGPoint(x: -1, y: -1), size: CGSize(width: 2, height: 2))
