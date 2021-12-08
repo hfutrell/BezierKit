@@ -101,6 +101,14 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             BoundingBox(first: $0, second: $1.boundingBoxOfPath)
         }
     }()
+    
+    private lazy var _hash: Int = {
+        var hasher = Hasher()
+        for component in components {
+            hasher.combine(component)
+        }
+        return hasher.finalize()
+    }()
 
     @objc public let components: [PathComponent]
 
@@ -352,6 +360,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 @objc extension Path: Reversible {
     public func reversed() -> Self {
         return type(of: self).init(components: self.components.map { $0.reversed() })
+    }
+}
+
+extension Path {
+    public override var hash: Int {
+        // override is needed because NSObject hashing is independent of Swift's Hashable
+        return _hash
     }
 }
 
