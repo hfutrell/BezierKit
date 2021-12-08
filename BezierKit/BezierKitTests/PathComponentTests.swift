@@ -113,7 +113,7 @@ class PathComponentTests: XCTestCase {
     }
     
     func testHashing() {
-        // two paths that are equal
+        // two PathComponents that are equal
         let l1 = LineSegment(p0: p1, p1: p2)
         let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
         let l2 = LineSegment(p0: p4, p1: p5)
@@ -122,6 +122,10 @@ class PathComponentTests: XCTestCase {
         let pathComponent2 = PathComponent(curves: [l1, q1, l2, c1])
                             
         XCTAssert(pathComponent1.hash == pathComponent2.hash)
+        
+        // PathComponent that is equal should be located in a set
+        let set = Set([pathComponent1])
+        XCTAssert(set.contains(pathComponent2))
     }
 
     func testIndexedPathComponentLocation() {

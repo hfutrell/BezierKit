@@ -305,6 +305,11 @@ class PathTests: XCTestCase {
         let path2 = Path(cgPath: CGPath(rect: rect, transform: nil))
         
         XCTAssert(path1.hash == path2.hash)
+        
+        // path that is equal should be located in a set
+        let path3 = path1.copy(using: CGAffineTransform.identity)
+        let set = Set([path1])
+        XCTAssert(set.contains(path3))
     }
 
     func testEncodeDecode() {
