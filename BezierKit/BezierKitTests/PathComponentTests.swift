@@ -121,7 +121,7 @@ class PathComponentTests: XCTestCase {
         let pathComponent1 = PathComponent(curves: [l1, q1, l2, c1])
         let pathComponent2 = PathComponent(curves: [l1, q1, l2, c1])
 
-        XCTAssert(pathComponent1.hash == pathComponent2.hash)
+        XCTAssertEqual(pathComponent1.hash, pathComponent2.hash)
 
         // PathComponent that is equal should be located in a set
         let set = Set([pathComponent1])

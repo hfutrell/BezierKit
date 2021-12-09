@@ -101,7 +101,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
             BoundingBox(first: $0, second: $1.boundingBoxOfPath)
         }
     }()
-    
+
     private var _hash: Int?
 
     @objc public let components: [PathComponent]
@@ -360,8 +360,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 extension Path {
     public override var hash: Int {
         // override is needed because NSObject hashing is independent of Swift's Hashable
-        if let _hash = _hash { return _hash }
         return lock.sync {
+            if let _hash = _hash { return _hash }
             var hasher = Hasher()
             for component in components {
                 hasher.combine(component)

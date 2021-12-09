@@ -26,8 +26,8 @@ import Foundation
     }
 
     private lazy var _bvh: BoundingBoxHierarchy = BoundingBoxHierarchy(boxes: (0..<self.numberOfElements).map { self.element(at: $0).boundingBox })
-    
-    private var _hash: Int? = nil
+
+    private var _hash: Int?
 
     private lazy var _boundingBoxOfPath: BoundingBox = {
         var boundingBoxOfPath = BoundingBox.empty
@@ -415,18 +415,17 @@ import Foundation
         }
         return self.orders == otherPathComponent.orders && self.points == otherPathComponent.points
     }
-    
+
     public override var hash: Int {
         // override is needed because NSObject hashing is independent of Swift's Hashable
-        if let _hash = _hash { return _hash }
         return lock.sync {
+            if let _hash = _hash { return _hash }
             var hasher = Hasher()
-            for order in orders {
-                hasher.combine(order)
+            orders.withUnsafeBytes {
+                hasher.combine(bytes: $0)
             }
-            for point in points {
-                hasher.combine(point.x)
-                hasher.combine(point.y)
+            points.withUnsafeBytes {
+                hasher.combine(bytes: $0)
             }
             let h = hasher.finalize()
             _hash = h
