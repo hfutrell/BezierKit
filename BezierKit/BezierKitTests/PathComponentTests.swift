@@ -112,6 +112,25 @@ class PathComponentTests: XCTestCase {
         XCTAssertFalse(pathComponent1.isEqual(pathComponent3))
     }
 
+    func testHashing() {
+        // two PathComponents that are equal
+        let l1 = LineSegment(p0: p1, p1: p2)
+        let q1 = QuadraticCurve(p0: p2, p1: p3, p2: p4)
+        let l2 = LineSegment(p0: p4, p1: p5)
+        let c1 = CubicCurve(p0: p5, p1: p6, p2: p7, p3: p8)
+        let pathComponent1 = PathComponent(curves: [l1, q1, l2, c1])
+        let pathComponent2 = PathComponent(curves: [l1, q1, l2, c1])
+
+        XCTAssertEqual(pathComponent1.hash, pathComponent2.hash)
+
+        // PathComponent that is equal should be located in a set
+        let set = Set([pathComponent1])
+        XCTAssert(set.contains(pathComponent2))
+
+        // hash values produced from Obj-C hash should match Swift Hashable
+        XCTAssertEqual(pathComponent1.hashValue, pathComponent2.hashValue)
+    }
+
     func testIndexedPathComponentLocation() {
         let location1 = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
         let location2 = IndexedPathComponentLocation(elementIndex: 0, t: 1.0)

@@ -102,6 +102,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
     }()
 
+    private var _hash: Int?
+
     @objc public let components: [PathComponent]
 
     @objc(selfIntersectsWithAccuracy:) public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
@@ -352,6 +354,22 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 @objc extension Path: Reversible {
     public func reversed() -> Self {
         return type(of: self).init(components: self.components.map { $0.reversed() })
+    }
+}
+
+extension Path {
+    public override var hash: Int {
+        // override is needed because NSObject hashing is independent of Swift's Hashable
+        return lock.sync {
+            if let _hash = _hash { return _hash }
+            var hasher = Hasher()
+            for component in components {
+                hasher.combine(component)
+            }
+            let h = hasher.finalize()
+            _hash = h
+            return h
+        }
     }
 }
 
