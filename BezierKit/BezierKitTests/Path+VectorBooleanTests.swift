@@ -9,7 +9,7 @@
 @testable import BezierKit
 import XCTest
 
-private extension Path {
+internal extension Path {
     /// copies the path in such a way that it's impossible that optimizations would allow the copy to share the same underlying storage
     func independentCopy() -> Path {
         return self.copy(using: CGAffineTransform(translationX: 1, y: 0)).copy(using: CGAffineTransform(translationX: -1, y: 0))
@@ -472,36 +472,6 @@ class PathVectorBooleanTests: XCTestCase {
         let result = square.crossingsRemoved()
         XCTAssertEqual(result.components.count, 1)
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], square.components[0]))
-    }
-
-    func testCrossingsRemovedEdgeCase() {
-        // this is an edge cases which caused difficulty in practice
-        // the contour, which intersects at (1,1) creates two squares, one with -1 winding count
-        // the other with +1 winding count
-        // incorrect implementation of this algorithm previously interpretted
-        // the crossing as an entry / exit, which would completely cull off the square with +1 count
-
-        let points = [CGPoint(x: 0, y: 1),
-                      CGPoint(x: 1, y: 1),
-                      CGPoint(x: 2, y: 1),
-                      CGPoint(x: 2, y: 2),
-                      CGPoint(x: 1, y: 2),
-                      CGPoint(x: 1, y: 1),
-                      CGPoint(x: 1, y: 0),
-                      CGPoint(x: 0, y: 0)]
-
-        let cgPath = CGMutablePath()
-        cgPath.addLines(between: points)
-        cgPath.closeSubpath()
-
-        let contour = Path(cgPath: cgPath)
-        XCTAssertEqual(contour.windingCount(CGPoint(x: 0.5, y: 0.5)), -1) // winding count at center of one square region
-        XCTAssertEqual(contour.windingCount(CGPoint(x: 1.5, y: 1.5)), 1) // winding count at center of other square region
-
-        let crossingsRemoved = contour.crossingsRemoved()
-
-        XCTAssertEqual(crossingsRemoved.components.count, 1)
-        XCTAssertTrue(componentsEqualAsideFromElementOrdering(crossingsRemoved.components[0], contour.components[0]))
     }
 
     func testCrossingsRemovedEdgeCaseInnerLoop() {

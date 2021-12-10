@@ -48,8 +48,12 @@ private class Node {
     }
     func mergeNeighbors(of node: Node) {
         node.neighbors.forEach {
-            $0.replaceNeighbor(node, with: self)
-            self.addNeighbor($0)
+            if !$0.neighborsContain(self) {
+                $0.replaceNeighbor(node, with: self)
+            }
+            if !self.neighborsContain($0) {
+                self.addNeighbor($0)
+            }
         }
     }
     /// Nodes can have strong reference cycles either through their neighbors or through their edges, unlinking all nodes when owner no longer holds instance prevents memory leakage
