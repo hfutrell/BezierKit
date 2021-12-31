@@ -666,7 +666,7 @@ public struct IndexedPathComponentLocation: Equatable, Comparable {
 }
 
 public struct PathComponentIntersection {
-    let indexedComponentLocation1, indexedComponentLocation2: IndexedPathComponentLocation
+    public let indexedComponentLocation1, indexedComponentLocation2: IndexedPathComponentLocation
 }
 
 public struct PathComponentRange: Equatable {
