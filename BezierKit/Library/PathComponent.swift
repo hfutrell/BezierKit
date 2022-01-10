@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-@objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
+open class PathComponent: NSObject, Reversible, Transformable {
 
     private let offsets: [Int]
     public let points: [CGPoint]
@@ -45,12 +45,29 @@ import Foundation
     public var numberOfElements: Int {
         return self.orders.count
     }
-
-    @objc public var startingPoint: CGPoint {
+    #if os(WASI)
+        public var startingPoint: CGPoint {
+            return _startingPoint
+        }
+    #else
+        @objc public var startingPoint: CGPoint {
+            return _startingPoint
+        }
+    #endif
+    fileprivate var _startingPoint: CGPoint {
         return self.points[0]
     }
 
-    @objc public var endingPoint: CGPoint {
+    #if os(WASI)
+        public var endingPoint: CGPoint {
+                return _endingPoint
+        }
+    #else
+        @objc public var endingPoint: CGPoint {
+            return _endingPoint
+        }
+    #endif
+    fileprivate var _endingPoint: CGPoint {
         return self.points.last!
     }
 
@@ -507,8 +524,18 @@ import Foundation
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
     }
+    
+    #if os(WASI)
+        public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+            return _enumeratePoints(includeControlPoints: includeControlPoints, using: block)
+        }
+    #else
+        @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+            return _enumeratePoints(includeControlPoints: includeControlPoints, using: block)
+        }
+    #endif
 
-    @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+    fileprivate func _enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
         if includeControlPoints {
             for p in points {
                 block(p)
@@ -586,6 +613,10 @@ import Foundation
         return type(of: self).init(points: self.points.map { $0.applying(t) }, orders: self.orders )
     }
 }
+
+#if !os(WASI)
+@objc(BezierKitPathComponent) extension PathComponent { }
+#endif
 
 public struct IndexedPathComponentLocation: Equatable, Comparable {
     public let elementIndex: Int

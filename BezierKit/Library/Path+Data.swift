@@ -6,6 +6,8 @@
 //  Copyright © 2019 Holmes Futrell. All rights reserved.
 //
 
+#if !os(WASI)
+
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -146,3 +148,4 @@ private struct SerializationTypes {
         return result
     }
 }
+#endif
