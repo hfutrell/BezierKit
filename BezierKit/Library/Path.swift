@@ -436,6 +436,22 @@ open class Path: NSObject, NSSecureCoding {
         }
         return outerComponents.values.map { Path(components: $0) }
     }
+
+    #if !os(WASI)
+    public override var hash: Int {
+        // override is needed because NSObject hashing is independent of Swift's Hashable
+        return lock.sync {
+            if let _hash = _hash { return _hash }
+            var hasher = Hasher()
+            for component in components {
+                hasher.combine(component)
+            }
+            let h = hasher.finalize()
+            _hash = h
+            return h
+        }
+    }
+    #endif
 }
 
 #if !os(WASI)
@@ -469,24 +485,6 @@ fileprivate extension Path {
         return type(of: self).init(components: self.components.map { $0.reversed() })
     }
 }
-
-#if !os(WASI)
-extension Path {
-    public override var hash: Int {
-        // override is needed because NSObject hashing is independent of Swift's Hashable
-        return lock.sync {
-            if let _hash = _hash { return _hash }
-            var hasher = Hasher()
-            for component in components {
-                hasher.combine(component)
-            }
-            let h = hasher.finalize()
-            _hash = h
-            return h
-        }
-    }
-}
-#endif
 
 public struct IndexedPathLocation: Equatable, Comparable {
     public let componentIndex: Int

@@ -8,6 +8,9 @@
 
 @testable import BezierKit
 import XCTest
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 
 #if !os(WASI)
 private extension Path {
