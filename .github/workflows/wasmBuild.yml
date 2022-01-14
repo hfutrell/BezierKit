@@ -4,12 +4,10 @@ jobs:
   test:
     name: BezierKit WASM support
     runs-on: ubuntu-latest
+    container: ghcr.io/swiftwasm/carton:0.12.1
+
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Install dependencies
-      run: docker pull ghcr.io/swiftwasm/carton:0.12.1 
+
     - name: Test
-      run: docker run -v `pwd`:`pwd` -w `pwd` ghcr.io/swiftwasm/carton:latest /bin/sh -c 'carton test'
-    
+      run: carton test
