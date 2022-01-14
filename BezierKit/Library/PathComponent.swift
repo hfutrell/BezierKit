@@ -45,29 +45,21 @@ open class PathComponent: NSObject, Reversible, Transformable {
     public var numberOfElements: Int {
         return self.orders.count
     }
-    #if os(WASI)
-        public var startingPoint: CGPoint {
-            return _startingPoint
-        }
-    #else
-        @objc public var startingPoint: CGPoint {
-            return _startingPoint
-        }
+    #if !os(WASI)
+    @objc(startingPoint) public var _startingPoint: CGPoint {
+        return startingPoint
+    }
     #endif
-    fileprivate var _startingPoint: CGPoint {
+    public var startingPoint: CGPoint {
         return self.points[0]
     }
 
-    #if os(WASI)
-        public var endingPoint: CGPoint {
-                return _endingPoint
-        }
-    #else
-        @objc public var endingPoint: CGPoint {
-            return _endingPoint
-        }
+    #if !os(WASI)
+    @objc(endingPoint) public var _endingPoint: CGPoint {
+        return endingPoint
+    }
     #endif
-    fileprivate var _endingPoint: CGPoint {
+    public var endingPoint: CGPoint {
         return self.points.last!
     }
 
@@ -525,17 +517,13 @@ open class PathComponent: NSObject, Reversible, Transformable {
         return windingCountImpliesContainment(windingCount, using: rule)
     }
     
-    #if os(WASI)
-        public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
-            return _enumeratePoints(includeControlPoints: includeControlPoints, using: block)
-        }
-    #else
-        @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
-            return _enumeratePoints(includeControlPoints: includeControlPoints, using: block)
-        }
+    #if !os(WASI)
+    @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func _enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+        return enumeratePoints(includeControlPoints: includeControlPoints, using: block)
+    }
     #endif
 
-    fileprivate func _enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+    public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
         if includeControlPoints {
             for p in points {
                 block(p)
