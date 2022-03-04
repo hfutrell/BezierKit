@@ -8,6 +8,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
+    # Carton is not able to find our tests if LinuxMain.swift file is defined
+    - name: Remove LinuxMain.swift file
+      run: rm BezierKit/LinuxMain.swift
 
     - name: Test
       run: carton test
