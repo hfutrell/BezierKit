@@ -184,7 +184,7 @@ open class Path: NSObject, NSSecureCoding {
     @objc public convenience override init() {
         self.init(components: [])
     }
-    
+
     @objc required public init(components: [PathComponent]) {
         self.components = components
     }
@@ -270,7 +270,7 @@ open class Path: NSObject, NSSecureCoding {
     public static var supportsSecureCoding: Bool {
         return true
     }
-    
+
     #if !os(WASI)
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.data)
@@ -442,7 +442,6 @@ extension Path: Reversible { }
 #else
 @objc extension Path: Reversible { }
 #endif
-
 
 public struct IndexedPathLocation: Equatable, Comparable {
     public let componentIndex: Int

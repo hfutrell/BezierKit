@@ -516,7 +516,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
         let windingCount = self.windingCount(at: point)
         return windingCountImpliesContainment(windingCount, using: rule)
     }
-    
+
     #if !os(WASI)
     @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func _enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
         return enumeratePoints(includeControlPoints: includeControlPoints, using: block)

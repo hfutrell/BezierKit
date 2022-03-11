@@ -51,7 +51,7 @@ public extension Path {
     #if !os(WASI)
     @objc(point:isWithinDistanceOfBoundary:) func _pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
         return pointIsWithinDistanceOfBoundary(point, distance: distance)
-    }    
+    }
     #endif
 
     func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {

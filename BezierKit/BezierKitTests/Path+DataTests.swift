@@ -195,7 +195,7 @@ class PathDataTests: XCTestCase {
     }
 
     #endif
-    
+
     #if !os(WASI)
     func testEmptyData() {
         let path = Path(data: Data())
@@ -208,7 +208,7 @@ class PathDataTests: XCTestCase {
     }()
 
     let expectedSimpleRectangleData = Data(base64Encoded: "JbPlSAUAAAAAAQEBAQAAAAAAAPA/AAAAAAAAAEAAAAAAAAAQQAAAAAAAAABAAAAAAAAAEEAAAAAAAAAYQAAAAAAAAPA/AAAAAAAAGEAAAAAAAADwPwAAAAAAAABA")!
-    
+
     #if !os(WASI)
     func testSimpleRectangle() {
         XCTAssertEqual(simpleRectangle.data, expectedSimpleRectangleData)
