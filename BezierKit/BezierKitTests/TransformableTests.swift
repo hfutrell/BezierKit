@@ -9,6 +9,7 @@
 import XCTest
 @testable import BezierKit
 
+#if canImport(CoreGraphics)
 class TransformableTests: XCTestCase {
 
     // rotates by 90 degrees ccw and then shifts (-1, 1)
@@ -82,3 +83,4 @@ class TransformableTests: XCTestCase {
     }
 
 }
+#endif

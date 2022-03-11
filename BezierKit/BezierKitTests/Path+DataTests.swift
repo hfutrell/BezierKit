@@ -195,18 +195,21 @@ class PathDataTests: XCTestCase {
     }
 
     #endif
-
+    
+    #if !os(WASI)
     func testEmptyData() {
         let path = Path(data: Data())
         XCTAssertEqual(path, nil)
     }
+    #endif
 
     let simpleRectangle = {
         Path(rect: CGRect(x: 1, y: 2, width: 3, height: 4))
     }()
 
     let expectedSimpleRectangleData = Data(base64Encoded: "JbPlSAUAAAAAAQEBAQAAAAAAAPA/AAAAAAAAAEAAAAAAAAAQQAAAAAAAAABAAAAAAAAAEEAAAAAAAAAYQAAAAAAAAPA/AAAAAAAAGEAAAAAAAADwPwAAAAAAAABA")!
-
+    
+    #if !os(WASI)
     func testSimpleRectangle() {
         XCTAssertEqual(simpleRectangle.data, expectedSimpleRectangleData)
     }
@@ -236,4 +239,5 @@ class PathDataTests: XCTestCase {
         let corruptData6 = data[0..<10] // commands cut off
         XCTAssertEqual(Path(data: corruptData6), nil)
     }
+    #endif
 }

@@ -47,7 +47,14 @@ public extension Path {
     func project(_ point: CGPoint) -> (point: CGPoint, location: IndexedPathLocation)? {
         return self.searchForClosestLocation(to: point, maximumDistance: .infinity, requireBest: true)
     }
-    @objc(point:isWithinDistanceOfBoundary:) func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
+
+    #if !os(WASI)
+    @objc(point:isWithinDistanceOfBoundary:) func _pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
+        return pointIsWithinDistanceOfBoundary(point, distance: distance)
+    }    
+    #endif
+
+    func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
         return self.searchForClosestLocation(to: point, maximumDistance: distance, requireBest: false) != nil
     }
 }
@@ -104,7 +111,14 @@ public extension PathComponent {
         }
         return result
     }
-    @objc(point:isWithinDistanceOfBoundary:) func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
+
+    #if !os(WASI)
+    @objc(point:isWithinDistanceOfBoundary:) func _pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
+        return pointIsWithinDistanceOfBoundary(point, distance: distance)
+    }
+    #endif
+
+    func pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
         return self.searchForClosestLocation(to: point, maximumDistance: distance, requireBest: false) != nil
     }
 }

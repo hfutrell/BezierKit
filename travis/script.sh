@@ -16,6 +16,10 @@ if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
   		pod spec lint;
     fi
 elif [[ $TRAVIS_OS_NAME = 'linux' ]]; then
- 	export PATH="${PWD}/${SWIFT_VERSION}-ubuntu18.04/usr/bin:${PATH}"
-	swift test --enable-test-discovery
+	if [[ $TRAVIS_JOB_NAME = 'WebAssembly' ]]; then
+    	docker run -v `pwd`:`pwd` -w `pwd` ghcr.io/swiftwasm/carton:latest /bin/sh -c 'carton test'
+  	else
+		export PATH="${PWD}/${SWIFT_VERSION}-ubuntu18.04/usr/bin:${PATH}"
+		swift test --enable-test-discovery
+	fi
 fi

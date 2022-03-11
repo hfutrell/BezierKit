@@ -21,7 +21,7 @@ private extension Array {
 }
 
 @objc(BezierKitPathFillRule) public enum PathFillRule: NSInteger {
-    case winding=0, evenOdd
+        case winding=0, evenOdd
 }
 
 internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillRule) -> Bool {
@@ -33,7 +33,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-@objc(BezierKitPath) open class Path: NSObject, NSSecureCoding {
+open class Path: NSObject, NSSecureCoding {
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
@@ -77,7 +77,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }()
     #endif
 
-    @objc public var isEmpty: Bool {
+    #if !os(WASI)
+    @objc(isEmpty) public var _isEmpty: Bool {
+        return isEmpty
+    }
+    #endif
+
+    public var isEmpty: Bool {
         return self.components.isEmpty // components are not allowed to be empty
     }
 
@@ -104,9 +110,19 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
     private var _hash: Int?
 
+    #if os(WASI)
+    public let components: [PathComponent]
+    #else
     @objc public let components: [PathComponent]
+    #endif
 
-    @objc(selfIntersectsWithAccuracy:) public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    #if !os(WASI)
+    @objc(selfIntersectsWithAccuracy:) public func _selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+        return selfIntersects(accuracy: accuracy)
+    }
+    #endif
+
+    public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.selfIntersections(accuracy: accuracy).isEmpty
     }
 
@@ -127,7 +143,13 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return intersections
     }
 
-    @objc(intersectsPath:accuracy:) public func intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    #if !os(WASI)
+    @objc(intersectsPath:accuracy:) public func _intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+        return intersects(other, accuracy: accuracy)
+    }
+    #endif
+
+    public func intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.intersections(with: other, accuracy: accuracy).isEmpty
     }
 
@@ -150,13 +172,23 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return intersections
     }
 
-    @objc public convenience override init() {
+    #if os(WASI)
+    public convenience override init() {
         self.init(components: [])
     }
 
+    required public init(components: [PathComponent]) {
+        self.components = components
+    }
+    #else
+    @objc public convenience override init() {
+        self.init(components: [])
+    }
+    
     @objc required public init(components: [PathComponent]) {
         self.components = components
     }
+    #endif
 
     #if canImport(CoreGraphics)
     @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
@@ -238,7 +270,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     public static var supportsSecureCoding: Bool {
         return true
     }
-
+    
+    #if !os(WASI)
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.data)
     }
@@ -247,6 +280,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         guard let data = aDecoder.decodeData() else { return nil }
         self.init(data: data)
     }
+    #endif
 
     // MARK: -
 
@@ -288,12 +322,24 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return windingCount
     }
 
-    @objc(containsPoint:usingRule:) public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+    #if !os(WASI)
+    @objc(containsPoint:usingRule:) public func _contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
+        return contains(point, using: rule)
+    }
+    #endif
+
+    public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let count = self.windingCount(point)
         return windingCountImpliesContainment(count, using: rule)
     }
 
-    @objc(containsPath:usingRule:accuracy:) public func contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    #if !os(WASI)
+    @objc(containsPath:usingRule:accuracy:) public func _contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+        return contains(other, using: rule, accuracy: accuracy)
+    }
+    #endif
+
+    public func contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         // first, check that each component of `other` starts inside self
         for component in other.components {
             let p = component.startingPoint
@@ -307,13 +353,25 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         return !self.intersects(other, accuracy: accuracy)
     }
 
-    @objc(offsetWithDistance:) public func offset(distance d: CGFloat) -> Path {
+    #if !os(WASI)
+    @objc(offsetWithDistance:) public func _offset(distance d: CGFloat) -> Path {
+        return offset(distance: d)
+    }
+    #endif
+
+    public func offset(distance d: CGFloat) -> Path {
         return Path(components: self.components.compactMap {
             $0.offset(distance: d)
         })
     }
 
-    @objc public func disjointComponents() -> [Path] {
+    #if !os(WASI)
+    @objc public func _disjointComponents() -> [Path] {
+        return disjointComponents()
+    }
+    #endif
+
+    public func disjointComponents() -> [Path] {
         let rule: PathFillRule = .evenOdd
         var outerComponents: [PathComponent: [PathComponent]] = [:]
         var innerComponents: [PathComponent] = []
@@ -343,21 +401,8 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
         }
         return outerComponents.values.map { Path(components: $0) }
     }
-}
 
-@objc extension Path: Transformable {
-    @objc(copyUsingTransform:) public func copy(using t: CGAffineTransform) -> Self {
-        return type(of: self).init(components: self.components.map { $0.copy(using: t)})
-    }
-}
-
-@objc extension Path: Reversible {
-    public func reversed() -> Self {
-        return type(of: self).init(components: self.components.map { $0.reversed() })
-    }
-}
-
-extension Path {
+    #if !os(WASI)
     public override var hash: Int {
         // override is needed because NSObject hashing is independent of Swift's Hashable
         return lock.sync {
@@ -371,7 +416,33 @@ extension Path {
             return h
         }
     }
+    #endif
 }
+
+#if !os(WASI)
+@objc(BezierKitPath) extension Path { }
+#endif
+
+#if canImport(CoreGraphics)
+@objc extension Path: Transformable {
+    public func copy(using t: CGAffineTransform) -> Self {
+        return type(of: self).init(components: self.components.map { $0.copy(using: t)})
+    }
+}
+#endif
+
+extension Path {
+    public func reversed() -> Self {
+        return type(of: self).init(components: self.components.map { $0.reversed() })
+    }
+}
+
+#if os(WASI)
+extension Path: Reversible { }
+#else
+@objc extension Path: Reversible { }
+#endif
+
 
 public struct IndexedPathLocation: Equatable, Comparable {
     public let componentIndex: Int

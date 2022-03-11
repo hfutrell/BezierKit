@@ -1,0 +1,17 @@
+name: WebAssmelby build
+on: [push, pull_request]
+jobs:
+  test:
+    name: BezierKit WASM support
+    runs-on: ubuntu-latest
+    container: ghcr.io/swiftwasm/carton:0.12.1
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    # Carton is not able to find our tests if LinuxMain.swift file is defined
+    - name: Remove LinuxMain.swift file
+      run: rm BezierKit/LinuxMain.swift
+
+    - name: Test
+      run: carton test

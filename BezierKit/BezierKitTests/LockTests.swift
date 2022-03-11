@@ -9,6 +9,7 @@
 import XCTest
 @testable import BezierKit
 
+#if !os(WASI)
 class LockTests: XCTestCase {
     func testPathPropertyAtomicity() {
         // ensure that lazy properties of Path are only initialized once
@@ -53,3 +54,4 @@ class LockTests: XCTestCase {
         XCTAssertTrue(boundingBoxes.values.allSatisfy { $0 == expectedBoundingBox })
     }
 }
+#endif
