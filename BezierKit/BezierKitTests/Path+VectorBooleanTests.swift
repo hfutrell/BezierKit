@@ -795,5 +795,3 @@ class PathVectorBooleanTests: XCTestCase {
 
     #endif
 }
-
-#endif
