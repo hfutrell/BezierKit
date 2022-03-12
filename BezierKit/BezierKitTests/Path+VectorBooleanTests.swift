@@ -12,13 +12,14 @@ import XCTest
 import CoreGraphics
 #endif
 
-#if !os(WASI)
+#if canImport(CoreGraphics)
 private extension Path {
     /// copies the path in such a way that it's impossible that optimizations would allow the copy to share the same underlying storage
     func independentCopy() -> Path {
         return self.copy(using: CGAffineTransform(translationX: 1, y: 0)).copy(using: CGAffineTransform(translationX: -1, y: 0))
     }
 }
+#endif
 
 class PathVectorBooleanTests: XCTestCase {
 
@@ -140,14 +141,14 @@ class PathVectorBooleanTests: XCTestCase {
         )
     }
 
+    #if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
+    
     func testUnionSelf() {
         let square = createSquare1()
         let copy = square.independentCopy()
         XCTAssertEqual(square.union(square), square)
         XCTAssertEqual(square.union(copy), square)
     }
-
-    #if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
 
     func testUnionCoincidentEdges1() {
         // a simple test of union'ing two squares where the max/min x edge are coincident
@@ -356,6 +357,8 @@ class PathVectorBooleanTests: XCTestCase {
         )
     }
 
+    #if canImport(CoreGraphics)
+
     func testIntersectingSelf() {
         let square = createSquare1()
         XCTAssertEqual(square.intersect(square), square)
@@ -368,9 +371,7 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertEqual(square.subtract(square), expectedResult)
         XCTAssertEqual(square.subtract(square.independentCopy()), expectedResult)
     }
-
-    #if canImport(CoreGraphics)
-
+    
     func testSubtractingWindingDirection() {
         // this is a specific test of `subtracting` to ensure that when a component creates a "hole"
         // the order of the hole is reversed so that it is not contained in the shape when using .winding fill rule
