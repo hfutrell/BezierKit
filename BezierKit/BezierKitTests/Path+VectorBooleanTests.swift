@@ -367,7 +367,7 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertEqual(square.subtract(square), expectedResult)
         XCTAssertEqual(square.subtract(square.independentCopy()), expectedResult)
     }
-    
+
     #if canImport(CoreGraphics)
 
     func testSubtractingWindingDirection() {
