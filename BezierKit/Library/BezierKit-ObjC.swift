@@ -34,13 +34,13 @@ import Foundation
         return intersects(other, accuracy: accuracy)
     }
 
-    @objc(initWithComponents:) convenience init(_objc_components components: [PathComponent]) {
-        self.init(components: components)
+    @objc(initWithComponents:) convenience init(_objc_components: [PathComponent]) {
+        self.init(components: _objc_components)
     }
 
     #if canImport(CoreGraphics)
-    @objc(initWithCGPath:) convenience init(_objc_cgPath cgPath: CGPath) {
-        self.init(cgPath: cgPath)
+    @objc(initWithCGPath:) convenience init(_objc_cgPath: CGPath) {
+        self.init(cgPath: _objc_cgPath)
     }
     #endif
 
@@ -85,8 +85,8 @@ public extension Path {
 // MARK: Path+Data.swift
 @available (*, unavailable)
 public extension Path {
-    @objc(initWithData:) convenience init?(_objc_data data: Data) {
-        self.init(data: data)
+    @objc(initWithData:) convenience init?(_objc_data: Data) {
+        self.init(data: _objc_data)
     }
 }
 
