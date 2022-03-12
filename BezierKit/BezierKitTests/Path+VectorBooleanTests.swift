@@ -7,19 +7,17 @@
 //
 
 @testable import BezierKit
-import XCTest
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
+import XCTest
 
-#if canImport(CoreGraphics)
 private extension Path {
     /// copies the path in such a way that it's impossible that optimizations would allow the copy to share the same underlying storage
     func independentCopy() -> Path {
         return self.copy(using: CGAffineTransform(translationX: 1, y: 0)).copy(using: CGAffineTransform(translationX: -1, y: 0))
     }
 }
-#endif
 
 class PathVectorBooleanTests: XCTestCase {
 
@@ -142,7 +140,7 @@ class PathVectorBooleanTests: XCTestCase {
     }
 
     #if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
-    
+
     func testUnionSelf() {
         let square = createSquare1()
         let copy = square.independentCopy()
@@ -371,7 +369,7 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertEqual(square.subtract(square), expectedResult)
         XCTAssertEqual(square.subtract(square.independentCopy()), expectedResult)
     }
-    
+
     func testSubtractingWindingDirection() {
         // this is a specific test of `subtracting` to ensure that when a component creates a "hole"
         // the order of the hole is reversed so that it is not contained in the shape when using .winding fill rule
