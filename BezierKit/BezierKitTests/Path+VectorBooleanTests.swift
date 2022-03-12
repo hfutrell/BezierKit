@@ -139,14 +139,14 @@ class PathVectorBooleanTests: XCTestCase {
         )
     }
 
-    #if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
-
     func testUnionSelf() {
         let square = createSquare1()
         let copy = square.independentCopy()
         XCTAssertEqual(square.union(square), square)
         XCTAssertEqual(square.union(copy), square)
     }
+
+    #if canImport(CoreGraphics) // many of these tests rely on CGPath to build the test Paths
 
     func testUnionCoincidentEdges1() {
         // a simple test of union'ing two squares where the max/min x edge are coincident
