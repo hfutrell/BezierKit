@@ -7,10 +7,10 @@
 //
 
 @testable import BezierKit
-import XCTest
 #if canImport(CoreGraphics)
 import CoreGraphics
 #endif
+import XCTest
 
 private extension Path {
     /// copies the path in such a way that it's impossible that optimizations would allow the copy to share the same underlying storage
