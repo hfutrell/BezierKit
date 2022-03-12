@@ -6,6 +6,8 @@
 //  Copyright © 2019 Holmes Futrell. All rights reserved.
 //
 
+#if !os(WASI)
+
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -49,14 +51,14 @@ private struct SerializationTypes {
     typealias Coordinate    = Float64
 }
 
-@objc public extension Path {
+public extension Path {
 
     private struct SerializationConstants {
         static let magicNumberVersion1: SerializationTypes.MagicNumber = 1223013157 // just a random number that helps us identify if the data is OK and saved in compatible version
         static let startComponentCommand: SerializationTypes.Command = 0
     }
 
-    @objc(initWithData:) convenience init?(data: Data) {
+    convenience init?(data: Data) {
 
         var components: [PathComponent] = []
 
@@ -146,3 +148,4 @@ private struct SerializationTypes {
         return result
     }
 }
+#endif

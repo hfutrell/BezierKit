@@ -1,6 +1,5 @@
 # BezierKit
 
-[![Build Status](https://travis-ci.org/hfutrell/BezierKit.svg?branch=master)](https://travis-ci.org/hfutrell/BezierKit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/hfutrell/BezierKit/branch/master/graph/badge.svg)](https://codecov.io/gh/hfutrell/BezierKit)
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/BezierKit.svg)](https://img.shields.io/cocoapods/v/BezierKit.svg)
@@ -45,7 +44,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.13.0'
+    pod 'BezierKit', '>= 0.14.0'
 end
 ```
 
@@ -67,7 +66,7 @@ import PackageDescription
 let package = Package(
     name: "<Your Target Name>",
     dependencies: [
-        .package(url: "https://github.com/hfutrell/BezierKit.git", from: "0.13.0"),
+        .package(url: "https://github.com/hfutrell/BezierKit.git", from: "0.14.0"),
     ]
 )
 ```

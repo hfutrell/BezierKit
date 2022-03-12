@@ -7,6 +7,9 @@
 //
 
 @testable import BezierKit
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
 import XCTest
 
 private extension Path {

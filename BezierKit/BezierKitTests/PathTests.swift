@@ -934,6 +934,7 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path2.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 0), p2: CGPoint(x: 3, y: 4)))
     }
 
+    #if !os(WASI)
     func testNSCoder() {
         // just some random curves, but we ensure they're continuous
         let l1 = LineSegment(p0: CGPoint(x: 4.9652, y: 8.2774),
@@ -963,6 +964,7 @@ class PathTests: XCTestCase {
         }
         XCTAssertEqual(path, decodedPath)
     }
+    #endif
 
     func testIndexedPathLocation() {
         let location1 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.5)
