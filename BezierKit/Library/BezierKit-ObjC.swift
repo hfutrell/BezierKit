@@ -16,7 +16,7 @@ import Foundation
 
 // MARK: Path.swift
 @available (*, unavailable)
-@objc(BezierKitPath) public extension Path {
+@objc public extension Path {
 
     @objc(isEmpty) var _objc_isEmpty: Bool {
         return isEmpty
@@ -107,7 +107,7 @@ public extension PathComponent {
 
 // MARK: PathComponent.swift
 @available(*, unavailable)
-@objc(BezierKitPathComponent) public extension PathComponent {
+public extension PathComponent {
     @objc(startingPoint) var _objc_startingPoint: CGPoint {
         return startingPoint
     }
