@@ -355,8 +355,6 @@ class PathVectorBooleanTests: XCTestCase {
         )
     }
 
-    #if canImport(CoreGraphics)
-
     func testIntersectingSelf() {
         let square = createSquare1()
         XCTAssertEqual(square.intersect(square), square)
@@ -369,6 +367,8 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertEqual(square.subtract(square), expectedResult)
         XCTAssertEqual(square.subtract(square.independentCopy()), expectedResult)
     }
+    
+    #if canImport(CoreGraphics)
 
     func testSubtractingWindingDirection() {
         // this is a specific test of `subtracting` to ensure that when a component creates a "hole"
