@@ -1,4 +1,4 @@
-name: WebAssmelby build
+name: WebAssembly build
 on: [push, pull_request]
 jobs:
   test:
