@@ -369,11 +369,13 @@ open class Path: NSObject, NSSecureCoding {
     #endif
 }
 
+#if canImport(CoreGraphics)
 extension Path: Transformable {
     public func copy(using t: CGAffineTransform) -> Self {
         return type(of: self).init(components: self.components.map { $0.copy(using: t)})
     }
 }
+#endif
 
 extension Path: Reversible {
     public func reversed() -> Self {
