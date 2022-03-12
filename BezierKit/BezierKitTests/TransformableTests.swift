@@ -9,7 +9,6 @@
 import XCTest
 @testable import BezierKit
 
-#if canImport(CoreGraphics)
 class TransformableTests: XCTestCase {
 
     // rotates by 90 degrees ccw and then shifts (-1, 1)
@@ -38,8 +37,8 @@ class TransformableTests: XCTestCase {
                                      p1: CGPoint(x: 3, y: 1),
                                      p2: CGPoint(x: 7, y: -1))
         XCTAssertEqual(q.copy(using: transform), QuadraticCurve(p0: CGPoint(x: 0, y: 0),
-                                                                      p1: CGPoint(x: -2, y: 4),
-                                                                      p2: CGPoint(x: 0, y: 8)))
+                                                                p1: CGPoint(x: -2, y: 4),
+                                                                p2: CGPoint(x: 0, y: 8)))
     }
 
     func testTransformCubicCurve() {
@@ -48,9 +47,9 @@ class TransformableTests: XCTestCase {
                                  p2: CGPoint(x: 7, y: -1),
                                  p3: CGPoint(x: 8, y: 0))
         XCTAssertEqual(c.copy(using: transform), CubicCurve(p0: CGPoint(x: 0, y: 0),
-                                                                  p1: CGPoint(x: -2, y: 4),
-                                                                  p2: CGPoint(x: 0, y: 8),
-                                                                  p3: CGPoint(x: -1, y: 9)))
+                                                            p1: CGPoint(x: -2, y: 4),
+                                                            p2: CGPoint(x: 0, y: 8),
+                                                            p3: CGPoint(x: -1, y: 9)))
     }
 
     func testTransformPathComponent() {
@@ -83,4 +82,3 @@ class TransformableTests: XCTestCase {
     }
 
 }
-#endif
