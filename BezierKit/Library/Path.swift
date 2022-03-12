@@ -21,7 +21,7 @@ private extension Array {
 }
 
 @objc(BezierKitPathFillRule) public enum PathFillRule: NSInteger {
-        case winding=0, evenOdd
+    case winding = 0, evenOdd
 }
 
 internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillRule) -> Bool {
@@ -64,7 +64,7 @@ open class Path: NSObject, NSSecureCoding {
     }
 
     #if canImport(CoreGraphics)
-    @objc(CGPath) public var cgPath: CGPath {
+    public var cgPath: CGPath {
         return self.lock.sync { self._cgPath }
     }
 
@@ -75,12 +75,6 @@ open class Path: NSObject, NSSecureCoding {
         }
         return mutablePath.copy()!
     }()
-    #endif
-
-    #if !os(WASI)
-    @objc(isEmpty) public var _isEmpty: Bool {
-        return isEmpty
-    }
     #endif
 
     public var isEmpty: Bool {
@@ -110,17 +104,7 @@ open class Path: NSObject, NSSecureCoding {
 
     private var _hash: Int?
 
-    #if os(WASI)
     public let components: [PathComponent]
-    #else
-    @objc public let components: [PathComponent]
-    #endif
-
-    #if !os(WASI)
-    @objc(selfIntersectsWithAccuracy:) public func _selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
-        return selfIntersects(accuracy: accuracy)
-    }
-    #endif
 
     public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.selfIntersections(accuracy: accuracy).isEmpty
@@ -142,12 +126,6 @@ open class Path: NSObject, NSSecureCoding {
         }
         return intersections
     }
-
-    #if !os(WASI)
-    @objc(intersectsPath:accuracy:) public func _intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
-        return intersects(other, accuracy: accuracy)
-    }
-    #endif
 
     public func intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.intersections(with: other, accuracy: accuracy).isEmpty
@@ -172,26 +150,22 @@ open class Path: NSObject, NSSecureCoding {
         return intersections
     }
 
-    #if os(WASI)
+    #if os(WASI) || os(Linux)
     public convenience override init() {
         self.init(components: [])
-    }
-
-    required public init(components: [PathComponent]) {
-        self.components = components
     }
     #else
     @objc public convenience override init() {
         self.init(components: [])
     }
-
-    @objc required public init(components: [PathComponent]) {
-        self.components = components
-    }
     #endif
 
+    required public init(components: [PathComponent]) {
+        self.components = components
+    }
+
     #if canImport(CoreGraphics)
-    @objc(initWithCGPath:) convenience public init(cgPath: CGPath) {
+    convenience public init(cgPath: CGPath) {
         let context = PathApplierFunctionContext()
         func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
@@ -322,22 +296,10 @@ open class Path: NSObject, NSSecureCoding {
         return windingCount
     }
 
-    #if !os(WASI)
-    @objc(containsPoint:usingRule:) public func _contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
-        return contains(point, using: rule)
-    }
-    #endif
-
     public func contains(_ point: CGPoint, using rule: PathFillRule = .winding) -> Bool {
         let count = self.windingCount(point)
         return windingCountImpliesContainment(count, using: rule)
     }
-
-    #if !os(WASI)
-    @objc(containsPath:usingRule:accuracy:) public func _contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
-        return contains(other, using: rule, accuracy: accuracy)
-    }
-    #endif
 
     public func contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
         // first, check that each component of `other` starts inside self
@@ -353,23 +315,11 @@ open class Path: NSObject, NSSecureCoding {
         return !self.intersects(other, accuracy: accuracy)
     }
 
-    #if !os(WASI)
-    @objc(offsetWithDistance:) public func _offset(distance d: CGFloat) -> Path {
-        return offset(distance: d)
-    }
-    #endif
-
     public func offset(distance d: CGFloat) -> Path {
         return Path(components: self.components.compactMap {
             $0.offset(distance: d)
         })
     }
-
-    #if !os(WASI)
-    @objc public func _disjointComponents() -> [Path] {
-        return disjointComponents()
-    }
-    #endif
 
     public func disjointComponents() -> [Path] {
         let rule: PathFillRule = .evenOdd
@@ -419,29 +369,19 @@ open class Path: NSObject, NSSecureCoding {
     #endif
 }
 
-#if !os(WASI)
-@objc(BezierKitPath) extension Path { }
-#endif
-
 #if canImport(CoreGraphics)
-@objc extension Path: Transformable {
+extension Path: Transformable {
     public func copy(using t: CGAffineTransform) -> Self {
         return type(of: self).init(components: self.components.map { $0.copy(using: t)})
     }
 }
 #endif
 
-extension Path {
+extension Path: Reversible {
     public func reversed() -> Self {
         return type(of: self).init(components: self.components.map { $0.reversed() })
     }
 }
-
-#if os(WASI)
-extension Path: Reversible { }
-#else
-@objc extension Path: Reversible { }
-#endif
 
 public struct IndexedPathLocation: Equatable, Comparable {
     public let componentIndex: Int
