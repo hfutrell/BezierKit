@@ -45,20 +45,11 @@ open class PathComponent: NSObject, Reversible, Transformable {
     public var numberOfElements: Int {
         return self.orders.count
     }
-    #if !os(WASI)
-    @objc(startingPoint) public var _startingPoint: CGPoint {
-        return startingPoint
-    }
-    #endif
+
     public var startingPoint: CGPoint {
         return self.points[0]
     }
 
-    #if !os(WASI)
-    @objc(endingPoint) public var _endingPoint: CGPoint {
-        return endingPoint
-    }
-    #endif
     public var endingPoint: CGPoint {
         return self.points.last!
     }
@@ -517,12 +508,6 @@ open class PathComponent: NSObject, Reversible, Transformable {
         return windingCountImpliesContainment(windingCount, using: rule)
     }
 
-    #if !os(WASI)
-    @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func _enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
-        return enumeratePoints(includeControlPoints: includeControlPoints, using: block)
-    }
-    #endif
-
     public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
         if includeControlPoints {
             for p in points {
@@ -601,10 +586,6 @@ open class PathComponent: NSObject, Reversible, Transformable {
         return type(of: self).init(points: self.points.map { $0.applying(t) }, orders: self.orders )
     }
 }
-
-#if !os(WASI)
-@objc(BezierKitPathComponent) extension PathComponent { }
-#endif
 
 public struct IndexedPathComponentLocation: Equatable, Comparable {
     public let elementIndex: Int
