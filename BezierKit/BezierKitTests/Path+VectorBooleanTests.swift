@@ -12,7 +12,6 @@ import XCTest
 import CoreGraphics
 #endif
 
-#if !os(WASI)
 private extension Path {
     /// copies the path in such a way that it's impossible that optimizations would allow the copy to share the same underlying storage
     func independentCopy() -> Path {
@@ -794,5 +793,3 @@ class PathVectorBooleanTests: XCTestCase {
 
     #endif
 }
-
-#endif
