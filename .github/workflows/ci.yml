@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: BezierKit on Mac
+    name: Mac
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -18,3 +18,11 @@ jobs:
         uses: codecov/codecov-action@v1.0.13
         with:
           file: info.lcov
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: swift build
+      - name: Run tests
+        run: swift test --enable-test-discovery
