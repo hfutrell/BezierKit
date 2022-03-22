@@ -12,7 +12,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: codecov/codecov-action@v2
+        with: 
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
       - name: Build
         run: swift build
       - name: Run tests
-        run: swift test --enable-test-discovery
+        run: swift test --enable-test-discovery --enable-code-coverage
+      - name: Mac upload coverage to codecov.io
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          xcrun llvm-cov export -format="lcov" .build/debug/BezierKitPackageTests.xctest/Contents/MacOS/BezierKitPackageTests -instr-profile .build/debug/codecov/default.profdata
+          bash <(curl -s https://codecov.io/bash)
