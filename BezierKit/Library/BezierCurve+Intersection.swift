@@ -115,6 +115,11 @@ fileprivate extension BezierCurve {
     }
 }
 
+private func implicitLine(_ pi: CGPoint, _ pj: CGPoint, _ k: Int) -> ImplicitLine {
+    return CGFloat(k) * ImplicitLine(a10: pi.y - pj.y, a01: pj.x - pi.x, a00: pi.x * pj.y - pj.x * pi.y)
+}
+
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
     // try intersecting using subdivision
@@ -122,45 +127,69 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let rb = curve2.curve.boundingBox
     var pairIntersections: [Intersection] = []
     var subdivisionIterations = 0
-    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
-        return pairIntersections.sortedAndUniqued()
-    }
-
-    // subdivision failed, check if the curves are coincident
+//    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
+//        return pairIntersections.sortedAndUniqued()
+//    }
+//
+//    // subdivision failed, check if the curves are coincident
     let insignificantDistance: CGFloat = 0.5 * accuracy
-    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
-        return coincidence
+//    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+//        return coincidence
+//    }
+    
+    let k = implicitLine(curve2.curve.points[2], curve2.curve.points[0], 1)
+    let l = implicitLine(curve2.curve.points[2], curve2.curve.points[1], 2)
+    let m = implicitLine(curve2.curve.points[1], curve2.curve.points[0], 2)
+    //let lineProduct = k * k - l * m
+
+    let pStart = curve1.curve.startingPoint
+    let pEnd = curve1.curve.endingPoint
+
+    func f(_ t: CGFloat) -> CGFloat {
+        let p = curve1.curve.point(at: t)
+        return k.value(at: p) * k.value(at: p) - l.value(at: p) * m.value(at: p)
+    }
+    func df(_ t: CGFloat) -> CGFloat {
+        let p = curve1.curve.point(at: t)
+        let pp = curve1.curve.derivative(at: t)
+        let temp = 2.0 * k.value(at: p) * k.d - l.value(at: p) * m.d - m.value(at: p) * l.d
+        #warning(" i haev no idea why / 2 is needed")
+        return temp.dot(pp) / 2
+    }
+    func ddf(_ t: CGFloat) -> CGFloat {
+        let p = curve1.curve.point(at: t)
+        let pp = curve1.curve.derivative(at: t)
+
+        let ppp = 2.0 * (curve1.curve.points[2] - 2.0 * curve1.curve.points[1] + curve1.curve.points[0])
+        
+        let temp = (2.0 * k.value(at: p) * k.d - l.value(at: p) * m.d - m.value(at: p) * l.d).dot(ppp) / 2
+        return temp + (2.0 * k.d.dot(k.d) - 2.0 * l.d.dot(m.d)) * p.dot(pp) / 2
     }
 
-    // find any intersections using curve implicitization
-    let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
-    let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
+    let n = 2
+    let p0 = f(0)
+    let p1 = df(0) / CGFloat(n) + p0
+    let p2 = ddf(1) / CGFloat(n) / CGFloat(n-1) + 2 * p1 - p0
+    let p4 = f(1)
+    let p3 = -df(1) / CGFloat(n) + p4
 
-    let c1 = curve1.curve.copy(using: transform)
-    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
+    let c1 = curve1.curve
+    let c2 = curve2.curve
+    
+    let equation = BernsteinPolynomialN(coefficients: [p0, p1, p2, p3, p4])
+    
+    let equation2: BernsteinPolynomialN = -1 * c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
+
+    
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
-
-    let t1Tolerance = insignificantDistance / c1.derivativeBounds
-    let t2Tolerance = insignificantDistance / c2.derivativeBounds
 
     func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {
         let point = c1.point(at: t1)
-        guard c2.boundingBox.contains(point) else { return nil }
-        var t2 = c2.project(point).t
-        if t2 < t2Tolerance {
-            t2 = 0
-        } else if t2 > 1 - t2Tolerance {
-            t2 = 1
-        }
-        guard distance(point, c2.point(at: t2)) < accuracy else { return nil }
+        let t2 = c2.project(point).t
         return Intersection(t1: t1, t2: t2)
     }
+    
     var intersections = roots.compactMap { t1 -> Intersection? in
-        if t1 < t1Tolerance {
-            return nil // (t1 near 0 handled explicitly)
-        } else if t1 > 1 - t1Tolerance {
-            return nil // (t1 near 1 handled explicitly)
-        }
         return intersectionIfCloseEnough(at: t1)
     }
     if intersections.contains(where: { $0.t1 == 0 }) == false {
