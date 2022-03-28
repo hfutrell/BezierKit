@@ -119,6 +119,27 @@ private func implicitLine(_ pi: CGPoint, _ pj: CGPoint, _ k: Int) -> ImplicitLin
     return CGFloat(k) * ImplicitLine(a10: pi.y - pj.y, a01: pj.x - pi.x, a00: pi.x * pj.y - pj.x * pi.y)
 }
 
+func f<U: NonlinearBezierCurve>(_ k: ImplicitLine, _ l: ImplicitLine, _ m: ImplicitLine, _ curve: U, _ t: CGFloat) -> CGFloat {
+    let p = curve.point(at: t)
+    return k.value(at: p) * k.value(at: p) - l.value(at: p) * m.value(at: p)
+}
+
+func df<U: NonlinearBezierCurve>(_ k: ImplicitLine, _ l: ImplicitLine, _ m: ImplicitLine, _ curve: U, _ t: CGFloat) -> CGFloat {
+    let p = curve.point(at: t)
+    let pp = curve.derivative(at: t)
+    let temp = 2.0 * k.value(at: p) * k.d - l.value(at: p) * m.d - m.value(at: p) * l.d
+    return temp.dot(pp)
+}
+
+func ddf<U: NonlinearBezierCurve>(_ k: ImplicitLine, _ l: ImplicitLine, _ m: ImplicitLine, _ curve: U, _ t: CGFloat) -> CGFloat {
+    let p = curve.point(at: t)
+    let pp = curve.derivative(at: t)
+    let ppp = 2.0 * (curve.points[2] - 2.0 * curve.points[1] + curve.points[0])
+    let temp1 = (2.0 * k.value(at: p) * k.d - l.value(at: p) * m.d - m.value(at: p) * l.d).dot(ppp)
+    let temp2 = (2.0 * k.d.dot(pp) * k.d - l.d.dot(pp) * m.d - m.d.dot(pp) * l.d).dot(pp)
+    print("temp1 = \(temp1), temp2 = \(temp2), sum = \(temp1 + temp2)")
+    return temp1 + temp2
+}
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
@@ -132,7 +153,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
 //    }
 //
 //    // subdivision failed, check if the curves are coincident
-    let insignificantDistance: CGFloat = 0.5 * accuracy
+//    let insignificantDistance: CGFloat = 0.5 * accuracy
 //    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
 //        return coincidence
 //    }
@@ -145,42 +166,21 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let pStart = curve1.curve.startingPoint
     let pEnd = curve1.curve.endingPoint
 
-    func f(_ t: CGFloat) -> CGFloat {
-        let p = curve1.curve.point(at: t)
-        return k.value(at: p) * k.value(at: p) - l.value(at: p) * m.value(at: p)
-    }
-    func df(_ t: CGFloat) -> CGFloat {
-        let p = curve1.curve.point(at: t)
-        let pp = curve1.curve.derivative(at: t)
-        let temp = 2.0 * k.value(at: p) * k.d - l.value(at: p) * m.d - m.value(at: p) * l.d
-        #warning(" i haev no idea why / 2 is needed")
-        return temp.dot(pp) / 2
-    }
-    func ddf(_ t: CGFloat) -> CGFloat {
-        let p = curve1.curve.point(at: t)
-        let pp = curve1.curve.derivative(at: t)
-
-        let ppp = 2.0 * (curve1.curve.points[2] - 2.0 * curve1.curve.points[1] + curve1.curve.points[0])
-        
-        let temp = (2.0 * k.value(at: p) * k.d - l.value(at: p) * m.d - m.value(at: p) * l.d).dot(ppp) / 2
-        return temp + (2.0 * k.d.dot(k.d) - 2.0 * l.d.dot(m.d)) * p.dot(pp) / 2
-    }
-
-    let n = 2
-    let p0 = f(0)
-    let p1 = df(0) / CGFloat(n) + p0
-    let p2 = ddf(1) / CGFloat(n) / CGFloat(n-1) + 2 * p1 - p0
-    let p4 = f(1)
-    let p3 = -df(1) / CGFloat(n) + p4
+    let n = 4
+    let p0 = f(k, l, m, curve1.curve, 0)
+    let p1 = df(k, l, m, curve1.curve, 0) / CGFloat(n) + p0
+    let p2 = ddf(k, l, m, curve1.curve, 0) / CGFloat(n) / CGFloat(n-1) + 2 * p1 - p0
+    let p4 = f(k, l, m, curve1.curve, 1)
+    let p3 = -df(k, l, m, curve1.curve, 1) / CGFloat(n) + p4
 
     let c1 = curve1.curve
     let c2 = curve2.curve
     
     let equation = BernsteinPolynomialN(coefficients: [p0, p1, p2, p3, p4])
-    
     let equation2: BernsteinPolynomialN = -1 * c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
 
-    
+    print("expected \(equation2.derivative.derivative.value(at: 0))")
+
     let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
 
     func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {
@@ -188,7 +188,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         let t2 = c2.project(point).t
         return Intersection(t1: t1, t2: t2)
     }
-    
+
     var intersections = roots.compactMap { t1 -> Intersection? in
         return intersectionIfCloseEnough(at: t1)
     }
