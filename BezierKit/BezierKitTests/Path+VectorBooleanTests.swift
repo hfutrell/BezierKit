@@ -648,6 +648,91 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertFalse(result.contains(point3, using: .evenOdd))
     }
 
+    func testStrangerCase() {
+        let points = [CGPoint(x: 0.773659843382172, y: 0.348791176079494),
+                      CGPoint(x: 0.578398510649888, y: 0.544054135095094),
+                      CGPoint(x: 0.2618160212173556, y: 0.544055453458206),
+                      CGPoint(x: 0.06655306220175583, y: 0.348794120725922)]
+        let cgPath = CGMutablePath()
+        cgPath.move(to: points[0])
+        cgPath.addCurve(to: points[3], control1: points[1], control2: points[2])
+        cgPath.closeSubpath()
+
+        let path = Path(cgPath: cgPath)
+
+        let curve = path.components[0].curves[0] as! CubicCurve
+
+        XCTAssertTrue(path.contains(curve.point(at: 0.5) + 1e-5 * curve.normal(at: 0.5)))
+        XCTAssertFalse(path.contains(curve.point(at: 0.5) - 1e-5 * curve.normal(at: 0.5)))
+
+        XCTAssertTrue(path.contains(curve.point(at: 0.5) + 1e-6 * curve.normal(at: 0.5)))
+        XCTAssertFalse(path.contains(curve.point(at: 0.5) - 1e-6 * curve.normal(at: 0.5)))
+
+        XCTAssertTrue(path.contains(curve.point(at: 0.5) + 1e-13 * curve.normal(at: 0.5)))
+        XCTAssertFalse(path.contains(curve.point(at: 0.5) - 1e-13 * curve.normal(at: 0.5)))
+
+        // precision issues, this point is not inside(!) at 1e-6 but at 1e-5 it is!
+        // 0.42010706264404296, 6.495238257808165
+        let point = curve.point(at: 0.5) + 1e-6 * curve.normal(at: 0.5)
+
+        let lineSegment = LineSegment(p0: CGPoint(x: 0, y: 6.495238257808165), p1: CGPoint(x: 1, y: 6.495238257808165))
+
+        // intersection computed as t=0.4201049674954501 (0.4201049674954501, 6.495238257808165)
+
+        let intersection = lineSegment.intersections(with: curve)
+
+        // berstein method finds
+//        - t1 : 0.4191021345882
+//        - t2 : 0.5013088979618842
+//        AND
+//        - t1 : 0.42110780017195365
+//        - t2 : 0.4986965601197636
+
+        XCTAssertTrue(path.contains(point))
+
+        // using increased accuracy yields
+//        t1    CoreGraphics.CGFloat    0.4191018298762979
+//        t2    CoreGraphics.CGFloat    0.50130929484324693
+//        AND
+//        t1    CoreGraphics.CGFloat    0.42110810490321898
+//        t2    CoreGraphics.CGFloat    0.49869616321317917
+    }
+        
+    func testCrossingsRemovedFifthRealWorldCase() {
+            // this test fails for the same reason that
+            // `testDrootsCubicWorldIssue4` fails
+            // the path doesn't have any self-intersections
+            // but the `contains` call gives the wrong results
+            let cgPath = CGMutablePath()
+            cgPath.move(to: CGPoint(x: -45.58408505173276, y: 4384.210079234615))
+            cgPath.addCurve(to: CGPoint(x: 519.756427723393, y: 4384.14765017776),
+                            control1: CGPoint(x: 110.51314747385496, y: 4228.07836809298),
+                            control2: CGPoint(x: 363.6247165817579, y: 4228.050417652172))
+            cgPath.addCurve(to: CGPoint(x: 519.8188567802481, y: 4949.488162952885),
+                            control1: CGPoint(x: 675.8881388650282, y: 4540.244882703348),
+                            control2: CGPoint(x: 675.9160893058358, y: 4793.356451811251))
+            cgPath.addCurve(to: CGPoint(x: 501.53832994006814, y: 4967.769608589276),
+                            control1: CGPoint(x: 513.7155041887056, y: 4955.5928615872745),
+                            control2: CGPoint(x: 507.6055609674461, y: 4961.702072477192))
+            cgPath.addCurve(to: CGPoint(x: -63.802186103924214, y: 4967.783798079717),
+                            control1: CGPoint(x: 345.4277755233733, y: 5123.887999645149),
+                            control2: CGPoint(x: 92.31620495194895, y: 5123.894352496412))
+            cgPath.addCurve(to: CGPoint(x: -63.81637559436501, y: 4402.443282035724),
+                            control1: CGPoint(x: -219.92057715979726, y: 4811.673243663022),
+                            control2: CGPoint(x: -219.9269300110598, y: 4558.561673091597))
+            cgPath.addCurve(to: CGPoint(x: -45.58408505173276, y: 4384.210079234615),
+                            control1: CGPoint(x: -57.725037285805456, y: 4396.351638460308),
+                            control2: CGPoint(x: -51.63917972581493, y: 4390.2665134127255))
+            let path = Path(cgPath: cgPath)
+            let result = path.crossingsRemoved()
+    //      seems to fail because we get the wrong results here:
+    //       we get the right results with 1.0e-5
+    //        let curve = path.components[0].curves[0]
+    //        let point = curve.point(at: 0.5) - 1.0e-7 * curve.normal(at: 0.5)
+    //        XCTAssertFalse(path.contains(point))
+            XCTAssertEqual(path, result)
+    }
+
     func testCrossingsRemovedMulticomponent() {
         // this path is a square with a self-intersecting inner region that should form a square shaped hole when crossings
         // this is similar to what happens if you use CoreGraphics to stroke shape, albeit simplified here for the sake of testing

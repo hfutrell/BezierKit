@@ -180,6 +180,12 @@ internal class Utils {
     }
 
     static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, _ p3: CGFloat, callback: (CGFloat) -> Void) {
+     
+        let poly = BernsteinPolynomialN(coefficients: [p0, p1, p2, p3])
+        let roots = poly.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+        roots.forEach(callback)
+        return
+        
         // convert the points p0, p1, p2, p3 to a cubic polynomial at^3 + bt^2 + ct + 1 and solve
         // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
         let p0 = Double(p0)
