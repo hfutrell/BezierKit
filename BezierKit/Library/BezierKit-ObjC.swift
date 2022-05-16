@@ -88,6 +88,9 @@ public extension Path {
     @objc(initWithData:) convenience init?(_objc_data: Data) {
         self.init(data: _objc_data)
     }
+    @objc(data) var _objc_data: Data {
+        return data
+    }
 }
 
 // MARK: Path+Projection.swift
