@@ -6,8 +6,6 @@
 //  Copyright © 2019 Holmes Futrell. All rights reserved.
 //
 
-#if !os(WASI)
-
 import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
@@ -163,4 +161,3 @@ public extension Path {
         return result
     }
 }
-#endif
