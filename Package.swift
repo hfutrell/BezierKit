@@ -23,7 +23,16 @@ let package = Package(
         .testTarget(
             name: "BezierKitTests",
             dependencies: ["BezierKit"],
-            path: "BezierKit/BezierKitTests"
+            path: "BezierKit/BezierKitTests",
+            linkerSettings: [
+              // Extend stack size on WebAssembly since the default stack size of wasm-ld (64kb)
+              // is not enough for testing BezierKit.Utils.pairiteration, which heavily calls itself
+              // recursively.
+              .unsafeFlags(
+                    ["-Xlinker", "-z", "-Xlinker", "stack-size=\(248 * 1024)"],
+                    .when(platforms: [.wasi])
+              ),
+            ]
         ),
     ],
     swiftLanguageVersions: [.v5]

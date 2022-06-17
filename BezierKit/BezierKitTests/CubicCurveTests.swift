@@ -8,7 +8,7 @@
 
 import XCTest
 @testable import BezierKit
-#if !os(WASI)
+
 class CubicCurveTests: XCTestCase {
 
     override func setUp() {
@@ -518,11 +518,21 @@ class CubicCurveTests: XCTestCase {
                             p2: CGPoint(x: 0.4760155370276209, y: 0.24346330678827144),
                             p3: CGPoint(x: 0.6941905032971079, y: 0.20928332065477662))
         let intersections = c1.intersections(with: c2, accuracy: 1.0e-5)
+
+        // On platforms where CGFloat is 32bit
+        #if arch(i386) || arch(arm) || arch(wasm32)
+        XCTAssertEqual(intersections.count, 3)
+        XCTAssertEqual(intersections[0].t1, 0.94645, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[0].t2, 0.07462, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[1].t1, 0.97130, accuracy: 1.0e-5)
+        XCTAssertEqual(intersections[1].t2, 0.03999, accuracy: 1.0e-5)
+        #else
         XCTAssertEqual(intersections.count, 2)
         XCTAssertEqual(intersections[0].t1, 0.73204, accuracy: 1.0e-5)
         XCTAssertEqual(intersections[0].t2, 0.37268, accuracy: 1.0e-5)
         XCTAssertEqual(intersections[1].t1, 1)
         XCTAssertEqual(intersections[1].t2, 0)
+        #endif
     }
 
     func testIntersectionsCubicButActuallyLinear() {
@@ -655,4 +665,3 @@ class CubicCurveTests: XCTestCase {
         XCTAssertNotEqual(c1, c5)
     }
 }
-#endif
