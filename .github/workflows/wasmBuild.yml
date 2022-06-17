@@ -4,7 +4,7 @@ jobs:
   test:
     name: BezierKit WASM support
     runs-on: ubuntu-latest
-    container: ghcr.io/swiftwasm/carton:0.12.1
+    container: ghcr.io/swiftwasm/carton:0.16.0
 
     steps:
     - uses: actions/checkout@v2
