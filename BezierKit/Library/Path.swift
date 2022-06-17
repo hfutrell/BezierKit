@@ -245,7 +245,17 @@ open class Path: NSObject, NSSecureCoding {
         return true
     }
 
-    #if !os(WASI)
+    #if os(WASI)
+    @available(*, deprecated, message: "unavailable on WASI due to missing plist support")
+    public func encode(with aCoder: NSCoder) {
+      fatalError("unavailable on WASI due to missing plist support")
+    }
+
+    @available(*, deprecated, message: "unavailable on WASI due to missing plist support")
+    required public convenience init?(coder aDecoder: NSCoder) {
+      fatalError("unavailable on WASI due to missing plist support")
+    }
+    #else
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.data)
     }
