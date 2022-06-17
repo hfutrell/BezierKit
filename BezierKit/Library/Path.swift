@@ -352,7 +352,6 @@ open class Path: NSObject, NSSecureCoding {
         return outerComponents.values.map { Path(components: $0) }
     }
 
-    #if !os(WASI)
     public override var hash: Int {
         // override is needed because NSObject hashing is independent of Swift's Hashable
         return lock.sync {
@@ -366,7 +365,6 @@ open class Path: NSObject, NSSecureCoding {
             return h
         }
     }
-    #endif
 }
 
 extension Path: Transformable {
