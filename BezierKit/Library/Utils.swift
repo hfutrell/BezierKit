@@ -141,7 +141,7 @@ internal class Utils {
         return top/bottom
     }
 
-    static func map(_ v: CGFloat, _ ds: CGFloat, _ de: CGFloat, _ ts: CGFloat, _ te: CGFloat) -> CGFloat {
+    static func map(_ v: CGFloat, _ ds: CGFloat, _ de: CGFloat, _ ts: Double, _ te: Double) -> Double {
         let t = (v - ds) / (de - ds)
         return t * te + (1 - t) * ts
     }
@@ -168,7 +168,7 @@ internal class Utils {
         return (v < 0) ? -pow(-v, 1.0/3.0) : pow(v, 1.0/3.0)
     }
 
-    static func clamp(_ x: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
+    static func clamp(_ x: Double, _ a: Double, _ b: Double) -> Double {
         precondition(b >= a)
         if x < a {
             return a
@@ -179,7 +179,7 @@ internal class Utils {
         }
     }
 
-    static func droots(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, _ p3: CGFloat, callback: (CGFloat) -> Void) {
+    static func droots(_ p0: Double, _ p1: Double, _ p2: Double, _ p3: Double, callback: (CGFloat) -> Void) {
         // convert the points p0, p1, p2, p3 to a cubic polynomial at^3 + bt^2 + ct + 1 and solve
         // see http://www.trans4mind.com/personal_development/mathematics/polynomials/cubicAlgebra.htm
         let p0 = Double(p0)
@@ -278,7 +278,7 @@ internal class Utils {
         callback(p0 / (p0 - p1))
     }
 
-    static func linearInterpolate(_ v1: CGPoint, _ v2: CGPoint, _ t: CGFloat) -> CGPoint {
+    static func linearInterpolate(_ v1: CGPoint, _ v2: CGPoint, _ t: Double) -> CGPoint {
         return v1 + t * (v2 - v1)
     }
 

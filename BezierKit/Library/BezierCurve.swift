@@ -12,8 +12,8 @@ import CoreGraphics
 import Foundation
 
 public struct Subcurve<CurveType> where CurveType: BezierCurve {
-    public let t1: CGFloat
-    public let t2: CGFloat
+    public let t1: Double
+    public let t2: Double
     public let curve: CurveType
 
     internal var canSplit: Bool {
@@ -27,7 +27,7 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
         self.curve = curve
     }
 
-    internal init(t1: CGFloat, t2: CGFloat, curve: CurveType) {
+    internal init(t1: Double, t2: Double, curve: CurveType) {
         self.t1 = t1
         self.t2 = t2
         self.curve = curve
@@ -289,15 +289,15 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     var endingPoint: CGPoint { get set }
     var order: Int { get }
     init(points: [CGPoint])
-    func point(at t: CGFloat) -> CGPoint
+    func point(at t: Double) -> CGPoint
     func derivative(at t: CGFloat) -> CGPoint
     func normal(at t: CGFloat) -> CGPoint
-    func split(from t1: CGFloat, to t2: CGFloat) -> Self
+    func split(from t1: Double, to t2: Double) -> Self
     func split(at t: CGFloat) -> (left: Self, right: Self)
     func length() -> CGFloat
     func extrema() -> (x: [CGFloat], y: [CGFloat], all: [CGFloat])
     func lookupTable(steps: Int) -> [CGPoint]
-    func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat)
+    func project(_ point: CGPoint) -> (point: CGPoint, t: Double)
     // intersection routines
     var selfIntersects: Bool { get }
     var selfIntersections: [Intersection] { get }

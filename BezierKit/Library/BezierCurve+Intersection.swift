@@ -37,15 +37,15 @@ public extension BezierCurve {
 }
 
 private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> [Intersection]? {
-    func pointIsCloseToCurve<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
+    func pointIsCloseToCurve<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> Double? {
         let (projection, t) = curve.project(point)
         guard distanceSquared(point, projection) < 4.0 * accuracy * accuracy else { return nil }
         return t
     }
-    var range1Start: CGFloat    = .infinity
-    var range1End: CGFloat      = -.infinity
-    var range2Start: CGFloat    = .infinity
-    var range2End: CGFloat      = -.infinity
+    var range1Start: Double    = .infinity
+    var range1End: Double      = -.infinity
+    var range2Start: Double    = .infinity
+    var range2End: Double      = -.infinity
     if range1Start > 0 || range2Start > 0 || range2End < 1 {
         if let t2 = pointIsCloseToCurve(curve1.startingPoint, curve2) {
             range1Start = 0
@@ -187,7 +187,7 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
     guard lineLength > 0 else { return [] }
-    func align(_ point: CGPoint) -> CGFloat {
+    func align(_ point: CGPoint) -> Double {
         return (point - line.p0).dot(lineDirection.perpendicular)
     }
     var intersections: [Intersection] = []

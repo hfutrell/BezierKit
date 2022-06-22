@@ -106,11 +106,11 @@ open class Path: NSObject {
 
     public let components: [PathComponent]
 
-    public func selfIntersects(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    public func selfIntersects(accuracy: Double = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.selfIntersections(accuracy: accuracy).isEmpty
     }
 
-    public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
+    public func selfIntersections(accuracy: Double = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
         var intersections: [PathIntersection] = []
         for i in 0..<self.components.count {
             for j in i..<self.components.count {
@@ -127,11 +127,11 @@ open class Path: NSObject {
         return intersections
     }
 
-    public func intersects(_ other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    public func intersects(_ other: Path, accuracy: Double = BezierKit.defaultIntersectionAccuracy) -> Bool {
         return !self.intersections(with: other, accuracy: accuracy).isEmpty
     }
 
-    public func intersections(with other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
+    public func intersections(with other: Path, accuracy: Double = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
         guard self.boundingBox.overlaps(other.boundingBox) else {
             return []
         }
@@ -301,7 +301,7 @@ open class Path: NSObject {
         return windingCountImpliesContainment(count, using: rule)
     }
 
-    public func contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> Bool {
+    public func contains(_ other: Path, using rule: PathFillRule = .winding, accuracy: Double = BezierKit.defaultIntersectionAccuracy) -> Bool {
         // first, check that each component of `other` starts inside self
         for component in other.components {
             let p = component.startingPoint
@@ -315,7 +315,7 @@ open class Path: NSObject {
         return !self.intersects(other, accuracy: accuracy)
     }
 
-    public func offset(distance d: CGFloat) -> Path {
+    public func offset(distance d: Double) -> Path {
         return Path(components: self.components.compactMap {
             $0.offset(distance: d)
         })
@@ -386,8 +386,8 @@ extension Path: Reversible {
 public struct IndexedPathLocation: Equatable, Comparable {
     public let componentIndex: Int
     public let elementIndex: Int
-    public let t: CGFloat
-    public init(componentIndex: Int, elementIndex: Int, t: CGFloat) {
+    public let t: Double
+    public init(componentIndex: Int, elementIndex: Int, t: Double) {
         self.componentIndex = componentIndex
         self.elementIndex = elementIndex
         self.t = t
