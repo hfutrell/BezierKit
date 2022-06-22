@@ -33,7 +33,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-open class Path: NSObject, NSSecureCoding {
+open class Path: NSObject {
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
@@ -245,17 +245,7 @@ open class Path: NSObject, NSSecureCoding {
         return true
     }
 
-    #if os(WASI)
-    @available(*, deprecated, message: "unavailable on WASI due to missing plist support")
-    public func encode(with aCoder: NSCoder) {
-      fatalError("unavailable on WASI due to missing plist support")
-    }
-
-    @available(*, deprecated, message: "unavailable on WASI due to missing plist support")
-    required public convenience init?(coder aDecoder: NSCoder) {
-      fatalError("unavailable on WASI due to missing plist support")
-    }
-    #else
+    #if !os(WASI)
     public func encode(with aCoder: NSCoder) {
         aCoder.encode(self.data)
     }
@@ -376,6 +366,10 @@ open class Path: NSObject, NSSecureCoding {
         }
     }
 }
+
+#if !os(WASI)
+extension Path: NSSecureCoding {}
+#endif
 
 extension Path: Transformable {
     public func copy(using t: CGAffineTransform) -> Self {
