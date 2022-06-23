@@ -121,8 +121,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var pairIntersections: [Intersection] = []
-    var subdivisionIterations = 0
-    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
+    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy) {
         return pairIntersections.sortedAndUniqued()
     }
 
