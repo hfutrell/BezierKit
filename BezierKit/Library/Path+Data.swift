@@ -22,7 +22,7 @@ fileprivate extension Data {
     }
 }
 
-fileprivate struct DataStream {
+private struct DataStream {
     var dataCursor: Data.Index
     let data: Data
 
