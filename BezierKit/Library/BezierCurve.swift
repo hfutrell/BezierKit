@@ -16,11 +16,6 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t2: CGFloat
     public let curve: CurveType
 
-    internal var canSplit: Bool {
-        let mid = 0.5 * (self.t1 + self.t2)
-        return mid > self.t1 && mid < self.t2
-    }
-
     internal init(curve: CurveType) {
         self.t1 = 0.0
         self.t2 = 1.0
@@ -307,7 +302,12 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable {
+internal protocol PointClassifiable {
+    /// returns true if all control points are equal
+    var isPoint: Bool { get }
+}
+
+internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable, PointClassifiable {
     // intentionally empty, just declare conformance if you're not a line
 }
 

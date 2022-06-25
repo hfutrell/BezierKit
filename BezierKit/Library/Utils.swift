@@ -311,11 +311,23 @@ internal class Utils {
     // disable this SwiftLint warning about function having more than 5 parameters
     // swiftlint:disable function_parameter_count
 
-    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-                                      _ c1b: BoundingBox, _ c2b: BoundingBox,
-                                      _ results: inout [Intersection],
-                                      _ accuracy: CGFloat,
-                                      _ totalIterations: inout Int) -> Bool {
+    static func pairiteration<C1: PointClassifiable, C2: PointClassifiable>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
+                                                                            _ c1b: BoundingBox, _ c2b: BoundingBox,
+                                                                            _ results: inout [Intersection],
+                                                                            _ accuracy: CGFloat,
+                                                                            _ totalIterations: inout Int) -> Bool {
+
+        func splitCurveIfWithinAccuracyAndNumericalLimits<C: PointClassifiable>(_ curve: Subcurve<C>, boundingBox: BoundingBox) -> (left: Subcurve<C>, right: Subcurve<C>)? {
+            // first check if the curve is small enough that it falls within
+            // accuracy threshold and therefore does not require further recursion
+            guard boundingBox.size.x + boundingBox.size.y >= accuracy else { return nil }
+            // next check if splitting the curve results in either half being a point
+            // if so, we've reached numerical precision limits of how far we can split things
+            let (left, right) = curve.split(at: 0.5)
+            guard left.curve.isPoint == false else { return nil }
+            guard right.curve.isPoint == false else { return nil }
+            return (left: left, right: right)
+        }
 
         let maximumIterations = 900
         let maximumIntersections = c1.curve.order * c2.curve.order
@@ -325,14 +337,10 @@ internal class Utils {
         guard results.count <= maximumIntersections else { return false }
         guard c1b.overlaps(c2b) else { return true }
 
-        let canSplit1 = c1.canSplit
-        let canSplit2 = c2.canSplit
-        let size1 = c1b.size
-        let size2 = c2b.size
-        let shouldRecurse1 = canSplit1 && ((size1.x + size1.y) >= accuracy)
-        let shouldRecurse2 = canSplit2 && ((size2.x + size2.y) >= accuracy)
+        let cc1 = splitCurveIfWithinAccuracyAndNumericalLimits(c1, boundingBox: c1b)
+        let cc2 = splitCurveIfWithinAccuracyAndNumericalLimits(c2, boundingBox: c2b)
 
-        if shouldRecurse1 == false, shouldRecurse2 == false {
+        if cc1 == nil, cc2 == nil {
             // subcurves are small enough or we simply cannot recurse any more
             let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
             let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
@@ -341,9 +349,7 @@ internal class Utils {
             let t2 = intersection.t2
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
                                         t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
-        } else if shouldRecurse1, shouldRecurse2 {
-            let cc1 = c1.split(at: 0.5)
-            let cc2 = c2.split(at: 0.5)
+        } else if let cc1 = cc1, let cc2 = cc2 {
             let cc1lb = cc1.left.curve.boundingBox
             let cc1rb = cc1.right.curve.boundingBox
             let cc2lb = cc2.left.curve.boundingBox
@@ -352,14 +358,12 @@ internal class Utils {
             guard Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy, &totalIterations) else { return false }
             guard Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy, &totalIterations) else { return false }
             guard Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy, &totalIterations) else { return false }
-        } else if shouldRecurse1 {
-            let cc1 = c1.split(at: 0.5)
+        } else if let cc1 = cc1 {
             let cc1lb = cc1.left.curve.boundingBox
             let cc1rb = cc1.right.curve.boundingBox
             guard Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy, &totalIterations) else { return false }
             guard Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy, &totalIterations) else { return false }
-        } else if shouldRecurse2 {
-            let cc2 = c2.split(at: 0.5)
+        } else if let cc2 = cc2 {
             let cc2lb = cc2.left.curve.boundingBox
             let cc2rb = cc2.right.curve.boundingBox
             guard Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy, &totalIterations) else { return false }

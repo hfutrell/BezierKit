@@ -233,3 +233,7 @@ extension QuadraticCurve: Flatness {
         return (1.0 / 16.0) * (a.x * a.x + a.y * a.y)
     }
 }
+
+extension QuadraticCurve: PointClassifiable {
+    var isPoint: Bool { return self.p0 == self.p1 && self.p1 == self.p2 }
+}
