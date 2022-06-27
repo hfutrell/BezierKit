@@ -16,6 +16,11 @@ public struct Subcurve<CurveType> where CurveType: BezierCurve {
     public let t2: CGFloat
     public let curve: CurveType
 
+    internal var canSplit: Bool {
+        let mid = 0.5 * (self.t1 + self.t2)
+        return mid > self.t1 && mid < self.t2
+    }
+
     internal init(curve: CurveType) {
         self.t1 = 0.0
         self.t2 = 1.0
