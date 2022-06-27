@@ -308,6 +308,21 @@ internal class Utils {
         return atan2(d1.cross(d2), d1.dot(d2))
     }
 
+    @inline(__always) private static func shouldRecurse<C>(for subcurve: Subcurve<C>, boundingBoxSize: CGPoint, accuracy: CGFloat) -> Bool {
+        guard subcurve.canSplit else { return false }
+        guard boundingBoxSize.x + boundingBoxSize.y >= accuracy else { return false }
+        if MemoryLayout<CGFloat>.size == 4 {
+            let curve = subcurve.curve
+            // limit recursion when we exceed Float32 precision
+            let midPoint = curve.point(at: 0.5)
+            if midPoint == curve.startingPoint ||
+                midPoint == curve.endingPoint {
+                guard curve.selfIntersects else { return false }
+            }
+        }
+        return true
+    }
+
     // disable this SwiftLint warning about function having more than 5 parameters
     // swiftlint:disable function_parameter_count
 
@@ -325,22 +340,8 @@ internal class Utils {
         guard results.count <= maximumIntersections else { return false }
         guard c1b.overlaps(c2b) else { return true }
 
-        func shouldRecurse<C>(for subcurve: Subcurve<C>, boundingBox: BoundingBox) -> Bool {
-            guard subcurve.canSplit else { return false }
-            guard boundingBox.size.x + boundingBox.size.y >= accuracy else { return false }
-            if MemoryLayout<CGFloat>.size == 4 {
-                // limit recursion when we exceed Float32 precision
-                let midPoint = subcurve.curve.point(at: 0.5)
-                if midPoint == subcurve.curve.startingPoint ||
-                    midPoint == subcurve.curve.endingPoint {
-                    guard c1.curve.selfIntersects else { return false }
-                }
-            }
-            return true
-        }
-
-        let shouldRecurse1 = shouldRecurse(for: c1, boundingBox: c1b)
-        let shouldRecurse2 = shouldRecurse(for: c2, boundingBox: c2b)
+        let shouldRecurse1 = shouldRecurse(for: c1, boundingBoxSize: c1b.size, accuracy: accuracy)
+        let shouldRecurse2 = shouldRecurse(for: c2, boundingBoxSize: c2b.size, accuracy: accuracy)
 
         if shouldRecurse1 == false, shouldRecurse2 == false {
             // subcurves are small enough or we simply cannot recurse any more
