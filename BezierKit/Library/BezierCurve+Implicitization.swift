@@ -113,7 +113,7 @@ internal struct ImplicitPolynomial {
     }
 }
 
-struct ImplicitLineProduct {
+private struct ImplicitLineProduct {
     var a20, a11, a10, a02, a01, a00: CGFloat
     static func * (left: ImplicitLine, right: ImplicitLineProduct) -> ImplicitPolynomial {
         let a00 = left.a00 * right.a00
@@ -152,7 +152,7 @@ struct ImplicitLineProduct {
     }
 }
 
-struct ImplicitLine {
+private struct ImplicitLine {
     var a10, a01, a00: CGFloat
     static func * (left: ImplicitLine, right: ImplicitLine) -> ImplicitLineProduct {
         return ImplicitLineProduct(a20: left.a10 * right.a10,
@@ -169,12 +169,6 @@ struct ImplicitLine {
         return ImplicitLine(a10: left.a10 + right.a10,
                             a01: left.a01 + right.a01,
                             a00: left.a00 + right.a00)
-    }
-    func value(at point: CGPoint) -> CGFloat {
-        return a10 * point.x + a01 * point.y + a00
-    }
-    var d: CGPoint {
-        return CGPoint(x: a10, y: a01)
     }
 }
 
