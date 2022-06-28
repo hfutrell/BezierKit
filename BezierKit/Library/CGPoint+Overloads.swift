@@ -14,10 +14,10 @@ import Foundation
 // swiftlint:disable shorthand_operator
 
 public extension CGPoint {
-    var length: Double {
+    var length: CGFloat {
         return sqrt(self.lengthSquared)
     }
-    internal var lengthSquared: Double {
+    internal var lengthSquared: CGFloat {
         return self.dot(self)
     }
     func normalize() -> CGPoint {
@@ -52,7 +52,7 @@ public extension CGPoint {
     static internal var dimensions: Int {
         return 2
     }
-    func dot(_ other: CGPoint) -> Double {
+    func dot(_ other: CGPoint) -> CGFloat {
         return self.x * other.x + self.y * other.y
     }
     func cross(_ other: CGPoint) -> CGFloat {
@@ -88,10 +88,10 @@ public extension CGPoint {
     static func -= (left: inout CGPoint, right: CGPoint) {
         left = left - right
     }
-    static func / (left: CGPoint, right: Double) -> CGPoint {
+    static func / (left: CGPoint, right: CGFloat) -> CGPoint {
         return CGPoint(x: left.x / right, y: left.y / right)
     }
-    static func * (left: Double, right: CGPoint) -> CGPoint {
+    static func * (left: CGFloat, right: CGPoint) -> CGPoint {
         return CGPoint(x: left * right.x, y: left * right.y)
     }
     static prefix func - (point: CGPoint) -> CGPoint {

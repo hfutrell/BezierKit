@@ -11,18 +11,18 @@ import CoreGraphics
 import Foundation
 
 struct BernsteinPolynomialN: BernsteinPolynomial {
-    let coefficients: [Double]
+    let coefficients: [CGFloat]
 
     func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomialN {
         fatalError("unimplemented.")
     }
 
     var order: Int { return coefficients.count - 1 }
-    init(coefficients: [Double]) {
+    init(coefficients: [CGFloat]) {
         precondition(coefficients.isEmpty == false, "Bezier curves require at least one point")
         self.coefficients = coefficients
     }
-    static func * (left: Double, right: BernsteinPolynomialN) -> BernsteinPolynomialN {
+    static func * (left: CGFloat, right: BernsteinPolynomialN) -> BernsteinPolynomialN {
         return BernsteinPolynomialN(coefficients: right.coefficients.map { left * $0 })
     }
     static func == (left: BernsteinPolynomialN, right: BernsteinPolynomialN) -> Bool {
@@ -35,7 +35,7 @@ struct BernsteinPolynomialN: BernsteinPolynomial {
         guard order > 0 else { return BernsteinPolynomialN(coefficients: [CGFloat.zero]) }
         return CGFloat(order) * hodograph
     }
-    func value(at t: Double) -> Double {
+    func value(at t: CGFloat) -> CGFloat {
         return self.split(at: t).left.coefficients.last!
     }
     private var hodograph: BernsteinPolynomialN {
@@ -43,16 +43,16 @@ struct BernsteinPolynomialN: BernsteinPolynomial {
         let differences = (0..<order).map { coefficients[$0 + 1] - coefficients[$0] }
         return BernsteinPolynomialN(coefficients: differences)
     }
-    func split(at t: Double) -> (left: BernsteinPolynomialN, right: BernsteinPolynomialN) {
+    func split(at t: CGFloat) -> (left: BernsteinPolynomialN, right: BernsteinPolynomialN) {
         guard order > 0 else {
             // splitting a point results in getting a point back
             return (left: self, right: self)
         }
         // apply de Casteljau Algorithm
-        var leftPoints = [Double](repeating: .zero, count: coefficients.count)
-        var rightPoints = [Double](repeating: .zero, count: coefficients.count)
+        var leftPoints = [CGFloat](repeating: .zero, count: coefficients.count)
+        var rightPoints = [CGFloat](repeating: .zero, count: coefficients.count)
         let n = order
-        var scratchPad: [Double] = coefficients
+        var scratchPad: [CGFloat] = coefficients
         leftPoints[0] = scratchPad[0]
         rightPoints[n] = scratchPad[n]
         for j in 1...n {
@@ -65,7 +65,7 @@ struct BernsteinPolynomialN: BernsteinPolynomial {
         return (left: BernsteinPolynomialN(coefficients: leftPoints),
                 right: BernsteinPolynomialN(coefficients: rightPoints))
     }
-    func split(from t1: Double, to t2: Double) -> BernsteinPolynomialN {
+    func split(from t1: CGFloat, to t2: CGFloat) -> BernsteinPolynomialN {
         guard (t1 > t2) == false else {
             // simplifying to t1 <= t2 would infinite loop on NaN because NaN comparisons are always false
             return split(from: t2, to: t1).reversed()
@@ -90,14 +90,14 @@ extension BernsteinPolynomialN {
         // 9.3 Multiplication of Polynomials in Bernstein Form
         let m = left.order
         let n = right.order
-        let points = (0...m + n).map { k -> Double in
+        let points = (0...m + n).map { k -> CGFloat in
             let start = max(k - n, 0)
             let end = min(m, k)
             let sum = (start...end).reduce(CGFloat.zero) { totalSoFar, i  in
                 let j = k - i
                 return totalSoFar + CGFloat(Utils.binomialCoefficient(m, choose: i) * Utils.binomialCoefficient(n, choose: j)) * left.coefficients[i] * right.coefficients[j]
             }
-            let divisor = Double(Utils.binomialCoefficient(m + n, choose: k))
+            let divisor = CGFloat(Utils.binomialCoefficient(m + n, choose: k))
             return sum / divisor
         }
         return BernsteinPolynomialN(coefficients: points)

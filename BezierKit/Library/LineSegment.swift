@@ -64,7 +64,7 @@ public struct LineSegment: BezierCurve, Equatable {
         return (self.p1 - self.p0).perpendicular.normalize()
     }
 
-    public func split(from t1: Double, to t2: Double) -> LineSegment {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> LineSegment {
         return LineSegment(p0: self.point(at: t1), p1: self.point(at: t2))
     }
 
@@ -83,7 +83,7 @@ public struct LineSegment: BezierCurve, Equatable {
         return BoundingBox(min: CGPoint.min(p0, p1), max: CGPoint.max(p0, p1))
     }
 
-    public func point(at t: Double) -> CGPoint {
+    public func point(at t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         } else if t == 1 {
@@ -103,7 +103,7 @@ public struct LineSegment: BezierCurve, Equatable {
         return (x: [], y: [], all: [])
     }
 
-    public func project(_ point: CGPoint) -> (point: CGPoint, t: Double) {
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         // optimized implementation for line segments can be directly computed
         // default project implementation is found in BezierCurve protocol extension
         let relativePoint    = point - self.p0

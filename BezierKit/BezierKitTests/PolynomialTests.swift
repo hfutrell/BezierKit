@@ -57,7 +57,7 @@ class PolynomialTests: XCTestCase {
     func testDegree3() {
         // x^3 - 6x^2 + 11x - 6
         let polynomial = BernsteinPolynomial3(b0: -6, b1: -7.0 / 3.0, b2: -2.0 / 3.0, b3: 0)
-        XCTAssertEqual(polynomial.coefficients, [-6, Double(-7.0 / 3.0), Double(-2.0 / 3.0), 0.0])
+        XCTAssertEqual(polynomial.coefficients, [-6, CGFloat(-7.0 / 3.0), CGFloat(-2.0 / 3.0), 0.0])
         let roots = findDistinctRoots(of: polynomial, between: 0, and: 4)
         XCTAssertEqual(roots[0], 1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
@@ -93,7 +93,8 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[2], 1, accuracy: accuracy)
         XCTAssertEqual(roots[3], 1.2, accuracy: accuracy)
     }
-
+    // Skip on platforms where CGFloat is 32bit
+    #if !(arch(i386) || arch(arm) || arch(wasm32))
     func testDegree4RepeatedRoots() {
         // x^4 - 2x^2 + 1
         let polynomial = BernsteinPolynomial4(b0: 1, b1: 1, b2: 2.0 / 3.0, b3: 0, b4: 0)
@@ -102,7 +103,7 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[0], -1, accuracy: accuracy)
         XCTAssertEqual(roots[1], 1, accuracy: accuracy)
     }
-
+    #endif
     func testDegree5() {
         // 0.2x^5 - 0.813333x^3 - 8.56x
         let polynomial = BernsteinPolynomial5(b0: 0, b1: -1.712, b2: -3.424, b3: -5.2173333, b4: -7.1733332, b5: -9.173333)

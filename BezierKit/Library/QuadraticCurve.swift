@@ -108,7 +108,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return a*p0 + b*p1
     }
 
-    public func split(from t1: Double, to t2: Double) -> QuadraticCurve {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let k = (t2 - t1) / 2
         let p0 = self.point(at: t1)
@@ -132,7 +132,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return (left: leftCurve, right: rightCurve)
     }
 
-    public func project(_ point: CGPoint) -> (point: CGPoint, t: Double) {
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         func multiplyCoordinates(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
@@ -195,7 +195,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
         return BoundingBox(min: mmin, max: mmax)
     }
 
-    public func point(at t: Double) -> CGPoint {
+    public func point(at t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         } else if t == 1 {

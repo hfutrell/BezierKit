@@ -62,8 +62,8 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
     }
 
     public init(lineSegment: LineSegment) {
-        let oneThird: Double = 1.0 / 3.0
-        let twoThirds: Double = 2.0 / 3.0
+        let oneThird: CGFloat = 1.0 / 3.0
+        let twoThirds: CGFloat = 2.0 / 3.0
         self.init(p0: lineSegment.p0,
                   p1: twoThirds * lineSegment.p0 + oneThird * lineSegment.p1,
                   p2: oneThird * lineSegment.p0 + twoThirds * lineSegment.p1,
@@ -71,8 +71,8 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
     }
 
     public init(quadratic: QuadraticCurve) {
-        let oneThird: Double = 1.0 / 3.0
-        let twoThirds: Double = 2.0 / 3.0
+        let oneThird: CGFloat = 1.0 / 3.0
+        let twoThirds: CGFloat = 2.0 / 3.0
         self.init(p0: quadratic.p0,
                   p1: twoThirds * quadratic.p1 + oneThird * quadratic.p0,
                   p2: oneThird * quadratic.p2 + twoThirds * quadratic.p1,
@@ -187,7 +187,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         return temp1 + temp2 + temp3
     }
 
-    public func split(from t1: Double, to t2: Double) -> CubicCurve {
+    public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let k = (t2 - t1) / 3.0
         let p0 = self.point(at: t1)
@@ -217,7 +217,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
 
     }
 
-    public func project(_ point: CGPoint) -> (point: CGPoint, t: Double) {
+    public func project(_ point: CGPoint) -> (point: CGPoint, t: CGFloat) {
         func mul(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
@@ -298,15 +298,15 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable {
         return BoundingBox(min: mmin, max: mmax)
     }
 
-    public func point(at t: Double) -> CGPoint {
+    public func point(at t: CGFloat) -> CGPoint {
         if t == 0 {
             return self.p0
         } else if t == 1 {
             return self.p3
         }
         let mt = 1.0 - t
-        let mt2: Double    = mt*mt
-        let t2: Double     = t*t
+        let mt2: CGFloat    = mt*mt
+        let t2: CGFloat     = t*t
         let a = mt2 * mt
         let b = mt2 * t * 3.0
         let c = mt * t2 * 3.0
