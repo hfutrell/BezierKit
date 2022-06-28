@@ -8,7 +8,7 @@
 
 import XCTest
 @testable import BezierKit
-#if !os(WASI)
+
 class CubicCurveTests: XCTestCase {
 
     override func setUp() {
@@ -655,4 +655,3 @@ class CubicCurveTests: XCTestCase {
         XCTAssertNotEqual(c1, c5)
     }
 }
-#endif
