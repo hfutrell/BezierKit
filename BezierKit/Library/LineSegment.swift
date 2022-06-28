@@ -129,7 +129,3 @@ extension LineSegment: Flatness {
     public var flatnessSquared: CGFloat { return 0.0 }
     public var flatness: CGFloat { return 0.0 }
 }
-
-extension LineSegment: PointClassifiable {
-    var isPoint: Bool { return self.p0 == self.p1 }
-}

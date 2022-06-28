@@ -307,11 +307,6 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol PointClassifiable {
-    /// returns true if all control points are equal
-    var isPoint: Bool { get }
-}
-
 internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable, PointClassifiable {
     // intentionally empty, just declare conformance if you're not a line
 }

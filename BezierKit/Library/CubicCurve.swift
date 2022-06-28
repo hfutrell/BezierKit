@@ -341,7 +341,3 @@ extension CubicCurve: Flatness {
         return (1.0 / 16.0) * ( temp1 + temp2 )
     }
 }
-
-extension CubicCurve: PointClassifiable {
-    var isPoint: Bool { return self.p0 == self.p1 && self.p1 == self.p2 && self.p2 == self.p3 }
-}
