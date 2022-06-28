@@ -62,7 +62,7 @@ internal struct ImplicitPolynomial {
         }
 
         let resultOrder = order * polynomialOrder
-        var sum: BernsteinPolynomialN = BernsteinPolynomialN(coefficients: [CGFloat](repeating: 0, count: resultOrder + 1))
+        var sum: BernsteinPolynomialN = BernsteinPolynomialN(coefficients: [Double](repeating: 0, count: resultOrder + 1))
         for i in 0...order {
             let xPower: BernsteinPolynomialN = xPowers[i]
             for j in 0...order {
@@ -79,7 +79,7 @@ internal struct ImplicitPolynomial {
                 // swiftlint:disable shorthand_operator
                 if k > 0 {
                     // bring the term up to degree k
-                    term = term * BernsteinPolynomialN(coefficients: [CGFloat](repeating: 1, count: k + 1))
+                    term = term * BernsteinPolynomialN(coefficients: [Double](repeating: 1, count: k + 1))
                 } else {
                     assert(k == 0, "for k < 0 we should have c == 0")
                 }
@@ -90,10 +90,10 @@ internal struct ImplicitPolynomial {
         return sum
     }
 
-    func value(at point: CGPoint) -> CGFloat {
+    func value(at point: CGPoint) -> Double {
         let x = point.x
         let y = point.y
-        var sum: CGFloat = 0
+        var sum: Double = 0
         for i in 0...order {
             for j in 0...order {
                 sum += coefficient(i, j) * pow(x, CGFloat(i)) * pow(y, CGFloat(j))
@@ -114,7 +114,7 @@ internal struct ImplicitPolynomial {
 }
 
 private struct ImplicitLineProduct {
-    var a20, a11, a10, a02, a01, a00: CGFloat
+    var a20, a11, a10, a02, a01, a00: Double
     static func * (left: ImplicitLine, right: ImplicitLineProduct) -> ImplicitPolynomial {
         let a00 = left.a00 * right.a00
         let a10 = left.a00 * right.a10 + left.a10 * right.a00
@@ -153,7 +153,7 @@ private struct ImplicitLineProduct {
 }
 
 private struct ImplicitLine {
-    var a10, a01, a00: CGFloat
+    var a10, a01, a00: Double
     static func * (left: ImplicitLine, right: ImplicitLine) -> ImplicitLineProduct {
         return ImplicitLineProduct(a20: left.a10 * right.a10,
                                    a11: left.a01 * right.a10 + left.a10 * right.a01,

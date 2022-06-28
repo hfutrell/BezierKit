@@ -234,7 +234,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
         self.points = temp
     }
 
-    public var length: CGFloat {
+    public var length: Double {
         return self.curves.reduce(0.0) { $0 + $1.length() }
     }
 
@@ -250,7 +250,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
         return self.startingPoint == self.endingPoint
     }
 
-    public func offset(distance d: CGFloat) -> PathComponent? {
+    public func offset(distance d: Double) -> PathComponent? {
         var offsetCurves = self.curves.reduce([]) {
             $0 + $1.offset(distance: d)
         }
