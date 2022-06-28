@@ -8,7 +8,7 @@
 
 import XCTest
 @testable import BezierKit
-#if !os(WASI)
+
 class CubicCurveTests: XCTestCase {
 
     override func setUp() {
@@ -505,6 +505,8 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
     }
 
+    // Skip on platforms where CGFloat is 32bit
+    #if !(arch(i386) || arch(arm) || arch(wasm32))
     func testRealWorldNearlyCoincidentCurvesIntersection() {
         // these curves are nearly coincident over from c1's t = 0.278 to 1.0
         // staying roughly 0.0002 distance of eachother
@@ -524,6 +526,7 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(intersections[1].t1, 1)
         XCTAssertEqual(intersections[1].t2, 0)
     }
+    #endif
 
     func testIntersectionsCubicButActuallyLinear() {
         // this test presents a challenge for an implicitization based approach
@@ -655,4 +658,3 @@ class CubicCurveTests: XCTestCase {
         XCTAssertNotEqual(c1, c5)
     }
 }
-#endif

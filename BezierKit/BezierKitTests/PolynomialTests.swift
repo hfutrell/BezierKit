@@ -93,7 +93,8 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[2], 1, accuracy: accuracy)
         XCTAssertEqual(roots[3], 1.2, accuracy: accuracy)
     }
-    #if !os(WASI)
+    // Skip on platforms where CGFloat is 32bit
+    #if !(arch(i386) || arch(arm) || arch(wasm32))
     func testDegree4RepeatedRoots() {
         // x^4 - 2x^2 + 1
         let polynomial = BernsteinPolynomial4(b0: 1, b1: 1, b2: 2.0 / 3.0, b3: 0, b4: 0)

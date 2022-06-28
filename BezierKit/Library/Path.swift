@@ -33,7 +33,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-open class Path: NSObject, NSSecureCoding {
+open class Path: NSObject {
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
@@ -352,7 +352,6 @@ open class Path: NSObject, NSSecureCoding {
         return outerComponents.values.map { Path(components: $0) }
     }
 
-    #if !os(WASI)
     public override var hash: Int {
         // override is needed because NSObject hashing is independent of Swift's Hashable
         return lock.sync {
@@ -366,8 +365,11 @@ open class Path: NSObject, NSSecureCoding {
             return h
         }
     }
-    #endif
 }
+
+#if !os(WASI)
+extension Path: NSSecureCoding {}
+#endif
 
 extension Path: Transformable {
     public func copy(using t: CGAffineTransform) -> Self {
