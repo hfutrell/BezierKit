@@ -308,122 +308,64 @@ internal class Utils {
         return atan2(d1.cross(d2), d1.dot(d2))
     }
 
-    enum PairiterationStrategy {
-        /// DFS by recursive function call
-        case recurse
-        /// DFS by stack to avoid deep call stack.
-        /// This strategy is 2x slower than `recurse` strategy,
-        /// but consumes much less call stack.
-        case manualStack
-
-        static var `default`: PairiterationStrategy {
-            // Use stack-friendly strategy on WebAssembly since
-            // wasm-ld, a defacto WebAssembly linker sets stack size
-            // very small (64KB) by default.
-            #if arch(wasm32)
-            return .manualStack
-            #else
-            return .recurse
-            #endif
-        }
-    }
-
     // disable this SwiftLint warning about function having more than 5 parameters
     // swiftlint:disable function_parameter_count
+
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],
                                       _ accuracy: CGFloat,
-                                      _ strategy: PairiterationStrategy = .default) -> Bool {
+                                      _ totalIterations: inout Int) -> Bool {
 
         let maximumIterations = 900
-        var totalIterations = 0
+        let maximumIntersections = c1.curve.order * c2.curve.order
 
-        /// Parameters
-        /// - enqueueWork: A closure to enqueue a child work. Returns `false` when search should be stopped
-        func process(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-                     _ c1b: BoundingBox, _ c2b: BoundingBox,
-                     _ results: inout [Intersection],
-                     _ enqueueWork: (_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-                                     _ c1b: BoundingBox, _ c2b: BoundingBox,
-                                     inout [Intersection]) -> Bool
-                     ) -> Bool {
-            totalIterations += 1
-            guard totalIterations <= maximumIterations else { return false }
+        totalIterations += 1
+        guard totalIterations <= maximumIterations else { return false }
+        guard results.count <= maximumIntersections else { return false }
+        guard c1b.overlaps(c2b) else { return true }
 
-            let maximumIntersections = c1.curve.order * c2.curve.order
-            guard results.count <= maximumIntersections else { return false }
+        let canSplit1 = c1.canSplit
+        let canSplit2 = c2.canSplit
+        let size1 = c1b.size
+        let size2 = c2b.size
+        let shouldRecurse1 = canSplit1 && ((size1.x + size1.y) >= accuracy)
+        let shouldRecurse2 = canSplit2 && ((size2.x + size2.y) >= accuracy)
 
-            // fast-path: when no overlap in boxes
-            guard c1b.overlaps(c2b) else { return true }
-
-            let canSplit1 = c1.canSplit
-            let canSplit2 = c2.canSplit
-            let size1 = c1b.size
-            let size2 = c2b.size
-            let shouldRecurse1 = canSplit1 && ((size1.x + size1.y) >= accuracy)
-            let shouldRecurse2 = canSplit2 && ((size2.x + size2.y) >= accuracy)
-
-            if shouldRecurse1 == false, shouldRecurse2 == false {
-                // subcurves are small enough or we simply cannot recurse any more
-                let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
-                let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-                guard let intersection = l1.intersections(with: l2, checkCoincidence: false).first else { return true }
-                let t1 = intersection.t1
-                let t2 = intersection.t2
-                results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
-                                            t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
-            } else if shouldRecurse1, shouldRecurse2 {
-                let cc1 = c1.split(at: 0.5)
-                let cc2 = c2.split(at: 0.5)
-                let cc1lb = cc1.left.curve.boundingBox
-                let cc1rb = cc1.right.curve.boundingBox
-                let cc2lb = cc2.left.curve.boundingBox
-                let cc2rb = cc2.right.curve.boundingBox
-                guard enqueueWork(cc1.right, cc2.right, cc1rb, cc2rb, &results) else { return false }
-                guard enqueueWork(cc1.right, cc2.left, cc1rb, cc2lb, &results) else { return false }
-                guard enqueueWork(cc1.left, cc2.right, cc1lb, cc2rb, &results) else { return false }
-                guard enqueueWork(cc1.left, cc2.left, cc1lb, cc2lb, &results) else { return false }
-            } else if shouldRecurse1 {
-                let cc1 = c1.split(at: 0.5)
-                let cc1lb = cc1.left.curve.boundingBox
-                let cc1rb = cc1.right.curve.boundingBox
-                guard enqueueWork(cc1.right, c2, cc1rb, c2b, &results) else { return false }
-                guard enqueueWork(cc1.left, c2, cc1lb, c2b, &results) else { return false }
-            } else if shouldRecurse2 {
-                let cc2 = c2.split(at: 0.5)
-                let cc2lb = cc2.left.curve.boundingBox
-                let cc2rb = cc2.right.curve.boundingBox
-                guard enqueueWork(c1, cc2.left, c1b, cc2lb, &results) else { return false }
-                guard enqueueWork(c1, cc2.right, c1b, cc2rb, &results) else { return false }
-            }
-            return true
+        if shouldRecurse1 == false, shouldRecurse2 == false {
+            // subcurves are small enough or we simply cannot recurse any more
+            let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
+            let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
+            guard let intersection = l1.intersections(with: l2, checkCoincidence: false).first else { return true }
+            let t1 = intersection.t1
+            let t2 = intersection.t2
+            results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
+                                        t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
+        } else if shouldRecurse1, shouldRecurse2 {
+            let cc1 = c1.split(at: 0.5)
+            let cc2 = c2.split(at: 0.5)
+            let cc1lb = cc1.left.curve.boundingBox
+            let cc1rb = cc1.right.curve.boundingBox
+            let cc2lb = cc2.left.curve.boundingBox
+            let cc2rb = cc2.right.curve.boundingBox
+            guard Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy, &totalIterations) else { return false }
+        } else if shouldRecurse1 {
+            let cc1 = c1.split(at: 0.5)
+            let cc1lb = cc1.left.curve.boundingBox
+            let cc1rb = cc1.right.curve.boundingBox
+            guard Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy, &totalIterations) else { return false }
+        } else if shouldRecurse2 {
+            let cc2 = c2.split(at: 0.5)
+            let cc2lb = cc2.left.curve.boundingBox
+            let cc2rb = cc2.right.curve.boundingBox
+            guard Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy, &totalIterations) else { return false }
+            guard Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy, &totalIterations) else { return false }
         }
-
-        switch strategy {
-        case .recurse:
-            func runImmediately(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-                                _ c1b: BoundingBox, _ c2b: BoundingBox,
-                                _ results: inout [Intersection]) -> Bool {
-                return process(c1, c2, c1b, c2b, &results) {
-                    runImmediately($0, $1, $2, $3, &$4)
-                }
-            }
-            return runImmediately(c1, c2, c1b, c2b, &results)
-        case .manualStack:
-            typealias Work = (c1: Subcurve<C1>, c2: Subcurve<C2>, c1b: BoundingBox, c2b: BoundingBox)
-            var worklist: [Work] = [(c1, c2, c1b, c2b)]
-            while let work = worklist.popLast() {
-                let shouldContinue = process(work.c1, work.c2, work.c1b, work.c2b, &results) { c1, c2, c1b, c2b, _ in
-                    worklist.append((c1, c2, c1b, c2b))
-                    return true
-                }
-                guard shouldContinue else {
-                    return false
-                }
-            }
-            return true
-        }
+        return true
     }
 
     // swiftlint:enable function_parameter_count
