@@ -466,6 +466,44 @@ class Demos {
                                 }
 
     })
+    static let demo23 = Demo(title: "PathComponent(arcCenter: ...)",
+                             quadraticControlPoints: [],
+                             cubicControlPoints: [],
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+                                if demoState.quadratic {
+                                    return
+                                }
+                                
+                                let pathComponent = PathComponent(
+                                    arcCenter: CGPoint(x: 100, y: 105),
+                                    radius: 100,
+                                    startAngle: .pi / 2,
+                                    endAngle: 2 * .pi,
+                                    clockwise: true
+                                )
+                                Draw.drawPathComponent(context, pathComponent: pathComponent)
+                                for curve in pathComponent.curves {
+                                    Draw.drawSkeleton(context, curve: curve)
+                                }
+    })
+    static let demo24 = Demo(title: "PathComponent(ovalIn rect: CGRect)",
+                             quadraticControlPoints: [],
+                             cubicControlPoints: [],
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+                                if demoState.quadratic {
+                                    return
+                                }
+                                
+                                let pathComponent = PathComponent(
+                                    ovalIn: CGRect(
+                                        x: 0, y: 52.5,
+                                        width: 200, height: 100
+                                    )
+                                )
+                                Draw.drawPathComponent(context, pathComponent: pathComponent)
+                                Draw.setColor(context, color: Draw.pinkish)
+                                Draw.drawBoundingBox(context, boundingBox: pathComponent.boundingBox)
+    })
 
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22]
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23, demo24]
 }
