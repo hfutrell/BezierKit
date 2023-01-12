@@ -92,7 +92,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
         return self.points[self.offsets[index] + self.orders[index]]
     }
 
-    internal func cubic(at index: Int) -> CubicCurve {
+    public func cubic(at index: Int) -> CubicCurve {
         assert(self.order(at: index) == 3)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
@@ -100,7 +100,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
         }
     }
 
-    internal func quadratic(at index: Int) -> QuadraticCurve {
+    public func quadratic(at index: Int) -> QuadraticCurve {
         assert(self.order(at: index) == 2)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
@@ -108,7 +108,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
         }
     }
 
-    internal func line(at index: Int) -> LineSegment {
+    public func line(at index: Int) -> LineSegment {
         assert(self.order(at: index) == 1)
         let offset = self.offsets[index]
         return self.points.withUnsafeBufferPointer { p in
