@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-@objc(BezierKitPathComponent) open class PathComponent: NSObject, Reversible, Transformable {
+open class PathComponent: NSObject, Reversible, Transformable {
 
     private let offsets: [Int]
     public let points: [CGPoint]
@@ -46,11 +46,11 @@ import Foundation
         return self.orders.count
     }
 
-    @objc public var startingPoint: CGPoint {
+    public var startingPoint: CGPoint {
         return self.points[0]
     }
 
-    @objc public var endingPoint: CGPoint {
+    public var endingPoint: CGPoint {
         return self.points.last!
     }
 
@@ -508,7 +508,7 @@ import Foundation
         return windingCountImpliesContainment(windingCount, using: rule)
     }
 
-    @objc(enumeratePointsIncludingControlPoints:usingBlock:) public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
+    public func enumeratePoints(includeControlPoints: Bool, using block: (CGPoint) -> Void) {
         if includeControlPoints {
             for p in points {
                 block(p)

@@ -22,14 +22,30 @@ fileprivate extension Data {
     }
 }
 
-fileprivate extension InputStream {
-    func readNativeValue<T>(_ value: UnsafeMutablePointer<T>) -> Bool {
+private struct DataStream {
+    var dataCursor: Data.Index
+    let data: Data
+
+    init(data: Data) {
+        self.data = data
+        self.dataCursor = data.startIndex
+    }
+
+    mutating func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength: Int) -> Int {
+        let startIndex = dataCursor
+        let endIndex = min(dataCursor + maxLength, data.count)
+        data.copyBytes(to: buffer, from: startIndex..<endIndex)
+        let readBytes = endIndex - startIndex
+        dataCursor += readBytes
+        return readBytes
+    }
+    mutating func readNativeValue<T>(_ value: UnsafeMutablePointer<T>) -> Bool {
         let size = MemoryLayout<T>.size
         return value.withMemoryRebound(to: UInt8.self, capacity: size) {
             self.read($0, maxLength: size) == size
         }
     }
-    func appendNativeValues<T>(to array: inout [T], count: Int) -> Bool {
+    mutating func appendNativeValues<T>(to array: inout [T], count: Int) -> Bool {
         guard count > 0 else { return true }
         let size = count * MemoryLayout<T>.stride
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
@@ -49,22 +65,21 @@ private struct SerializationTypes {
     typealias Coordinate    = Float64
 }
 
-@objc public extension Path {
+public extension Path {
 
     private struct SerializationConstants {
         static let magicNumberVersion1: SerializationTypes.MagicNumber = 1223013157 // just a random number that helps us identify if the data is OK and saved in compatible version
         static let startComponentCommand: SerializationTypes.Command = 0
     }
 
-    @objc(initWithData:) convenience init?(data: Data) {
+    convenience init?(data: Data) {
 
         var components: [PathComponent] = []
 
         var commandCount: SerializationTypes.CommandCount = 0
         var commands: [SerializationTypes.Command] = []
 
-        let stream = InputStream(data: data)
-        stream.open()
+        var stream = DataStream(data: data)
 
         // check the magic number
         var magic = SerializationTypes.MagicNumber.max

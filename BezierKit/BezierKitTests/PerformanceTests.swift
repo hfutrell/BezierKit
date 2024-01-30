@@ -9,6 +9,7 @@
 import BezierKit
 import XCTest
 
+#if !os(WASI)
 private extension PerformanceTests {
 
     func generateRandomCurves(count: Int, selfIntersect: Bool? = nil, reseed: Int? = nil) -> [CubicCurve] {
@@ -229,3 +230,4 @@ class PerformanceTests: XCTestCase {
 
     #endif
 }
+#endif
