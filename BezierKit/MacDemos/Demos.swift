@@ -466,6 +466,60 @@ class Demos {
                                 }
 
     })
+    
+    static let demo23 = Demo(title: "PathComponent split.inner",
+                             quadraticControlPoints: [],
+                             cubicControlPoints: [],
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+        
+        Draw.reset(context)
+        
+        var flip = CGAffineTransform(scaleX: 1, y: -1)
+        let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
+        let height = CTFontGetXHeight(font)
+        var translate = CGAffineTransform.init(translationX: 0, y: -height + 15)
+        
+        var unichar: UniChar = ("H" as NSString).character(at: 0)
+        var glyph: CGGlyph = 0
+        CTFontGetGlyphsForCharacters(font, &unichar, &glyph, 1)
+        
+        let cgPath: CGPath = CTFontCreatePathForGlyph(font, glyph, nil)!
+        let path = Path(cgPath: cgPath.copy(using: &translate)!)
+        
+        let component = path.components[0]
+        let splitted1 = component.split(from: .init(elementIndex: 0, t: 0), to: .init(elementIndex: component.numberOfElements/2, t: 1), bias: .inner)
+        let splitted2 = component.split(from: .init(elementIndex: component.numberOfElements/2, t: 1), to: .init(elementIndex: 0, t: 0), bias: .inner)
+        assert(splitted1 == splitted2.reversed())
+        
+        Draw.drawPath(context, Path(components: [splitted2]))
+    })
+    
+    static let demo24 = Demo(title: "PathComponent split.outer",
+                             quadraticControlPoints: [],
+                             cubicControlPoints: [],
+                             drawFunction: {(context: CGContext, demoState: DemoState) in
+        
+        Draw.reset(context)
+        
+        var flip = CGAffineTransform(scaleX: 1, y: -1)
+        let font = CTFontCreateWithName("Times" as CFString, 350, &flip)
+        let height = CTFontGetXHeight(font)
+        var translate = CGAffineTransform.init(translationX: 0, y: -height + 15)
+        
+        var unichar: UniChar = ("H" as NSString).character(at: 0)
+        var glyph: CGGlyph = 0
+        CTFontGetGlyphsForCharacters(font, &unichar, &glyph, 1)
+        
+        let cgPath: CGPath = CTFontCreatePathForGlyph(font, glyph, nil)!
+        let path = Path(cgPath: cgPath.copy(using: &translate)!)
+        
+        let component = path.components[0]
+        let splitted1 = component.split(from: .init(elementIndex: 0, t: 0), to: .init(elementIndex: component.numberOfElements/2, t: 1), bias: .outer)
+        let splitted2 = component.split(from: .init(elementIndex: component.numberOfElements/2, t: 1), to: .init(elementIndex: 0, t: 0), bias: .outer)
+        assert(splitted1 == splitted2.reversed())
 
-    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22]
+        Draw.drawPath(context, Path(components: [splitted1]))
+    })
+
+    static let all: [Demo] = [demo1, demo2, demo3, demo4, demo5, demo6, demo7, demo8, demo9, demo10, demo11, demo12, demo13, demo14, demo15, demo16, demo17, demo18, demo19, demo20, demo21, demo22, demo23, demo24]
 }
