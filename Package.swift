@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "BezierKit",
     platforms: [
-        .macOS(.v10_12), .iOS(.v12),
+        .macOS(.v10_12), .iOS(.v13),
     ],
     products: [
         .library(
