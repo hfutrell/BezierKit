@@ -118,7 +118,7 @@ public extension BernsteinPolynomial {
 //    }
 }
 
-public struct BernsteinPolynomial0: BernsteinPolynomial {
+public struct BernsteinPolynomial0: BernsteinPolynomial, Sendable {
 //    func enumerated(block: (Int, CGFloat) -> Void) {
 //        block(0, b0)
 //    }
@@ -142,7 +142,7 @@ public struct BernsteinPolynomial0: BernsteinPolynomial {
     }
 }
 
-public struct BernsteinPolynomial1: BernsteinPolynomial {
+public struct BernsteinPolynomial1: BernsteinPolynomial, Sendable {
 //    func enumerated(block: (Int, CGFloat) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -177,7 +177,7 @@ public struct BernsteinPolynomial1: BernsteinPolynomial {
     public var order: Int { return 1 }
 }
 
-public struct BernsteinPolynomial2: BernsteinPolynomial {
+public struct BernsteinPolynomial2: BernsteinPolynomial, Sendable {
 //    func enumerated(block: (Int, CGFloat) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -210,7 +210,7 @@ public struct BernsteinPolynomial2: BernsteinPolynomial {
     public var order: Int { return 2 }
 }
 
-public struct BernsteinPolynomial3: BernsteinPolynomial {
+public struct BernsteinPolynomial3: BernsteinPolynomial, Sendable {
 //    func enumerated(block: (Int, CGFloat) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -248,7 +248,7 @@ public struct BernsteinPolynomial3: BernsteinPolynomial {
     public var order: Int { return 3 }
 }
 
-public struct BernsteinPolynomial4: BernsteinPolynomial {
+public struct BernsteinPolynomial4: BernsteinPolynomial, Sendable {
 //    func enumerated(block: (Int, CGFloat) -> Void) {
 //        block(0, b0)
 //        block(1, b1)
@@ -291,7 +291,7 @@ public struct BernsteinPolynomial4: BernsteinPolynomial {
     public var order: Int { return 4 }
 }
 
-public struct BernsteinPolynomial5: BernsteinPolynomial {
+public struct BernsteinPolynomial5: BernsteinPolynomial, Sendable {
 //    func enumerated(block: (Int, CGFloat) -> Void) {
 //        block(0, b0)
 //        block(1, b1)

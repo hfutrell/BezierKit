@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-public struct LineSegment: BezierCurve, Equatable {
+public struct LineSegment: BezierCurve, Equatable, Sendable {
 
     public var p0, p1: CGPoint
 

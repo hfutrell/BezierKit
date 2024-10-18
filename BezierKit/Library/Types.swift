@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-public struct Intersection: Equatable, Comparable {
+public struct Intersection: Equatable, Comparable, Sendable {
     public var t1: CGFloat
     public var t2: CGFloat
     public static func < (lhs: Intersection, rhs: Intersection ) -> Bool {
@@ -25,7 +25,7 @@ public struct Intersection: Equatable, Comparable {
     }
 }
 
-public struct Interval: Equatable {
+public struct Interval: Equatable, Sendable {
     public var start: CGFloat
     public var end: CGFloat
     public init(start: CGFloat, end: CGFloat) {
@@ -34,7 +34,7 @@ public struct Interval: Equatable {
     }
 }
 
-public struct BoundingBox: Equatable {
+public struct BoundingBox: Equatable, Sendable {
     public var min: CGPoint
     public var max: CGPoint
     public var cgRect: CGRect {
