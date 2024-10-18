@@ -11,19 +11,13 @@
 
 #if !os(WASI)
 class LockTests: XCTestCase {
-    func testPathPropertyAtomicity() async {
+    @MainActor func testPathPropertyAtomicity() {
 
         @MainActor class Results: Sendable {
             #if canImport(CoreGraphics)
             var cgPaths: [Int: CGPath] = [:]
-            func setPath(at index: Int, _ value: CGPath) {
-                cgPaths[index] = value
-            }
             #endif
             var boundingBoxes: [Int: BoundingBox] = [:]
-            func setBoundingBox(at index: Int, _ value: BoundingBox) {
-                boundingBoxes[index] = value
-            }
         }
 
         // ensure that lazy properties of Path are only initialized once
@@ -34,35 +28,36 @@ class LockTests: XCTestCase {
         let expectation = XCTestExpectation()
         expectation.expectedFulfillmentCount = threadCount
 
-        let results = await Results()
+        let results = Results()
         for i in 0..<threadCount {
             let index = i
-            Task.detached {
+            DispatchQueue.global(qos: .default).async {
 #if canImport(CoreGraphics)
                 let pathValue = path.cgPath
 #endif
                 let boundingBoxValue = path.boundingBox
-                await MainActor.run {
+                DispatchQueue.main.async {
 #if canImport(CoreGraphics)
-                    results.setPath(at: index, pathValue)
+                    results.cgPaths[index] = pathValue
 #endif
-                    results.setBoundingBox(at: index, boundingBoxValue)
+                    results.boundingBoxes[index] = boundingBoxValue
                     expectation.fulfill()
                 }
             }
         }
+        wait(for: [expectation], timeout: 10.0)
 
-        await fulfillment(of: [expectation], timeout: 10.0)
-
-        await MainActor.run {
+        DispatchQueue.main.async {
 #if canImport(CoreGraphics)
-            XCTAssertEqual(results.cgPaths.values.count, threadCount)
-            XCTAssertEqual(results.cgPaths[0], Path(rect: rect).cgPath)
-            XCTAssertTrue(results.cgPaths.values.allSatisfy { $0 === results.cgPaths[0] }, "cgPaths should all refer to the same instance (was it initialized more than once?)")
+            let cgPaths = results.cgPaths
+            XCTAssertEqual(cgPaths.values.count, threadCount)
+            XCTAssertEqual(cgPaths[0], Path(rect: rect).cgPath)
+            XCTAssertTrue(cgPaths.values.allSatisfy { $0 === cgPaths[0] }, "cgPaths should all refer to the same instance (was it initialized more than once?)")
 #endif
+            let boundingBoxes = results.boundingBoxes
             let expectedBoundingBox = Path(rect: rect).boundingBox
-            XCTAssertEqual(results.boundingBoxes.values.count, threadCount)
-            XCTAssertTrue(results.boundingBoxes.values.allSatisfy { $0 == expectedBoundingBox })
+            XCTAssertEqual(boundingBoxes.values.count, threadCount)
+            XCTAssertTrue(boundingBoxes.values.allSatisfy { $0 == expectedBoundingBox })
         }
     }
 }
