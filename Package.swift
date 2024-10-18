@@ -23,7 +23,10 @@ let package = Package(
         .testTarget(
             name: "BezierKitTests",
             dependencies: ["BezierKit"],
-            path: "BezierKit/BezierKitTests"
+            path: "BezierKit/BezierKitTests",
+            exclude: [
+                "Info.plist"
+            ]
         ),
     ],
     swiftLanguageVersions: [.v5]
