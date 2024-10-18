@@ -1006,6 +1006,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1040,6 +1041,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -1075,6 +1077,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1108,6 +1111,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.HolmesFutrell.BezierKit;
 				PRODUCT_NAME = BezierKit;
 				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1129,6 +1133,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -1148,6 +1153,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 5.0;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1168,6 +1174,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-MacTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 			};
@@ -1188,6 +1195,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.HolmesFutrell.BezierKit-MacTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 			};
