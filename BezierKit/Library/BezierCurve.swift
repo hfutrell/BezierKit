@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-public struct Subcurve<CurveType> where CurveType: BezierCurve {
+public struct Subcurve<CurveType>: Sendable where CurveType: BezierCurve {
     public let t1: CGFloat
     public let t2: CGFloat
     public let curve: CurveType
@@ -282,7 +282,7 @@ public protocol Reversible {
     func reversed() -> Self
 }
 
-public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible {
+public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sendable {
     var simple: Bool { get }
     var points: [CGPoint] { get }
     var startingPoint: CGPoint { get set }

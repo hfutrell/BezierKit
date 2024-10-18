@@ -116,7 +116,7 @@ internal class Utils {
             x: B.x + (B.x-C.x)/s,
             y: B.y + (B.y-C.y)/s
         )
-        return ( A:A, B:B, C:C )
+        return (A: A, B: B, C: C)
     }
 
     static func abcRatio(n: Int, t: CGFloat = 0.5) -> CGFloat {

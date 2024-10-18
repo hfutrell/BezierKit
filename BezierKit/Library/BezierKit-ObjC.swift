@@ -15,7 +15,7 @@ import Foundation
 #if !os(WASI) && !os(Linux)
 
 // MARK: Path.swift
-@available (*, unavailable)
+@available(*, unavailable)
 @objc public extension Path {
 
     @objc(isEmpty) var _objc_isEmpty: Bool {
@@ -66,7 +66,7 @@ import Foundation
 }
 
 // MARK: Path+VectorBoolean.swift
-@available (*, unavailable)
+@available(*, unavailable)
 public extension Path {
     @objc(subtractPath:accuracy:) func _objc_subtract(_ other: Path, accuracy: CGFloat=BezierKit.defaultIntersectionAccuracy) -> Path {
         return subtract(other, accuracy: accuracy)
@@ -83,7 +83,7 @@ public extension Path {
 }
 
 // MARK: Path+Data.swift
-@available (*, unavailable)
+@available(*, unavailable)
 public extension Path {
     @objc(initWithData:) convenience init?(_objc_data: Data) {
         self.init(data: _objc_data)
@@ -94,7 +94,7 @@ public extension Path {
 }
 
 // MARK: Path+Projection.swift
-@available (*, unavailable)
+@available(*, unavailable)
 public extension Path {
     @objc(point:isWithinDistanceOfBoundary:) func _objc_pointIsWithinDistanceOfBoundary(_ point: CGPoint, distance: CGFloat) -> Bool {
         return pointIsWithinDistanceOfBoundary(point, distance: distance)

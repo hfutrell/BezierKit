@@ -46,10 +46,6 @@ final internal class BoundingBoxHierarchy {
     internal struct Node: Equatable {
         let boundingBox: BoundingBox
         let type: NodeType
-        init(boundingBox: BoundingBox, type: NodeType) {
-            self.type = type
-            self.boundingBox = boundingBox
-        }
     }
 
     private let boundingBoxes: UnsafePointer<BoundingBox>

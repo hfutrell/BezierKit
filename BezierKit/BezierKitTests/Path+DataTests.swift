@@ -50,7 +50,9 @@ fileprivate extension CGPath {
             context.elements.append(CGPathElementRecord(element.pointee))
         }
         var elementGetterContext = ElementGetterContext()
-        self.apply(info: &elementGetterContext, function: elementGetterApplierFunction)
+        withUnsafeMutablePointer(to: &elementGetterContext) { pointer in
+            self.apply(info: pointer, function: elementGetterApplierFunction)
+        }
         return elementGetterContext.elements
     }
 }

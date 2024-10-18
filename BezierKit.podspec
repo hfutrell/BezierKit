@@ -5,14 +5,14 @@
 
 Pod::Spec.new do |s|
   s.name         = "BezierKit"
-  s.version      = "0.15.0"
+  s.version      = "0.16.0"
   s.summary      = "comprehensive Bezier Path library written in Swift"
   s.homepage     = "https://github.com/hfutrell/BezierKit"
   s.license      = "MIT"
   s.author       = { "Holmes Futrell" => "holmesfutrell@gmail.com" }
   s.swift_version = "5.3"
 
-  s.ios.deployment_target = "10.0"
+  s.ios.deployment_target = "12.0"
   s.osx.deployment_target = "10.12"
   s.ios.framework  = 'UIKit', 'CoreGraphics'
   s.osx.framework  = 'AppKit'

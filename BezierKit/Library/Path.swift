@@ -33,7 +33,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
     }
 }
 
-open class Path: NSObject {
+open class Path: NSObject, @unchecked Sendable {
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
@@ -383,7 +383,7 @@ extension Path: Reversible {
     }
 }
 
-public struct IndexedPathLocation: Equatable, Comparable {
+public struct IndexedPathLocation: Equatable, Comparable, Sendable {
     public let componentIndex: Int
     public let elementIndex: Int
     public let t: CGFloat
@@ -413,7 +413,7 @@ public struct IndexedPathLocation: Equatable, Comparable {
     }
 }
 
-public struct PathIntersection: Equatable {
+public struct PathIntersection: Equatable, Sendable {
     public let indexedPathLocation1, indexedPathLocation2: IndexedPathLocation
     internal init(indexedPathLocation1: IndexedPathLocation, indexedPathLocation2: IndexedPathLocation) {
         self.indexedPathLocation1 = indexedPathLocation1
