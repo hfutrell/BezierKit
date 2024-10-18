@@ -8,8 +8,9 @@
 
 #if canImport(CoreGraphics)
 import CoreGraphics
+#else
+@preconcurrency import Foundation
 #endif
-import Foundation
 
 public struct Intersection: Equatable, Comparable, Sendable {
     public var t1: CGFloat
