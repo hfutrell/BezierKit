@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-public struct ShapeIntersection: Equatable {
+public struct ShapeIntersection: Equatable, Sendable {
     let curve1: BezierCurve
     let curve2: BezierCurve
     let intersections: [Intersection]
@@ -20,8 +20,8 @@ public struct ShapeIntersection: Equatable {
     }
 }
 
-public struct Shape: Equatable {
-    public struct Cap: Equatable {
+public struct Shape: Equatable, Sendable {
+    public struct Cap: Equatable, Sendable {
         let curve: BezierCurve
         let virtual: Bool // a cap is virtual if it is internal (not part of the outline of the boundary)
         init(curve: BezierCurve, virtual: Bool) {

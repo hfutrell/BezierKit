@@ -477,6 +477,16 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], square.components[0]))
     }
 
+    func testCrossingsRemovedSingleCurveLoop() {
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 0, y: 0))
+        cgPath.addCurve(to: CGPoint(x: 0, y: 0),
+                        control1: CGPoint(x: -1, y: 1),
+                        control2: CGPoint(x: 1, y: 1))
+        let path = Path(cgPath: cgPath)
+        XCTAssertEqual(path.crossingsRemoved(), path)
+    }
+
     func testCrossingsRemovedEdgeCase() {
         // this is an edge cases which caused difficulty in practice
         // the contour, which intersects at (1,1) creates two squares, one with -1 winding count
