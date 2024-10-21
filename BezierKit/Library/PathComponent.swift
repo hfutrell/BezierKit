@@ -371,7 +371,10 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
             if i1 == i2 {
                 // we are intersecting a path element against itself (only possible with cubic or higher order)
                 if self.order(at: i1) == 3 {
-                    elementIntersections = self.cubic(at: i1).selfIntersections
+                    elementIntersections = self.cubic(at: i1).selfIntersections.filter {
+                        guard self.numberOfElements == 1 else { return true }
+                        return $0.t1 != 0 || $0.t2 != 1 // exclude intersection of single curve path closing itself
+                    }
                 }
             } else if i1 < i2 {
                 // we are intersecting two distinct path elements
