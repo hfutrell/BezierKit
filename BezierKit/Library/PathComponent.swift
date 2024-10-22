@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-open class PathComponent: NSObject, Reversible, Transformable {
+open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendable {
 
     private let offsets: [Int]
     public let points: [CGPoint]
@@ -330,11 +330,11 @@ open class PathComponent: NSObject, Reversible, Transformable {
             let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
                 let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
                 let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
-                if i1.t == 0.0, (isClosed1 || i1.elementIndex > 0) {
+                if i1.t == 0.0, isClosed1 || i1.elementIndex > 0 {
                     // handle this intersection instead at i1.elementIndex-1 w/ t=1
                     return nil
                 }
-                if i2.t == 0.0, (isClosed2 || i2.elementIndex > 0) {
+                if i2.t == 0.0, isClosed2 || i2.elementIndex > 0 {
                     // handle this intersection instead at i2.elementIndex-1 w/ t=1
                     return nil
                 }
@@ -353,11 +353,13 @@ open class PathComponent: NSObject, Reversible, Transformable {
         }
         let numPoints = self.order(at: i2) + 1
         let offset = self.offsets[i2]
+        // swiftlint:disable for_where
         for i in 1..<numPoints {
             if b1.contains(self.points[offset+i]) {
                 return false
             }
         }
+        // swiftlint:enable for_where
         return true
     }
 
@@ -369,7 +371,10 @@ open class PathComponent: NSObject, Reversible, Transformable {
             if i1 == i2 {
                 // we are intersecting a path element against itself (only possible with cubic or higher order)
                 if self.order(at: i1) == 3 {
-                    elementIntersections = self.cubic(at: i1).selfIntersections
+                    elementIntersections = self.cubic(at: i1).selfIntersections.filter {
+                        guard self.numberOfElements == 1 else { return true }
+                        return $0.t1 != 0 || $0.t2 != 1 // exclude intersection of single curve path closing itself
+                    }
                 }
             } else if i1 < i2 {
                 // we are intersecting two distinct path elements
@@ -386,7 +391,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
                             assert(self.isClosed) // how else can that happen?
                             return false // exclude intersections of endpoint and startpoint
                         }
-                        if $0.t1 == 0.0, (i1 > 0 || isClosed) {
+                        if $0.t1 == 0.0, i1 > 0 || isClosed {
                             // handle the intersections instead at i1-1, t=1
                             return false
                         }
@@ -587,7 +592,7 @@ open class PathComponent: NSObject, Reversible, Transformable {
     }
 }
 
-public struct IndexedPathComponentLocation: Equatable, Comparable {
+public struct IndexedPathComponentLocation: Equatable, Comparable, Sendable {
     public let elementIndex: Int
     public let t: CGFloat
     public init(elementIndex: Int, t: CGFloat) {
@@ -604,11 +609,11 @@ public struct IndexedPathComponentLocation: Equatable, Comparable {
     }
 }
 
-public struct PathComponentIntersection {
+public struct PathComponentIntersection: Sendable {
     let indexedComponentLocation1, indexedComponentLocation2: IndexedPathComponentLocation
 }
 
-public struct PathComponentRange: Equatable {
+public struct PathComponentRange: Equatable, Sendable {
     public var start: IndexedPathComponentLocation
     public var end: IndexedPathComponentLocation
     public init(from start: IndexedPathComponentLocation, to end: IndexedPathComponentLocation) {

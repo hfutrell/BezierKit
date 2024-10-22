@@ -84,7 +84,7 @@ public class Draw {
     public static let blue = Draw.Color(red: 0.0, green: 0.0, blue: 255.0, alpha: 1.0)
     public static let green = Draw.Color(red: 0.0, green: 255.0, blue: 0.0, alpha: 1.0)
 
-    private static var randomIndex = 0
+    @MainActor private static var randomIndex = 0
     private static let randomColors: [CGColor] = {
         var temp: [CGColor] = []
         for i in 0..<360 {
@@ -97,20 +97,20 @@ public class Draw {
 
     // MARK: -
 
-    public static func reset(_ context: CGContext) {
+    @MainActor public static func reset(_ context: CGContext) {
         context.setStrokeColor(black)
         randomIndex = 0
     }
 
     // MARK: - setting colors
 
-    public static func setRandomColor(_ context: CGContext) {
+    @MainActor public static func setRandomColor(_ context: CGContext) {
         randomIndex = (randomIndex+1) % randomColors.count
         let c = randomColors[randomIndex]
         context.setStrokeColor(c)
     }
 
-    public static func setRandomFill(_ context: CGContext, alpha a: CGFloat = 1.0) {
+    @MainActor public static func setRandomFill(_ context: CGContext, alpha a: CGFloat = 1.0) {
         randomIndex = (randomIndex+1) % randomColors.count
         let c = randomColors[randomIndex]
         let c2 = c.copy(alpha: a)
@@ -264,7 +264,7 @@ public class Draw {
 
     }
 
-    public static func drawPathComponent(_ context: CGContext, pathComponent: PathComponent, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
+    @MainActor public static func drawPathComponent(_ context: CGContext, pathComponent: PathComponent, offset: CGPoint = .zero, includeBoundingVolumeHierarchy: Bool = false) {
         if includeBoundingVolumeHierarchy {
             pathComponent.bvh.visit { node, depth in
                 setColor(context, color: randomColors[depth])
@@ -280,7 +280,7 @@ public class Draw {
         context.drawPath(using: .fillStroke)
     }
 
-    public static func drawPath(_ context: CGContext, _ path: Path, offset: CGPoint = .zero) {
+    @MainActor public static func drawPath(_ context: CGContext, _ path: Path, offset: CGPoint = .zero) {
         Draw.setRandomFill(context, alpha: 0.2)
         context.addPath(path.cgPath)
         context.drawPath(using: .fillStroke)

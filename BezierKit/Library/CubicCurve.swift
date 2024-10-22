@@ -8,13 +8,14 @@
 
 #if canImport(CoreGraphics)
 import CoreGraphics
+#else
+@preconcurrency import Foundation
 #endif
-import Foundation
 
 /**
  Cubic Bézier Curve
  */
-public struct CubicCurve: NonlinearBezierCurve, Equatable {
+public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
 
     public var p0, p1, p2, p3: CGPoint
 

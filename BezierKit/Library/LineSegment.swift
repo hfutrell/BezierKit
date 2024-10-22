@@ -8,10 +8,11 @@
 
 #if canImport(CoreGraphics)
 import CoreGraphics
+#else
+@preconcurrency import Foundation
 #endif
-import Foundation
 
-public struct LineSegment: BezierCurve, Equatable {
+public struct LineSegment: BezierCurve, Equatable, Sendable {
 
     public var p0, p1: CGPoint
 

@@ -11,8 +11,6 @@ import CoreGraphics
 #endif
 import Foundation
 
-// swiftlint:disable shorthand_operator
-
 public extension CGPoint {
     var length: CGFloat {
         return sqrt(self.lengthSquared)

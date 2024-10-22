@@ -8,10 +8,11 @@
 
 #if canImport(CoreGraphics)
 import CoreGraphics
+#else
+@preconcurrency import Foundation
 #endif
-import Foundation
 
-public struct QuadraticCurve: NonlinearBezierCurve, Equatable {
+public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
 
     public var p0, p1, p2: CGPoint
 

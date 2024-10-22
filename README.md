@@ -44,7 +44,7 @@ To integrate BezierKit into your Xcode project using CocoaPods, add it to your t
 
 ```ruby
 target '<Your Target Name>' do
-    pod 'BezierKit', '>= 0.15.0'
+    pod 'BezierKit', '>= 0.16.1'
 end
 ```
 
@@ -66,7 +66,7 @@ import PackageDescription
 let package = Package(
     name: "<Your Target Name>",
     dependencies: [
-        .package(url: "https://github.com/hfutrell/BezierKit.git", from: "0.15.0"),
+        .package(url: "https://github.com/hfutrell/BezierKit.git", from: "0.16.1"),
     ]
 )
 ```
@@ -96,7 +96,7 @@ let curve = CubicCurve(
 
 ### Intersecting Curves
 
-The `intersections(with curve: BezierCurve) -> [Intersection]` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `ponit(at:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
+The `intersections(with curve: BezierCurve) -> [Intersection]` method determines each intersection between `self` and `curve` as an array of `Intersection` objects. Each intersection has two fields: `t1` represents the t-value for `self` at the intersection while `t2` represents the t-value for `curve` at the intersection. You can use the `point(at:)` method on either of the curves to calculate the coordinates of the intersection by passing in the corresponding t-value for the curve.
 
 Cubic curves may self-intersect which can be determined by calling the `selfIntersections()` method.
 
