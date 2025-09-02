@@ -322,3 +322,19 @@ public extension Flatness {
         return sqrt(flatnessSquared)
     }
 }
+
+extension BezierCurve {
+    public func projectedIntersection(with other : BezierCurve) -> CGPoint? {
+        // using determinant formula described at
+        // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+        let x1 = self.startingPoint.x; let y1 = self.startingPoint.y
+        let x2 = self.endingPoint.x; let y2 = self.endingPoint.y
+        let x3 = other.startingPoint.x; let y3 = other.startingPoint.y
+        let x4 = other.endingPoint.x; let y4 = other.endingPoint.y
+        let d = ((x1 - x2) * (y3 - y4)) - ((y1 - y2) * (x3 - x4))
+        guard d != 0 else { return nil }
+        let nx = (((x1 * y2) - (y1 * x2)) * (x3 - x4)) - ((x1 - x2) * ((x3 * y4) - (y3 * x4)))
+        let ny = (((x1 * y2) - (y1 * x2)) * (y3 - y4)) - ((y1 - y2) * ((x3 * y4) - (y3 * x4)))
+        return CGPoint(x: nx/d, y: ny/d)
+    }
+}

@@ -255,22 +255,22 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
             $0 + $1.offset(distance: d)
         }
         guard offsetCurves.isEmpty == false else { return nil }
+        let referenceCurves = offsetCurves.map { $0.copy(using: .identity) }
+        func makeContiguous(_ thisCurveIdx : Int, _ nextCurveIdx : Int) {
+            guard offsetCurves[thisCurveIdx].endingPoint != offsetCurves[nextCurveIdx].startingPoint else { return }
+            guard let intersection = referenceCurves[thisCurveIdx].projectedIntersection(with: referenceCurves[nextCurveIdx]) else { fatalError("what the heck") }
+            offsetCurves[thisCurveIdx].endingPoint = intersection
+            offsetCurves[nextCurveIdx].startingPoint = intersection
+        }
+        
         // force the set of curves to be contiguous
         for i in 0..<offsetCurves.count-1 {
-            let start = offsetCurves[i+1].startingPoint
-            let end = offsetCurves[i].endingPoint
-            let average = Utils.linearInterpolate(start, end, 0.5)
-            offsetCurves[i].endingPoint = average
-            offsetCurves[i+1].startingPoint = average
+            makeContiguous(i, i+1)
         }
         // we've touched everything but offsetCurves[0].startingPoint and offsetCurves[count-1].endingPoint
-        // if we are a closed componenet, keep the offset component closed as well
+        // if we are a closed component, keep the offset component closed as well
         if self.isClosed {
-            let start = offsetCurves[0].startingPoint
-            let end = offsetCurves[offsetCurves.count-1].endingPoint
-            let average = Utils.linearInterpolate(start, end, 0.5)
-            offsetCurves[0].startingPoint = average
-            offsetCurves[offsetCurves.count-1].endingPoint = average
+            makeContiguous(offsetCurves.count-1, 0)
         }
         return PathComponent(curves: offsetCurves)
     }
