@@ -10,7 +10,7 @@ import Foundation
 import BezierKit
 import CoreText
 
-typealias DemoDrawFunction = (_ context: CGContext, _ demoState: DemoState) -> Void
+typealias DemoDrawFunction = @MainActor (_ context: CGContext, _ demoState: DemoState) -> Void
 
 struct Demo {
     var title: String

@@ -349,7 +349,7 @@ private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.NextLow
         let delta = relaxation * f / fPrime
         let previous = x
         x -= delta
-        guard abs(x - previous) > 1.0e-10 else { break }
+        guard Swift.abs(x - previous) > 1.0e-10 else { break }
     }
     return x
 }
@@ -416,10 +416,10 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
         } else {
             let guess = end
             let value = newton(polynomial: polynomial, derivative: derivative, guess: guess)
-            guard abs(value - guess) < 1.0e-5 else {
+            guard Swift.abs(value - guess) < 1.0e-5 else {
                 return nil // did not converge near guess
             }
-            guard abs(polynomial.value(at: value)) < 1.0e-10 else {
+            guard Swift.abs(polynomial.value(at: value)) < 1.0e-10 else {
                 return nil // not actually a root
             }
             root = value
