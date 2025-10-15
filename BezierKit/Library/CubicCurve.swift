@@ -153,7 +153,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         let n1 = self.normal(at: 0)
         let n2 = self.normal(at: 1)
         let s = Utils.clamp(n1.dot(n2), -1.0, 1.0)
-        let angle: CGFloat = CGFloat(abs(acos(Double(s))))
+        let angle: CGFloat = CGFloat(Swift.abs(acos(Double(s))))
         return angle < (CGFloat.pi / 3.0)
     }
 
