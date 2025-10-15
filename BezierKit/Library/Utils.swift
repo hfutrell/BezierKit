@@ -127,7 +127,7 @@ internal class Utils {
         }
         let bottom = pow(t, CGFloat(n)) + pow(1 - t, CGFloat(n))
         let top = bottom - 1
-        return abs(top/bottom)
+        return Swift.abs(top/bottom)
     }
 
     static func projectionRatio(n: Int, t: CGFloat = 0.5) -> CGFloat {
@@ -147,7 +147,7 @@ internal class Utils {
     }
 
     static func approximately(_ a: Double, _ b: Double, precision: Double) -> Bool {
-        return abs(a-b) <= precision
+        return Swift.abs(a-b) <= precision
     }
 
     static func linesIntersection(_ line1p1: CGPoint, _ line1p2: CGPoint, _ line2p1: CGPoint, _ line2p2: CGPoint) -> CGPoint? {
@@ -188,7 +188,7 @@ internal class Utils {
         let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
         let smallValue: Double = 1.0e-8
-        guard abs(d) >= smallValue else {
+        guard Swift.abs(d) >= smallValue else {
             // solve the quadratic polynomial at^2 + bt + c instead
             let a = (3 * p0 - 6 * p1 + 3 * p2)
             let b = (-3 * p0 + 3 * p1)
@@ -250,7 +250,7 @@ internal class Utils {
         let p2 = Double(p2)
         let d = p0 - 2.0 * p1 + p2
         guard d.isFinite else { return }
-        guard abs(d) > epsilon else {
+        guard Swift.abs(d) > epsilon else {
             if p0 != p1 {
                 callback(CGFloat(0.5 * p0 / (p0 - p1)))
             }
