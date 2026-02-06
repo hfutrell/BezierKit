@@ -57,6 +57,14 @@ class PathProjectionTests: XCTestCase {
         XCTAssertFalse(circlePath.pointIsWithinDistanceOfBoundary(p4, distance: d)) // no, we are inside the path but too far from the boundary
 
     }
+
+    func testPointIsWithinDistanceOfBoundaryNaN() {
+        // tests graceful fallback when path contains NaN
+        let rectangularCGPathWithNaN = CGPath(rect: CGRect(x: CGFloat.nan, y: 0, width: 1, height: 1), transform: nil)
+        let rectangularPathWithNaN = Path(cgPath: rectangularCGPathWithNaN)
+        let p1 = CGPoint(x: 2.0, y: 2.0)
+        XCTAssertFalse(rectangularPathWithNaN.pointIsWithinDistanceOfBoundary(p1, distance: 2.0))
+    }
 }
 
 #endif
