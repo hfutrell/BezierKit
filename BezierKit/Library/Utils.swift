@@ -169,7 +169,6 @@ internal class Utils {
     }
 
     static func clamp(_ x: CGFloat, _ a: CGFloat, _ b: CGFloat) -> CGFloat {
-        precondition(b >= a)
         if x < a {
             return a
         } else if x > b {
