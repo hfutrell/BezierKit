@@ -405,12 +405,15 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
             // codepath due to roundoff and  converge only linearly to one end of interval
             let guess = (start + end) / 2
             let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess)
-            if start < newtonRoot, newtonRoot < end {
+            let newtonResidue = Swift.abs(polynomial.value(at: newtonRoot))
+            let scale = Swift.max(Swift.abs(fStart), Swift.abs(fEnd))
+            if start < newtonRoot, newtonRoot < end,
+               newtonResidue < scale * CGFloat.ulpOfOne.squareRoot() {
                 root = newtonRoot
             } else {
                 // newton's method failed / converged to the wrong root!
                 // rare, but can happen roughly 5% of the time
-                // see unit test: `testDegree4RealWorldIssue`
+                // see unit tests: `testDegree4RealWorldIssue`, `testDegree5RealWorldIssue`
                 root = findRootBisection(of: polynomial, start: start, end: end)
             }
         } else {
