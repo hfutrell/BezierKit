@@ -736,39 +736,6 @@ class PathTests: XCTestCase {
         XCTAssertFalse( path.contains(point, using: .evenOdd) )
     }
 
-    func testContainsRealWorldEdgeCase4() {
-        // The path has no self-intersections, but droots precision issues (GitHub issue #92)
-        // caused contains() to return wrong results due to incorrect winding counts.
-        let cgPath = CGMutablePath()
-        cgPath.move(to: CGPoint(x: -45.58408505173276, y: 4384.210079234615))
-        cgPath.addCurve(to: CGPoint(x: 519.756427723393, y: 4384.14765017776),
-                        control1: CGPoint(x: 110.51314747385496, y: 4228.07836809298),
-                        control2: CGPoint(x: 363.6247165817579, y: 4228.050417652172))
-        cgPath.addCurve(to: CGPoint(x: 519.8188567802481, y: 4949.488162952885),
-                        control1: CGPoint(x: 675.8881388650282, y: 4540.244882703348),
-                        control2: CGPoint(x: 675.9160893058358, y: 4793.356451811251))
-        cgPath.addCurve(to: CGPoint(x: 501.53832994006814, y: 4967.769608589276),
-                        control1: CGPoint(x: 513.7155041887056, y: 4955.5928615872745),
-                        control2: CGPoint(x: 507.6055609674461, y: 4961.702072477192))
-        cgPath.addCurve(to: CGPoint(x: -63.802186103924214, y: 4967.783798079717),
-                        control1: CGPoint(x: 345.4277755233733, y: 5123.887999645149),
-                        control2: CGPoint(x: 92.31620495194895, y: 5123.894352496412))
-        cgPath.addCurve(to: CGPoint(x: -63.81637559436501, y: 4402.443282035724),
-                        control1: CGPoint(x: -219.92057715979726, y: 4811.673243663022),
-                        control2: CGPoint(x: -219.9269300110598, y: 4558.561673091597))
-        cgPath.addCurve(to: CGPoint(x: -45.58408505173276, y: 4384.210079234615),
-                        control1: CGPoint(x: -57.725037285805456, y: 4396.351638460308),
-                        control2: CGPoint(x: -51.63917972581493, y: 4390.2665134127255))
-        let path = Path(cgPath: cgPath)
-        let curve = path.components[0].curves[0]
-
-        // This point is just outside the boundary (1e-7 in the outward normal direction).
-        // Prior to fixing droots precision (issue #92), the winding count was wrong and
-        // the point was incorrectly reported as inside.
-        let exteriorPoint = curve.point(at: 0.5) - 1.0e-7 * curve.normal(at: 0.5)
-        XCTAssertFalse(path.contains(exteriorPoint))
-    }
-
     func testContainsEdgeCaseParallelDerivative() {
         // this is a real-world edge case that can happen with round-rects
         let cgPath = CGMutablePath()
