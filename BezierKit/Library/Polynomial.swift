@@ -64,6 +64,17 @@ extension BernsteinPolynomial2: AnalyticalRoots {
     }
 }
 
+extension BernsteinPolynomial3: AnalyticalRoots {
+    internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+        var result: [CGFloat] = []
+        Utils.droots(self.b0, self.b1, self.b2, self.b3) {
+            guard $0 >= start, $0 <= end else { return }
+            result.append($0)
+        }
+        return result
+    }
+}
+
 public extension BernsteinPolynomial {
     func value(at x: CGFloat) -> CGFloat {
         let oneMinusX = 1.0 - x
