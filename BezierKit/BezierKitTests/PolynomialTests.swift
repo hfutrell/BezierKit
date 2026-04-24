@@ -73,15 +73,15 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
     }
 
-//    func testDegree3RootExactlyZero() {
-//        // root is exactly t = 0 (at the start of unit interval),
-//        // so may be accidentally discarded due to numerical precision
-//        let polynomial = BernsteinPolynomial3(b0: 0, b1: 96, b2: -24, b3: -36)
-//        let roots = findRoots(of: polynomial, between: 0, and: 1)
-//        XCTAssertEqual(roots.count, 2)
-//        XCTAssertEqual(roots[0], 0.0)
-//        XCTAssertEqual(roots[1], 2.0 / 3.0, accuracy: accuracy)
-//    }
+    func testDegree3RootExactlyZero() {
+        // root is exactly t = 0 (at the start of unit interval),
+        // so may be accidentally discarded due to numerical precision
+        let polynomial = BernsteinPolynomial3(b0: 0, b1: 96, b2: -24, b3: -36)
+        let roots = findDistinctRoots(of: polynomial, between: 0, and: 1)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.0)
+        XCTAssertEqual(roots[1], 2.0 / 3.0, accuracy: accuracy)
+    }
 
     func testDegree4() {
         // x^4 - 2.44x^2 + 1.44
@@ -97,11 +97,14 @@ class PolynomialTests: XCTestCase {
     #if !(arch(i386) || arch(arm) || arch(wasm32))
     func testDegree4RepeatedRoots() {
         // x^4 - 2x^2 + 1
+        // derivative 4x^3 - 4x should produce intervals of -2, -1, 0, 1, 2
         let polynomial = BernsteinPolynomial4(b0: 1, b1: 1, b2: 2.0 / 3.0, b3: 0, b4: 0)
         let roots = findDistinctRoots(of: polynomial, between: -2, and: 2)
         XCTAssertEqual(roots.count, 2)
         XCTAssertEqual(roots[0], -1, accuracy: accuracy)
-        XCTAssertEqual(roots[1], 1, accuracy: accuracy)
+        if roots.count > 1 {
+            XCTAssertEqual(roots[1], 1, accuracy: accuracy)
+        }
     }
     #endif
     func testDegree5() {
@@ -112,6 +115,43 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[0], -2.9806382, accuracy: accuracy)
         XCTAssertEqual(roots[1], 0, accuracy: accuracy)
         XCTAssertEqual(roots[2], 2.9806382, accuracy: accuracy)
+    }
+
+    func testDegree2RootAtLeftEndpoint() {
+        // f(t) = 2t(1 - 2t), roots at t=0 and t=0.5
+        // the no-sign-change branch uses guess=end (a critical point where f'=0),
+        // causing Newton to diverge and miss the root at t=0
+        let polynomial = BernsteinPolynomial2(b0: 0, b1: 1, b2: -2)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial, allowAnalyticalRootFindingFastPath: false)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.0, accuracy: accuracy)
+        if roots.count > 1 {
+            XCTAssertEqual(roots[1], 0.5, accuracy: accuracy)
+        }
+    }
+
+    func testDegree3RootAtLeftEndpoint() {
+        // f(t) = 3t(1-t)(1-2t), roots at t=0, 0.5, 1
+        // same issue as testDegree2RootAtLeftEndpoint: root at t=0 is missed
+        let polynomial = BernsteinPolynomial3(b0: 0, b1: 1, b2: -1, b3: 0)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial, allowAnalyticalRootFindingFastPath: false)
+        XCTAssertEqual(roots.count, 3)
+        XCTAssertEqual(roots[0], 0.0, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.5, accuracy: accuracy)
+        if roots.count > 2 {
+            XCTAssertEqual(roots[2], 1.0, accuracy: accuracy)
+        }
+    }
+
+    func testDegree3RootAtLeftEndpointTwoRoots() {
+        // roots at t=0 and t=2/3; only one critical point in [0,1] at t≈0.282
+        let polynomial = BernsteinPolynomial3(b0: 0, b1: 96, b2: -24, b3: -36)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial, allowAnalyticalRootFindingFastPath: false)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.0, accuracy: accuracy)
+        if roots.count > 1 {
+            XCTAssertEqual(roots[1], 2.0 / 3.0, accuracy: accuracy)
+        }
     }
 
     func testDegree3RealWorldIssue() {

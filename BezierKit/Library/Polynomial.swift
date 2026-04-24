@@ -57,8 +57,8 @@ extension BernsteinPolynomial2: AnalyticalRoots {
     internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2) {
-            guard $0 >= start, $0 <= end else { return }
-            result.append($0)
+            guard $0 >= start - 1.0e-10, $0 <= end + 1.0e-10 else { return }
+            result.append(max(start, min(end, $0)))
         }
         return result
     }
@@ -68,8 +68,8 @@ extension BernsteinPolynomial3: AnalyticalRoots {
     internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2, self.b3) {
-            guard $0 >= start, $0 <= end else { return }
-            result.append($0)
+            guard $0 >= start - 1.0e-10, $0 <= end + 1.0e-10 else { return }
+            result.append(max(start, min(end, $0)))
         }
         return result
     }
@@ -400,12 +400,17 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
         let fStart  = polynomial.value(at: start)
         let fEnd    = polynomial.value(at: end)
         let root: CGFloat
+        let absFStart = Swift.abs(fStart)
+        let absFEnd = Swift.abs(fEnd)
+        let scale = Swift.max(absFStart, absFEnd)
+        let residualToConsiderRoot = scale * CGFloat.ulpOfOne.squareRoot()
         if fStart * fEnd < 0 {
             // TODO: if a critical point is a root we take this
             // codepath due to roundoff and  converge only linearly to one end of interval
             let guess = (start + end) / 2
             let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess)
-            if start < newtonRoot, newtonRoot < end {
+            if start < newtonRoot, newtonRoot < end,
+                Swift.abs(polynomial.value(at: newtonRoot)) <= residualToConsiderRoot {
                 root = newtonRoot
             } else {
                 // newton's method failed / converged to the wrong root!
@@ -413,24 +418,15 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
                 // see unit test: `testDegree4RealWorldIssue`
                 root = findRootBisection(of: polynomial, start: start, end: end)
             }
+        } else if absFStart <= residualToConsiderRoot, absFEnd >= residualToConsiderRoot {
+            root = start
+        } else if absFStart > residualToConsiderRoot, absFEnd <= residualToConsiderRoot {
+            root = end
         } else {
-            let guess = end
-            let value = newton(polynomial: polynomial, derivative: derivative, guess: guess)
-            guard Swift.abs(value - guess) < 1.0e-5 else {
-                return nil // did not converge near guess
-            }
-            guard value >= start, value <= end else {
-                return nil // root is outside interval
-            }
-            guard Swift.abs(polynomial.value(at: value)) < 1.0e-10 else {
-                return nil // not actually a root
-            }
-            root = value
+            return nil
         }
-        if let lastFoundRoot = lastFoundRoot {
-            guard lastFoundRoot + 1.0e-5 < root else {
-                return nil // ensures roots are unique and ordered
-            }
+        if let lastFoundRoot, lastFoundRoot + 1.0e-5 >= root {
+            return nil // ensures roots are unique and ordered
         }
         lastFoundRoot = root
         return root
