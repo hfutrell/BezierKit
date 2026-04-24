@@ -107,7 +107,7 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
-fileprivate extension BezierCurve {
+internal extension BezierCurve {
     var derivativeBounds: CGFloat {
         let points = self.points
         let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
