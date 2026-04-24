@@ -208,44 +208,12 @@ internal class Utils {
         // When `d` is small relative to the Bernstein coefficient magnitudes, dividing by it
         // amplifies rounding errors enough to corrupt the discriminant sign, sending Cardano
         // into the wrong branch and producing garbage roots that Newton cannot recover.
-        // Use bisection on the stable Bernstein form to find roots in [0, 1] instead.
-        // Interior extrema of the cubic (roots of its derivative) are used as breakpoints
-        // so sign changes inside [0, 1] are never missed (e.g. symmetric hump polynomials).
+        // Fall back to the numerically stable convex-hull root finder instead.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
-            let deriv0 = 3.0*(p1-p0), deriv1 = 3.0*(p2-p1), deriv2 = 3.0*(p3-p2)
-            var breakpoints = [0.0, 1.0]
-            let denom = deriv0 - 2*deriv1 + deriv2
-            if Swift.abs(denom) > 0 {
-                let radical = deriv1*deriv1 - deriv0*deriv2
-                if radical >= 0 {
-                    let sq = sqrt(radical)
-                    for t in [(deriv0 - deriv1 + sq) / denom, (deriv0 - deriv1 - sq) / denom] {
-                        if t > 0 && t < 1 { breakpoints.append(t) }
-                    }
-                }
-            } else if deriv0 != deriv1 {
-                let t = 0.5 * deriv0 / (deriv0 - deriv1)
-                if t > 0 && t < 1 { breakpoints.append(t) }
-            }
-            breakpoints.sort()
-            var fPrev = beval(breakpoints[0])
-            for i in 1..<breakpoints.count {
-                let bHi = breakpoints[i]
-                let fHi = beval(bHi)
-                if fPrev * fHi < 0 {
-                    var lo = breakpoints[i-1], hi = bHi, flo = fPrev
-                    for _ in 0..<54 {
-                        let mid = (lo + hi) / 2.0
-                        let fmid = beval(mid)
-                        if flo * fmid <= 0 { hi = mid } else { lo = mid; flo = fmid }
-                    }
-                    callback(CGFloat(polish((lo + hi) / 2.0)))
-                } else if fPrev == 0 {
-                    callback(CGFloat(breakpoints[i-1]))
-                }
-                fPrev = fHi
-            }
-            if fPrev == 0 { callback(CGFloat(breakpoints[breakpoints.count - 1])) }
+            let poly = BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
+            poly.distinctRealRootsInUnitInterval(
+                configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold)
+            ).forEach(callback)
             return
         }
         // Polish each Cardano root with Newton steps using stable Bernstein evaluation
