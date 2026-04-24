@@ -245,8 +245,12 @@ internal func sylvesterIntersections(_ c1: CubicCurve, _ c2: CubicCurve, accurac
         }
 
         // Pick the s root that minimises the 2-D distance to the query point.
+        // Use insignificantDistance (0.5 × accuracy) rather than accuracy so that
+        // near-miss curve pairs (within accuracy but not truly intersecting) are
+        // rejected — unlike subdivision, the Sylvester resultant has no bounding-box
+        // fallback to filter these out.
         var bestT1: CGFloat?
-        var bestDist = accuracy
+        var bestDist = insignificantDistance
         for s in sRoots {
             let d = distance(c1.point(at: s), pt)
             if d < bestDist { bestDist = d; bestT1 = s }

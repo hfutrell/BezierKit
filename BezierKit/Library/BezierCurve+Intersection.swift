@@ -117,7 +117,15 @@ internal extension BezierCurve {
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
-    // try intersecting using subdivision
+    // For cubic-cubic pairs use the Sylvester resultant: no subdivision needed.
+    if let c1cubic = curve1.curve as? CubicCurve, let c2cubic = curve2.curve as? CubicCurve {
+        if let coincidence = coincidenceCheck(c1cubic, c2cubic, accuracy: 0.1 * accuracy) {
+            return coincidence
+        }
+        return sylvesterIntersections(c1cubic, c2cubic, accuracy: accuracy)
+    }
+
+    // For other curve-type combinations use subdivision then implicitization.
     let lb = curve1.curve.boundingBox
     let rb = curve2.curve.boundingBox
     var pairIntersections: [Intersection] = []
