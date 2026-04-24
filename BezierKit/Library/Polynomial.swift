@@ -381,13 +381,13 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     return guess
 }
 
-public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
-    return findDistinctRoots(of: polynomial, between: 0, and: 1)
+public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P, allowAnalyticalRootFindingFastPath: Bool = true) -> [CGFloat] {
+    return findDistinctRoots(of: polynomial, between: 0, and: 1, allowAnalyticalRootFindingFastPath: allowAnalyticalRootFindingFastPath)
 }
 
-internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat, allowAnalyticalRootFindingFastPath: Bool = true) -> [CGFloat] {
     assert(start < end)
-    if let analytical = polynomial as? AnalyticalRoots {
+    if allowAnalyticalRootFindingFastPath, let analytical = polynomial as? AnalyticalRoots {
         return analytical.distinctAnalyticalRoots(between: start, and: end)
     }
     let derivative = polynomial.derivative
@@ -418,6 +418,9 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
             let value = newton(polynomial: polynomial, derivative: derivative, guess: guess)
             guard Swift.abs(value - guess) < 1.0e-5 else {
                 return nil // did not converge near guess
+            }
+            guard value >= start, value <= end else {
+                return nil // root is outside interval
             }
             guard Swift.abs(polynomial.value(at: value)) < 1.0e-10 else {
                 return nil // not actually a root

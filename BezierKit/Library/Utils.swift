@@ -192,10 +192,8 @@ internal class Utils {
         // into the wrong branch and producing garbage roots that Newton cannot recover.
         // Fall back to the numerically stable convex-hull root finder instead.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
-            let poly = BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
-            poly.distinctRealRootsInUnitInterval(
-                configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold)
-            ).forEach(callback)
+            let poly = BernsteinPolynomial3(b0: CGFloat(p0), b1: CGFloat(p1), b2: CGFloat(p2), b3: CGFloat(p3))
+            findDistinctRootsInUnitInterval(of: poly, allowAnalyticalRootFindingFastPath: false).forEach(callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d

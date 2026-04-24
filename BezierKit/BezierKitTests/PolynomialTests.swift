@@ -114,6 +114,19 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[2], 2.9806382, accuracy: accuracy)
     }
 
+    func testDegree3RealWorldIssue() {
+        // Newton's method in the no-sign-change branch could converge to a root outside
+        // [start, end] that satisfied both the convergence and residual guards, producing
+        // a spurious second root at t ≈ 1.0000042 alongside the correct root at t ≈ 0.9999932.
+        let polynomial = BernsteinPolynomial3(b0: -0.14644808172857054,
+                                              b1: -0.04881594303476389,
+                                              b2: 1.2631213935909713e-07,
+                                              b3: 4.217515225946045e-12)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial, allowAnalyticalRootFindingFastPath: false)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], CGFloat(0.9999932), accuracy: 1.0e-5)
+    }
+
     func testDegree4RealWorldIssue() {
         let polynomial = BernsteinPolynomial4(b0: 1819945.4373168945, b1: -3353335.8194732666, b2: 3712712.6330566406, b3: -2836657.1703338623, b4: 2483314.5947265625)
         let roots = findDistinctRootsInUnitInterval(of: polynomial)
