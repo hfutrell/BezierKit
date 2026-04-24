@@ -207,20 +207,33 @@ internal func sylvesterIntersections(_ c1: CubicCurve, _ c2: CubicCurve, accurac
     }
     let effectiveDegree = min(trimmed.count - 1, m * n)
     let bernstein = powerToBernstein(trimmed, degree: effectiveDegree)
-    let t2Roots = bernstein.distinctRealRootsInUnitInterval(
-        configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold)
-    )
 
     let insignificantDistance: CGFloat = 0.5 * accuracy
     let t1Tol = insignificantDistance / c1.derivativeBounds
     let t2Tol = insignificantDistance / c2.derivativeBounds
+
+    // The Bernstein convex-hull root finder finds double roots (tangent intersections)
+    // as two near-identical values from both sides of the sign change created by a
+    // negative intermediate Bernstein coefficient.  Deduplicate those here so a single
+    // tangent intersection produces exactly one candidate.
+    var t2Roots: [CGFloat] = []
+    for t in bernstein.distinctRealRootsInUnitInterval(
+        configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold)
+    ) {
+        if t2Roots.isEmpty || t - t2Roots.last! > t2Tol {
+            t2Roots.append(t)
+        }
+    }
 
     // For a candidate t2 on curve2, recover t1 on curve1 via the reverse-inverse step:
     // solve curve1.coord(s) = Q(t2).coord for s ∈ [0,1], choosing the coordinate
     // axis with the larger control-point spread for better numerical conditioning.
     func intersectionIfCloseEnough(at t2: CGFloat) -> Intersection? {
         let pt = c2.point(at: t2)
-        guard c1.boundingBox.contains(pt) else { return nil }
+        // Use lowerBoundOfDistance rather than strict containment: the intersection
+        // point may be at the exact bounding-box boundary, where floating-point
+        // rounding can make `contains` return false for a legitimate intersection.
+        guard c1.boundingBox.lowerBoundOfDistance(to: pt) < insignificantDistance else { return nil }
 
         let xSpread = max(c1.p0.x, c1.p1.x, c1.p2.x, c1.p3.x) -
                       min(c1.p0.x, c1.p1.x, c1.p2.x, c1.p3.x)

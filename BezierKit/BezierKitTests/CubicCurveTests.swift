@@ -491,6 +491,57 @@ class CubicCurveTests: XCTestCase {
         }
     }
 
+    func testCubicCubicIntersectionLargeCoordinates() {
+        // This is the same 9-intersection configuration as testIntersectionsCubicMaxIntersections
+        // but scaled to large coordinate values (simulating screen-space pixel coordinates).
+        // The current subdivision fallback uses curve implicitization without coordinate
+        // normalization, which causes catastrophic cancellation in the implicit polynomial
+        // coefficients at this scale, producing wrong (or missing) intersections.
+        let scale: CGFloat = 1000
+        let a: CGFloat = 4.0
+        let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
+                            p1: CGPoint(x: 0.33 * scale, y: a * scale),
+                            p2: CGPoint(x: 0.66 * scale, y: (1-a) * scale),
+                            p3: CGPoint(x: scale, y: scale))
+        let c2 = CubicCurve(p0: CGPoint(x: 0, y: scale),
+                            p1: CGPoint(x: a * scale, y: 0.66 * scale),
+                            p2: CGPoint(x: (1-a) * scale, y: 0.33 * scale),
+                            p3: CGPoint(x: scale, y: 0))
+        let accuracy: CGFloat = 1.0e-2 * scale
+        let intersections = c1.intersections(with: c2, accuracy: accuracy)
+        XCTAssertEqual(intersections.count, 9)
+        for i in intersections {
+            let p1 = c1.point(at: i.t1)
+            let p2 = c2.point(at: i.t2)
+            XCTAssertTrue(distance(p1, p2) < accuracy, "intersection point mismatch: c1(\(i.t1))=\(p1) vs c2(\(i.t2))=\(p2)")
+        }
+    }
+
+    func testCubicCubicInteriorTangentIntersection() {
+        // Two cubics that share a tangent (same tangent line) at an interior point but cross there.
+        // Constructed so c1(1/3) = c2(1/3) = (0, 0), with both curves having a horizontal tangent
+        // at that point but curving in opposite y-directions (so they cross, not just touch).
+        // x(t) = 9t - 3 for both curves (same linear x-parametrization),
+        // y1(t) = ... and y2(t) = -y1(t), so they intersect exactly where y1(t) = 0.
+        // y1 has a double root at t = 1/3 (the only intersection in [0,1]).
+        let c1 = CubicCurve(p0: CGPoint(x: -3, y: 3),
+                            p1: CGPoint(x: 0, y: -15.0 / 4.0),
+                            p2: CGPoint(x: 3, y: 3),
+                            p3: CGPoint(x: 6, y: 3))
+        let c2 = CubicCurve(p0: CGPoint(x: -3, y: -3),
+                            p1: CGPoint(x: 0, y: 15.0 / 4.0),
+                            p2: CGPoint(x: 3, y: -3),
+                            p3: CGPoint(x: 6, y: -3))
+        let accuracy: CGFloat = 1.0e-4
+        let intersections = c1.intersections(with: c2, accuracy: accuracy)
+        XCTAssertEqual(intersections.count, 1)
+        if intersections.count == 1 {
+            XCTAssertEqual(intersections[0].t1, 1.0 / 3.0, accuracy: accuracy)
+            XCTAssertEqual(intersections[0].t2, 1.0 / 3.0, accuracy: accuracy)
+            XCTAssertTrue(distance(c1.point(at: intersections[0].t1), CGPoint(x: 0, y: 0)) < accuracy)
+        }
+    }
+
     func testBasicTangentIntersection() {
         let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
                             p1: CGPoint(x: 0, y: 3),
