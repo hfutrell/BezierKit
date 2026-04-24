@@ -729,6 +729,30 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertEqual(result.components.first?.numberOfElements, 7)
     }
 
+    func testCrossingsRemovedCoincidentPoints() {
+        // GitHub issue #84: crossingsRemoved gets confused by coincident points
+        // Two overlapping triangles where one has a zero-length degenerate segment at (100, 585).
+        // crossingsRemoved() should merge them into a single component, preserving the zero-length segment.
+        let comp0 = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 100, y: 585), p1: CGPoint(x: 100, y: 585)),
+            LineSegment(p0: CGPoint(x: 100, y: 585), p1: CGPoint(x: 225, y: 585)),
+            LineSegment(p0: CGPoint(x: 225, y: 585), p1: CGPoint(x: 100, y: 680)),
+            LineSegment(p0: CGPoint(x: 100, y: 680), p1: CGPoint(x: 100, y: 585))
+        ] as [BezierCurve])
+        let comp1 = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 260, y: 392), p1: CGPoint(x: 260, y: 585)),
+            LineSegment(p0: CGPoint(x: 260, y: 585), p1: CGPoint(x: 160, y: 680)),
+            LineSegment(p0: CGPoint(x: 160, y: 680), p1: CGPoint(x: 260, y: 392))
+        ] as [BezierCurve])
+        let path = Path(components: [comp0, comp1])
+        let result = path.crossingsRemoved()
+        XCTAssertEqual(result.components.count, 1)
+        let hasZeroLengthSegment = result.components[0].curves.contains {
+            $0.startingPoint == CGPoint(x: 100, y: 585) && $0.endingPoint == CGPoint(x: 100, y: 585)
+        }
+        XCTAssertTrue(hasZeroLengthSegment, "degenerate zero-length segment should be preserved in result")
+    }
+
     func testCrossingsRemovedRealWorldInfiniteLoop() {
 
         // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)
