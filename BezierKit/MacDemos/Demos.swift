@@ -310,11 +310,12 @@ class Demos {
                                 Draw.drawCurve(context, curve: curve)
                                 Draw.setColor(context, color: Draw.red)
                                 let doc = {(c: BezierCurve) in Draw.drawCurve(context, curve: c) }
-                                let outline = curve.outline(distance: 25)
-                                outline.curves.forEach(doc)
-                                Draw.setColor(context, color: Draw.transparentBlue)
-                                outline.offset(distance: 10)?.curves.forEach(doc)
-                                outline.offset(distance: -10)?.curves.forEach(doc)
+                                if let outline = curve.outline(distance: 25) {
+                                    outline.curves.forEach(doc)
+                                    Draw.setColor(context, color: Draw.transparentBlue)
+                                    outline.offset(distance: 10)?.curves.forEach(doc)
+                                    outline.offset(distance: -10)?.curves.forEach(doc)
+                                }
     })
 
     static let demo17 = Demo(title: "outlineShapes",

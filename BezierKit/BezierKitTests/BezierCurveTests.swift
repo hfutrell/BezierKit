@@ -149,7 +149,7 @@ class BezierCurveTests: XCTestCase {
     func testOutlineDistance() {
         // When only one distance value is given, the outline is generated at distance d on both the normal and anti-normal
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
-        let outline: PathComponent = lineSegment.outline(distance: 1)
+        let outline: PathComponent = lineSegment.outline(distance: 1)!
         XCTAssertEqual(outline.numberOfElements, 4)
 
         let (o0, o1, o2, o3) = lineOffsets(lineSegment, 1, 1, 1, 1)
@@ -165,7 +165,7 @@ class BezierCurveTests: XCTestCase {
         let lineSegment = BezierCurveTests.lineSegmentForOutlining
         let distanceAlongNormal: CGFloat = 1
         let distanceOppositeNormal: CGFloat = 2
-        let outline: PathComponent = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)
+        let outline: PathComponent = lineSegment.outline(distanceAlongNormal: distanceAlongNormal, distanceOppositeNormal: distanceOppositeNormal)!
         XCTAssertEqual(outline.numberOfElements, 4)
 
         let o0 = lineSegment.startingPoint + distanceAlongNormal * lineSegment.normal(at: 0)
@@ -183,7 +183,7 @@ class BezierCurveTests: XCTestCase {
         // this tests a special corner case of outlines where endpoint normals are parallel
 
         let q = QuadraticCurve(p0: CGPoint(x: 0.0, y: 0.0), p1: CGPoint(x: 5.0, y: 0.0), p2: CGPoint(x: 10.0, y: 0.0))
-        let outline: PathComponent = q.outline(distance: 1)
+        let outline: PathComponent = q.outline(distance: 1)!
 
         let expectedSegment1 = LineSegment(p0: CGPoint(x: 0, y: -1), p1: CGPoint(x: 0, y: 1))
         let expectedSegment2 = LineSegment(p0: CGPoint(x: 0, y: 1), p1: CGPoint(x: 10, y: 1))
@@ -311,6 +311,15 @@ class BezierCurveTests: XCTestCase {
         // check line segment case
         let lineSegment = CubicCurve(lineSegment: LineSegment(p0: CGPoint(x: 1, y: 2), p1: CGPoint(x: 3, y: 4)))
         XCTAssertFalse(curveSelfIntersects(lineSegment))
+    }
+
+    func testOutlineDegenerateAllPointsSame() {
+        // issue #96: outline crashes (index out of bounds) when all control points are the same
+        let p = CGPoint(x: 1, y: 1)
+        let cubic = CubicCurve(p0: p, p1: p, p2: p, p3: p)
+        XCTAssertNil(cubic.outline(distance: 1))
+        let quadratic = QuadraticCurve(p0: p, p1: p, p2: p)
+        XCTAssertNil(quadratic.outline(distance: 1))
     }
 
     func testCubicSelfIntersectionEdgeCase() {
