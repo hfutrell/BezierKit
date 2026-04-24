@@ -425,7 +425,7 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
         } else {
             return nil
         }
-        if let lastFoundRoot, lastFoundRoot + 1.0e-5 >= root {
+        if let lastFoundRoot = lastFoundRoot, lastFoundRoot + 1.0e-5 >= root {
             return nil // ensures roots are unique and ordered
         }
         lastFoundRoot = root
