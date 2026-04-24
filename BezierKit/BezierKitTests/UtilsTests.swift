@@ -68,6 +68,17 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(r[0], CGFloat(0.0014849), accuracy: 1.0e-4)
     }
 
+    func testDrootsCubicWorldIssue3() {
+        // this data causes issue #81 on GitHub
+        // discriminant is positive but very close to zero (8.46e-10)
+        // https://github.com/hfutrell/BezierKit/issues/81
+        let firstValue: CGFloat = -14.999127297400882
+        let otherValues: CGFloat = 0.00087270259911775838
+        let roots = drootsCubicTestHelper(firstValue, otherValues, otherValues, otherValues)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], CGFloat(0.961251), accuracy: 1.0e-4)
+    }
+
     func testDrootsCubicWorldIssue4() {
         // Cardano's formula returned 0.9997828474060952 instead of ~0.999858 (issue #92).
         // The cubic coefficient is small relative to the control point magnitudes, causing
@@ -98,17 +109,6 @@ class UtilsTests: XCTestCase {
                                       1.2631213935909713e-07, 4.217515225946045e-12)
         XCTAssertEqual(r.count, 1)
         XCTAssertEqual(r[0], CGFloat(0.9999932), accuracy: 1.0e-5)
-    }
-
-    func testDrootsCubicWorldIssue3() {
-        // this data causes issue #81 on GitHub
-        // discriminant is positive but very close to zero (8.46e-10)
-        // https://github.com/hfutrell/BezierKit/issues/81
-        let firstValue: CGFloat = -14.999127297400882
-        let otherValues: CGFloat = 0.00087270259911775838
-        let roots = drootsCubicTestHelper(firstValue, otherValues, otherValues, otherValues)
-        XCTAssertEqual(roots.count, 1)
-        XCTAssertEqual(roots[0], CGFloat(0.961251), accuracy: 1.0e-4)
     }
 
     func testDrootsQuadratic() {
