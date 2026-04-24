@@ -57,7 +57,7 @@ extension BernsteinPolynomial2: AnalyticalRoots {
     internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2) {
-            guard $0 >= start - 1.0e-10, $0 <= end + 1.0e-10 else { return }
+            guard $0 >= start, $0 <= end else { return }
             result.append(max(start, min(end, $0)))
         }
         return result
@@ -68,7 +68,7 @@ extension BernsteinPolynomial3: AnalyticalRoots {
     internal func distinctAnalyticalRoots(between start: CGFloat, and end: CGFloat) -> [CGFloat] {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2, self.b3) {
-            guard $0 >= start - 1.0e-10, $0 <= end + 1.0e-10 else { return }
+            guard $0 >= start, $0 <= end else { return }
             result.append(max(start, min(end, $0)))
         }
         return result
