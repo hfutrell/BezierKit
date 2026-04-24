@@ -121,7 +121,6 @@ class PolynomialTests: XCTestCase {
 
     func testDegree4RootAtLeftEndpointTwoRoots() {
         // degree-elevation of 2t(1-2t): roots at t=0 and t=0.5
-        // degree 4 uses the numerical path; verifies fStart==0 fix finds the root at t=0
         let polynomial = BernsteinPolynomial4(b0: 0, b1: 0.5, b2: 1.0 / 3.0, b3: -0.5, b4: -2)
         let roots = findDistinctRootsInUnitInterval(of: polynomial)
         XCTAssertEqual(roots.count, 2)
