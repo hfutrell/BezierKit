@@ -198,8 +198,8 @@ internal class Utils {
         // When `d` is small relative to the Bernstein coefficient magnitudes, dividing by it
         // amplifies rounding errors. Fall back to a different root finding method.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
-            let poly = BernsteinPolynomial3(b0: CGFloat(p0), b1: CGFloat(p1), b2: CGFloat(p2), b3: CGFloat(p3))
-            findDistinctRootsInUnitInterval(of: poly, allowAnalyticalRootFindingFastPath: false).forEach(callback)
+            BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
+                .distinctRealRootsInUnitInterval().forEach(callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d

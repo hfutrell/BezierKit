@@ -381,13 +381,13 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     return guess
 }
 
-public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P, allowAnalyticalRootFindingFastPath: Bool = true) -> [CGFloat] {
-    return findDistinctRoots(of: polynomial, between: 0, and: 1, allowAnalyticalRootFindingFastPath: allowAnalyticalRootFindingFastPath)
+public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
+    return findDistinctRoots(of: polynomial, between: 0, and: 1)
 }
 
-internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat, allowAnalyticalRootFindingFastPath: Bool = true) -> [CGFloat] {
+internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
     assert(start < end)
-    if allowAnalyticalRootFindingFastPath, let analytical = polynomial as? AnalyticalRoots {
+    if let analytical = polynomial as? AnalyticalRoots {
         return analytical.distinctAnalyticalRoots(between: start, and: end)
     }
     let derivative = polynomial.derivative
