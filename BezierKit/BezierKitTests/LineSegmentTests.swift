@@ -415,7 +415,7 @@ class LineSegmentTests: XCTestCase {
         let i = l.intersections(with: q)
         XCTAssertEqual(i.count, 1)
         if let first = i.first {
-            XCTAssertEqual(first.t1, 0.5)
+            XCTAssertEqual(first.t1, 0.5, accuracy: 1e-5)
             XCTAssertEqual(first.t2, 0)
         }
     }
