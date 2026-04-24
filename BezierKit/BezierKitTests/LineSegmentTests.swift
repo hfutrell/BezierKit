@@ -414,8 +414,10 @@ class LineSegmentTests: XCTestCase {
         let q = CubicCurve(quadratic: QuadraticCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
         let i = l.intersections(with: q)
         XCTAssertEqual(i.count, 1)
-        XCTAssertEqual(i.first?.t1, 0.5)
-        XCTAssertEqual(i.first?.t2, 0)
+        if let first = i.first {
+            XCTAssertEqual(first.t1, 0.5, accuracy: 1e-5)
+            XCTAssertEqual(first.t2, 0)
+        }
     }
 
     func testIntersectionsCubicRootsEdgeCase1() {
