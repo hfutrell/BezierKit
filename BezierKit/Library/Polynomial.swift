@@ -58,7 +58,7 @@ extension BernsteinPolynomial2: AnalyticalRoots {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2) {
             guard $0 >= start, $0 <= end else { return }
-            result.append(max(start, min(end, $0)))
+            result.append($0)
         }
         return result
     }
@@ -69,7 +69,7 @@ extension BernsteinPolynomial3: AnalyticalRoots {
         var result: [CGFloat] = []
         Utils.droots(self.b0, self.b1, self.b2, self.b3) {
             guard $0 >= start, $0 <= end else { return }
-            result.append(max(start, min(end, $0)))
+            result.append($0)
         }
         return result
     }
