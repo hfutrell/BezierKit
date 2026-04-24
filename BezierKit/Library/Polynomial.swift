@@ -415,7 +415,7 @@ internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, betwee
             } else {
                 // newton's method failed / converged to the wrong root!
                 // rare, but can happen roughly 5% of the time
-                // see unit test: `testDegree4RealWorldIssue`
+                // see unit tests: `testDegree4RealWorldIssue`, `testDegree5RealWorldIssue`
                 root = findRootBisection(of: polynomial, start: start, end: end)
             }
         } else if absFStart <= residualToConsiderRoot, absFEnd >= residualToConsiderRoot {
