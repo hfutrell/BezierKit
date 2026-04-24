@@ -186,15 +186,70 @@ internal class Utils {
         let p2 = Double(p2)
         let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
-        let smallValue: Double = 1.0e-8
-        guard Swift.abs(d) >= smallValue else {
-            // solve the quadratic polynomial at^2 + bt + c instead
-            let a = (3 * p0 - 6 * p1 + 3 * p2)
-            let b = (-3 * p0 + 3 * p1)
-            let c = p0
-            droots(CGFloat(c), CGFloat(b / 2.0 + c), CGFloat(a + b + c), callback: callback)
+        let scale = Swift.abs(p0) + 3 * Swift.abs(p1) + 3 * Swift.abs(p2) + Swift.abs(p3)
+        func beval(_ t: Double) -> Double {
+            let mt = 1.0 - t
+            return mt*mt*mt*p0 + 3.0*mt*mt*t*p1 + 3.0*mt*t*t*p2 + t*t*t*p3
+        }
+        func bderiv(_ t: Double) -> Double {
+            let mt = 1.0 - t
+            let d0 = 3.0*(p1-p0), d1 = 3.0*(p2-p1), d2 = 3.0*(p3-p2)
+            return mt*mt*d0 + 2.0*mt*t*d1 + t*t*d2
+        }
+        func polish(_ t0: Double) -> Double {
+            var t = t0
+            for _ in 0..<4 {
+                let fd = bderiv(t)
+                guard Swift.abs(fd) > 0 else { break }
+                t -= beval(t) / fd
+            }
+            return t
+        }
+        // When `d` is small relative to the Bernstein coefficient magnitudes, dividing by it
+        // amplifies rounding errors enough to corrupt the discriminant sign, sending Cardano
+        // into the wrong branch and producing garbage roots that Newton cannot recover.
+        // Use bisection on the stable Bernstein form to find roots in [0, 1] instead.
+        // Interior extrema of the cubic (roots of its derivative) are used as breakpoints
+        // so sign changes inside [0, 1] are never missed (e.g. symmetric hump polynomials).
+        guard Swift.abs(d) >= 1.0e-4 * scale else {
+            let deriv0 = 3.0*(p1-p0), deriv1 = 3.0*(p2-p1), deriv2 = 3.0*(p3-p2)
+            var breakpoints = [0.0, 1.0]
+            let denom = deriv0 - 2*deriv1 + deriv2
+            if Swift.abs(denom) > 0 {
+                let radical = deriv1*deriv1 - deriv0*deriv2
+                if radical >= 0 {
+                    let sq = sqrt(radical)
+                    for t in [(deriv0 - deriv1 + sq) / denom, (deriv0 - deriv1 - sq) / denom] {
+                        if t > 0 && t < 1 { breakpoints.append(t) }
+                    }
+                }
+            } else if deriv0 != deriv1 {
+                let t = 0.5 * deriv0 / (deriv0 - deriv1)
+                if t > 0 && t < 1 { breakpoints.append(t) }
+            }
+            breakpoints.sort()
+            var fPrev = beval(breakpoints[0])
+            for i in 1..<breakpoints.count {
+                let bHi = breakpoints[i]
+                let fHi = beval(bHi)
+                if fPrev * fHi < 0 {
+                    var lo = breakpoints[i-1], hi = bHi, flo = fPrev
+                    for _ in 0..<54 {
+                        let mid = (lo + hi) / 2.0
+                        let fmid = beval(mid)
+                        if flo * fmid <= 0 { hi = mid } else { lo = mid; flo = fmid }
+                    }
+                    callback(CGFloat(polish((lo + hi) / 2.0)))
+                } else if fPrev == 0 {
+                    callback(CGFloat(breakpoints[i-1]))
+                }
+                fPrev = fHi
+            }
+            if fPrev == 0 { callback(CGFloat(breakpoints[breakpoints.count - 1])) }
             return
         }
+        // Polish each Cardano root with Newton steps using stable Bernstein evaluation
+        // to recover accuracy lost in the power-basis conversion.
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d
         let b = (-3 * p0 + 3 * p1) / d
         let c = p0 / d
@@ -210,9 +265,9 @@ internal class Utils {
             let phi = acos(cosphi)
             let crtr = crt(r)
             let t1 = 2 * crtr
-            let root1 = CGFloat(t1 * cos((phi + tau) / 3) - a / 3)
-            let root2 = CGFloat(t1 * cos((phi + 2 * tau) / 3) - a / 3)
-            let root3 = CGFloat(t1 * cos(phi / 3) - a / 3)
+            let root1 = CGFloat(polish(t1 * cos((phi + tau) / 3) - a / 3))
+            let root2 = CGFloat(polish(t1 * cos((phi + 2 * tau) / 3) - a / 3))
+            let root3 = CGFloat(polish(t1 * cos(phi / 3) - a / 3))
             callback(root1)
             if root2 > root1 {
                 callback(root2)
@@ -224,11 +279,11 @@ internal class Utils {
             let sd = sqrt(discriminant)
             let u1 = crt(-q2 + sd)
             let v1 = crt(q2 + sd)
-            callback(CGFloat(u1 - v1 - a / 3))
+            callback(CGFloat(polish(u1 - v1 - a / 3)))
         } else if discriminant.isNaN == false {
             let u1 = q2 < 0 ? crt(-q2) : -crt(q2)
-            let root1 = CGFloat(2 * u1 - a / 3)
-            let root2 = CGFloat(-u1 - a / 3)
+            let root1 = CGFloat(polish(2 * u1 - a / 3))
+            let root2 = CGFloat(polish(-u1 - a / 3))
             if root1 < root2 {
                 callback(root1)
                 callback(root2)
