@@ -186,11 +186,17 @@ internal class Utils {
         let p2 = Double(p2)
         let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
+        guard Swift.abs(d) > 0 else {
+            // solve the quadratic polynomial at^2 + bt + c instead
+            let a = (3 * p0 - 6 * p1 + 3 * p2)
+            let b = (-3 * p0 + 3 * p1)
+            let c = p0
+            droots(CGFloat(c), CGFloat(b / 2.0 + c), CGFloat(a + b + c), callback: callback)
+            return
+        }
         let scale = Swift.abs(p0) + 3 * Swift.abs(p1) + 3 * Swift.abs(p2) + Swift.abs(p3)
         // When `d` is small relative to the Bernstein coefficient magnitudes, dividing by it
-        // amplifies rounding errors enough to corrupt the discriminant sign, sending Cardano
-        // into the wrong branch and producing garbage roots that Newton cannot recover.
-        // Fall back to the numerically stable convex-hull root finder instead.
+        // amplifies rounding errors. Fall back to a different root finding method.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
             let poly = BernsteinPolynomial3(b0: CGFloat(p0), b1: CGFloat(p1), b2: CGFloat(p2), b3: CGFloat(p3))
             findDistinctRootsInUnitInterval(of: poly, allowAnalyticalRootFindingFastPath: false).forEach(callback)
