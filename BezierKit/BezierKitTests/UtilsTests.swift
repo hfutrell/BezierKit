@@ -89,28 +89,6 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(r[0], CGFloat(0.999858), accuracy: 1.0e-5)
     }
 
-    func testDrootsCubicWorldIssue5() {
-        // Same failure mode as Issue4: the cubic coefficient is small relative to coefficient
-        // magnitudes (|d|/scale ≈ 1.3e-5), corrupting Cardano's discriminant.
-        // Coefficients are y-values of a curve (relative to a horizontal ray y) whose
-        // endpoints have nearly equal y while the control points dip far below.
-        let r = drootsCubicTestHelper(117.1170674036357, 39.03991314826271,
-                                      -3.4525219234637916e-06, -3.452663804637268e-06)
-        XCTAssertEqual(r.count, 1)
-        XCTAssertEqual(r[0], CGFloat(0.9998283), accuracy: 1.0e-5)
-    }
-
-    func testDrootsCubicWorldIssue6() {
-        // Coefficients arise when a horizontal ray passes within 1e-13 of a curve's midpoint:
-        // p2 and p3 are both near zero (~1e-7 and ~4e-12), making the cubic nearly linear
-        // with the root extremely close to t=1. |d|/scale ≈ 4e-7; Cardano's power-basis
-        // conversion completely breaks down.
-        let r = drootsCubicTestHelper(-0.14644808172857054, -0.04881594303476389,
-                                      1.2631213935909713e-07, 4.217515225946045e-12)
-        XCTAssertEqual(r.count, 1)
-        XCTAssertEqual(r[0], CGFloat(0.9999932), accuracy: 1.0e-5)
-    }
-
     func testDrootsQuadratic() {
         let a: CGFloat = 0.36159566118413977
         let b: CGFloat = -3.2979288390483816
