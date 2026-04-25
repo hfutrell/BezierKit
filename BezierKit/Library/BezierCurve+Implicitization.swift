@@ -49,7 +49,81 @@ internal struct ImplicitPolynomial {
     /// composes the implicit polynomial with a parametric polynomial whose coordinates are x(t) and y(t)
     /// the roots of the resulting polynomial are the intersection between the implicit and parametric polynomials
     func value<P: BernsteinPolynomial>(_ x: P, _ y: P) -> BernsteinPolynomialN {
+        if let x3 = x as? BernsteinPolynomial3, let y3 = y as? BernsteinPolynomial3 {
+            return value(x3, y3)
+        }
+        return _valueGeneric(x, y)
+    }
 
+    /// Specialized zero-allocation path for cubic implicit polynomials (order == 3) composed with
+    /// cubic parametric curves. Compared to the generic path, this avoids ~40 heap allocations by
+    /// using withUnsafeTemporaryAllocation for all intermediates. The generic value<P> dispatches
+    /// here at runtime via a conditional cast, ensuring this path is always taken for cubic curves.
+    func value(_ x: BernsteinPolynomial3, _ y: BernsteinPolynomial3) -> BernsteinPolynomialN {
+        guard order == 3 else { return _valueGeneric(x, y) }
+        // Scratch layout (69 CGFloat slots, stack-allocated via withUnsafeTemporaryAllocation):
+        //  [0..3]   x      (deg 3, 4 coefs)
+        //  [4..7]   y      (deg 3, 4 coefs)
+        //  [8..14]  x²     (deg 6, 7 coefs)
+        //  [15..24] x³     (deg 9, 10 coefs)
+        //  [25..31] y²     (deg 6, 7 coefs)
+        //  [32..41] y³     (deg 9, 10 coefs)
+        //  [42..48] x·y    (deg 6, 7 coefs)
+        //  [49..58] temp   (10 coefs: x·y² first, then reused for degree elevations)
+        //  [59..68] temp2  (10 coefs: x²·y)
+        var result = [CGFloat](repeating: .zero, count: 10)
+        result.withUnsafeMutableBufferPointer { resultBuf in
+            let rp = resultBuf.baseAddress!
+            withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 69) { buf in
+                let bp = buf.baseAddress!
+                bp[0] = x.b0; bp[1] = x.b1; bp[2] = x.b2; bp[3] = x.b3
+                bp[4] = y.b0; bp[5] = y.b1; bp[6] = y.b2; bp[7] = y.b3
+                bernsteinMul(bp, 3, bp, 3, into: bp + 8)           // x²
+                bernsteinMul(bp + 8, 6, bp, 3, into: bp + 15)      // x³
+                bernsteinMul(bp + 4, 3, bp + 4, 3, into: bp + 25)  // y²
+                bernsteinMul(bp + 25, 6, bp + 4, 3, into: bp + 32) // y³
+                bernsteinMul(bp, 3, bp + 4, 3, into: bp + 42)      // x·y
+                bernsteinMul(bp, 3, bp + 25, 6, into: bp + 49)     // x·y² → temp[49]
+                bernsteinMul(bp + 8, 6, bp + 4, 3, into: bp + 59)  // x²·y → temp[59]
+                // Coefficients: c[4i+j] = a[i][j] for x^i * y^j (order=3, so 4×4 matrix)
+                let c = self.coefficients
+                let a00 = c[0], a01 = c[1], a02 = c[2], a03 = c[3]
+                let a10 = c[4], a11 = c[5], a12 = c[6]
+                let a20 = c[8], a21 = c[9]
+                let a30 = c[12]
+                // Degree-9 terms (no elevation needed) — consume temp before overwriting it.
+                if a00 != 0 { for k in 0 ..< 10 { rp[k] += a00 } }
+                if a12 != 0 { for k in 0 ..< 10 { rp[k] += a12 * bp[49 + k] } }
+                if a21 != 0 { for k in 0 ..< 10 { rp[k] += a21 * bp[59 + k] } }
+                if a03 != 0 { for k in 0 ..< 10 { rp[k] += a03 * bp[32 + k] } }
+                if a30 != 0 { for k in 0 ..< 10 { rp[k] += a30 * bp[15 + k] } }
+                // Lower-degree terms requiring elevation to degree 9, reusing temp[49].
+                if a01 != 0 {
+                    bernsteinElevate(bp + 4, 3, by: 6, into: bp + 49)
+                    for k in 0 ..< 10 { rp[k] += a01 * bp[49 + k] }
+                }
+                if a02 != 0 {
+                    bernsteinElevate(bp + 25, 6, by: 3, into: bp + 49)
+                    for k in 0 ..< 10 { rp[k] += a02 * bp[49 + k] }
+                }
+                if a10 != 0 {
+                    bernsteinElevate(bp, 3, by: 6, into: bp + 49)
+                    for k in 0 ..< 10 { rp[k] += a10 * bp[49 + k] }
+                }
+                if a11 != 0 {
+                    bernsteinElevate(bp + 42, 6, by: 3, into: bp + 49)
+                    for k in 0 ..< 10 { rp[k] += a11 * bp[49 + k] }
+                }
+                if a20 != 0 {
+                    bernsteinElevate(bp + 8, 6, by: 3, into: bp + 49)
+                    for k in 0 ..< 10 { rp[k] += a20 * bp[49 + k] }
+                }
+            }
+        }
+        return BernsteinPolynomialN(coefficients: result)
+    }
+
+    private func _valueGeneric<P: BernsteinPolynomial>(_ x: P, _ y: P) -> BernsteinPolynomialN {
         assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
         let polynomialOrder = x.order
         let x = BernsteinPolynomialN(coefficients: x.coefficients)
@@ -110,6 +184,43 @@ internal struct ImplicitPolynomial {
     fileprivate static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(-), order: left.order)
+    }
+}
+
+// MARK: - Zero-allocation Bernstein arithmetic for the cubic specialization of ImplicitPolynomial.value
+
+private func bernsteinMul(
+    _ left: UnsafePointer<CGFloat>, _ m: Int,
+    _ right: UnsafePointer<CGFloat>, _ n: Int,
+    into result: UnsafeMutablePointer<CGFloat>
+) {
+    for k in 0 ... m + n {
+        let lo = max(k - n, 0)
+        let hi = min(m, k)
+        var s = CGFloat.zero
+        for i in lo ... hi {
+            s += Utils.binomialCoefficient(m, choose: i) *
+                 Utils.binomialCoefficient(n, choose: k - i) *
+                 left[i] * right[k - i]
+        }
+        result[k] = s / Utils.binomialCoefficient(m + n, choose: k)
+    }
+}
+
+private func bernsteinElevate(
+    _ src: UnsafePointer<CGFloat>, _ d: Int, by e: Int,
+    into result: UnsafeMutablePointer<CGFloat>
+) {
+    for k in 0 ... d + e {
+        let lo = max(k - e, 0)
+        let hi = min(d, k)
+        var s = CGFloat.zero
+        for l in lo ... hi {
+            s += Utils.binomialCoefficient(d, choose: l) *
+                 Utils.binomialCoefficient(e, choose: k - l) *
+                 src[l]
+        }
+        result[k] = s / Utils.binomialCoefficient(d + e, choose: k)
     }
 }
 

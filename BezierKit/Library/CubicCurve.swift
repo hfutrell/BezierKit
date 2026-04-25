@@ -252,8 +252,8 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
                                               b3: p3.x + p3.y,
                                               b4: p4.x + p4.y,
                                               b5: p5.x + p5.y)
-        for t in findDistinctRootsInUnitInterval(of: polynomial) {
-            guard t > 0.0, t < 1.0 else { break }
+        findDistinctRootsCallback(of: polynomial, between: 0, and: 1) { t in
+            guard t > 0.0, t < 1.0 else { return }
             let point = c.point(at: CGFloat(t))
             let distanceSquared = point.lengthSquared
             if distanceSquared < minimumDistanceSquared {

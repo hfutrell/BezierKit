@@ -37,6 +37,18 @@ private extension PerformanceTests {
         return curves
     }
 
+    func generateRandomQuadraticCurves(count: Int, reseed: Int? = nil) -> [QuadraticCurve] {
+        if let reseed = reseed {
+            srand48(reseed)
+        }
+        func randomPoint() -> CGPoint {
+            return CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48()))
+        }
+        return (0..<count).map { _ in
+            QuadraticCurve(p0: randomPoint(), p1: randomPoint(), p2: randomPoint())
+        }
+    }
+
     #if canImport(CoreGraphics)
 
     func parametricPath(numCurves: Int,
@@ -137,6 +149,156 @@ class PerformanceTests: XCTestCase {
                 count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
             }
         }
+    }
+
+    func testQuadraticIntersectionsPerformanceTangentEndpoint() {
+        // quadratic-quadratic analogue of testCubicIntersectionsPerformanceTangentEndpoint:
+        // curve2 starts at curve1's endpoint with its first control point doubling back in the
+        // anti-tangent direction (mirroring the cubic-cubic test), creating a tangent intersection
+        // that is hard for divide-and-conquer subdivision algorithms
+        let dataCount = 250
+        let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 13)
+        self.measure {
+            var count = 0
+            for curve1 in curves {
+                let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                            p1: CGFloat(drand48()) * (curve1.p1 - curve1.p2) + curve1.endingPoint,
+                                            p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            }
+        }
+    }
+
+    func testQuadraticIntersectionsAccuracyTangentEndpoint() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomQuadraticCurves(count: 250, reseed: 13)
+        var maxError: CGFloat = 0
+        var totalError: CGFloat = 0
+        var intersectionCount = 0
+        for curve1 in curves {
+            let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                        p1: CGFloat(drand48()) * (curve1.p1 - curve1.p2) + curve1.endingPoint,
+                                        p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+            for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                maxError = max(maxError, err)
+                totalError += err
+                intersectionCount += 1
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Quadratic-Quadratic tangent endpoint: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testCubicQuadraticIntersectionsPerformanceTangentEndpoint() {
+        // cubic-quadratic: curve1 is cubic, curve2 is quadratic whose first control point
+        // doubles back in the anti-tangent direction (mirroring testCubicIntersectionsPerformanceTangentEndpoint)
+        let dataCount = 250
+        let curves = generateRandomCurves(count: dataCount, reseed: 14)
+        self.measure {
+            var count = 0
+            for curve1 in curves {
+                let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                            p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                            p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            }
+        }
+    }
+
+    func testCubicQuadraticIntersectionsAccuracyTangentEndpoint() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomCurves(count: 250, reseed: 14)
+        var maxError: CGFloat = 0
+        var totalError: CGFloat = 0
+        var intersectionCount = 0
+        for curve1 in curves {
+            let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                        p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                        p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+            for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                maxError = max(maxError, err)
+                totalError += err
+                intersectionCount += 1
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Cubic-Quadratic tangent endpoint: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testQuadraticIntersectionsPerformance() {
+        // test the performance of `intersections(with:,accuracy:)` for quadratic-quadratic pairs
+        let dataCount = 50
+        let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 10)
+        self.measure {
+            var count = 0
+            for curve1 in curves {
+                for curve2 in curves {
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
+            }
+        }
+    }
+
+    func testQuadraticCubicIntersectionsPerformance() {
+        // test the performance of `intersections(with:,accuracy:)` for quadratic-cubic pairs
+        let dataCount = 50
+        let quadratics = generateRandomQuadraticCurves(count: dataCount, reseed: 11)
+        let cubics = generateRandomCurves(count: dataCount, reseed: 12)
+        self.measure {
+            var count = 0
+            for curve1 in quadratics {
+                for curve2 in cubics {
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
+            }
+        }
+    }
+
+    func testQuadraticIntersectionsAccuracy() {
+        // measures the geometric distance between intersection points found on each curve;
+        // print results to compare accuracy before and after algorithm changes
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomQuadraticCurves(count: 50, reseed: 10)
+        var maxError: CGFloat = 0
+        var totalError: CGFloat = 0
+        var intersectionCount = 0
+        for curve1 in curves {
+            for curve2 in curves {
+                for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                    let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                    maxError = max(maxError, err)
+                    totalError += err
+                    intersectionCount += 1
+                }
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Quadratic-Quadratic: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testQuadraticCubicIntersectionsAccuracy() {
+        // measures the geometric distance between intersection points found on each curve;
+        // print results to compare accuracy before and after algorithm changes
+        let accuracy: CGFloat = 1.0e-5
+        let quadratics = generateRandomQuadraticCurves(count: 50, reseed: 11)
+        let cubics = generateRandomCurves(count: 50, reseed: 12)
+        var maxError: CGFloat = 0
+        var totalError: CGFloat = 0
+        var intersectionCount = 0
+        for curve1 in quadratics {
+            for curve2 in cubics {
+                for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                    let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                    maxError = max(maxError, err)
+                    totalError += err
+                    intersectionCount += 1
+                }
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Quadratic-Cubic: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
     }
 
     func testQuadraticCurveProjectPerformance() {
