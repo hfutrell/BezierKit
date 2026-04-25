@@ -20,31 +20,40 @@ class PathComponentTests: XCTestCase {
     }
 
     func testBoundingBox() {
+        // line segments: tight == loose, so boundingBox matches the union of endpoints
         let p = PathComponent(curves: [line1, line2])
-        XCTAssertEqual(p.boundingBox, BoundingBox(min: CGPoint(x: 1.0, y: -1.0), max: CGPoint(x: 13.0, y: 5.0))) // just the union of the two bounding boxes
+        XCTAssertEqual(p.boundingBox, BoundingBox(min: CGPoint(x: 1.0, y: -1.0), max: CGPoint(x: 13.0, y: 5.0)))
+        // a quadratic whose middle control point extends outside the actual curve —
+        // boundingBox (loose) includes the control point, unlike boundingBoxOfPath (tight)
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
+                                       p1: CGPoint(x: 2, y: 4),
+                                       p2: CGPoint(x: 4, y: 0))
+        XCTAssertEqual(PathComponent(curve: quadratic).boundingBox, BoundingBox(p1: CGPoint(x: 0, y: 0), p2: CGPoint(x: 4, y: 4)))
     }
 
     func testBoundingBoxOfPath() {
+        // boundingBoxOfPath is the tight (exact) bounding box of the path, matching CoreGraphics convention
         let point1 = CGPoint(x: 3, y: -2)
         let pointComponent = PathComponent(points: [point1], orders: [0])
         XCTAssertEqual(pointComponent.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 3, y: -2), p2: CGPoint(x: 3, y: -2)))
 
-        let line = LineSegment(p0: CGPoint(x: 1, y: 2),
-                               p1: CGPoint(x: 5, y: 3))
+        // quadratic: middle control point at (2, 4) is above the actual curve; tight y max is 2
+        let quadratic = QuadraticCurve(p0: CGPoint(x: 0, y: 0),
+                                       p1: CGPoint(x: 2, y: 4),
+                                       p2: CGPoint(x: 4, y: 0))
+        XCTAssertEqual(PathComponent(curve: quadratic).boundingBoxOfPath, quadratic.boundingBox)
+        XCTAssertEqual(PathComponent(curve: quadratic).boundingBoxOfPath,
+                       BoundingBox(p1: CGPoint(x: 0, y: 0), p2: CGPoint(x: 4, y: 2)))
 
-        let quadratic = QuadraticCurve(p0: CGPoint(x: 5, y: 3),
-                                       p1: CGPoint(x: 4, y: 4),
-                                       p2: CGPoint(x: 3, y: 6))
-
-        let cubic = CubicCurve(p0: CGPoint(x: 3, y: 6),
-                               p1: CGPoint(x: 2, y: 5),
-                               p2: CGPoint(x: -1, y: 4),
-                               p3: CGPoint(x: 1, y: 2))
-
-        XCTAssertEqual(PathComponent(curve: line).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 5, y: 3)))
-        XCTAssertEqual(PathComponent(curve: quadratic).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 3, y: 3), p2: CGPoint(x: 5, y: 6)))
-        XCTAssertEqual(PathComponent(curve: cubic).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: -1, y: 2), p2: CGPoint(x: 3, y: 6)))
-        XCTAssertEqual(PathComponent(curves: [line, quadratic, cubic]).boundingBoxOfPath, BoundingBox(p1: CGPoint(x: -1, y: 2), p2: CGPoint(x: 5, y: 6)))
+        // contiguous chain: tight box uses each curve's exact bounding box
+        let line = LineSegment(p0: CGPoint(x: 1, y: 2), p1: CGPoint(x: 5, y: 3))
+        let quadratic2 = QuadraticCurve(p0: CGPoint(x: 5, y: 3), p1: CGPoint(x: 4, y: 4), p2: CGPoint(x: 3, y: 6))
+        let cubic = CubicCurve(p0: CGPoint(x: 3, y: 6), p1: CGPoint(x: 2, y: 5), p2: CGPoint(x: -1, y: 4), p3: CGPoint(x: 1, y: 2))
+        XCTAssertEqual(PathComponent(curve: line).boundingBoxOfPath, line.boundingBox)
+        XCTAssertEqual(PathComponent(curve: quadratic2).boundingBoxOfPath, quadratic2.boundingBox)
+        XCTAssertEqual(PathComponent(curve: cubic).boundingBoxOfPath, cubic.boundingBox)
+        XCTAssertEqual(PathComponent(curves: [line, quadratic2, cubic]).boundingBoxOfPath,
+                       BoundingBox(first: line.boundingBox, second: BoundingBox(first: quadratic2.boundingBox, second: cubic.boundingBox)))
     }
 
     func testOffset() {

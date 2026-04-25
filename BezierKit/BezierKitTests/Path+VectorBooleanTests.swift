@@ -331,8 +331,8 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertTrue(a.contains(point, using: rule))
         XCTAssertTrue(b.contains(point, using: rule))
         XCTAssertTrue(result.contains(point, using: rule), "a union b should contain point that is in both a and b")
-        XCTAssertTrue(result.boundingBox.cgRect.insetBy(dx: -1, dy: -1).contains(a.boundingBox.cgRect), "resulting bounding box should contain a.boundingBox")
-        XCTAssertTrue(result.boundingBox.cgRect.insetBy(dx: -1, dy: -1).contains(b.boundingBox.cgRect), "resulting bounding box should contain b.boundingBox")
+        XCTAssertTrue(result.boundingBoxOfPath.cgRect.insetBy(dx: -1, dy: -1).contains(a.boundingBoxOfPath.cgRect), "resulting bounding box should contain a.boundingBoxOfPath")
+        XCTAssertTrue(result.boundingBoxOfPath.cgRect.insetBy(dx: -1, dy: -1).contains(b.boundingBoxOfPath.cgRect), "resulting bounding box should contain b.boundingBoxOfPath")
     }
 
     #endif
@@ -576,8 +576,8 @@ class PathVectorBooleanTests: XCTestCase {
         let path = Path(cgPath: cgPath)
         let result = path.crossingsRemoved(accuracy: 0.01)
          // in practice .crossingsRemoved was cutting off most of the shape
-        XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
-        XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
+        XCTAssertEqual(path.boundingBoxOfPath.size.x, result.boundingBoxOfPath.size.x, accuracy: 1.0e-3)
+        XCTAssertEqual(path.boundingBoxOfPath.size.y, result.boundingBoxOfPath.size.y, accuracy: 1.0e-3)
         XCTAssertEqual(result.components[0].numberOfElements, 5) // with crossings removed we should have 1 fewer curve (the last one)
     }
 
@@ -605,8 +605,8 @@ class PathVectorBooleanTests: XCTestCase {
         let path = Path(cgPath: cgPath)
         let result = path.crossingsRemoved(accuracy: 1.0e-5)
         // in practice .crossingsRemoved was cutting off most of the shape
-        XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 1.0e-3)
-        XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 1.0e-3)
+        XCTAssertEqual(path.boundingBoxOfPath.size.x, result.boundingBoxOfPath.size.x, accuracy: 1.0e-3)
+        XCTAssertEqual(path.boundingBoxOfPath.size.y, result.boundingBoxOfPath.size.y, accuracy: 1.0e-3)
     }
 
     func testCrossingsRemovedThirdRealWorldCase() {

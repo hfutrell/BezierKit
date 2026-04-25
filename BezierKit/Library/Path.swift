@@ -81,11 +81,11 @@ open class Path: NSObject, @unchecked Sendable {
         return self.components.isEmpty // components are not allowed to be empty
     }
 
+    /// the smallest bounding box completely enclosing the path, including its control points.
     public var boundingBox: BoundingBox {
         return self.lock.sync { self._boundingBox }
     }
 
-    /// the smallest bounding box completely enclosing the points of the path, includings its control points.
     public var boundingBoxOfPath: BoundingBox {
         return self.lock.sync { self._boundingBoxOfPath }
     }
@@ -132,7 +132,7 @@ open class Path: NSObject, @unchecked Sendable {
     }
 
     public func intersections(with other: Path, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathIntersection] {
-        guard self.boundingBox.overlaps(other.boundingBox) else {
+        guard self.boundingBoxOfPath.overlaps(other.boundingBoxOfPath) else {
             return []
         }
         var intersections: [PathIntersection] = []
@@ -339,7 +339,7 @@ open class Path: NSObject, @unchecked Sendable {
             var owner: PathComponent?
             for outer in outerComponents.keys {
                 if let owner = owner {
-                    guard outer.boundingBox.intersection(owner.boundingBox) == outer.boundingBox else { continue }
+                    guard outer.boundingBoxOfPath.intersection(owner.boundingBoxOfPath) == outer.boundingBoxOfPath else { continue }
                 }
                 if outer.contains(component.startingPoint, using: rule) {
                     owner = outer

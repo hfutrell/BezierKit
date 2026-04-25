@@ -687,7 +687,7 @@ class PathTests: XCTestCase {
                         control2: CGPoint(x: 212.02163105179878, y: 108.14905966376985))
         let path = Path(cgPath: cgPath)
 
-        XCTAssertFalse(path.boundingBox.contains(point)) // the point is not even in the bounding box of the path!
+        XCTAssertFalse(path.boundingBoxOfPath.contains(point)) // the point is not even in the tight bounding box of the path!
         XCTAssertFalse(path.contains(point, using: .evenOdd))
         XCTAssertFalse(path.contains(point, using: .winding))
     }
@@ -919,7 +919,26 @@ class PathTests: XCTestCase {
 
     #endif
 
+    func testBoundingBox() {
+        // boundingBox is the loose bounding box including control points, matching CoreGraphics convention
+        XCTAssertEqual(Path().boundingBox, BoundingBox.empty)
+        let quad1 = QuadraticCurve(p0: CGPoint(x: 1, y: 2),
+                                   p1: CGPoint(x: 2, y: 4),
+                                   p2: CGPoint(x: 3, y: 2))
+        let quad2 = QuadraticCurve(p0: CGPoint(x: 3, y: 2),
+                                   p1: CGPoint(x: 2, y: 0),
+                                   p2: CGPoint(x: 1, y: 2))
+        // control point of quad1 reaches y=4 and control point of quad2 reaches y=0,
+        // even though neither curve actually reaches those extremes
+        let path1 = Path(curve: quad1)
+        XCTAssertEqual(path1.boundingBox, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 4)))
+        let path2 = Path(components: [PathComponent(curve: quad1),
+                                      PathComponent(curve: quad2)])
+        XCTAssertEqual(path2.boundingBox, BoundingBox(p1: CGPoint(x: 1, y: 0), p2: CGPoint(x: 3, y: 4)))
+    }
+
     func testBoundingBoxOfPath() {
+        // boundingBoxOfPath is the tight (exact) bounding box, matching CoreGraphics convention
         XCTAssertEqual(Path().boundingBoxOfPath, BoundingBox.empty)
         let quad1 = QuadraticCurve(p0: CGPoint(x: 1, y: 2),
                                    p1: CGPoint(x: 2, y: 4),
@@ -927,11 +946,12 @@ class PathTests: XCTestCase {
         let quad2 = QuadraticCurve(p0: CGPoint(x: 3, y: 2),
                                    p1: CGPoint(x: 2, y: 0),
                                    p2: CGPoint(x: 1, y: 2))
+        // quad1 extremum at t=0.5: y=3 (not 4); quad2 extremum at t=0.5: y=1 (not 0)
         let path1 = Path(curve: quad1)
-        XCTAssertEqual(path1.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 4)))
+        XCTAssertEqual(path1.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 3)))
         let path2 = Path(components: [PathComponent(curve: quad1),
                                       PathComponent(curve: quad2)])
-        XCTAssertEqual(path2.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 0), p2: CGPoint(x: 3, y: 4)))
+        XCTAssertEqual(path2.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 1), p2: CGPoint(x: 3, y: 3)))
     }
 
     #if !os(WASI)
