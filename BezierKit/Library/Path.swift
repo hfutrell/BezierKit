@@ -81,11 +81,12 @@ open class Path: NSObject, @unchecked Sendable {
         return self.components.isEmpty // components are not allowed to be empty
     }
 
-    /// the smallest bounding box completely enclosing the path, including its control points.
+    /// The bounding box of the path. The bounding box is the smallest rectangle completely enclosing all points in the path, including control points for Bézier cubic and quadratic curves.
     public var boundingBox: BoundingBox {
         return self.lock.sync { self._boundingBox }
     }
 
+    /// The path bounding box of the path. The path bounding box is the smallest rectangle completely enclosing all points in the path, *not* including control points for Bézier cubic and quadratic curves.
     public var boundingBoxOfPath: BoundingBox {
         return self.lock.sync { self._boundingBoxOfPath }
     }

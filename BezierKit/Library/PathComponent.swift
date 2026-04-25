@@ -238,10 +238,12 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         return self.curves.reduce(0.0) { $0 + $1.length() }
     }
 
+    /// The path bounding box of the path component. The path bounding box is the smallest rectangle completely enclosing all points in the path component, *not* including control points for Bézier cubic and quadratic curves.
     public var boundingBoxOfPath: BoundingBox {
         return self.bvh.boundingBox
     }
 
+    /// The bounding box of the path component. The bounding box is the smallest rectangle completely enclosing all points in the path component, including control points for Bézier cubic and quadratic curves.
     public var boundingBox: BoundingBox {
         return self.lock.sync { _boundingBox }
     }
