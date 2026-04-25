@@ -917,6 +917,37 @@ class PathTests: XCTestCase {
         XCTAssertEqual(records, expectedRecords)
     }
 
+    func testApplyClosedCubicPath() {
+        // A closed PathComponent made entirely of cubics (e.g. a circle) must emit
+        // closeSubpath via apply/appendPath even though no line segment closes the path.
+        let circlePath = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil))
+        let circleComponent = circlePath.components[0]
+        XCTAssertTrue(circleComponent.isClosed)
+        XCTAssertTrue(circleComponent.orders.allSatisfy { $0 == 3 }, "circle should be all cubics")
+
+        var records: [CGPathElementRecord] = []
+        func clearAndApply(_ block: (_: UnsafeMutablePointer<[CGPathElementRecord]>) -> Void) {
+            records.removeAll()
+            withUnsafeMutablePointer(to: &records) { block($0) }
+        }
+
+        // apply must end with closeSubpath
+        clearAndApply { circleComponent.apply(info: $0, function: applierFunction) }
+        XCTAssertEqual(records.last?.type, .closeSubpath,
+                       "closed cubic-only PathComponent must emit closeSubpath via apply")
+
+        // appendPath must produce a CGPath that also ends with closeSubpath
+        let mutablePath = CGMutablePath()
+        circleComponent.appendPath(to: mutablePath)
+        clearAndApply { mutablePath.apply(info: $0, function: applierFunction) }
+        XCTAssertEqual(records.last?.type, .closeSubpath,
+                       "closed cubic-only PathComponent must emit closeSubpath via appendPath")
+
+        // round-trip through CGPath must preserve the closed structure
+        let roundTripped = Path(cgPath: mutablePath).components[0]
+        XCTAssertEqual(roundTripped, circleComponent)
+    }
+
     #endif
 
     func testBoundingBoxOfPath() {

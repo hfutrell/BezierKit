@@ -165,10 +165,15 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
             }
             var element = CGPathElement(type: type, points: points)
             function(info, &element)
+            if i == numberOfElements - 1, isClosed, order > 1 {
+                var closeElement = CGPathElement(type: .closeSubpath, points: points)
+                function(info, &closeElement)
+            }
         }
     }
 
     internal func appendPath(to mutablePath: CGMutablePath) {
+        let isClosed = self.isClosed
         enumerateOrdersAndPoints { i, order, points in
             switch order {
             case 0:
@@ -187,6 +192,9 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
                 assertionFailureBadCurveOrder(order)
                 return
             }
+        }
+        if isClosed, let lastOrder = orders.last, lastOrder > 1 {
+            mutablePath.closeSubpath()
         }
     }
 
