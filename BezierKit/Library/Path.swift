@@ -315,6 +315,18 @@ open class Path: NSObject, @unchecked Sendable {
         return !self.intersects(other, accuracy: accuracy)
     }
 
+    /// Splits the path at `location`, returning two paths: everything before the location and everything from the location onward.
+    public func split(at location: IndexedPathLocation) -> (Path, Path) {
+        let componentIndex = location.componentIndex
+        let component = self.components[componentIndex]
+        let loc = location.locationInComponent
+        let before = component.split(from: component.startingIndexedLocation, to: loc)
+        let after = component.split(from: loc, to: component.endingIndexedLocation)
+        let firstPath = Path(components: Array(self.components[0..<componentIndex]) + [before])
+        let secondPath = Path(components: [after] + Array(self.components[(componentIndex + 1)...]))
+        return (firstPath, secondPath)
+    }
+
     public func offset(distance d: CGFloat) -> Path {
         return Path(components: self.components.compactMap {
             $0.offset(distance: d)

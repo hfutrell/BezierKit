@@ -966,6 +966,36 @@ class PathTests: XCTestCase {
     }
     #endif
 
+    func testSplitAtLocation() {
+        // Build a two-segment open path: line (0,0)→(1,0) then (1,0)→(2,0)
+        let seg1 = LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 1, y: 0))
+        let seg2 = LineSegment(p0: CGPoint(x: 1, y: 0), p1: CGPoint(x: 2, y: 0))
+        let component = PathComponent(curves: [seg1, seg2])
+        let path = Path(components: [component])
+
+        // split at the midpoint of the first segment (elementIndex=0, t=0.5) → point (0.5, 0)
+        let location = IndexedPathLocation(componentIndex: 0, elementIndex: 0, t: 0.5)
+        let (first, second) = path.split(at: location)
+
+        XCTAssertEqual(first.components.count, 1)
+        XCTAssertEqual(second.components.count, 1)
+
+        // first path should run from (0,0) to (0.5,0) — one half-segment
+        XCTAssertEqual(first.components[0].startingPoint, CGPoint(x: 0, y: 0))
+        XCTAssertEqual(first.components[0].endingPoint,   CGPoint(x: 0.5, y: 0))
+
+        // second path should run from (0.5,0) to (2,0) — a half-segment + full second segment
+        XCTAssertEqual(second.components[0].startingPoint, CGPoint(x: 0.5, y: 0))
+        XCTAssertEqual(second.components[0].endingPoint,   CGPoint(x: 2,   y: 0))
+        XCTAssertEqual(second.components[0].numberOfElements, 2)
+
+        // split at the junction between the two segments (elementIndex=1, t=0) → point (1,0)
+        let junction = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0)
+        let (beforeJunction, afterJunction) = path.split(at: junction)
+        XCTAssertEqual(beforeJunction.components[0].endingPoint, CGPoint(x: 1, y: 0))
+        XCTAssertEqual(afterJunction.components[0].startingPoint, CGPoint(x: 1, y: 0))
+    }
+
     func testIndexedPathLocation() {
         let location1 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 0.5)
         let location2 = IndexedPathLocation(componentIndex: 0, elementIndex: 1, t: 1.0)

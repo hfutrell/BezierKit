@@ -208,6 +208,30 @@ class PathComponentTests: XCTestCase {
         XCTAssertEqual(split6alt, expectedValue6)
     }
 
+    func testSplitAtLocations() {
+        // no locations → returns the original component unchanged
+        XCTAssertEqual(circlePathComponent.split(at: []), [circlePathComponent])
+
+        // one location → two pieces that reconstruct the original
+        let loc1 = IndexedPathComponentLocation(elementIndex: 1, t: 0.5)
+        let pieces1 = circlePathComponent.split(at: [loc1])
+        XCTAssertEqual(pieces1.count, 2)
+        XCTAssertEqual(pieces1[0], circlePathComponent.split(from: circlePathComponent.startingIndexedLocation, to: loc1))
+        XCTAssertEqual(pieces1[1], circlePathComponent.split(from: loc1, to: circlePathComponent.endingIndexedLocation))
+
+        // two locations in order → three pieces
+        let loc2 = IndexedPathComponentLocation(elementIndex: 2, t: 0.3)
+        let pieces2 = circlePathComponent.split(at: [loc1, loc2])
+        XCTAssertEqual(pieces2.count, 3)
+        XCTAssertEqual(pieces2[0], circlePathComponent.split(from: circlePathComponent.startingIndexedLocation, to: loc1))
+        XCTAssertEqual(pieces2[1], circlePathComponent.split(from: loc1, to: loc2))
+        XCTAssertEqual(pieces2[2], circlePathComponent.split(from: loc2, to: circlePathComponent.endingIndexedLocation))
+
+        // locations passed in reverse order are sorted automatically
+        let pieces2reversed = circlePathComponent.split(at: [loc2, loc1])
+        XCTAssertEqual(pieces2reversed, pieces2)
+    }
+
     func testEnumeratePoints() {
         func arrayByEnumerating(component: PathComponent, includeControlPoints: Bool) -> [CGPoint] {
             var points: [CGPoint] = []
