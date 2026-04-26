@@ -26,6 +26,24 @@ internal extension Array where Element: Comparable {
     }
 }
 
+internal extension Array where Element == Intersection {
+    func sortedAndUniqued() -> [Intersection] {
+        guard self.count > 1 else { return self }
+        let sorted = self.sorted()
+        return sorted.indices.compactMap { i -> Intersection? in
+            let element = sorted[i]
+            guard i > sorted.startIndex else { return element }
+            let prev = sorted[i - 1]
+            // Use approximate equality to handle near-duplicate boundary intersections
+            // that arise when adjacent monotone segments independently find the same point.
+            guard !Utils.approximately(Double(element.t1), Double(prev.t1), precision: Utils.epsilon)
+               || !Utils.approximately(Double(element.t2), Double(prev.t2), precision: Utils.epsilon)
+            else { return nil }
+            return element
+        }
+    }
+}
+
 internal class Utils {
 
     private static let binomialTable: [[CGFloat]] = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -325,6 +343,159 @@ internal class Utils {
     // disable this SwiftLint warning about function having more than 5 parameters
     // swiftlint:disable function_parameter_count
 
+    // Lightweight segment descriptor for the monotonic fast-path.
+    // Once a curve's control polygon is monotone in both x and y, its actual curve
+    // is also monotone, so its tight bounding box equals [startPoint, endPoint].
+    // Sub-curves produced by de Casteljau subdivision inherit monotonicity,
+    // so the fast path only needs one point evaluation per split instead of a full
+    // split() + boundingBox() recomputation.
+    private struct MonoSeg {
+        var globalT1, globalT2: CGFloat // original-curve parameter range (for Intersection output)
+        var localT1,  localT2: CGFloat  // reference-curve parameter range (for point(at:) evaluation)
+        var p1, p2: CGPoint             // curve(localT1), curve(localT2)
+        var span: CGFloat { Swift.abs(p2.x - p1.x) + Swift.abs(p2.y - p1.y) }
+        var canSplit: Bool {
+            let mid = (globalT1 + globalT2) * 0.5
+            return mid > globalT1 && mid < globalT2
+        }
+    }
+
+    @inline(__always)
+    private static func monoOverlap(_ a: MonoSeg, _ b: MonoSeg) -> Bool {
+        let aMinX = Swift.min(a.p1.x, a.p2.x), aMaxX = Swift.max(a.p1.x, a.p2.x)
+        let bMinX = Swift.min(b.p1.x, b.p2.x), bMaxX = Swift.max(b.p1.x, b.p2.x)
+        guard aMinX <= bMaxX, bMinX <= aMaxX else { return false }
+        let aMinY = Swift.min(a.p1.y, a.p2.y), aMaxY = Swift.max(a.p1.y, a.p2.y)
+        let bMinY = Swift.min(b.p1.y, b.p2.y), bMaxY = Swift.max(b.p1.y, b.p2.y)
+        return aMinY <= bMaxY && bMinY <= aMaxY
+    }
+
+    // Compiler specialises this per C; for CubicCurve/QuadraticCurve the as? cast is statically resolved.
+    @inline(__always)
+    private static func isMonotone<C: BezierCurve>(_ curve: C) -> Bool {
+        if let c = curve as? CubicCurve     { return c.isMonotonicallyOrdered }
+        if let q = curve as? QuadraticCurve { return q.isMonotonicallyOrdered }
+        return false
+    }
+
+    // Fast-path recursive intersection for pairs of monotone subcurves.
+    // c1/c2 are the fixed reference curves; s1/s2 carry the parameter range and endpoint pair.
+    // maxIntersections is passed rather than recomputed each call.
+    private static func monoPairiteration<C1: BezierCurve, C2: BezierCurve>(
+        _ c1: C1, _ s1: MonoSeg,
+        _ c2: C2, _ s2: MonoSeg,
+        _ results: inout [Intersection],
+        _ accuracy: CGFloat,
+        _ maxIntersections: Int,
+        _ totalIterations: inout Int
+    ) -> Bool {
+        totalIterations += 1
+        guard totalIterations <= 900 else { return false }
+        guard results.count <= maxIntersections else { return false }
+        guard monoOverlap(s1, s2) else { return true }
+
+        let r1 = s1.canSplit && s1.span >= accuracy
+        let r2 = s2.canSplit && s2.span >= accuracy
+
+        if !r1 && !r2 {
+            // Use Cramer's rule directly to avoid false positives from FP-coincident
+            // endpoints when both curves are tangent near a shared boundary point.
+            let b1x = s1.p2.x - s1.p1.x, b1y = s1.p2.y - s1.p1.y
+            let b2x = s2.p2.x - s2.p1.x, b2y = s2.p2.y - s2.p1.y
+            let det = b1x * (-b2y) - (-b2x) * b1y
+            let scale = (Swift.abs(b1x) + Swift.abs(b1y)) * (Swift.abs(b2x) + Swift.abs(b2y))
+            let inv_det = 1.0 / det
+            if Swift.abs(det) > CGFloat(Utils.epsilon) * scale {
+                let ex = s2.p1.x - s1.p1.x, ey = s2.p1.y - s1.p1.y
+                var lt1 = (ex * (-b2y) - (-b2x) * ey) * inv_det
+                var lt2 = (b1x * ey - ex * b1y) * inv_det
+                // When an endpoint snaps, reproject from that exact point so both
+                // adjacent mono-path calls produce bit-identical t values at boundaries.
+                if Utils.approximately(Double(lt1), 0, precision: Utils.epsilon) {
+                    lt1 = 0
+                    lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
+                        ? (s1.p1.x - s2.p1.x) / b2x
+                        : (s1.p1.y - s2.p1.y) / b2y
+                } else if Utils.approximately(Double(lt1), 1, precision: Utils.epsilon) {
+                    lt1 = 1
+                    lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
+                        ? (s1.p2.x - s2.p1.x) / b2x
+                        : (s1.p2.y - s2.p1.y) / b2y
+                }
+                if Utils.approximately(Double(lt2), 0, precision: Utils.epsilon) {
+                    lt2 = 0
+                    if lt1 != 0 && lt1 != 1 {
+                        lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
+                            ? (s2.p1.x - s1.p1.x) / b1x
+                            : (s2.p1.y - s1.p1.y) / b1y
+                    }
+                } else if Utils.approximately(Double(lt2), 1, precision: Utils.epsilon) {
+                    lt2 = 1
+                    if lt1 != 0 && lt1 != 1 {
+                        lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
+                            ? (s2.p2.x - s1.p1.x) / b1x
+                            : (s2.p2.y - s1.p1.y) / b1y
+                    }
+                }
+                if lt1 >= 0, lt1 <= 1, lt2 >= 0, lt2 <= 1 {
+                    let gt1 = lt1 == 0 ? s1.globalT1 : lt1 == 1 ? s1.globalT2
+                        : lt1 * s1.globalT2 + (1 - lt1) * s1.globalT1
+                    let gt2 = lt2 == 0 ? s2.globalT1 : lt2 == 1 ? s2.globalT2
+                        : lt2 * s2.globalT2 + (1 - lt2) * s2.globalT1
+                    results.append(Intersection(t1: gt1, t2: gt2))
+                }
+            } else if s1.p2 == c1.endingPoint && s2.p1 == c2.startingPoint {
+                // Parallel segments sharing a genuine curve endpoint (e.g. tangent junction).
+                results.append(Intersection(t1: s1.globalT2, t2: s2.globalT1))
+            } else if s1.p1 == c1.startingPoint && s2.p2 == c2.endingPoint {
+                results.append(Intersection(t1: s1.globalT1, t2: s2.globalT2))
+            }
+        } else if r1 && r2 {
+            let lM1 = (s1.localT1 + s1.localT2) * 0.5, gM1 = (s1.globalT1 + s1.globalT2) * 0.5
+            let pM1 = c1.point(at: lM1)
+            let ls1 = MonoSeg(globalT1: s1.globalT1, globalT2: gM1, localT1: s1.localT1, localT2: lM1, p1: s1.p1, p2: pM1)
+            let rs1 = MonoSeg(globalT1: gM1, globalT2: s1.globalT2, localT1: lM1, localT2: s1.localT2, p1: pM1, p2: s1.p2)
+            let lM2 = (s2.localT1 + s2.localT2) * 0.5, gM2 = (s2.globalT1 + s2.globalT2) * 0.5
+            let pM2 = c2.point(at: lM2)
+            let ls2 = MonoSeg(globalT1: s2.globalT1, globalT2: gM2, localT1: s2.localT1, localT2: lM2, p1: s2.p1, p2: pM2)
+            let rs2 = MonoSeg(globalT1: gM2, globalT2: s2.globalT2, localT1: lM2, localT2: s2.localT2, p1: pM2, p2: s2.p2)
+            guard monoPairiteration(c1, ls1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            guard monoPairiteration(c1, ls1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            guard monoPairiteration(c1, rs1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            guard monoPairiteration(c1, rs1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+        } else if r1 {
+            let lM1 = (s1.localT1 + s1.localT2) * 0.5, gM1 = (s1.globalT1 + s1.globalT2) * 0.5
+            let pM1 = c1.point(at: lM1)
+            let ls1 = MonoSeg(globalT1: s1.globalT1, globalT2: gM1, localT1: s1.localT1, localT2: lM1, p1: s1.p1, p2: pM1)
+            let rs1 = MonoSeg(globalT1: gM1, globalT2: s1.globalT2, localT1: lM1, localT2: s1.localT2, p1: pM1, p2: s1.p2)
+            guard monoPairiteration(c1, ls1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            guard monoPairiteration(c1, rs1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+        } else {
+            let lM2 = (s2.localT1 + s2.localT2) * 0.5, gM2 = (s2.globalT1 + s2.globalT2) * 0.5
+            let pM2 = c2.point(at: lM2)
+            let ls2 = MonoSeg(globalT1: s2.globalT1, globalT2: gM2, localT1: s2.localT1, localT2: lM2, p1: s2.p1, p2: pM2)
+            let rs2 = MonoSeg(globalT1: gM2, globalT2: s2.globalT2, localT1: lM2, localT2: s2.localT2, p1: pM2, p2: s2.p2)
+            guard monoPairiteration(c1, s1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            guard monoPairiteration(c1, s1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+        }
+        return true
+    }
+
+    @inline(__always)
+    private static func enterMonoPath<C1: BezierCurve, C2: BezierCurve>(
+        _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
+        _ results: inout [Intersection],
+        _ accuracy: CGFloat,
+        _ maxIntersections: Int,
+        _ totalIterations: inout Int
+    ) -> Bool {
+        let s1 = MonoSeg(globalT1: c1.t1, globalT2: c1.t2, localT1: 0, localT2: 1,
+                         p1: c1.curve.startingPoint, p2: c1.curve.endingPoint)
+        let s2 = MonoSeg(globalT1: c2.t1, globalT2: c2.t2, localT1: 0, localT2: 1,
+                         p1: c2.curve.startingPoint, p2: c2.curve.endingPoint)
+        return monoPairiteration(c1.curve, s1, c2.curve, s2, &results, accuracy, maxIntersections, &totalIterations)
+    }
+
     static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
                                       _ c1b: BoundingBox, _ c2b: BoundingBox,
                                       _ results: inout [Intersection],
@@ -352,6 +523,10 @@ internal class Utils {
             results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
                                         t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
         } else if shouldRecurse1, shouldRecurse2 {
+            // Both curves still large — switch to fast path if both are monotone.
+            if isMonotone(c1.curve) && isMonotone(c2.curve) {
+                return enterMonoPath(c1, c2, &results, accuracy, maximumIntersections, &totalIterations)
+            }
             let cc1 = c1.split(at: 0.5)
             let cc2 = c2.split(at: 0.5)
             let cc1lb = cc1.left.curve.boundingBox
