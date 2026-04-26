@@ -233,4 +233,10 @@ extension QuadraticCurve: Flatness {
         let a: CGPoint = 2.0 * self.p1 - self.p0 - self.p2
         return (1.0 / 16.0) * (a.x * a.x + a.y * a.y)
     }
+    internal var isMonotonicallyOrdered: Bool {
+        let dx01 = p1.x - p0.x, dx12 = p2.x - p1.x
+        let dy01 = p1.y - p0.y, dy12 = p2.y - p1.y
+        return ((dx01 >= 0 && dx12 >= 0) || (dx01 <= 0 && dx12 <= 0))
+            && ((dy01 >= 0 && dy12 >= 0) || (dy01 <= 0 && dy12 <= 0))
+    }
 }
