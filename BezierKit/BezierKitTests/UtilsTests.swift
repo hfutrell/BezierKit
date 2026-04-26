@@ -55,20 +55,28 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(filtered.first!, CGFloat(0.1499651773565319), accuracy: 1.0e-3)
     }
 
-//    func testDrootsCubicWorldIssue2() {
-//        // this data is actually very close to a quadratic. It may get the wrong
-//        // answer is if is recognized as a cubic
-//        let points: [CGFloat] = [
-//            0.0000010000090924222604,
-//            0.0000013261883395898622,
-//            -0.1484297874302456,
-//            -0.44529201466082213
-//        ]
-//        let r = drootsCubicTestHelper(points[0], points[1], points[2], points[3])
-//        let filtered = r.filter { $0 >= 0 && $0 <= 1 }
-//        XCTAssertEqual(filtered.count, 1)
-//        XCTAssertEqual(filtered.first!, CGFloat(0.0014849), accuracy: 1.0e-4)
-//    }
+    func testDrootsCubicWorldIssue2() {
+        // this data is very close to a quadratic; Cardano's formula lost precision here (issue #92)
+        let points: [CGFloat] = [
+            0.0000010000090924222604,
+            0.0000013261883395898622,
+            -0.1484297874302456,
+            -0.44529201466082213
+        ]
+        let r = drootsCubicTestHelper(points[0], points[1], points[2], points[3])
+        XCTAssertEqual(r.count, 1)
+        XCTAssertEqual(r[0], CGFloat(0.0014849), accuracy: 1.0e-4)
+    }
+
+    func testDrootsCubicWorldIssue4() {
+        // Cardano's formula returned ~0.9997828 instead of ~0.999858 (issue #92).
+        // The cubic coefficient is small relative to the control point magnitudes, causing
+        // catastrophic cancellation in the power-basis conversion.
+        let r = drootsCubicTestHelper(117.11706850363589, 39.0399142482629,
+                                      -2.3525217329734005e-06, -2.352663614146877e-06)
+        XCTAssertEqual(r.count, 1)
+        XCTAssertEqual(r[0], CGFloat(0.999858), accuracy: 1.0e-5)
+    }
 
     func testDrootsCubicWorldIssue3() {
         // this data causes issue #81 on GitHub

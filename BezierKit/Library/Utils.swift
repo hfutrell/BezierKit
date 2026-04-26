@@ -186,13 +186,19 @@ internal class Utils {
         let p2 = Double(p2)
         let p3 = Double(p3)
         let d = -p0 + 3 * p1 - 3 * p2 + p3
-        let smallValue: Double = 1.0e-8
-        guard Swift.abs(d) >= smallValue else {
+        guard Swift.abs(d) > 0 else {
             // solve the quadratic polynomial at^2 + bt + c instead
             let a = (3 * p0 - 6 * p1 + 3 * p2)
             let b = (-3 * p0 + 3 * p1)
             let c = p0
             droots(CGFloat(c), CGFloat(b / 2.0 + c), CGFloat(a + b + c), callback: callback)
+            return
+        }
+        let scale = Swift.abs(p0) + 3 * Swift.abs(p1) + 3 * Swift.abs(p2) + Swift.abs(p3)
+        // When `d` is small relative to coefficient magnitudes, dividing by it amplifies rounding errors.
+        guard Swift.abs(d) >= 1.0e-4 * scale else {
+            BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
+                .distinctRealRootsInUnitInterval().forEach(callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d

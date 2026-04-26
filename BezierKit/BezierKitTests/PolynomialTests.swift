@@ -97,11 +97,14 @@ class PolynomialTests: XCTestCase {
     #if !(arch(i386) || arch(arm) || arch(wasm32))
     func testDegree4RepeatedRoots() {
         // x^4 - 2x^2 + 1
+        // derivative 4x^3 - 4x should produce intervals of -2, -1, 0, 1, 2
         let polynomial = BernsteinPolynomial4(b0: 1, b1: 1, b2: 2.0 / 3.0, b3: 0, b4: 0)
         let roots = findDistinctRoots(of: polynomial, between: -2, and: 2)
         XCTAssertEqual(roots.count, 2)
         XCTAssertEqual(roots[0], -1, accuracy: accuracy)
-        XCTAssertEqual(roots[1], 1, accuracy: accuracy)
+        if roots.count > 1 {
+            XCTAssertEqual(roots[1], 1, accuracy: accuracy)
+        }
     }
     #endif
     func testDegree5() {
@@ -120,6 +123,40 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots.count, 2)
         XCTAssertEqual(roots[0], 0.15977874432923783, accuracy: 1.0e-5)
         XCTAssertEqual(roots[1], 0.407811682610126, accuracy: 1.0e-5)
+    }
+
+    func testDegree5RealWorldIssue() {
+        // Newton iteration does not converge and may return a non-root without the residual check.
+        let polynomial = BernsteinPolynomial5(b0: -68686.64586343056,
+                                              b1: 102389.02112160496,
+                                              b2: -163207.59913132348,
+                                              b3: 177077.4933777841,
+                                              b4: -108411.70135107233,
+                                              b5: 57838.81668210728)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], 0.44454, accuracy: 1.0e-5)
+    }
+
+    func testDegree4RootAtLeftEndpoint() {
+        // degree-elevation of 2t(1-2t): roots at t=0 and t=0.5
+        let polynomial = BernsteinPolynomial4(b0: 0, b1: 0.5, b2: 1.0 / 3.0, b3: -0.5, b4: -2)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.0, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.5, accuracy: accuracy)
+    }
+
+    func testDegree4SpuriousRootIssue() {
+        // Newton's method in the no-sign-change branch could produce a spurious root just outside [0,1].
+        let polynomial = BernsteinPolynomial4(b0: -0.14644808172857054,
+                                              b1: -0.07322397770821555,
+                                              b2: -0.024407908361312264,
+                                              b3: 9.473515889812933e-08,
+                                              b4: 4.217515225946045e-12)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], CGFloat(0.9999932), accuracy: 1.0e-5)
     }
 
     func testDegreeN() {
