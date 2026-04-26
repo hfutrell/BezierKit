@@ -288,6 +288,14 @@ public struct BernsteinPolynomial4: BernsteinPolynomial, Sendable {
                            b2: a1 * b2 + a2 * b3,
                            b3: a1 * b3 + a2 * b4)
     }
+    public func value(at x: CGFloat) -> CGFloat {
+        let s = 1 - x, t = x
+        let c10 = s * b0 + t * b1; let c11 = s * b1 + t * b2
+        let c12 = s * b2 + t * b3; let c13 = s * b3 + t * b4
+        let c20 = s * c10 + t * c11; let c21 = s * c11 + t * c12; let c22 = s * c12 + t * c13
+        let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22
+        return s * c30 + t * c31
+    }
     public var order: Int { return 4 }
 }
 
@@ -336,6 +344,16 @@ public struct BernsteinPolynomial5: BernsteinPolynomial, Sendable {
                            b3: a1 * b3 + a2 * b4,
                            b4: a1 * b4 + a2 * b5)
     }
+    public func value(at x: CGFloat) -> CGFloat {
+        let s = 1 - x, t = x
+        let c10 = s * b0 + t * b1; let c11 = s * b1 + t * b2
+        let c12 = s * b2 + t * b3; let c13 = s * b3 + t * b4; let c14 = s * b4 + t * b5
+        let c20 = s * c10 + t * c11; let c21 = s * c11 + t * c12
+        let c22 = s * c12 + t * c13; let c23 = s * c13 + t * c14
+        let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22; let c32 = s * c22 + t * c23
+        let c40 = s * c30 + t * c31; let c41 = s * c31 + t * c32
+        return s * c40 + t * c41
+    }
     public var order: Int { return 5 }
 }
 
@@ -380,6 +398,65 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     }
     return guess
 }
+
+// Zero-allocation root finder. Calls `callback` for each root in sorted order.
+// For degree ≤ 3, delegates to Utils.droots (analytical). For higher degrees,
+// finds critical points of the derivative recursively and searches each interval.
+// Intervals are stored in a withUnsafeTemporaryAllocation buffer (stack for small sizes).
+// Capacity is 6: BernsteinPolynomial5 is the highest-order type defined in this library,
+// and a degree-5 polynomial needs at most [start] + 4 critical points + [end] = 6 slots.
+// A compile-time constant lets the compiler stack-allocate the buffer without a dynamic alloca.
+internal func findDistinctRootsCallback<P: BernsteinPolynomial>(
+    of polynomial: P,
+    between start: CGFloat, and end: CGFloat,
+    _ callback: (CGFloat) -> Void
+) {
+    if let analytical = polynomial as? AnalyticalRootsCallback {
+        analytical.forEachDistinctRoot(between: start, and: end, callback)
+        return
+    }
+    let derivative = polynomial.derivative
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 6) { buffer in
+        var count = 0
+        buffer[count] = start; count += 1
+        findDistinctRootsCallback(of: derivative, between: start, and: end) { criticalPoint in
+            buffer[count] = criticalPoint; count += 1
+        }
+        buffer[count] = end; count += 1
+        var lastFoundRoot: CGFloat?
+        for i in 0..<count - 1 {
+            let iStart = buffer[i]
+            let iEnd   = buffer[i + 1]
+            let fStart = polynomial.value(at: iStart)
+            let fEnd   = polynomial.value(at: iEnd)
+            let absFStart = Swift.abs(fStart)
+            let absFEnd = Swift.abs(fEnd)
+            let scale = Swift.max(absFStart, absFEnd)
+            let residualToConsiderRoot = scale * CGFloat.ulpOfOne.squareRoot()
+            let root: CGFloat
+            if fStart * fEnd < 0 {
+                let guess = (iStart + iEnd) / 2
+                let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess)
+                if iStart < newtonRoot, newtonRoot < iEnd,
+                   Swift.abs(polynomial.value(at: newtonRoot)) <= residualToConsiderRoot {
+                    root = newtonRoot
+                } else {
+                    root = findRootBisection(of: polynomial, start: iStart, end: iEnd)
+                }
+            } else if absFStart <= residualToConsiderRoot, absFEnd >= residualToConsiderRoot {
+                root = iStart
+            } else if absFStart > residualToConsiderRoot, absFEnd <= residualToConsiderRoot {
+                root = iEnd
+            } else {
+                continue
+            }
+            if let lastFoundRoot, lastFoundRoot + 1.0e-5 >= root { continue }
+            lastFoundRoot = root
+            callback(root)
+        }
+    }
+}
+
 
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
     return findDistinctRoots(of: polynomial, between: 0, and: 1)
