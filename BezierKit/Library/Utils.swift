@@ -395,10 +395,10 @@ internal class Utils {
         _ maxIntersections: Int,
         _ totalIterations: inout Int
     ) -> Bool {
+        guard monoOverlap(s1, s2) else { return true }
         totalIterations += 1
         guard totalIterations <= 900 else { return false }
         guard results.count <= maxIntersections else { return false }
-        guard monoOverlap(s1, s2) else { return true }
 
         let r1 = s1.canSplit && s1.span >= accuracy
         let r2 = s2.canSplit && s2.span >= accuracy
@@ -482,15 +482,23 @@ internal class Utils {
             let pM1 = c1.point(at: lM1)
             let ls1 = MonoSeg(globalT1: s1.globalT1, globalT2: gM1, localT1: s1.localT1, localT2: lM1, p1: s1.p1, p2: pM1)
             let rs1 = MonoSeg(globalT1: gM1, globalT2: s1.globalT2, localT1: lM1, localT2: s1.localT2, p1: pM1, p2: s1.p2)
-            guard monoPairiteration(c1, ls1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            guard monoPairiteration(c1, rs1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            if monoOverlap(ls1, s2) {
+                guard monoPairiteration(c1, ls1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            }
+            if monoOverlap(rs1, s2) {
+                guard monoPairiteration(c1, rs1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            }
         } else {
             let lM2 = (s2.localT1 + s2.localT2) * 0.5, gM2 = (s2.globalT1 + s2.globalT2) * 0.5
             let pM2 = c2.point(at: lM2)
             let ls2 = MonoSeg(globalT1: s2.globalT1, globalT2: gM2, localT1: s2.localT1, localT2: lM2, p1: s2.p1, p2: pM2)
             let rs2 = MonoSeg(globalT1: gM2, globalT2: s2.globalT2, localT1: lM2, localT2: s2.localT2, p1: pM2, p2: s2.p2)
-            guard monoPairiteration(c1, s1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            guard monoPairiteration(c1, s1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            if monoOverlap(s1, ls2) {
+                guard monoPairiteration(c1, s1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            }
+            if monoOverlap(s1, rs2) {
+                guard monoPairiteration(c1, s1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            }
         }
         return true
     }
