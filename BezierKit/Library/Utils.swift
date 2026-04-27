@@ -63,7 +63,7 @@ internal class Utils {
     // swiftlint:enable comma
 
     static func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
-        assert(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+        precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
         return binomialTable[n &* 10 &+ k]
     }
 
@@ -221,7 +221,7 @@ internal class Utils {
         // When `d` is small relative to coefficient magnitudes, dividing by it amplifies rounding errors.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
             BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
-                .distinctRootsAberth().forEach(callback)
+                .distinctRealRootsInUnitInterval().forEach(callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d
