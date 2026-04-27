@@ -35,15 +35,7 @@ public struct Subcurve<CurveType>: Sendable where CurveType: BezierCurve {
                                    curve: curve)
     }
 
-    internal func split(at t: CGFloat) -> (left: Subcurve<CurveType>, right: Subcurve<CurveType>) {
-        let (left, right) = curve.split(at: t)
-        let t1 = self.t1
-        let t2 = self.t2
-        let tSplit = Utils.map(t, 0, 1, t1, t2)
-        let subcurveLeft = Subcurve<CurveType>(t1: t1, t2: tSplit, curve: left)
-        let subcurveRight = Subcurve<CurveType>(t1: tSplit, t2: t2, curve: right)
-        return (left: subcurveLeft, right: subcurveRight)
-    }
+
 }
 
 extension Subcurve: Equatable where CurveType: Equatable {
