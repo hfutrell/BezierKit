@@ -331,24 +331,6 @@ internal class Utils {
         return atan2(d1.cross(d2), d1.dot(d2))
     }
 
-    @inline(__always) private static func shouldRecurse<C>(for subcurve: Subcurve<C>, boundingBoxSize: CGPoint, accuracy: CGFloat) -> Bool {
-        guard subcurve.canSplit else { return false }
-        guard boundingBoxSize.x + boundingBoxSize.y >= accuracy else { return false }
-        if MemoryLayout<CGFloat>.size == 4 {
-            let curve = subcurve.curve
-            // limit recursion when we exceed Float32 precision
-            let midPoint = curve.point(at: 0.5)
-            if midPoint == curve.startingPoint ||
-                midPoint == curve.endingPoint {
-                guard curve.selfIntersects else { return false }
-            }
-        }
-        return true
-    }
-
-    // disable this SwiftLint warning about function having more than 5 parameters
-    // swiftlint:disable function_parameter_count
-
     // Lightweight segment descriptor for the monotonic fast-path.
     // Once a curve's control polygon is monotone in both x and y, its actual curve
     // is also monotone, so its tight bounding box equals [startPoint, endPoint].
@@ -374,14 +356,6 @@ internal class Utils {
         let aMinY = Swift.min(a.p1.y, a.p2.y), aMaxY = Swift.max(a.p1.y, a.p2.y)
         let bMinY = Swift.min(b.p1.y, b.p2.y), bMaxY = Swift.max(b.p1.y, b.p2.y)
         return aMinY <= bMaxY && bMinY <= aMaxY
-    }
-
-    // Compiler specialises this per C; for CubicCurve/QuadraticCurve the as? cast is statically resolved.
-    @inline(__always)
-    private static func isMonotone<C: BezierCurve>(_ curve: C) -> Bool {
-        if let c = curve as? CubicCurve     { return c.isMonotonicallyOrdered }
-        if let q = curve as? QuadraticCurve { return q.isMonotonicallyOrdered }
-        return false
     }
 
     // Returns sorted t values in (0,1) where the x or y derivative of curve is zero,
@@ -577,80 +551,6 @@ internal class Utils {
         }
         return true
     }
-
-    @inline(__always)
-    private static func enterMonoPath<C1: BezierCurve, C2: BezierCurve>(
-        _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-        _ results: inout [Intersection],
-        _ accuracy: CGFloat,
-        _ maxIntersections: Int,
-        _ totalIterations: inout Int
-    ) -> Bool {
-        let s1 = MonoSeg(globalT1: c1.t1, globalT2: c1.t2, localT1: 0, localT2: 1,
-                         p1: c1.curve.startingPoint, p2: c1.curve.endingPoint)
-        let s2 = MonoSeg(globalT1: c2.t1, globalT2: c2.t2, localT1: 0, localT2: 1,
-                         p1: c2.curve.startingPoint, p2: c2.curve.endingPoint)
-        return monoPairiteration(c1.curve, s1, c2.curve, s2, &results, accuracy, maxIntersections, &totalIterations)
-    }
-
-    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-                                      _ c1b: BoundingBox, _ c2b: BoundingBox,
-                                      _ results: inout [Intersection],
-                                      _ accuracy: CGFloat,
-                                      _ totalIterations: inout Int) -> Bool {
-
-        let maximumIterations = 900
-        let maximumIntersections = c1.curve.order * c2.curve.order
-
-        totalIterations += 1
-        guard totalIterations <= maximumIterations else { return false }
-        guard results.count <= maximumIntersections else { return false }
-        guard c1b.overlaps(c2b) else { return true }
-
-        let shouldRecurse1 = shouldRecurse(for: c1, boundingBoxSize: c1b.size, accuracy: accuracy)
-        let shouldRecurse2 = shouldRecurse(for: c2, boundingBoxSize: c2b.size, accuracy: accuracy)
-
-        if shouldRecurse1 == false, shouldRecurse2 == false {
-            // subcurves are small enough or we simply cannot recurse any more
-            let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
-            let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-            guard let intersection = l1.intersections(with: l2, checkCoincidence: false).first else { return true }
-            let t1 = intersection.t1
-            let t2 = intersection.t2
-            results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
-                                        t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
-        } else if shouldRecurse1, shouldRecurse2 {
-            // Both curves still large — switch to fast path if both are monotone.
-            if isMonotone(c1.curve) && isMonotone(c2.curve) {
-                return enterMonoPath(c1, c2, &results, accuracy, maximumIntersections, &totalIterations)
-            }
-            let cc1 = c1.split(at: 0.5)
-            let cc2 = c2.split(at: 0.5)
-            let cc1lb = cc1.left.curve.boundingBox
-            let cc1rb = cc1.right.curve.boundingBox
-            let cc2lb = cc2.left.curve.boundingBox
-            let cc2rb = cc2.right.curve.boundingBox
-            guard Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy, &totalIterations) else { return false }
-        } else if shouldRecurse1 {
-            let cc1 = c1.split(at: 0.5)
-            let cc1lb = cc1.left.curve.boundingBox
-            let cc1rb = cc1.right.curve.boundingBox
-            guard Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy, &totalIterations) else { return false }
-        } else if shouldRecurse2 {
-            let cc2 = c2.split(at: 0.5)
-            let cc2lb = cc2.left.curve.boundingBox
-            let cc2rb = cc2.right.curve.boundingBox
-            guard Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy, &totalIterations) else { return false }
-        }
-        return true
-    }
-
-    // swiftlint:enable function_parameter_count
 
     static func hull(_ p: [CGPoint], _ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count
