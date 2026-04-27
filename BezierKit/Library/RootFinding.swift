@@ -24,11 +24,61 @@ struct RootFindingConfiguration {
 }
 
 extension BernsteinPolynomialN {
+
+    // Converts Bernstein coefficients to power basis a[0] + a[1]*t + ... + a[n]*t^n
+    // using iterative forward differences: a[m] = C(n,m) * Δ^m b_0.
+    internal func bernsteinToPowerBasis() -> [Double] {
+        let n = order
+        var diffs = coefficients.map { Double($0) }
+        var result = [Double](repeating: 0, count: n + 1)
+        for m in 0...n {
+            result[m] = Double(Utils.binomialCoefficient(n, choose: m)) * diffs[0]
+            for k in 0..<(n - m) { diffs[k] = diffs[k + 1] - diffs[k] }
+        }
+        return result
+    }
+
+    private static func horner(_ c: [Double], at t: Double) -> Double {
+        var v = c[c.count - 1]
+        for i in stride(from: c.count - 2, through: 0, by: -1) { v = v * t + c[i] }
+        return v
+    }
+
     /// Calls `callback` for each unique, ordered real root in `[0, 1]`.
     /// Roots are emitted in ascending order with exact duplicates suppressed inline.
     /// Zero-allocation beyond the arena (which is heap-allocated when count is a runtime value).
     func forEachDistinctRootInUnitInterval(configuration: RootFindingConfiguration = .default, _ callback: (CGFloat) -> Void) {
         guard coefficients.contains(where: { $0 != .zero }) else { return }
+
+        // Count sign changes in Bernstein coefficients (Descartes' rule).
+        // V=0: no roots. V=1: exactly one root. V>=2: fall through to subdivision.
+        let scale = coefficients.reduce(0.0) { Swift.max($0, Swift.abs($1)) }
+        let signThreshold = scale * 1e-10
+        var lastSign = 0
+        var signChanges = 0
+        for c in coefficients {
+            guard Swift.abs(c) > signThreshold else { continue }
+            let s = c > 0 ? 1 : -1
+            if lastSign != 0, s != lastSign { signChanges += 1 }
+            lastSign = s
+        }
+        if signChanges == 1 {
+            // Exactly one root in (0,1). b[0] and b[n] are guaranteed to have opposite signs.
+            // Convert to power basis once, then bisect using Horner evaluation — O(n) per step.
+            let pow = bernsteinToPowerBasis()
+            var lo = 0.0, hi = 1.0
+            var fLo = Double(coefficients.first!), fHi = Double(coefficients.last!)
+            let threshold = Double(configuration.errorThreshold)
+            while hi - lo > threshold {
+                let mid = 0.5 * (lo + hi)
+                let fMid = BernsteinPolynomialN.horner(pow, at: mid)
+                if fMid == 0 { lo = mid; hi = mid; break }
+                if (fLo > 0) == (fMid > 0) { lo = mid; fLo = fMid } else { hi = mid; fHi = fMid }
+            }
+            callback(CGFloat(0.5 * (lo + hi)))
+            return
+        }
+
         let count = coefficients.count
         let maxDepth = 48
         coefficients.withUnsafeBufferPointer { inputPtr in
