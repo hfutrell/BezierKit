@@ -20,7 +20,11 @@ public extension BezierCurve {
         return self.intersects(curve, accuracy: BezierKit.defaultIntersectionAccuracy)
     }
     func intersections(with curve: BezierCurve) -> [Intersection] {
-        return self.intersections(with: curve, accuracy: BezierKit.defaultIntersectionAccuracy)
+        var intersections = [Intersection]()
+        for _ in 0..<1000 {
+            intersections = self.intersections(with: curve, accuracy: BezierKit.defaultIntersectionAccuracy)
+        }
+        return intersections
     }
     func intersects(_ line: LineSegment) -> Bool {
         return !self.intersections(with: line).isEmpty

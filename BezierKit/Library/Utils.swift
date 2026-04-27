@@ -338,13 +338,12 @@ internal class Utils {
     // so the fast path only needs one point evaluation per split instead of a full
     // split() + boundingBox() recomputation.
     private struct MonoSeg {
-        var globalT1, globalT2: CGFloat // original-curve parameter range (for Intersection output)
-        var localT1,  localT2: CGFloat  // reference-curve parameter range (for point(at:) evaluation)
-        var p1, p2: CGPoint             // curve(localT1), curve(localT2)
+        var t1, t2: CGFloat  // curve parameter range (for Intersection output and point(at:))
+        var p1, p2: CGPoint  // curve(t1), curve(t2)
         var span: CGFloat { Swift.abs(p2.x - p1.x) + Swift.abs(p2.y - p1.y) }
         var canSplit: Bool {
-            let mid = (globalT1 + globalT2) * 0.5
-            return mid > globalT1 && mid < globalT2
+            let mid = (t1 + t2) * 0.5
+            return mid > t1 && mid < t2
         }
     }
 
@@ -358,195 +357,210 @@ internal class Utils {
         return aMinY <= bMaxY && bMinY <= aMaxY
     }
 
-    // Returns sorted t values in (0,1) where the x or y derivative of curve is zero,
-    // i.e., the minimal split points needed to make the curve monotone.
+    // Writes sorted breakpoints for curve into buf[0..<return_value].
+    // buf must have capacity >= 4 (max: 2 x-roots + 2 y-roots for a cubic).
     @inline(__always)
-    private static func monoBreakpoints<C: BezierCurve>(_ curve: C) -> [CGFloat] {
-        var ts: [CGFloat] = []
+    private static func fillBreakpoints<C: BezierCurve>(_ curve: C, _ buf: UnsafeMutablePointer<CGFloat>) -> Int {
+        var n = 0
         if let c = curve as? CubicCurve {
             Utils.droots(c.p1.x - c.p0.x, c.p2.x - c.p1.x, c.p3.x - c.p2.x) { t in
-                if t > 0 && t < 1 { ts.append(t) }
+                if t > 0 && t < 1 { buf[n] = t; n += 1 }
             }
             Utils.droots(c.p1.y - c.p0.y, c.p2.y - c.p1.y, c.p3.y - c.p2.y) { t in
-                if t > 0 && t < 1 { ts.append(t) }
+                if t > 0 && t < 1 { buf[n] = t; n += 1 }
             }
         } else if let q = curve as? QuadraticCurve {
             Utils.droots(q.p1.x - q.p0.x, q.p2.x - q.p1.x) { t in
-                if t > 0 && t < 1 { ts.append(t) }
+                if t > 0 && t < 1 { buf[n] = t; n += 1 }
             }
             Utils.droots(q.p1.y - q.p0.y, q.p2.y - q.p1.y) { t in
-                if t > 0 && t < 1 { ts.append(t) }
+                if t > 0 && t < 1 { buf[n] = t; n += 1 }
             }
         }
-        ts.sort()
-        return ts
+        // Insertion sort — at most 4 elements, so effectively O(1).
+        if n > 1 {
+            for i in 1..<n {
+                let key = buf[i]; var j = i
+                while j > 0 && buf[j - 1] > key { buf[j] = buf[j - 1]; j -= 1 }
+                buf[j] = key
+            }
+        }
+        return n
     }
 
     // Intersect two NonlinearBezierCurves by splitting each upfront at its derivative roots
     // to produce monotone pieces, then running monoPairiteration on each overlapping pair.
     // Returns false only if the iteration limit is hit (coincident curves), signalling the caller
     // to fall through to curve implicitization.
+    // All working memory is stack-allocated via withUnsafeTemporaryAllocation — no heap allocation
+    // in the hot path except the final bulk copy into the results array.
     static func preSplitIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
         _ curve1: C1, _ curve2: C2,
         _ results: inout [Intersection],
         _ accuracy: CGFloat,
         _ totalIterations: inout Int
     ) -> Bool {
-        // Quick rejection before the expensive monoBreakpoints / segment-endpoint computation.
-        // For random pairs ~60-70% are disjoint; this avoids all further work for those.
         guard curve1.boundingBox.overlaps(curve2.boundingBox) else { return true }
-
         let maxIntersections = curve1.order * curve2.order
 
-        let breaks1 = monoBreakpoints(curve1)
-        let breaks2 = monoBreakpoints(curve2)
+        // Splits: [0, ≤4 breakpoints, 1] = ≤6 entries per curve.
+        // Stack: 64 × (MonoSeg, MonoSeg). Max depth ≈ 3×log2(1/accuracy)+1: for accuracy=1e-10, ~100.
+        // Results: collected into a fixed buffer, bulk-copied to output once at the end.
+        return withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 6) { s1Buf -> Bool in
+        withUnsafeTemporaryAllocation(of: CGPoint.self, capacity: 6) { p1Buf -> Bool in
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 6) { s2Buf -> Bool in
+        withUnsafeTemporaryAllocation(of: CGPoint.self, capacity: 6) { p2Buf -> Bool in
+        withUnsafeTemporaryAllocation(of: (MonoSeg, MonoSeg).self, capacity: 64) { stackBuf -> Bool in
+        withUnsafeTemporaryAllocation(of: Intersection.self, capacity: maxIntersections + 1) { resBuf -> Bool in
+            var resCount = 0
 
-        // Build t-split arrays [0, t1, t2, ..., 1]
-        var splits1: [CGFloat] = [0]; splits1.append(contentsOf: breaks1); splits1.append(1)
-        var splits2: [CGFloat] = [0]; splits2.append(contentsOf: breaks2); splits2.append(1)
+            s1Buf[0] = 0
+            let bk1 = fillBreakpoints(curve1, s1Buf.baseAddress! + 1)
+            s1Buf[bk1 + 1] = 1
+            let n1 = bk1 + 2
+            p1Buf[0] = curve1.startingPoint
+            for k in 1..<n1 - 1 { p1Buf[k] = curve1.point(at: s1Buf[k]) }
+            p1Buf[n1 - 1] = curve1.endingPoint
 
-        // Precompute segment endpoints, reusing adjacent shared points.
-        var pts1: [CGPoint] = []
-        pts1.reserveCapacity(splits1.count)
-        pts1.append(curve1.startingPoint)
-        for k in 1..<splits1.count - 1 { pts1.append(curve1.point(at: splits1[k])) }
-        pts1.append(curve1.endingPoint)
+            s2Buf[0] = 0
+            let bk2 = fillBreakpoints(curve2, s2Buf.baseAddress! + 1)
+            s2Buf[bk2 + 1] = 1
+            let n2 = bk2 + 2
+            p2Buf[0] = curve2.startingPoint
+            for k in 1..<n2 - 1 { p2Buf[k] = curve2.point(at: s2Buf[k]) }
+            p2Buf[n2 - 1] = curve2.endingPoint
 
-        var pts2: [CGPoint] = []
-        pts2.reserveCapacity(splits2.count)
-        pts2.append(curve2.startingPoint)
-        for k in 1..<splits2.count - 1 { pts2.append(curve2.point(at: splits2[k])) }
-        pts2.append(curve2.endingPoint)
-
-        for i in 0..<splits1.count - 1 {
-            let s1 = MonoSeg(globalT1: splits1[i], globalT2: splits1[i + 1],
-                             localT1: splits1[i], localT2: splits1[i + 1],
-                             p1: pts1[i], p2: pts1[i + 1])
-            for j in 0..<splits2.count - 1 {
-                let s2 = MonoSeg(globalT1: splits2[j], globalT2: splits2[j + 1],
-                                 localT1: splits2[j], localT2: splits2[j + 1],
-                                 p1: pts2[j], p2: pts2[j + 1])
-                guard monoOverlap(s1, s2) else { continue }
-                guard monoPairiteration(curve1, s1, curve2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            for i in 0..<n1 - 1 {
+                let seg1 = MonoSeg(t1: s1Buf[i], t2: s1Buf[i + 1], p1: p1Buf[i], p2: p1Buf[i + 1])
+                for j in 0..<n2 - 1 {
+                    let seg2 = MonoSeg(t1: s2Buf[j], t2: s2Buf[j + 1], p1: p2Buf[j], p2: p2Buf[j + 1])
+                    guard monoOverlap(seg1, seg2) else { continue }
+                    guard monoPairiteration(curve1, seg1, curve2, seg2,
+                                            resBuf, &resCount,
+                                            accuracy, maxIntersections,
+                                            stackBuf, &totalIterations) else { return false }
+                }
             }
-        }
-        return true
+
+            // Bulk-copy accumulated results into the output array (single allocation if needed).
+            if resCount > 0 {
+                results.reserveCapacity(results.count + resCount)
+                for i in 0..<resCount { results.append(resBuf[i]) }
+            }
+            return true
+        }}}}}}
     }
 
-    // Fast-path recursive intersection for pairs of monotone subcurves.
-    // c1/c2 are the fixed reference curves; s1/s2 carry the parameter range and endpoint pair.
-    // maxIntersections is passed rather than recomputed each call.
+    // Iterative intersection for pairs of monotone subcurves.
+    // Accepts pre-allocated stack and result buffers from preSplitIntersections so that
+    // no heap allocation occurs inside the tight loop.
+    // swiftlint:disable:next function_parameter_count
     private static func monoPairiteration<C1: BezierCurve, C2: BezierCurve>(
-        _ c1: C1, _ s1: MonoSeg,
-        _ c2: C2, _ s2: MonoSeg,
-        _ results: inout [Intersection],
+        _ c1: C1, _ s1initial: MonoSeg,
+        _ c2: C2, _ s2initial: MonoSeg,
+        _ resBuf: UnsafeMutableBufferPointer<Intersection>,
+        _ resCount: inout Int,
         _ accuracy: CGFloat,
         _ maxIntersections: Int,
+        _ stackBuf: UnsafeMutableBufferPointer<(MonoSeg, MonoSeg)>,
         _ totalIterations: inout Int
     ) -> Bool {
-        guard monoOverlap(s1, s2) else { return true }
-        totalIterations += 1
-        guard totalIterations <= 900 else { return false }
-        guard results.count <= maxIntersections else { return false }
+        let stackCapacity = stackBuf.count
+        var top = 0
+        stackBuf[top] = (s1initial, s2initial)
+        top = 1
 
-        let r1 = s1.canSplit && s1.span >= accuracy
-        let r2 = s2.canSplit && s2.span >= accuracy
+        while top > 0 {
+            top -= 1
+            let (s1, s2) = stackBuf[top]
 
-        if !r1 && !r2 {
-            // Use Cramer's rule directly to avoid false positives from FP-coincident
-            // endpoints when both curves are tangent near a shared boundary point.
-            let b1x = s1.p2.x - s1.p1.x, b1y = s1.p2.y - s1.p1.y
-            let b2x = s2.p2.x - s2.p1.x, b2y = s2.p2.y - s2.p1.y
-            let det = b1x * (-b2y) - (-b2x) * b1y
-            let scale = (Swift.abs(b1x) + Swift.abs(b1y)) * (Swift.abs(b2x) + Swift.abs(b2y))
-            let inv_det = 1.0 / det
-            if Swift.abs(det) > CGFloat(Utils.epsilon) * scale {
-                let ex = s2.p1.x - s1.p1.x, ey = s2.p1.y - s1.p1.y
-                var lt1 = (ex * (-b2y) - (-b2x) * ey) * inv_det
-                var lt2 = (b1x * ey - ex * b1y) * inv_det
-                // When an endpoint snaps, reproject from that exact point so both
-                // adjacent mono-path calls produce bit-identical t values at boundaries.
-                if Utils.approximately(Double(lt1), 0, precision: Utils.epsilon) {
-                    lt1 = 0
-                    lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
-                        ? (s1.p1.x - s2.p1.x) / b2x
-                        : (s1.p1.y - s2.p1.y) / b2y
-                } else if Utils.approximately(Double(lt1), 1, precision: Utils.epsilon) {
-                    lt1 = 1
-                    lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
-                        ? (s1.p2.x - s2.p1.x) / b2x
-                        : (s1.p2.y - s2.p1.y) / b2y
-                }
-                if Utils.approximately(Double(lt2), 0, precision: Utils.epsilon) {
-                    lt2 = 0
-                    if lt1 != 0 && lt1 != 1 {
-                        lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
-                            ? (s2.p1.x - s1.p1.x) / b1x
-                            : (s2.p1.y - s1.p1.y) / b1y
+            totalIterations += 1
+            guard totalIterations <= 900 else { return false }
+            guard resCount <= maxIntersections else { return false }
+
+            let r1 = s1.canSplit && s1.span >= accuracy
+            let r2 = s2.canSplit && s2.span >= accuracy
+
+            if !r1 && !r2 {
+                // Use Cramer's rule directly to avoid false positives from FP-coincident
+                // endpoints when both curves are tangent near a shared boundary point.
+                let b1x = s1.p2.x - s1.p1.x, b1y = s1.p2.y - s1.p1.y
+                let b2x = s2.p2.x - s2.p1.x, b2y = s2.p2.y - s2.p1.y
+                let det = b1x * (-b2y) - (-b2x) * b1y
+                let scale = (Swift.abs(b1x) + Swift.abs(b1y)) * (Swift.abs(b2x) + Swift.abs(b2y))
+                let inv_det = 1.0 / det
+                if Swift.abs(det) > CGFloat(Utils.epsilon) * scale {
+                    let ex = s2.p1.x - s1.p1.x, ey = s2.p1.y - s1.p1.y
+                    var lt1 = (ex * (-b2y) - (-b2x) * ey) * inv_det
+                    var lt2 = (b1x * ey - ex * b1y) * inv_det
+                    // When an endpoint snaps, reproject from that exact point so both
+                    // adjacent mono-path calls produce bit-identical t values at boundaries.
+                    if Utils.approximately(Double(lt1), 0, precision: Utils.epsilon) {
+                        lt1 = 0
+                        lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
+                            ? (s1.p1.x - s2.p1.x) / b2x
+                            : (s1.p1.y - s2.p1.y) / b2y
+                    } else if Utils.approximately(Double(lt1), 1, precision: Utils.epsilon) {
+                        lt1 = 1
+                        lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
+                            ? (s1.p2.x - s2.p1.x) / b2x
+                            : (s1.p2.y - s2.p1.y) / b2y
                     }
-                } else if Utils.approximately(Double(lt2), 1, precision: Utils.epsilon) {
-                    lt2 = 1
-                    if lt1 != 0 && lt1 != 1 {
-                        lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
-                            ? (s2.p2.x - s1.p1.x) / b1x
-                            : (s2.p2.y - s1.p1.y) / b1y
+                    if Utils.approximately(Double(lt2), 0, precision: Utils.epsilon) {
+                        lt2 = 0
+                        if lt1 != 0 && lt1 != 1 {
+                            lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
+                                ? (s2.p1.x - s1.p1.x) / b1x
+                                : (s2.p1.y - s1.p1.y) / b1y
+                        }
+                    } else if Utils.approximately(Double(lt2), 1, precision: Utils.epsilon) {
+                        lt2 = 1
+                        if lt1 != 0 && lt1 != 1 {
+                            lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
+                                ? (s2.p2.x - s1.p1.x) / b1x
+                                : (s2.p2.y - s1.p1.y) / b1y
+                        }
                     }
+                    if lt1 >= 0, lt1 <= 1, lt2 >= 0, lt2 <= 1 {
+                        let gt1 = lt1 == 0 ? s1.t1 : lt1 == 1 ? s1.t2 : lt1 * s1.t2 + (1 - lt1) * s1.t1
+                        let gt2 = lt2 == 0 ? s2.t1 : lt2 == 1 ? s2.t2 : lt2 * s2.t2 + (1 - lt2) * s2.t1
+                        resBuf[resCount] = Intersection(t1: gt1, t2: gt2)
+                        resCount += 1
+                    }
+                } else if s1.p2 == c1.endingPoint && s2.p1 == c2.startingPoint {
+                    // Parallel segments sharing a genuine curve endpoint (e.g. tangent junction).
+                    resBuf[resCount] = Intersection(t1: s1.t2, t2: s2.t1)
+                    resCount += 1
+                } else if s1.p1 == c1.startingPoint && s2.p2 == c2.endingPoint {
+                    resBuf[resCount] = Intersection(t1: s1.t1, t2: s2.t2)
+                    resCount += 1
                 }
-                if lt1 >= 0, lt1 <= 1, lt2 >= 0, lt2 <= 1 {
-                    let gt1 = lt1 == 0 ? s1.globalT1 : lt1 == 1 ? s1.globalT2
-                        : lt1 * s1.globalT2 + (1 - lt1) * s1.globalT1
-                    let gt2 = lt2 == 0 ? s2.globalT1 : lt2 == 1 ? s2.globalT2
-                        : lt2 * s2.globalT2 + (1 - lt2) * s2.globalT1
-                    results.append(Intersection(t1: gt1, t2: gt2))
-                }
-            } else if s1.p2 == c1.endingPoint && s2.p1 == c2.startingPoint {
-                // Parallel segments sharing a genuine curve endpoint (e.g. tangent junction).
-                results.append(Intersection(t1: s1.globalT2, t2: s2.globalT1))
-            } else if s1.p1 == c1.startingPoint && s2.p2 == c2.endingPoint {
-                results.append(Intersection(t1: s1.globalT1, t2: s2.globalT2))
-            }
-        } else if r1 && r2 {
-            let lM1 = (s1.localT1 + s1.localT2) * 0.5, gM1 = (s1.globalT1 + s1.globalT2) * 0.5
-            let pM1 = c1.point(at: lM1)
-            let ls1 = MonoSeg(globalT1: s1.globalT1, globalT2: gM1, localT1: s1.localT1, localT2: lM1, p1: s1.p1, p2: pM1)
-            let rs1 = MonoSeg(globalT1: gM1, globalT2: s1.globalT2, localT1: lM1, localT2: s1.localT2, p1: pM1, p2: s1.p2)
-            let lM2 = (s2.localT1 + s2.localT2) * 0.5, gM2 = (s2.globalT1 + s2.globalT2) * 0.5
-            let pM2 = c2.point(at: lM2)
-            let ls2 = MonoSeg(globalT1: s2.globalT1, globalT2: gM2, localT1: s2.localT1, localT2: lM2, p1: s2.p1, p2: pM2)
-            let rs2 = MonoSeg(globalT1: gM2, globalT2: s2.globalT2, localT1: lM2, localT2: s2.localT2, p1: pM2, p2: s2.p2)
-            if monoOverlap(ls1, ls2) {
-                guard monoPairiteration(c1, ls1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-            if monoOverlap(ls1, rs2) {
-                guard monoPairiteration(c1, ls1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-            if monoOverlap(rs1, ls2) {
-                guard monoPairiteration(c1, rs1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-            if monoOverlap(rs1, rs2) {
-                guard monoPairiteration(c1, rs1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-        } else if r1 {
-            let lM1 = (s1.localT1 + s1.localT2) * 0.5, gM1 = (s1.globalT1 + s1.globalT2) * 0.5
-            let pM1 = c1.point(at: lM1)
-            let ls1 = MonoSeg(globalT1: s1.globalT1, globalT2: gM1, localT1: s1.localT1, localT2: lM1, p1: s1.p1, p2: pM1)
-            let rs1 = MonoSeg(globalT1: gM1, globalT2: s1.globalT2, localT1: lM1, localT2: s1.localT2, p1: pM1, p2: s1.p2)
-            if monoOverlap(ls1, s2) {
-                guard monoPairiteration(c1, ls1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-            if monoOverlap(rs1, s2) {
-                guard monoPairiteration(c1, rs1, c2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-        } else {
-            let lM2 = (s2.localT1 + s2.localT2) * 0.5, gM2 = (s2.globalT1 + s2.globalT2) * 0.5
-            let pM2 = c2.point(at: lM2)
-            let ls2 = MonoSeg(globalT1: s2.globalT1, globalT2: gM2, localT1: s2.localT1, localT2: lM2, p1: s2.p1, p2: pM2)
-            let rs2 = MonoSeg(globalT1: gM2, globalT2: s2.globalT2, localT1: lM2, localT2: s2.localT2, p1: pM2, p2: s2.p2)
-            if monoOverlap(s1, ls2) {
-                guard monoPairiteration(c1, s1, c2, ls2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
-            }
-            if monoOverlap(s1, rs2) {
-                guard monoPairiteration(c1, s1, c2, rs2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            } else if r1 && r2 {
+                guard top + 4 <= stackCapacity else { return false }
+                let mT1 = (s1.t1 + s1.t2) * 0.5, pM1 = c1.point(at: mT1)
+                let ls1 = MonoSeg(t1: s1.t1, t2: mT1, p1: s1.p1, p2: pM1)
+                let rs1 = MonoSeg(t1: mT1, t2: s1.t2, p1: pM1, p2: s1.p2)
+                let mT2 = (s2.t1 + s2.t2) * 0.5, pM2 = c2.point(at: mT2)
+                let ls2 = MonoSeg(t1: s2.t1, t2: mT2, p1: s2.p1, p2: pM2)
+                let rs2 = MonoSeg(t1: mT2, t2: s2.t2, p1: pM2, p2: s2.p2)
+                if monoOverlap(rs1, rs2) { stackBuf[top] = (rs1, rs2); top += 1 }
+                if monoOverlap(ls1, rs2) { stackBuf[top] = (ls1, rs2); top += 1 }
+                if monoOverlap(rs1, ls2) { stackBuf[top] = (rs1, ls2); top += 1 }
+                if monoOverlap(ls1, ls2) { stackBuf[top] = (ls1, ls2); top += 1 }
+            } else if r1 {
+                guard top + 2 <= stackCapacity else { return false }
+                let mT1 = (s1.t1 + s1.t2) * 0.5, pM1 = c1.point(at: mT1)
+                let ls1 = MonoSeg(t1: s1.t1, t2: mT1, p1: s1.p1, p2: pM1)
+                let rs1 = MonoSeg(t1: mT1, t2: s1.t2, p1: pM1, p2: s1.p2)
+                if monoOverlap(rs1, s2) { stackBuf[top] = (rs1, s2); top += 1 }
+                if monoOverlap(ls1, s2) { stackBuf[top] = (ls1, s2); top += 1 }
+            } else {
+                guard top + 2 <= stackCapacity else { return false }
+                let mT2 = (s2.t1 + s2.t2) * 0.5, pM2 = c2.point(at: mT2)
+                let ls2 = MonoSeg(t1: s2.t1, t2: mT2, p1: s2.p1, p2: pM2)
+                let rs2 = MonoSeg(t1: mT2, t2: s2.t2, p1: pM2, p2: s2.p2)
+                if monoOverlap(s1, rs2) { stackBuf[top] = (s1, rs2); top += 1 }
+                if monoOverlap(s1, ls2) { stackBuf[top] = (s1, ls2); top += 1 }
             }
         }
         return true
