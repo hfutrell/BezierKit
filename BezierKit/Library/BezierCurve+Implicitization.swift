@@ -113,6 +113,58 @@ internal struct ImplicitPolynomial {
     }
 }
 
+// MARK: - Zero-allocation Bernstein arithmetic for the cubic specialization of ImplicitPolynomial.value
+
+private func bernsteinMul(
+    _ left: UnsafePointer<CGFloat>, _ m: Int,
+    _ right: UnsafePointer<CGFloat>, _ n: Int,
+    into result: UnsafeMutablePointer<CGFloat>
+) {
+    // Precompute the three binomial rows (m, n, m+n) once; max 10 elements each.
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 30) { tmp in
+        let mRow = tmp.baseAddress!
+        let nRow = tmp.baseAddress! + 10
+        let mnRow = tmp.baseAddress! + 20
+        for i in 0 ... m { mRow[i] = Utils.binomialCoefficient(m, choose: i) }
+        for i in 0 ... n { nRow[i] = Utils.binomialCoefficient(n, choose: i) }
+        for i in 0 ... m + n { mnRow[i] = Utils.binomialCoefficient(m + n, choose: i) }
+        for k in 0 ... m + n {
+            let lo = max(k - n, 0)
+            let hi = min(m, k)
+            var s = CGFloat.zero
+            for i in lo ... hi {
+                s += mRow[i] * nRow[k - i] * left[i] * right[k - i]
+            }
+            result[k] = s / mnRow[k]
+        }
+    }
+}
+
+private func bernsteinElevate(
+    _ src: UnsafePointer<CGFloat>, _ d: Int, by e: Int,
+    into result: UnsafeMutablePointer<CGFloat>
+) {
+    // Precompute the three binomial rows (d, e, d+e) once; max 10 elements each.
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 30) { tmp in
+        let dRow = tmp.baseAddress!
+        let eRow = tmp.baseAddress! + 10
+        let deRow = tmp.baseAddress! + 20
+        for i in 0 ... d { dRow[i] = Utils.binomialCoefficient(d, choose: i) }
+        for i in 0 ... e { eRow[i] = Utils.binomialCoefficient(e, choose: i) }
+        for i in 0 ... d + e { deRow[i] = Utils.binomialCoefficient(d + e, choose: i) }
+        for k in 0 ... d + e {
+            let lo = max(k - e, 0)
+            let hi = min(d, k)
+            var s = CGFloat.zero
+            for l in lo ... hi {
+                s += dRow[l] * eRow[k - l] * src[l]
+            }
+            result[k] = s / deRow[k]
+        }
+    }
+}
+
+
 private struct ImplicitLineProduct {
     var a20, a11, a10, a02, a01, a00: CGFloat
     static func * (left: ImplicitLine, right: ImplicitLineProduct) -> ImplicitPolynomial {
