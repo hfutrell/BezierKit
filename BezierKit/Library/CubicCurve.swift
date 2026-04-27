@@ -341,16 +341,5 @@ extension CubicCurve: Flatness {
         let temp2 = max(a.y * a.y, b.y * b.y)
         return (1.0 / 16.0) * ( temp1 + temp2 )
     }
-    // Sufficient condition for curve ⊆ endpoint rectangle [p0, p3]:
-    // all control points lie within the axis-aligned bbox of the two endpoints.
-    // Weaker than full polygon ordering (doesn't require p1 ≤ p2), but the Bezier
-    // convex-hull property guarantees the curve stays within the control-point convex hull,
-    // which is within the endpoint rectangle when both p1 and p2 are inside it.
-    // De Casteljau splitting preserves this property (proven by convex combination argument).
-    internal var isMonotonicallyOrdered: Bool {
-        let xlo = Swift.min(p0.x, p3.x), xhi = Swift.max(p0.x, p3.x)
-        let ylo = Swift.min(p0.y, p3.y), yhi = Swift.max(p0.y, p3.y)
-        return p1.x >= xlo && p1.x <= xhi && p2.x >= xlo && p2.x <= xhi
-            && p1.y >= ylo && p1.y <= yhi && p2.y >= ylo && p2.y <= yhi
-    }
+
 }
