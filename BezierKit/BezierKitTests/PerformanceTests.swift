@@ -6,7 +6,7 @@
 //  Copyright © 2021 Holmes Futrell. All rights reserved.
 //
 
-import BezierKit
+@testable import BezierKit
 import XCTest
 
 #if !os(WASI)

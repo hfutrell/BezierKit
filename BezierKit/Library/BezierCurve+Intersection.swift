@@ -172,9 +172,22 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         return Intersection(t1: t1, t2: t2)
     }
 
+    let equationDerivative = equation.derivative
     var intersections: [Intersection] = []
-    equation.forEachDistinctRootInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold)) { t1 in
-        guard t1 >= t1Tolerance, t1 <= 1 - t1Tolerance else { return }
+    for t1raw in equation.distinctRootsAberth() {
+        // Newton refinement to machine precision. Simple roots (quadratic convergence)
+        // exit after 1-2 iterations; double roots (linear convergence) need up to ~30.
+        var t1 = t1raw
+        for _ in 0..<30 {
+            let f = Double(equation.value(at: t1))
+            let df = Double(equationDerivative.value(at: t1))
+            guard abs(df) > 0 else { break }
+            let dt = CGFloat(f / df)
+            t1 -= dt
+            if abs(dt) < 1e-14 { break }
+        }
+        t1 = max(0, min(1, t1))
+        guard t1 >= t1Tolerance, t1 <= 1 - t1Tolerance else { continue }
         if let intersection = intersectionIfCloseEnough(at: t1) {
             intersections.append(intersection)
         }

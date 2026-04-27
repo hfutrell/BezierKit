@@ -10,175 +10,150 @@ import CoreGraphics
 #endif
 import Foundation
 
-struct RootFindingConfiguration {
-    static let defaultErrorThreshold: CGFloat = 1e-5
-    static let minimumErrorThreshold: CGFloat = 1e-12
-    private(set) var errorThreshold: CGFloat
-    init(errorThreshold: CGFloat) {
-        precondition(errorThreshold >= RootFindingConfiguration.minimumErrorThreshold)
-        self.errorThreshold = errorThreshold
-    }
-    static var `default`: RootFindingConfiguration {
-        return Self(errorThreshold: RootFindingConfiguration.defaultErrorThreshold)
-    }
-}
-
 extension BernsteinPolynomialN {
-    /// Calls `callback` for each unique, ordered real root in `[0, 1]`.
-    /// Roots are emitted in ascending order with exact duplicates suppressed inline.
-    /// Zero-allocation beyond the arena (which is heap-allocated when count is a runtime value).
-    func forEachDistinctRootInUnitInterval(configuration: RootFindingConfiguration = .default, _ callback: (CGFloat) -> Void) {
-        guard coefficients.contains(where: { $0 != .zero }) else { return }
+
+    // Convert Bernstein coefficients to power basis coefficients.
+    // a[m] = C(n,m) * sum_{k=0}^{m} (-1)^{m-k} * C(m,k) * b[k]
+    private func bernsteinToPowerBasis() -> [Double] {
         let count = coefficients.count
-        let maxDepth = 48
-        coefficients.withUnsafeBufferPointer { inputPtr in
-            withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: maxDepth * 4 * count) { arenaPtr in
-                // Wrap callback with inline deduplication so rootsCore stays at 8 parameters.
-                // lastRoot is captured by reference across all recursive rootsCore calls.
-                var lastRoot = CGFloat.infinity
-                BernsteinPolynomialN.rootsCore(
-                    coefficients: inputPtr,
-                    count: count,
-                    start: 0, end: 1,
-                    configuration: configuration,
-                    arena: arenaPtr,
-                    depth: 0,
-                    callback: {
-                        guard $0 != lastRoot else { return }
-                        lastRoot = $0
-                        callback($0)
+        let n = count - 1
+        var a = [Double](repeating: 0, count: count)
+        for m in 0...n {
+            var sum = 0.0
+            var sign = (m % 2 == 0) ? 1.0 : -1.0
+            for k in 0...m {
+                sum += sign * Double(Utils.binomialCoefficient(m, choose: k)) * Double(coefficients[k])
+                sign = -sign
+            }
+            a[m] = Double(Utils.binomialCoefficient(n, choose: m)) * sum
+        }
+        return a
+    }
+
+    /// Finds real roots in [0,1] using the Aberth-Ehrlich simultaneous iteration.
+    /// No LAPACK required. O(n × iterations) per call using power basis + Horner evaluation.
+    internal func distinctRootsAberth(imagThreshold: Double = 1e-5) -> [CGFloat] {
+        let n = order  // degree; polynomial has n+1 coefficients
+        guard n >= 1 else { return [] }
+
+        let coeffD = coefficients.map { Double($0) }
+
+        // Descartes' rule: zero sign changes in Bernstein coefficients → no real roots in (0,1).
+        let scale = coeffD.reduce(0.0) { Swift.max($0, Swift.abs($1)) }
+        guard scale > 0 else { return [] }
+        let signThreshold = scale * 1e-10
+        var lastSign = 0
+        var hasSignChange = false
+        for c in coeffD {
+            guard Swift.abs(c) > signThreshold else { continue }
+            let s = c > 0 ? 1 : -1
+            if lastSign != 0, s != lastSign { hasSignChange = true; break }
+            lastSign = s
+        }
+        guard hasSignChange else { return [] }
+
+        // Convert to power basis for O(n) Horner evaluation.
+        let powCoeffs = bernsteinToPowerBasis()  // a[0] + a[1]*t + ... + a[n]*t^n
+        let derivPow: [Double] = (0..<n).map { Double($0 + 1) * powCoeffs[$0 + 1] }
+
+        // Buffer: [re[n] | im[n]] — root approximations only.
+        return withUnsafeTemporaryAllocation(of: Double.self, capacity: 2 * n) { buf in
+            let rePtr = buf.baseAddress!
+            let imPtr = buf.baseAddress! + n
+
+            // Initialise roots equally spaced on a circle centred at 0.5, radius 0.45.
+            for k in 0..<n {
+                let theta = 2.0 * Double.pi * Double(k) / Double(n)
+                rePtr[k]  = 0.5 + 0.45 * cos(theta)
+                imPtr[k]  = 0.45 * sin(theta)
+            }
+
+            let maxIter = 50
+            let tolSq   = 1.0e-24
+
+            for _ in 0..<maxIter {
+                var maxWMag2 = 0.0
+                for k in 0..<n {
+                    let zre = rePtr[k], zim = imPtr[k]
+
+                    // Evaluate p(z) via Horner.
+                    var pre = powCoeffs[n], pim = 0.0
+                    for j in stride(from: n - 1, through: 0, by: -1) {
+                        let newre = pre*zre - pim*zim + powCoeffs[j]
+                        let newim = pre*zim + pim*zre
+                        pre = newre; pim = newim
                     }
-                )
-            }
-        }
-    }
 
-    /// Returns the unique, ordered real roots of the curve that fall within the unit interval `0 <= t <= 1`
-    /// the roots are unique and ordered so that for  `i < j` they satisfy `root[i] < root[j]`
-    /// - Returns: the array of roots
-    func distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration = .default) -> [CGFloat] {
-        var results: [CGFloat] = []
-        forEachDistinctRootInUnitInterval(configuration: configuration) { results.append($0) }
-        return results
-    }
+                    // Evaluate p'(z) via Horner.
+                    var dre = derivPow[n - 1], dim = 0.0
+                    for j in stride(from: n - 2, through: 0, by: -1) {
+                        let newre = dre*zre - dim*zim + derivPow[j]
+                        let newim = dre*zim + dim*zre
+                        dre = newre; dim = newim
+                    }
 
-    // In-place de Casteljau split into pre-allocated left/right/scratch buffers.
-    private static func deCasteljauSplit(
-        input: UnsafeBufferPointer<CGFloat>,
-        count: Int,
-        at t: CGFloat,
-        left: UnsafeMutableBufferPointer<CGFloat>,
-        right: UnsafeMutableBufferPointer<CGFloat>,
-        scratch: UnsafeMutableBufferPointer<CGFloat>
-    ) {
-        let n = count - 1
-        for i in 0..<count { scratch[i] = input[i] }
-        left[0] = scratch[0]
-        right[n] = scratch[n]
-        for j in 1...n {
-            for i in 0...(n - j) {
-                scratch[i] = Utils.linearInterpolate(scratch[i], scratch[i + 1], t)
-            }
-            left[j] = scratch[0]
-            right[n - j] = scratch[n - j]
-        }
-    }
+                    let dMag2 = dre*dre + dim*dim
+                    guard dMag2 > 0 else { continue }
 
-    // Arena layout per depth level (base = depth * 4 * count):
-    //   slotA = base + 0*count  (scratch / temp)
-    //   slotB = base + 1*count  (left or result)
-    //   slotC = base + 2*count  (right or intermediate)
-    //   slotD = base + 3*count  (secondary right, discarded)
-    // Children at depth+1 write to (depth+1)*4*count onward, never touching this level's slots.
-    private static func rootsCore(
-        coefficients: UnsafeBufferPointer<CGFloat>,
-        count: Int,
-        start rangeStart: CGFloat,
-        end rangeEnd: CGFloat,
-        configuration: RootFindingConfiguration,
-        arena: UnsafeMutableBufferPointer<CGFloat>,
-        depth: Int,
-        callback: (CGFloat) -> Void
-    ) {
-        let n = count - 1
-        var lowerBound = CGFloat.infinity
-        var upperBound = -CGFloat.infinity
-        for i in 0..<n {
-            for j in i+1...n {
-                let p1 = CGPoint(x: CGFloat(i) / CGFloat(n), y: coefficients[i])
-                let p2 = CGPoint(x: CGFloat(j) / CGFloat(n), y: coefficients[j])
-                guard p1.y != 0 || p2.y != 0 else {
-                    assert(p2.x >= p1.x)
-                    if p1.x < lowerBound { lowerBound = p1.x }
-                    if p2.x > upperBound { upperBound = p2.x }
-                    continue
+                    // Newton ratio: nr = p(z) / p'(z)
+                    let nrRe = ( pre*dre + pim*dim) / dMag2
+                    let nrIm = (pim*dre  - pre*dim) / dMag2
+
+                    // Aberth correction sum: Σ_{j≠k} 1 / (z_k − z_j)
+                    var sumRe = 0.0, sumIm = 0.0
+                    for j in 0..<n where j != k {
+                        let dRe = zre - rePtr[j], dIm = zim - imPtr[j]
+                        let d2  = dRe*dRe + dIm*dIm
+                        if d2 > 0 { sumRe += dRe/d2; sumIm -= dIm/d2 }
+                    }
+
+                    // Aberth step: w = nr / (1 − nr · sum)
+                    let prodRe  = nrRe*sumRe - nrIm*sumIm
+                    let prodIm  = nrRe*sumIm + nrIm*sumRe
+                    let denomRe = 1.0 - prodRe, denomIm = -prodIm
+                    let denom2  = denomRe*denomRe + denomIm*denomIm
+                    guard denom2 > 0 else { continue }
+                    let wRe = (nrRe*denomRe + nrIm*denomIm) / denom2
+                    let wIm = (nrIm*denomRe - nrRe*denomIm) / denom2
+
+                    rePtr[k] -= wRe
+                    imPtr[k] -= wIm
+                    maxWMag2 = Swift.max(maxWMag2, wRe*wRe + wIm*wIm)
                 }
-                let tLine = -p1.y / (p2.y - p1.y)
-                if tLine >= 0, tLine <= 1 {
-                    let t = Utils.linearInterpolate(p1.x, p2.x, tLine)
-                    if t < lowerBound { lowerBound = t }
-                    if t > upperBound { upperBound = t }
+                if maxWMag2 < tolSq { break }
+            }
+
+            // Post-process: near-coincident real pairs indicate a double root.
+            // Aberth repulsion keeps them apart; midpoint + multiplicity-2 Newton converges quadratically.
+            for k in 0..<n {
+                guard Swift.abs(imPtr[k]) <= imagThreshold else { continue }
+                for j in (k+1)..<n {
+                    guard Swift.abs(imPtr[j]) <= imagThreshold else { continue }
+                    guard Swift.abs(rePtr[k] - rePtr[j]) < 1e-4 else { continue }
+                    var t = (rePtr[k] + rePtr[j]) * 0.5
+                    for _ in 0..<15 {
+                        var fv = powCoeffs[n]
+                        for j2 in stride(from: n - 1, through: 0, by: -1) { fv = fv * t + powCoeffs[j2] }
+                        var dv = derivPow[n - 1]
+                        for j2 in stride(from: n - 2, through: 0, by: -1) { dv = dv * t + derivPow[j2] }
+                        guard Swift.abs(dv) > 0 else { break }
+                        let step = 2.0 * fv / dv
+                        t -= step
+                        if Swift.abs(step) < 1e-14 { break }
+                    }
+                    rePtr[k] = t; rePtr[j] = t
                 }
             }
-        }
-        guard lowerBound.isFinite, upperBound.isFinite else { return }
-        let nextRangeStart = Utils.linearInterpolate(rangeStart, rangeEnd, lowerBound)
-        let nextRangeEnd = Utils.linearInterpolate(rangeStart, rangeEnd, upperBound)
-        guard nextRangeEnd - nextRangeStart > configuration.errorThreshold else {
-            callback(Utils.linearInterpolate(nextRangeStart, nextRangeEnd, 0.5))
-            return
-        }
-        let base = arena.baseAddress! + depth * 4 * count
-        let slotA = UnsafeMutableBufferPointer(start: base,              count: count)
-        let slotB = UnsafeMutableBufferPointer(start: base + count,      count: count)
-        let slotC = UnsafeMutableBufferPointer(start: base + 2 * count,  count: count)
-        let slotD = UnsafeMutableBufferPointer(start: base + 3 * count,  count: count)
-        guard upperBound - lowerBound < 0.8 else {
-            // Convergence too slow — split in half and handle each side separately.
-            let rangeMid = Utils.linearInterpolate(rangeStart, rangeEnd, 0.5)
-            deCasteljauSplit(input: coefficients, count: count, at: 0.5,
-                             left: slotB, right: slotC, scratch: slotA)
-            rootsCore(coefficients: UnsafeBufferPointer(slotB), count: count,
-                      start: rangeStart, end: rangeMid,
-                      configuration: configuration, arena: arena, depth: depth + 1, callback: callback)
-            rootsCore(coefficients: UnsafeBufferPointer(slotC), count: count,
-                      start: rangeMid, end: rangeEnd,
-                      configuration: configuration, arena: arena, depth: depth + 1, callback: callback)
-            return
-        }
-        // Narrow the curve to [lowerBound, upperBound] (equivalent to split(from:to:)).
-        // lowerBound and upperBound are always in [0,1] and lowerBound <= upperBound by construction.
-        let subcurvePtr: UnsafeBufferPointer<CGFloat>
-        if lowerBound == 0 {
-            // Only need the left portion of split at upperBound.
-            deCasteljauSplit(input: coefficients, count: count, at: upperBound,
-                             left: slotC, right: slotB, scratch: slotA)
-            subcurvePtr = UnsafeBufferPointer(slotC)
-        } else if upperBound == 1 {
-            // Only need the right portion of split at lowerBound.
-            deCasteljauSplit(input: coefficients, count: count, at: lowerBound,
-                             left: slotB, right: slotC, scratch: slotA)
-            subcurvePtr = UnsafeBufferPointer(slotC)
-        } else {
-            // General case: split at lowerBound, take right; then split right at mapped t2, take left.
-            deCasteljauSplit(input: coefficients, count: count, at: lowerBound,
-                             left: slotB, right: slotC, scratch: slotA)
-            let t2Mapped = (upperBound - lowerBound) / (1 - lowerBound)
-            deCasteljauSplit(input: UnsafeBufferPointer(slotC), count: count, at: t2Mapped,
-                             left: slotB, right: slotD, scratch: slotA)
-            subcurvePtr = UnsafeBufferPointer(slotB)
-        }
-        func skippedRoot(between first: CGFloat, and second: CGFloat) -> Bool {
-            return first > 0 && second < 0 || first < 0 && second > 0
-        }
-        if skippedRoot(between: coefficients[0], and: subcurvePtr[0]) {
-            callback(nextRangeStart)
-        }
-        rootsCore(coefficients: subcurvePtr, count: count,
-                  start: nextRangeStart, end: nextRangeEnd,
-                  configuration: configuration, arena: arena, depth: depth + 1, callback: callback)
-        if skippedRoot(between: subcurvePtr[count - 1], and: coefficients[count - 1]) {
-            callback(nextRangeEnd)
+
+            // Collect roots that are real (small imaginary part) and lie in [0,1].
+            var roots: [CGFloat] = []
+            for k in 0..<n {
+                let rk = rePtr[k], ik = imPtr[k]
+                guard Swift.abs(ik) <= imagThreshold * (1.0 + Swift.abs(rk)) else { continue }
+                guard rk >= 0.0, rk <= 1.0 else { continue }
+                roots.append(CGFloat(rk))
+            }
+            return roots.sorted()
         }
     }
 }
