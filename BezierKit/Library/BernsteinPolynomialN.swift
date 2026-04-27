@@ -14,7 +14,8 @@ struct BernsteinPolynomialN: BernsteinPolynomial {
     let coefficients: [CGFloat]
 
     func difference(a1: CGFloat, a2: CGFloat) -> BernsteinPolynomialN {
-        fatalError("unimplemented.")
+        let diffs = (0..<order).map { a1 * coefficients[$0] + a2 * coefficients[$0 + 1] }
+        return BernsteinPolynomialN(coefficients: diffs)
     }
 
     var order: Int { return coefficients.count - 1 }
