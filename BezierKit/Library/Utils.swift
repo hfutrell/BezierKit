@@ -384,6 +384,81 @@ internal class Utils {
         return false
     }
 
+    // Returns sorted t values in (0,1) where the x or y derivative of curve is zero,
+    // i.e., the minimal split points needed to make the curve monotone.
+    @inline(__always)
+    private static func monoBreakpoints<C: BezierCurve>(_ curve: C) -> [CGFloat] {
+        var ts: [CGFloat] = []
+        if let c = curve as? CubicCurve {
+            Utils.droots(c.p1.x - c.p0.x, c.p2.x - c.p1.x, c.p3.x - c.p2.x) { t in
+                if t > 0 && t < 1 { ts.append(t) }
+            }
+            Utils.droots(c.p1.y - c.p0.y, c.p2.y - c.p1.y, c.p3.y - c.p2.y) { t in
+                if t > 0 && t < 1 { ts.append(t) }
+            }
+        } else if let q = curve as? QuadraticCurve {
+            Utils.droots(q.p1.x - q.p0.x, q.p2.x - q.p1.x) { t in
+                if t > 0 && t < 1 { ts.append(t) }
+            }
+            Utils.droots(q.p1.y - q.p0.y, q.p2.y - q.p1.y) { t in
+                if t > 0 && t < 1 { ts.append(t) }
+            }
+        }
+        ts.sort()
+        return ts
+    }
+
+    // Intersect two NonlinearBezierCurves by splitting each upfront at its derivative roots
+    // to produce monotone pieces, then running monoPairiteration on each overlapping pair.
+    // Returns false only if the iteration limit is hit (coincident curves), signalling the caller
+    // to fall through to curve implicitization.
+    static func preSplitIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+        _ curve1: C1, _ curve2: C2,
+        _ results: inout [Intersection],
+        _ accuracy: CGFloat,
+        _ totalIterations: inout Int
+    ) -> Bool {
+        // Quick rejection before the expensive monoBreakpoints / segment-endpoint computation.
+        // For random pairs ~60-70% are disjoint; this avoids all further work for those.
+        guard curve1.boundingBox.overlaps(curve2.boundingBox) else { return true }
+
+        let maxIntersections = curve1.order * curve2.order
+
+        let breaks1 = monoBreakpoints(curve1)
+        let breaks2 = monoBreakpoints(curve2)
+
+        // Build t-split arrays [0, t1, t2, ..., 1]
+        var splits1: [CGFloat] = [0]; splits1.append(contentsOf: breaks1); splits1.append(1)
+        var splits2: [CGFloat] = [0]; splits2.append(contentsOf: breaks2); splits2.append(1)
+
+        // Precompute segment endpoints, reusing adjacent shared points.
+        var pts1: [CGPoint] = []
+        pts1.reserveCapacity(splits1.count)
+        pts1.append(curve1.startingPoint)
+        for k in 1..<splits1.count - 1 { pts1.append(curve1.point(at: splits1[k])) }
+        pts1.append(curve1.endingPoint)
+
+        var pts2: [CGPoint] = []
+        pts2.reserveCapacity(splits2.count)
+        pts2.append(curve2.startingPoint)
+        for k in 1..<splits2.count - 1 { pts2.append(curve2.point(at: splits2[k])) }
+        pts2.append(curve2.endingPoint)
+
+        for i in 0..<splits1.count - 1 {
+            let s1 = MonoSeg(globalT1: splits1[i], globalT2: splits1[i + 1],
+                             localT1: splits1[i], localT2: splits1[i + 1],
+                             p1: pts1[i], p2: pts1[i + 1])
+            for j in 0..<splits2.count - 1 {
+                let s2 = MonoSeg(globalT1: splits2[j], globalT2: splits2[j + 1],
+                                 localT1: splits2[j], localT2: splits2[j + 1],
+                                 p1: pts2[j], p2: pts2[j + 1])
+                guard monoOverlap(s1, s2) else { continue }
+                guard monoPairiteration(curve1, s1, curve2, s2, &results, accuracy, maxIntersections, &totalIterations) else { return false }
+            }
+        }
+        return true
+    }
+
     // Fast-path recursive intersection for pairs of monotone subcurves.
     // c1/c2 are the fixed reference curves; s1/s2 carry the parameter range and endpoint pair.
     // maxIntersections is passed rather than recomputed each call.

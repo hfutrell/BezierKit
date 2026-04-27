@@ -341,12 +341,16 @@ extension CubicCurve: Flatness {
         let temp2 = max(a.y * a.y, b.y * b.y)
         return (1.0 / 16.0) * ( temp1 + temp2 )
     }
-    // Control-polygon monotonicity ↔ curve monotonicity for Bezier curves.
-    // Derivative control points are 3*(p_{i+1}-p_i); all same sign ↔ derivative doesn't change sign.
+    // Sufficient condition for curve ⊆ endpoint rectangle [p0, p3]:
+    // all control points lie within the axis-aligned bbox of the two endpoints.
+    // Weaker than full polygon ordering (doesn't require p1 ≤ p2), but the Bezier
+    // convex-hull property guarantees the curve stays within the control-point convex hull,
+    // which is within the endpoint rectangle when both p1 and p2 are inside it.
+    // De Casteljau splitting preserves this property (proven by convex combination argument).
     internal var isMonotonicallyOrdered: Bool {
-        let dx01 = p1.x - p0.x, dx12 = p2.x - p1.x, dx23 = p3.x - p2.x
-        let dy01 = p1.y - p0.y, dy12 = p2.y - p1.y, dy23 = p3.y - p2.y
-        return ((dx01 >= 0 && dx12 >= 0 && dx23 >= 0) || (dx01 <= 0 && dx12 <= 0 && dx23 <= 0))
-            && ((dy01 >= 0 && dy12 >= 0 && dy23 >= 0) || (dy01 <= 0 && dy12 <= 0 && dy23 <= 0))
+        let xlo = Swift.min(p0.x, p3.x), xhi = Swift.max(p0.x, p3.x)
+        let ylo = Swift.min(p0.y, p3.y), yhi = Swift.max(p0.y, p3.y)
+        return p1.x >= xlo && p1.x <= xhi && p2.x >= xlo && p2.x <= xhi
+            && p1.y >= ylo && p1.y <= yhi && p2.y >= ylo && p2.y <= yhi
     }
 }

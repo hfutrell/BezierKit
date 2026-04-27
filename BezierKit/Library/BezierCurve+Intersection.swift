@@ -117,12 +117,11 @@ fileprivate extension BezierCurve {
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
-    // try intersecting using subdivision
-    let lb = curve1.curve.boundingBox
-    let rb = curve2.curve.boundingBox
+    // Split both curves at derivative roots upfront so every piece is monotone,
+    // then run the fast mono path on all overlapping pairs.
     var pairIntersections: [Intersection] = []
     var subdivisionIterations = 0
-    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
+    if Utils.preSplitIntersections(curve1.curve, curve2.curve, &pairIntersections, accuracy, &subdivisionIterations) {
         return pairIntersections.sortedAndUniqued()
     }
 
