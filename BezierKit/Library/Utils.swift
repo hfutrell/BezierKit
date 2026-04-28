@@ -488,6 +488,23 @@ internal class Utils {
 
         // If either curve reduced by less than 20 %, convergence is slow — subdivide.
         if c1Ratio > 0.8 || c2Ratio > 0.8 {
+            // For tangent intersections at a shared endpoint, fat-line clipping near the
+            // endpoint gives ratio ≈ 1.0, causing exponential blowup.  When both sub-curves
+            // have already been narrowed to a small parameter range (fast convergence already
+            // did its job), detect exact shared endpoints directly rather than continuing to
+            // subdivide.  The range threshold is conservative: tangent cases reach this scale
+            // quickly via fast convergence, while nearly-coincident cases exhaust their budget
+            // long before reaching it.
+            let c1Range = c1Reduced.t2 - c1Reduced.t1
+            let c2Range = c2Reduced.t2 - c2Reduced.t1
+            if c1Range < 0.05 && c2Range < 0.05 {
+                let p1s = c1Reduced.curve.startingPoint; let p1e = c1Reduced.curve.endingPoint
+                let p2s = c2Reduced.curve.startingPoint; let p2e = c2Reduced.curve.endingPoint
+                if p1e == p2s { results.append(Intersection(t1: c1Reduced.t2, t2: c2Reduced.t1)); return true }
+                if p1e == p2e { results.append(Intersection(t1: c1Reduced.t2, t2: c2Reduced.t2)); return true }
+                if p1s == p2s { results.append(Intersection(t1: c1Reduced.t1, t2: c2Reduced.t1)); return true }
+                if p1s == p2e { results.append(Intersection(t1: c1Reduced.t1, t2: c2Reduced.t2)); return true }
+            }
             // Subdivide whichever has the larger global parameter range.
             if (c1Reduced.t2 - c1Reduced.t1) >= (c2Reduced.t2 - c2Reduced.t1) {
                 guard c1Reduced.canSplit else {
