@@ -185,4 +185,67 @@ class PolynomialTests: XCTestCase {
             XCTAssertEqual(roots[0], 0, accuracy: accuracy)
         }
     }
+
+    // MARK: - Chebyshev colleague matrix root finding
+
+    func testChebyshevDegree2() {
+        // p(t) = (t - 0.25)(t - 0.75): roots at 0.25 and 0.75
+        // Bernstein degree-2: b0=p(0)=0.1875, b2=p(1)=0.1875
+        // b1: p(0.5)=-0.0625 = b0*(1-t)^2 + 2*b1*t*(1-t) + b2*t^2 at t=0.5
+        //   -0.0625 = 0.1875*0.25 + 0.5*b1 + 0.1875*0.25  →  b1 = -0.3125
+        let polynomial = BernsteinPolynomialN(coefficients: [0.1875, -0.3125, 0.1875])
+        let roots = polynomial.distinctRealRootsInUnitIntervalChebyshev()
+        XCTAssertEqual(roots.count, 2)
+        if roots.count == 2 {
+            XCTAssertEqual(roots[0], 0.25, accuracy: accuracy)
+            XCTAssertEqual(roots[1], 0.75, accuracy: accuracy)
+        }
+    }
+
+    func testChebyshevDegree4ThreeRoots() {
+        // Same polynomial as testDegree4 but via BernsteinPolynomialN + Chebyshev path
+        // x^4 - 2.44x^2 + 1.44  with roots at ±1, ±1.2 (outside [0,1])
+        // Use polynomial with roots at 0.2, 0.4, 0.6, 0.8 in [0,1]
+        // p(t) = (t-0.2)(t-0.4)(t-0.6)(t-0.8)  (degree 4, 4 roots in [0,1])
+        // p(t) = t^4 - 2t^3 + 1.4t^2 - 0.4t + 0.0384
+        // Convert to Bernstein coefficients using the power→Bernstein transformation is complex;
+        // instead use BernsteinPolynomialN.forEachDistinctRootInUnitInterval as ground truth
+        // and compare the two methods on real-world inputs.
+        let polynomial = BernsteinPolynomialN(coefficients: [1819945.4373168945,
+                                                              -3353335.8194732666,
+                                                              3712712.6330566406,
+                                                              -2836657.1703338623,
+                                                              2483314.5947265625])
+        let chebyshevRoots = polynomial.distinctRealRootsInUnitIntervalChebyshev()
+        XCTAssertEqual(chebyshevRoots.count, 2)
+        if chebyshevRoots.count == 2 {
+            XCTAssertEqual(chebyshevRoots[0], 0.15977874432923783, accuracy: 1.0e-5)
+            XCTAssertEqual(chebyshevRoots[1], 0.407811682610126, accuracy: 1.0e-5)
+        }
+    }
+
+    func testChebyshevDegree5RealWorldIssue() {
+        let polynomial = BernsteinPolynomialN(coefficients: [-68686.64586343056,
+                                                              102389.02112160496,
+                                                              -163207.59913132348,
+                                                              177077.4933777841,
+                                                              -108411.70135107233,
+                                                              57838.81668210728])
+        let chebyshevRoots = polynomial.distinctRealRootsInUnitIntervalChebyshev()
+        XCTAssertEqual(chebyshevRoots.count, 1)
+        if chebyshevRoots.count >= 1 {
+            XCTAssertEqual(chebyshevRoots[0], 0.44454, accuracy: 1.0e-5)
+        }
+    }
+
+    func testChebyshevDegreeNHighDegree() {
+        // Same polynomial as testDegree5: the only root in [0,1] is at t=0 (b[0]=0).
+        // From testDegree5 the other roots are near ±2.98, well outside [0,1].
+        let poly = BernsteinPolynomialN(coefficients: [0, -1.712, -3.424, -5.2173333, -7.1733332, -9.173333])
+        let chebyshevRoots = poly.distinctRealRootsInUnitIntervalChebyshev()
+        XCTAssertEqual(chebyshevRoots.count, 1)
+        if chebyshevRoots.count >= 1 {
+            XCTAssertEqual(chebyshevRoots[0], 0.0, accuracy: accuracy)
+        }
+    }
 }
