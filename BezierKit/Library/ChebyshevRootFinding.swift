@@ -46,13 +46,70 @@ extension BernsteinPolynomialN {
 
 /// Bernstein coefficients on [0,1] → real roots in [0,1] via Chebyshev colleague matrix.
 private func chebyshevCompanionRoots(bernsteinCoefficients b: [Double], degree n: Int) -> [Double] {
-    var c = bernsteinToChebyshev(bernstein: b, degree: n)
+    let N = n + 1
+    // Phase 1: evaluate at Chebyshev nodes and check for uniform sign.
+    // If all n+1 node values share the same sign there are no simple real roots → skip QR.
+    // This is an O(n²) check vs the O(n³) QR, so worth doing eagerly.
+    var c = [Double](repeating: 0, count: N)
+    var cosTheta = [Double](repeating: 0, count: N)
+    withUnsafeTemporaryAllocation(of: Double.self, capacity: N) { scratch in
+        var allPos = true, allNeg = true, scale = 0.0
+        // Include Bernstein endpoint values b[0]=p(0) and b[n]=p(1) in the sign check:
+        // Chebyshev interior nodes don't reach t=0 or t=1 exactly, so a root right at a
+        // boundary would otherwise go undetected by the sign-change test.
+        for v in [b[0], b[n]] {
+            scale = Swift.max(scale, abs(v))
+            if v < 0 { allPos = false }
+            if v > 0 { allNeg = false }
+        }
+        for j in 0...n {
+            let theta = (Double(2 * j + 1) * Double.pi) / Double(2 * N)
+            cosTheta[j] = cos(theta)
+            let tj = (cosTheta[j] + 1.0) * 0.5
+            let fj = deCasteljau(b, degree: n, at: tj, scratch: scratch.baseAddress!)
+            c[j] = fj          // reuse c[] as f[] for now
+            scale = Swift.max(scale, abs(fj))
+            if fj < 0 { allPos = false }
+            if fj > 0 { allNeg = false }
+        }
+        guard scale > 0 else { c[0] = .infinity; return }  // signal "zero poly"
+        // Nodes near zero could be roots — only skip if all values are clearly same-sign.
+        let threshold = scale * 1e-10
+        if allPos || allNeg {
+            var safeToSkip = true
+            if abs(b[0]) <= threshold || abs(b[n]) <= threshold { safeToSkip = false }
+            if safeToSkip {
+                for j in 0...n { if abs(c[j]) <= threshold { safeToSkip = false; break } }
+            }
+            if safeToSkip { c[0] = .infinity; return }  // signal "no roots"
+        }
+        // Phase 2: DCT — compute Chebyshev coefficients from node values via recurrence.
+        // c[j] currently holds f[j]; overwrite with Chebyshev coefficients.
+        let f = Array(c[0...n])   // save node values
+        for k in 0...n { c[k] = 0 }
+        for j in 0...n {
+            let xj = cosTheta[j]
+            let fj = f[j]
+            var T0 = 1.0, T1 = xj
+            c[0] += fj
+            if n >= 1 { c[1] += fj * xj }
+            for k in 2...n {
+                let T2 = 2 * xj * T1 - T0
+                c[k] += fj * T2
+                T0 = T1; T1 = T2
+            }
+        }
+        let factor = 2.0 / Double(N)
+        c[0] *= factor * 0.5
+        for k in 1...n { c[k] *= factor }
+    }
+    guard c[0] != .infinity else { return [] }
 
     // Trim leading near-zero Chebyshev coefficients to find effective degree
-    let scale = c.map(abs).max() ?? 0
-    guard scale > 0 else { return [] }
+    let scale2 = c.map(abs).max() ?? 0
+    guard scale2 > 0 else { return [] }
     var deg = n
-    while deg > 0 && abs(c[deg]) < 1e-14 * scale { deg -= 1 }
+    while deg > 0 && abs(c[deg]) < 1e-14 * scale2 { deg -= 1 }
     guard deg >= 1 else { return [] }
     c = Array(c[0...deg])
 
@@ -62,12 +119,6 @@ private func chebyshevCompanionRoots(bernsteinCoefficients b: [Double], degree n
         guard x >= -1 - 1e-9 && x <= 1 + 1e-9 else { return [] }
         return [chebyshevClamp((x + 1) / 2)]
     }
-
-    // Chebyshev coefficient bound: |p(x)| ≥ |c[0]| − Σ_{k≥1}|c[k]| on [−1,1].
-    // If positive, the polynomial is nonzero throughout [−1,1] — skip QR entirely.
-    var coeffSum = 0.0
-    for k in 1...deg { coeffSum += abs(c[k]) }
-    guard abs(c[0]) <= coeffSum else { return [] }
 
     // Allocate companion matrix (deg²) + Hessenberg scratch (deg) from the stack.
     let eigenvalues: [Double] = withUnsafeTemporaryAllocation(
@@ -135,41 +186,7 @@ private func newtonPolishChebyshev(_ c: [Double], start x0: Double) -> Double {
     return x
 }
 
-// MARK: - Stage 1: Basis conversion (DCT via de Casteljau — numerically stable)
-
-/// Returns c[0..n] so that p(x) = Σ c[k] T_k(x) on [−1,1],
-/// where p on [0,1] is given by Bernstein coefficients b[0..n].
-///
-/// DCT-II: c_k = (2/N) Σ_j f_j T_k(x_j), x_j = cos((2j+1)π/2N), f_j = p(t_j).
-/// Chebyshev recurrence T_k(x) = 2x T_{k-1}(x) - T_{k-2}(x) is used so cos is
-/// called only N times (not N²).  de Casteljau runs in pre-allocated scratch.
-private func bernsteinToChebyshev(bernstein b: [Double], degree n: Int) -> [Double] {
-    let N = n + 1
-    var c = [Double](repeating: 0, count: N)
-    // Temporary scratch for de Casteljau: avoids a heap allocation per node evaluation.
-    withUnsafeTemporaryAllocation(of: Double.self, capacity: N) { scratch in
-        for j in 0...n {
-            // Chebyshev node in [-1,1], mapped to Bernstein parameter t ∈ [0,1]
-            let theta = (Double(2 * j + 1) * Double.pi) / Double(2 * N)
-            let xj = cos(theta)                         // only N cos calls total
-            let tj = (xj + 1.0) * 0.5
-            let fj = deCasteljau(b, degree: n, at: tj, scratch: scratch.baseAddress!)
-            // Accumulate: c[k] += f_j * T_k(x_j), using three-term recurrence
-            var T0 = 1.0, T1 = xj
-            c[0] += fj                  // T_0 = 1
-            if n >= 1 { c[1] += fj * xj }  // T_1 = x
-            for k in 2...n {
-                let T2 = 2 * xj * T1 - T0
-                c[k] += fj * T2
-                T0 = T1; T1 = T2
-            }
-        }
-    }
-    let factor = 2.0 / Double(N)
-    c[0] *= factor * 0.5    // k=0: normalization is 1/N, not 2/N
-    for k in 1...n { c[k] *= factor }
-    return c
-}
+// MARK: - Stage 1: de Casteljau evaluation
 
 /// Evaluate the Bernstein polynomial at t via de Casteljau (numerically stable).
 /// scratch must point to at least degree+1 Doubles of temporary storage.
