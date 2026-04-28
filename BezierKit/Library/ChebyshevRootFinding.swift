@@ -64,8 +64,11 @@ private func chebyshevCompanionRoots(bernsteinCoefficients b: [Double], degree n
     }
 
     var A = buildColleagueMatrix(c: c, deg: deg)
-    hessenbergReduce(&A, n: deg)
-    let eigenvalues = qrEigenvalues(&A, n: deg)
+    let eigenvalues: [Double] = A.withUnsafeMutableBufferPointer { buf in
+        let p = buf.baseAddress!
+        hessenbergReduce(p, n: deg)
+        return qrEigenvalues(p, n: deg)
+    }
 
     let cScale = c.map(abs).max() ?? 1
     return eigenvalues
@@ -189,7 +192,7 @@ private func buildColleagueMatrix(c: [Double], deg: Int) -> [Double] {
 
 /// Reduce A (n×n, row-major) to upper Hessenberg form in place
 /// via Householder similarity: A ← P A P for each column.
-private func hessenbergReduce(_ A: inout [Double], n: Int) {
+private func hessenbergReduce(_ A: UnsafeMutablePointer<Double>, n: Int) {
     guard n > 2 else { return }
     var v = [Double](repeating: 0, count: n)
     for j in 0..<(n - 2) {
@@ -209,7 +212,8 @@ private func hessenbergReduce(_ A: inout [Double], n: Int) {
         let beta = 2.0 / vNorm2
 
         // Apply P from left: A ← P A  (modifies rows j+1..n−1)
-        for col in 0..<n {
+        // Cols 0..j-1 are already zero in rows j+1..n-1 due to prior steps.
+        for col in j..<n {
             var dot = 0.0
             for i in (j + 1)..<n { dot += v[i] * A[i * n + col] }
             dot *= beta
@@ -232,8 +236,9 @@ private func hessenbergReduce(_ A: inout [Double], n: Int) {
 // MARK: - Stage 3b: Francis implicit double-shift QR
 
 /// Compute real eigenvalues of upper Hessenberg H (n×n, modified in place).
-private func qrEigenvalues(_ H: inout [Double], n: Int) -> [Double] {
+private func qrEigenvalues(_ H: UnsafeMutablePointer<Double>, n: Int) -> [Double] {
     var eigenvalues = [Double]()
+    eigenvalues.reserveCapacity(n)
     var q = n - 1
     var iter = 0
     let maxIter = 30 * n
@@ -285,7 +290,7 @@ private func qrEigenvalues(_ H: inout [Double], n: Int) -> [Double] {
         }
 
         // Block size ≥ 3: apply Francis double-shift step
-        francisStep(&H, n: n, p: p, q: q)
+        francisStep(H, n: n, p: p, q: q)
         iter += 1
     }
 
@@ -296,7 +301,7 @@ private func qrEigenvalues(_ H: inout [Double], n: Int) -> [Double] {
 
 /// One Francis implicit double-shift QR step on the active block H[p..q, p..q].
 /// Uses 3-element Householder reflections at every chase position.
-private func francisStep(_ H: inout [Double], n: Int, p: Int, q: Int) {
+private func francisStep(_ H: UnsafeMutablePointer<Double>, n: Int, p: Int, q: Int) {
     // Double shift from trailing 2×2
     let s = H[(q - 1) * n + (q - 1)] + H[q * n + q]
     let t = H[(q - 1) * n + (q - 1)] * H[q * n + q]
@@ -327,16 +332,20 @@ private func francisStep(_ H: inout [Double], n: Int, p: Int, q: Int) {
         let v0 = x + sig * r, v1 = y, v2 = z
         let beta = 2.0 / (v0 * v0 + v1 * v1 + v2 * v2)
 
-        // Apply Householder from left: rows k, k+1, k+2
-        for col in 0..<n {
+        // Apply Householder from left: rows k, k+1, k+2.
+        // Hessenberg structure: cols 0..k-2 are zero in these rows, so start from k-1.
+        let colStart = k > 0 ? k - 1 : 0
+        for col in colStart..<n {
             let d = (v0 * H[k * n + col] + v1 * H[(k + 1) * n + col] + v2 * H[(k + 2) * n + col]) * beta
             H[k * n + col]       -= d * v0
             H[(k + 1) * n + col] -= d * v1
             H[(k + 2) * n + col] -= d * v2
         }
 
-        // Apply Householder from right: cols k, k+1, k+2
-        for row in 0..<n {
+        // Apply Householder from right: cols k, k+1, k+2.
+        // The bulge is at most at row k+3; rows k+4..n-1 have zero entries in these cols.
+        let rowEnd = n < k + 4 ? n : k + 4
+        for row in 0..<rowEnd {
             let d = (v0 * H[row * n + k] + v1 * H[row * n + (k + 1)] + v2 * H[row * n + (k + 2)]) * beta
             H[row * n + k]       -= d * v0
             H[row * n + (k + 1)] -= d * v1
