@@ -27,19 +27,31 @@ extension BernsteinPolynomialN {
 
     /// Calls `callback` for each unique, ordered real root in `[0, 1]`.
     /// Roots are emitted in ascending order with exact duplicates suppressed inline.
+    /// Zero-allocation beyond the arena (which is heap-allocated when count is a runtime value).
     func forEachDistinctRootInUnitInterval(configuration: RootFindingConfiguration = .default, _ callback: (CGFloat) -> Void) {
         guard coefficients.contains(where: { $0 != .zero }) else { return }
-        var lastRoot = CGFloat.infinity
-        BernsteinPolynomialN.rootsCore(
-            polynomial: self,
-            rangeStart: 0.0, rangeEnd: 1.0,
-            configuration: configuration,
-            callback: {
-                guard $0 != lastRoot else { return }
-                lastRoot = $0
-                callback($0)
+        let count = coefficients.count
+        let maxDepth = 48
+        coefficients.withUnsafeBufferPointer { inputPtr in
+            withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: maxDepth * 4 * count) { arenaPtr in
+                // Wrap callback with inline deduplication so rootsCore stays at 8 parameters.
+                // lastRoot is captured by reference across all recursive rootsCore calls.
+                var lastRoot = CGFloat.infinity
+                BernsteinPolynomialN.rootsCore(
+                    coefficients: inputPtr,
+                    count: count,
+                    start: 0, end: 1,
+                    configuration: configuration,
+                    arena: arenaPtr,
+                    depth: 0,
+                    callback: {
+                        guard $0 != lastRoot else { return }
+                        lastRoot = $0
+                        callback($0)
+                    }
+                )
             }
-        )
+        }
     }
 
     /// Returns the unique, ordered real roots of the curve that fall within the unit interval `0 <= t <= 1`
@@ -51,97 +63,176 @@ extension BernsteinPolynomialN {
         return results
     }
 
-    // Counts sign changes in Bernstein coefficients (skipping zeros per Descartes' rule).
-    private static func countSignChanges(_ coefficients: [CGFloat]) -> Int {
-        var count = 0
-        var lastSign: Int = 0
-        for c in coefficients {
-            guard c != 0 else { continue }
+    // In-place de Casteljau split into pre-allocated left/right/scratch buffers.
+    private static func deCasteljauSplit(
+        input: UnsafeBufferPointer<CGFloat>,
+        count: Int,
+        at t: CGFloat,
+        left: UnsafeMutableBufferPointer<CGFloat>,
+        right: UnsafeMutableBufferPointer<CGFloat>,
+        scratch: UnsafeMutableBufferPointer<CGFloat>
+    ) {
+        let n = count - 1
+        for i in 0..<count { scratch[i] = input[i] }
+        left[0] = scratch[0]
+        right[n] = scratch[n]
+        for j in 1...n {
+            for i in 0...(n - j) {
+                scratch[i] = Utils.linearInterpolate(scratch[i], scratch[i + 1], t)
+            }
+            left[j] = scratch[0]
+            right[n - j] = scratch[n - j]
+        }
+    }
+
+    // Converts Bernstein control points to power basis using iterative forward differences.
+    // a[m] = C(n,m) * Δ^m b_0, so p(t) = Σ a[m] * t^m.
+    private static func bernsteinToPowerBasis(_ coefficients: UnsafeBufferPointer<CGFloat>, count: Int) -> [Double] {
+        let n = count - 1
+        var diffs = (0..<count).map { Double(coefficients[$0]) }
+        var result = [Double](repeating: 0, count: count)
+        for m in 0...n {
+            result[m] = Double(Utils.binomialCoefficient(n, choose: m)) * diffs[0]
+            for k in 0..<(n - m) { diffs[k] = diffs[k + 1] - diffs[k] }
+        }
+        return result
+    }
+
+    private static func horner(_ c: [Double], at t: Double) -> Double {
+        var v = c[c.count - 1]
+        for i in stride(from: c.count - 2, through: 0, by: -1) { v = v * t + c[i] }
+        return v
+    }
+
+    // Arena layout per depth level (base = depth * 4 * count):
+    //   slotA = base + 0*count  (scratch / temp)
+    //   slotB = base + 1*count  (left or result)
+    //   slotC = base + 2*count  (right or intermediate)
+    //   slotD = base + 3*count  (secondary right, discarded)
+    // Children at depth+1 write to (depth+1)*4*count onward, never touching this level's slots.
+    private static func rootsCore(
+        coefficients: UnsafeBufferPointer<CGFloat>,
+        count: Int,
+        start rangeStart: CGFloat,
+        end rangeEnd: CGFloat,
+        configuration: RootFindingConfiguration,
+        arena: UnsafeMutableBufferPointer<CGFloat>,
+        depth: Int,
+        callback: (CGFloat) -> Void
+    ) {
+        let n = count - 1
+
+        // Descartes isolation: once a sub-interval has exactly one sign change the root
+        // is isolated. Switch to bisection on the power basis (O(n) Horner evals) instead
+        // of continuing Bézier clipping subdivision.
+        var coeffScale = 0.0
+        for i in 0..<count { coeffScale = Swift.max(coeffScale, Swift.abs(Double(coefficients[i]))) }
+        let signThreshold = coeffScale * 1e-10
+        var lastSign = 0
+        var signChanges = 0
+        for i in 0..<count {
+            let c = Double(coefficients[i])
+            guard Swift.abs(c) > signThreshold else { continue }
             let s = c > 0 ? 1 : -1
-            if lastSign != 0 && s != lastSign { count += 1 }
+            if lastSign != 0, s != lastSign { signChanges += 1 }
             lastSign = s
         }
-        return count
-    }
-
-    // Monotone-decomposition root finder for Bernstein polynomials.
-    // polynomial is Bernstein-parameterized on [0,1], corresponding to [rangeStart, rangeEnd].
-    //
-    // By Descartes' rule for Bernstein form, the number of sign changes in the
-    // coefficients is an upper bound on the number of roots in (0,1). When there
-    // is exactly one sign change (strict crossing), there is exactly one interior
-    // root and bisection is used. Otherwise the interval is subdivided at the
-    // midpoint until each piece has zero or one sign change.
-    private static func rootsCore(
-        polynomial: BernsteinPolynomialN,
-        rangeStart: CGFloat,
-        rangeEnd: CGFloat,
-        configuration: RootFindingConfiguration,
-        callback: (CGFloat) -> Void
-    ) {
-        let n = polynomial.order
-        let coeffs = polynomial.coefficients
-        let b0 = coeffs[0]
-        let bn = coeffs[n]
-
-        // Roots exactly at endpoints.
-        if b0 == 0 { callback(rangeStart) }
-        if bn == 0 { callback(rangeEnd) }
-
-        // Sign changes upper-bound the number of roots in the open interval (0, 1).
-        let signChanges = countSignChanges(coeffs)
-        guard signChanges > 0 else { return }
-
-        guard rangeEnd - rangeStart > configuration.errorThreshold else {
-            // Interval too small to subdivide further: emit midpoint for any crossing.
-            if b0 * bn < 0 { callback(0.5 * (rangeStart + rangeEnd)) }
-            return
+        if signChanges == 1 {
+            let fLo = Double(coefficients[0])
+            let fHi = Double(coefficients[count - 1])
+            if fLo * fHi < 0 {
+                let pow = bernsteinToPowerBasis(coefficients, count: count)
+                var lo = 0.0, hi = 1.0, fL = fLo, fH = fHi
+                let threshold = Double(configuration.errorThreshold) / Double(rangeEnd - rangeStart)
+                while hi - lo > threshold {
+                    let mid = 0.5 * (lo + hi)
+                    let fMid = horner(pow, at: mid)
+                    if fMid == 0 { lo = mid; hi = mid; break }
+                    if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid; fH = fMid }
+                }
+                callback(Utils.linearInterpolate(rangeStart, rangeEnd, CGFloat(0.5 * (lo + hi))))
+                return
+            }
         }
 
-        // One sign change and a strict crossing: bisect to find the single interior root.
-        if signChanges == 1, b0 * bn < 0 {
-            bisectRoot(polynomial: polynomial,
-                       rangeStart: rangeStart, rangeEnd: rangeEnd,
-                       fa: b0, fb: bn,
-                       configuration: configuration,
-                       callback: callback)
+        var lowerBound = CGFloat.infinity
+        var upperBound = -CGFloat.infinity
+        for i in 0..<n {
+            for j in i+1...n {
+                let p1 = CGPoint(x: CGFloat(i) / CGFloat(n), y: coefficients[i])
+                let p2 = CGPoint(x: CGFloat(j) / CGFloat(n), y: coefficients[j])
+                guard p1.y != 0 || p2.y != 0 else {
+                    assert(p2.x >= p1.x)
+                    if p1.x < lowerBound { lowerBound = p1.x }
+                    if p2.x > upperBound { upperBound = p2.x }
+                    continue
+                }
+                let tLine = -p1.y / (p2.y - p1.y)
+                if tLine >= 0, tLine <= 1 {
+                    let t = Utils.linearInterpolate(p1.x, p2.x, tLine)
+                    if t < lowerBound { lowerBound = t }
+                    if t > upperBound { upperBound = t }
+                }
+            }
+        }
+        guard lowerBound.isFinite, upperBound.isFinite else { return }
+        let nextRangeStart = Utils.linearInterpolate(rangeStart, rangeEnd, lowerBound)
+        let nextRangeEnd = Utils.linearInterpolate(rangeStart, rangeEnd, upperBound)
+        guard nextRangeEnd - nextRangeStart > configuration.errorThreshold else {
+            callback(Utils.linearInterpolate(nextRangeStart, nextRangeEnd, 0.5))
             return
         }
-
-        // Multiple sign changes (or endpoint zero with interior roots): subdivide at midpoint.
-        let mid = 0.5 * (rangeStart + rangeEnd)
-        let (left, right) = polynomial.split(at: 0.5)
-        rootsCore(polynomial: left, rangeStart: rangeStart, rangeEnd: mid,
-                  configuration: configuration, callback: callback)
-        rootsCore(polynomial: right, rangeStart: mid, rangeEnd: rangeEnd,
-                  configuration: configuration, callback: callback)
-    }
-
-    // Bisects a monotone interval known to contain exactly one root (fa * fb < 0).
-    private static func bisectRoot(
-        polynomial: BernsteinPolynomialN,
-        rangeStart: CGFloat,
-        rangeEnd: CGFloat,
-        fa: CGFloat,
-        fb: CGFloat,
-        configuration: RootFindingConfiguration,
-        callback: (CGFloat) -> Void
-    ) {
-        guard rangeEnd - rangeStart > configuration.errorThreshold else {
-            callback(0.5 * (rangeStart + rangeEnd))
+        let base = arena.baseAddress! + depth * 4 * count
+        let slotA = UnsafeMutableBufferPointer(start: base,              count: count)
+        let slotB = UnsafeMutableBufferPointer(start: base + count,      count: count)
+        let slotC = UnsafeMutableBufferPointer(start: base + 2 * count,  count: count)
+        let slotD = UnsafeMutableBufferPointer(start: base + 3 * count,  count: count)
+        guard upperBound - lowerBound < 0.8 else {
+            // Convergence too slow — split in half and handle each side separately.
+            let rangeMid = Utils.linearInterpolate(rangeStart, rangeEnd, 0.5)
+            deCasteljauSplit(input: coefficients, count: count, at: 0.5,
+                             left: slotB, right: slotC, scratch: slotA)
+            rootsCore(coefficients: UnsafeBufferPointer(slotB), count: count,
+                      start: rangeStart, end: rangeMid,
+                      configuration: configuration, arena: arena, depth: depth + 1, callback: callback)
+            rootsCore(coefficients: UnsafeBufferPointer(slotC), count: count,
+                      start: rangeMid, end: rangeEnd,
+                      configuration: configuration, arena: arena, depth: depth + 1, callback: callback)
             return
         }
-        let mid = 0.5 * (rangeStart + rangeEnd)
-        let (left, right) = polynomial.split(at: 0.5)
-        let fm = left.coefficients[left.order]
-        if fm == 0 {
-            callback(mid)
-        } else if fa * fm < 0 {
-            bisectRoot(polynomial: left, rangeStart: rangeStart, rangeEnd: mid,
-                       fa: fa, fb: fm, configuration: configuration, callback: callback)
+        // Narrow the curve to [lowerBound, upperBound] (equivalent to split(from:to:)).
+        // lowerBound and upperBound are always in [0,1] and lowerBound <= upperBound by construction.
+        let subcurvePtr: UnsafeBufferPointer<CGFloat>
+        if lowerBound == 0 {
+            // Only need the left portion of split at upperBound.
+            deCasteljauSplit(input: coefficients, count: count, at: upperBound,
+                             left: slotC, right: slotB, scratch: slotA)
+            subcurvePtr = UnsafeBufferPointer(slotC)
+        } else if upperBound == 1 {
+            // Only need the right portion of split at lowerBound.
+            deCasteljauSplit(input: coefficients, count: count, at: lowerBound,
+                             left: slotB, right: slotC, scratch: slotA)
+            subcurvePtr = UnsafeBufferPointer(slotC)
         } else {
-            bisectRoot(polynomial: right, rangeStart: mid, rangeEnd: rangeEnd,
-                       fa: fm, fb: fb, configuration: configuration, callback: callback)
+            // General case: split at lowerBound, take right; then split right at mapped t2, take left.
+            deCasteljauSplit(input: coefficients, count: count, at: lowerBound,
+                             left: slotB, right: slotC, scratch: slotA)
+            let t2Mapped = (upperBound - lowerBound) / (1 - lowerBound)
+            deCasteljauSplit(input: UnsafeBufferPointer(slotC), count: count, at: t2Mapped,
+                             left: slotB, right: slotD, scratch: slotA)
+            subcurvePtr = UnsafeBufferPointer(slotB)
+        }
+        func skippedRoot(between first: CGFloat, and second: CGFloat) -> Bool {
+            return first > 0 && second < 0 || first < 0 && second > 0
+        }
+        if skippedRoot(between: coefficients[0], and: subcurvePtr[0]) {
+            callback(nextRangeStart)
+        }
+        rootsCore(coefficients: subcurvePtr, count: count,
+                  start: nextRangeStart, end: nextRangeEnd,
+                  configuration: configuration, arena: arena, depth: depth + 1, callback: callback)
+        if skippedRoot(between: subcurvePtr[count - 1], and: coefficients[count - 1]) {
+            callback(nextRangeEnd)
         }
     }
 }
