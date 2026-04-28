@@ -75,6 +75,41 @@ extension BernsteinPolynomial3: AnalyticalRoots {
     }
 }
 
+internal protocol AnalyticalRootsCallback {
+    func forEachDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void)
+}
+
+extension BernsteinPolynomial0: AnalyticalRootsCallback {
+    func forEachDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {}
+}
+
+extension BernsteinPolynomial1: AnalyticalRootsCallback {
+    func forEachDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {
+        Utils.droots(self.b0, self.b1) {
+            guard $0 >= start, $0 <= end else { return }
+            callback($0)
+        }
+    }
+}
+
+extension BernsteinPolynomial2: AnalyticalRootsCallback {
+    func forEachDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {
+        Utils.droots(self.b0, self.b1, self.b2) {
+            guard $0 >= start, $0 <= end else { return }
+            callback($0)
+        }
+    }
+}
+
+extension BernsteinPolynomial3: AnalyticalRootsCallback {
+    func forEachDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {
+        Utils.droots(self.b0, self.b1, self.b2, self.b3) {
+            guard $0 >= start, $0 <= end else { return }
+            callback($0)
+        }
+    }
+}
+
 public extension BernsteinPolynomial {
     func value(at x: CGFloat) -> CGFloat {
         let oneMinusX = 1.0 - x
@@ -459,57 +494,15 @@ internal func findDistinctRootsCallback<P: BernsteinPolynomial>(
 
 
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
-    return findDistinctRoots(of: polynomial, between: 0, and: 1)
+    var result: [CGFloat] = []
+    findDistinctRootsCallback(of: polynomial, between: 0, and: 1) { result.append($0) }
+    return result
 }
 
 internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
-    assert(start < end)
-    if let analytical = polynomial as? AnalyticalRoots {
-        return analytical.distinctAnalyticalRoots(between: start, and: end)
-    }
-    let derivative = polynomial.derivative
-    let criticalPoints: [CGFloat] = findDistinctRoots(of: derivative, between: start, and: end)
-    let intervals: [CGFloat] = [start] + criticalPoints + [end]
-    var lastFoundRoot: CGFloat?
-    let roots = (0..<intervals.count-1).compactMap { (i: Int) -> CGFloat? in
-        let start   = intervals[i]
-        let end     = intervals[i+1]
-        let fStart  = polynomial.value(at: start)
-        let fEnd    = polynomial.value(at: end)
-        let root: CGFloat
-        if fStart * fEnd < 0 {
-            // TODO: if a critical point is a root we take this
-            // codepath due to roundoff and  converge only linearly to one end of interval
-            let guess = (start + end) / 2
-            let newtonRoot = newton(polynomial: polynomial, derivative: derivative, guess: guess)
-            if start < newtonRoot, newtonRoot < end {
-                root = newtonRoot
-            } else {
-                // newton's method failed / converged to the wrong root!
-                // rare, but can happen roughly 5% of the time
-                // see unit test: `testDegree4RealWorldIssue`
-                root = findRootBisection(of: polynomial, start: start, end: end)
-            }
-        } else {
-            let guess = end
-            let value = newton(polynomial: polynomial, derivative: derivative, guess: guess)
-            guard Swift.abs(value - guess) < 1.0e-5 else {
-                return nil // did not converge near guess
-            }
-            guard Swift.abs(polynomial.value(at: value)) < 1.0e-10 else {
-                return nil // not actually a root
-            }
-            root = value
-        }
-        if let lastFoundRoot = lastFoundRoot {
-            guard lastFoundRoot + 1.0e-5 < root else {
-                return nil // ensures roots are unique and ordered
-            }
-        }
-        lastFoundRoot = root
-        return root
-    }
-    return roots
+    var result: [CGFloat] = []
+    findDistinctRootsCallback(of: polynomial, between: start, and: end) { result.append($0) }
+    return result
 }
 
 // internal func findRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
