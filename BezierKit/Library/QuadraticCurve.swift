@@ -56,6 +56,12 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         return [p0, p1, p2]
     }
 
+    internal func withPointsDo<R>(_ body: (Int, (Int) -> CGPoint) -> R) -> R {
+        return body(3) { i in
+            switch i { case 0: return p0; case 1: return p1; default: return p2 }
+        }
+    }
+
     public var startingPoint: CGPoint {
         get {
             return p0

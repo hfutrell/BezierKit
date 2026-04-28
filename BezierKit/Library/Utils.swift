@@ -322,6 +322,201 @@ internal class Utils {
         return true
     }
 
+    // MARK: - Bezier Clipping (Sederberg & Nishita, 1990)
+
+    // Given n Bernstein coefficients d(i) (curve at t_i = i/(n-1)) and a horizontal band
+    // [dLow, dHigh], returns the sub-interval [tMin, tMax] of [0,1] where the convex hull
+    // of {(t_i, d(i))} intersects the band. Returns nil if hull and band are disjoint.
+    // Uses stack-allocated buffers for the hull indices to avoid heap allocation.
+    internal static func convexHullClipInterval(n: Int, d: (Int) -> CGFloat,
+                                                dLow: CGFloat, dHigh: CGFloat) -> (CGFloat, CGFloat)? {
+        let nf = CGFloat(n - 1)
+        var tMin = CGFloat.infinity
+        var tMax = -CGFloat.infinity
+
+        // Precompute all d-values once to avoid repeated closure calls during hull building.
+        var dv: (CGFloat, CGFloat, CGFloat, CGFloat) = (d(0), d(1), 0, 0)
+        if n > 2 { dv.2 = d(2) }
+        if n > 3 { dv.3 = d(3) }
+        func dAt(_ i: Int) -> CGFloat {
+            switch i { case 0: return dv.0; case 1: return dv.1; case 2: return dv.2; default: return dv.3 }
+        }
+
+        func cross2d(_ a: Int, _ b: Int, _ c: Int) -> CGFloat {
+            let ta = CGFloat(a)/nf; let da = dAt(a)
+            let tb = CGFloat(b)/nf; let db = dAt(b)
+            let tc = CGFloat(c)/nf; let dc = dAt(c)
+            return (tb - ta) * (dc - da) - (db - da) * (tc - ta)
+        }
+        func processEdge(ta: CGFloat, da: CGFloat, tb: CGFloat, db: CGFloat) {
+            if da >= dLow && da <= dHigh { tMin = min(tMin, ta); tMax = max(tMax, ta) }
+            let dDelta = db - da
+            if abs(dDelta) > 0 {
+                let paramLow  = (dLow  - da) / dDelta
+                if paramLow  >= 0 && paramLow  <= 1 { let t = ta + paramLow  * (tb - ta); tMin = min(tMin, t); tMax = max(tMax, t) }
+                let paramHigh = (dHigh - da) / dDelta
+                if paramHigh >= 0 && paramHigh <= 1 { let t = ta + paramHigh * (tb - ta); tMin = min(tMin, t); tMax = max(tMax, t) }
+            }
+        }
+
+        // Build lower and upper convex hulls using stack-allocated fixed-size buffers
+        // (curves have at most 4 control points, so hull length ≤ 4).
+        var lower: (Int, Int, Int, Int) = (0, 0, 0, 0); var lc = 0
+        var upper: (Int, Int, Int, Int) = (0, 0, 0, 0); var uc = 0
+        func lowerAt(_ k: Int) -> Int {
+            switch k { case 0: return lower.0; case 1: return lower.1; case 2: return lower.2; default: return lower.3 }
+        }
+        func upperAt(_ k: Int) -> Int {
+            switch k { case 0: return upper.0; case 1: return upper.1; case 2: return upper.2; default: return upper.3 }
+        }
+        func setLower(_ k: Int, _ v: Int) {
+            switch k { case 0: lower.0 = v; case 1: lower.1 = v; case 2: lower.2 = v; default: lower.3 = v }
+        }
+        func setUpper(_ k: Int, _ v: Int) {
+            switch k { case 0: upper.0 = v; case 1: upper.1 = v; case 2: upper.2 = v; default: upper.3 = v }
+        }
+        for i in 0..<n {
+            while lc >= 2 && cross2d(lowerAt(lc-2), lowerAt(lc-1), i) <= 0 { lc -= 1 }
+            setLower(lc, i); lc += 1
+            while uc >= 2 && cross2d(upperAt(uc-2), upperAt(uc-1), i) >= 0 { uc -= 1 }
+            setUpper(uc, i); uc += 1
+        }
+        for i in 0..<lc-1 { processEdge(ta: CGFloat(lowerAt(i))/nf, da: dAt(lowerAt(i)), tb: CGFloat(lowerAt(i+1))/nf, db: dAt(lowerAt(i+1))) }
+        if lc > 0 { let last = lowerAt(lc-1); let dv = dAt(last); if dv >= dLow && dv <= dHigh { let t = CGFloat(last)/nf; tMin = min(tMin, t); tMax = max(tMax, t) } }
+        for i in 0..<uc-1 { processEdge(ta: CGFloat(upperAt(i))/nf, da: dAt(upperAt(i)), tb: CGFloat(upperAt(i+1))/nf, db: dAt(upperAt(i+1))) }
+        if uc > 0 { let last = upperAt(uc-1); let dv = dAt(last); if dv >= dLow && dv <= dHigh { let t = CGFloat(last)/nf; tMin = min(tMin, t); tMax = max(tMax, t) } }
+
+        guard tMin <= tMax else { return nil }
+        return (max(0, tMin), min(1, tMax))
+    }
+
+    // Compute the fat line of `other` and clip `curve`'s [0,1] parameter range
+    // to where it might intersect `other`. Returns nil if no intersection possible.
+    private static func fatLineClip<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(curve: C1, fatOf other: C2) -> (CGFloat, CGFloat)? {
+        let q0  = other.startingPoint
+        let qn  = other.endingPoint
+        let dir = qn - q0
+        guard dir.lengthSquared > 0 else { return (0, 1) }
+
+        // Fat-line signed-distance bounds from Q's internal control points (no heap allocation).
+        var dMin: CGFloat = 0
+        var dMax: CGFloat = 0
+        other.withPointsDo { n, pt in
+            for i in 1..<n-1 {
+                let d = (pt(i) - q0).cross(dir)
+                if d < dMin { dMin = d } else if d > dMax { dMax = d }
+            }
+        }
+
+        // Clip curve against fat line: distances computed on demand via closure (no heap allocation).
+        return curve.withPointsDo { n, pt in
+            convexHullClipInterval(n: n, d: { (pt($0) - q0).cross(dir) }, dLow: dMin, dHigh: dMax)
+        }
+    }
+
+    // Bezier clipping main recursive entry.  Returns false if the iteration
+    // budget was exceeded (caller falls back to implicitization).
+    // swiftlint:disable function_parameter_count
+    static func bezierClipping<C1, C2>(
+        _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
+        _ results: inout [Intersection],
+        _ accuracy: CGFloat,
+        _ totalIterations: inout Int
+    ) -> Bool where C1: NonlinearBezierCurve, C2: NonlinearBezierCurve {
+
+        let maximumIterations    = 900
+        let maximumIntersections = c1.curve.order * c2.curve.order
+
+        totalIterations += 1
+        guard totalIterations  <= maximumIterations    else { return false }
+        guard results.count    <= maximumIntersections else { return false }
+
+        // Quick bounding-box rejection.
+        guard c1.curve.boundingBox.overlaps(c2.curve.boundingBox) else { return true }
+
+        // Clip c1 using the fat line of c2.
+        guard let clip1 = fatLineClip(curve: c1.curve, fatOf: c2.curve) else { return true }
+        let c1Ratio   = clip1.1 - clip1.0
+        let c1Reduced = c1.split(from: clip1.0, to: clip1.1)
+
+        // Clip c2 using the fat line of the (possibly narrowed) c1.
+        guard let clip2 = fatLineClip(curve: c2.curve, fatOf: c1Reduced.curve) else { return true }
+        let c2Ratio   = clip2.1 - clip2.0
+        let c2Reduced = c2.split(from: clip2.0, to: clip2.1)
+
+        // Geometric convergence check: both subcurves fit inside the accuracy threshold.
+        let b1 = c1Reduced.curve.boundingBox
+        let b2 = c2Reduced.curve.boundingBox
+        if b1.size.x + b1.size.y < accuracy && b2.size.x + b2.size.y < accuracy {
+            // Reject false positives: nearby non-intersecting sub-curves can both pass the
+            // size threshold. Require the reduced bounding boxes to be spatially close.
+            // Expand by `accuracy` to absorb floating-point rounding on degenerate curves.
+            guard b1.max.x + accuracy >= b2.min.x && b2.max.x + accuracy >= b1.min.x &&
+                  b1.max.y + accuracy >= b2.min.y && b2.max.y + accuracy >= b1.min.y else { return true }
+            let p1s = c1Reduced.curve.startingPoint
+            let p1e = c1Reduced.curve.endingPoint
+            let p2s = c2Reduced.curve.startingPoint
+            let p2e = c2Reduced.curve.endingPoint
+            var t1: CGFloat
+            var t2: CGFloat
+            // Exact shared-endpoint matching: point(at:0) and point(at:1) return the
+            // raw control points, so these equalities are bit-for-bit when curves share
+            // an original endpoint.
+            if p1s == p2s {
+                t1 = c1Reduced.t1; t2 = c2Reduced.t1
+            } else if p1s == p2e {
+                t1 = c1Reduced.t1; t2 = c2Reduced.t2
+            } else if p1e == p2s {
+                t1 = c1Reduced.t2; t2 = c2Reduced.t1
+            } else if p1e == p2e {
+                t1 = c1Reduced.t2; t2 = c2Reduced.t2
+            } else {
+                let l1 = LineSegment(p0: p1s, p1: p1e)
+                let l2 = LineSegment(p0: p2s, p1: p2e)
+                if l1.p0 != l1.p1, l2.p0 != l2.p1,
+                   let ix = l1.intersections(with: l2, checkCoincidence: false).first {
+                    t1 = ix.t1 * c1Reduced.t2 + (1 - ix.t1) * c1Reduced.t1
+                    t2 = ix.t2 * c2Reduced.t2 + (1 - ix.t2) * c2Reduced.t1
+                } else {
+                    t1 = 0.5 * (c1Reduced.t1 + c1Reduced.t2)
+                    t2 = 0.5 * (c2Reduced.t1 + c2Reduced.t2)
+                }
+            }
+            results.append(Intersection(t1: t1, t2: t2))
+            return true
+        }
+
+        // If either curve reduced by less than 20 %, convergence is slow — subdivide.
+        if c1Ratio > 0.8 || c2Ratio > 0.8 {
+            // Subdivide whichever has the larger global parameter range.
+            if (c1Reduced.t2 - c1Reduced.t1) >= (c2Reduced.t2 - c2Reduced.t1) {
+                guard c1Reduced.canSplit else {
+                    guard c2Reduced.canSplit else { return true }
+                    let h = c2Reduced.split(at: 0.5)
+                    guard bezierClipping(c1Reduced, h.left,  &results, accuracy, &totalIterations) else { return false }
+                    return  bezierClipping(c1Reduced, h.right, &results, accuracy, &totalIterations)
+                }
+                let h = c1Reduced.split(at: 0.5)
+                guard bezierClipping(h.left,  c2Reduced, &results, accuracy, &totalIterations) else { return false }
+                return  bezierClipping(h.right, c2Reduced, &results, accuracy, &totalIterations)
+            } else {
+                guard c2Reduced.canSplit else {
+                    guard c1Reduced.canSplit else { return true }
+                    let h = c1Reduced.split(at: 0.5)
+                    guard bezierClipping(h.left,  c2Reduced, &results, accuracy, &totalIterations) else { return false }
+                    return  bezierClipping(h.right, c2Reduced, &results, accuracy, &totalIterations)
+                }
+                let h = c2Reduced.split(at: 0.5)
+                guard bezierClipping(c1Reduced, h.left,  &results, accuracy, &totalIterations) else { return false }
+                return  bezierClipping(c1Reduced, h.right, &results, accuracy, &totalIterations)
+            }
+        }
+
+        // Good convergence — continue alternating clipping passes.
+        return bezierClipping(c1Reduced, c2Reduced, &results, accuracy, &totalIterations)
+    }
+    // swiftlint:enable function_parameter_count
+
     // disable this SwiftLint warning about function having more than 5 parameters
     // swiftlint:disable function_parameter_count
 

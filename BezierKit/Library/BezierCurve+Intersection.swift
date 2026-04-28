@@ -117,13 +117,24 @@ fileprivate extension BezierCurve {
 
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
 
-    // try intersecting using subdivision
-    let lb = curve1.curve.boundingBox
-    let rb = curve2.curve.boundingBox
-    var pairIntersections: [Intersection] = []
-    var subdivisionIterations = 0
-    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
-        return pairIntersections.sortedAndUniqued()
+    // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
+    var clipIntersections: [Intersection] = []
+    var clipIterations = 0
+    if Utils.bezierClipping(curve1, curve2, &clipIntersections, accuracy, &clipIterations) {
+        // Slow-convergence subdivisions can produce near-duplicate intersections when
+        // the same crossing is found in both halves of a split. Remove spatially-close
+        // duplicates: keep only the first intersection whose curve1 point is further than
+        // `accuracy` from every previously kept one.
+        let sorted = clipIntersections.sorted()
+        var result: [Intersection] = []
+        for ix in sorted {
+            let p1 = curve1.curve.point(at: ix.t1)
+            let isDuplicate = result.contains(where: { distanceSquared(p1, curve1.curve.point(at: $0.t1)) < accuracy * accuracy })
+            if !isDuplicate {
+                result.append(ix)
+            }
+        }
+        return result
     }
 
     // subdivision failed, check if the curves are coincident

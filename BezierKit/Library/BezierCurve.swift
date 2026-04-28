@@ -308,7 +308,8 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sen
 }
 
 internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable {
-    // intentionally empty, just declare conformance if you're not a line
+    // Point-by-index access without heap allocation — used by the bezier-clipping hot path.
+    func withPointsDo<R>(_ body: (Int, (Int) -> CGPoint) -> R) -> R
 }
 
 public protocol Flatness: BezierCurve {

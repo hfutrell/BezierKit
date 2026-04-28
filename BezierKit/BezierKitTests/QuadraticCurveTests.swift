@@ -238,8 +238,8 @@ class QuadraticCurveTests: XCTestCase {
                                        p2: CGPoint(x: 7, y: 0))
         let intersections = quadratic.intersections(with: quadraticButActuallyLinear, accuracy: epsilon)
         XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t1, 0.5)
-        XCTAssertEqual(intersections[0].t2, 0.75)
+        XCTAssertEqual(intersections[0].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(intersections[0].t2, 0.75, accuracy: epsilon)
     }
 
     // MARK: -

@@ -23,6 +23,12 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         return [p0, p1, p2, p3]
     }
 
+    internal func withPointsDo<R>(_ body: (Int, (Int) -> CGPoint) -> R) -> R {
+        return body(4) { i in
+            switch i { case 0: return p0; case 1: return p1; case 2: return p2; default: return p3 }
+        }
+    }
+
     public var order: Int {
         return 3
     }
