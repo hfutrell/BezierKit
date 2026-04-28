@@ -63,21 +63,35 @@ private func chebyshevCompanionRoots(bernsteinCoefficients b: [Double], degree n
         return [chebyshevClamp((x + 1) / 2)]
     }
 
-    var A = buildColleagueMatrix(c: c, deg: deg)
-    let eigenvalues: [Double] = A.withUnsafeMutableBufferPointer { buf in
-        let p = buf.baseAddress!
-        hessenbergReduce(p, n: deg)
-        return qrEigenvalues(p, n: deg)
+    // Chebyshev coefficient bound: |p(x)| ≥ |c[0]| − Σ_{k≥1}|c[k]| on [−1,1].
+    // If positive, the polynomial is nonzero throughout [−1,1] — skip QR entirely.
+    var coeffSum = 0.0
+    for k in 1...deg { coeffSum += abs(c[k]) }
+    guard abs(c[0]) <= coeffSum else { return [] }
+
+    // Allocate companion matrix (deg²) + Hessenberg scratch (deg) from the stack.
+    let eigenvalues: [Double] = withUnsafeTemporaryAllocation(
+        of: Double.self, capacity: deg * deg + deg
+    ) { buf in
+        let mat = buf.baseAddress!
+        let scratch = mat + deg * deg
+        buildColleagueMatrix(c: c, deg: deg, into: mat)
+        hessenbergReduce(mat, n: deg, scratch: scratch)
+        return qrEigenvalues(mat, n: deg)
     }
 
     let cScale = c.map(abs).max() ?? 1
-    return eigenvalues
-        .filter { $0 >= -1 - 1e-9 && $0 <= 1 + 1e-9 }
-        .map { newtonPolishChebyshev(c, start: $0) }
-        .filter { $0 >= -1 - 1e-9 && $0 <= 1 + 1e-9 }
-        .filter { abs(evalChebyshev(c, at: $0)) <= 1e-6 * cScale }
-        .map { chebyshevClamp(($0 + 1) / 2) }
-        .sorted()
+    var result = [Double]()
+    result.reserveCapacity(deg)
+    for ev in eigenvalues {
+        guard ev >= -1 - 1e-9 && ev <= 1 + 1e-9 else { continue }
+        let polished = newtonPolishChebyshev(c, start: ev)
+        guard polished >= -1 - 1e-9 && polished <= 1 + 1e-9 else { continue }
+        guard abs(evalChebyshev(c, at: polished)) <= 1e-6 * cScale else { continue }
+        result.append(chebyshevClamp((polished + 1) / 2))
+    }
+    result.sort()
+    return result
 }
 
 private func chebyshevClamp(_ x: Double) -> Double {
@@ -126,43 +140,49 @@ private func newtonPolishChebyshev(_ c: [Double], start x0: Double) -> Double {
 /// Returns c[0..n] so that p(x) = Σ c[k] T_k(x) on [−1,1],
 /// where p on [0,1] is given by Bernstein coefficients b[0..n].
 ///
-/// Uses the discrete Chebyshev transform (DCT-II):
-///   sample p at the n+1 Chebyshev nodes  x_j = cos((2j+1)π / 2(n+1))
-///   via de Casteljau (stable), then apply the DCT to recover exact
-///   Chebyshev coefficients.  For a degree-n polynomial the DCT is exact.
+/// DCT-II: c_k = (2/N) Σ_j f_j T_k(x_j), x_j = cos((2j+1)π/2N), f_j = p(t_j).
+/// Chebyshev recurrence T_k(x) = 2x T_{k-1}(x) - T_{k-2}(x) is used so cos is
+/// called only N times (not N²).  de Casteljau runs in pre-allocated scratch.
 private func bernsteinToChebyshev(bernstein b: [Double], degree n: Int) -> [Double] {
     let N = n + 1
-
-    // Evaluate p at the n+1 Chebyshev nodes using de Casteljau
-    var f = [Double](repeating: 0, count: N)
-    for j in 0...n {
-        let theta = (Double(2 * j + 1) * Double.pi) / Double(2 * N)
-        let tj = (cos(theta) + 1.0) * 0.5      // map x ∈ [−1,1] → t ∈ [0,1]
-        f[j] = deCasteljau(b, degree: n, at: tj)
-    }
-
-    // DCT-II: c_0 = (1/N) Σ f_j,  c_k = (2/N) Σ f_j cos(k θ_j)  for k ≥ 1
     var c = [Double](repeating: 0, count: N)
-    for k in 0...n {
-        var sum = 0.0
+    // Temporary scratch for de Casteljau: avoids a heap allocation per node evaluation.
+    withUnsafeTemporaryAllocation(of: Double.self, capacity: N) { scratch in
         for j in 0...n {
+            // Chebyshev node in [-1,1], mapped to Bernstein parameter t ∈ [0,1]
             let theta = (Double(2 * j + 1) * Double.pi) / Double(2 * N)
-            sum += f[j] * cos(Double(k) * theta)
+            let xj = cos(theta)                         // only N cos calls total
+            let tj = (xj + 1.0) * 0.5
+            let fj = deCasteljau(b, degree: n, at: tj, scratch: scratch.baseAddress!)
+            // Accumulate: c[k] += f_j * T_k(x_j), using three-term recurrence
+            var T0 = 1.0, T1 = xj
+            c[0] += fj                  // T_0 = 1
+            if n >= 1 { c[1] += fj * xj }  // T_1 = x
+            for k in 2...n {
+                let T2 = 2 * xj * T1 - T0
+                c[k] += fj * T2
+                T0 = T1; T1 = T2
+            }
         }
-        c[k] = (2.0 / Double(N)) * sum
     }
-    c[0] *= 0.5     // c_0 = (1/N) Σ f_j
+    let factor = 2.0 / Double(N)
+    c[0] *= factor * 0.5    // k=0: normalization is 1/N, not 2/N
+    for k in 1...n { c[k] *= factor }
     return c
 }
 
 /// Evaluate the Bernstein polynomial at t via de Casteljau (numerically stable).
-private func deCasteljau(_ b: [Double], degree n: Int, at t: Double) -> Double {
-    var pts = Array(b[0...n])
+/// scratch must point to at least degree+1 Doubles of temporary storage.
+@inline(__always)
+private func deCasteljau(_ b: [Double], degree n: Int, at t: Double, scratch: UnsafeMutablePointer<Double>) -> Double {
     let s = 1.0 - t
-    for j in 1...n {
-        for i in 0...(n - j) { pts[i] = s * pts[i] + t * pts[i + 1] }
+    b.withUnsafeBufferPointer { bp in
+        for i in 0...n { scratch[i] = bp[i] }
     }
-    return pts[0]
+    for j in 1...n {
+        for i in 0...(n - j) { scratch[i] = s * scratch[i] + t * scratch[i + 1] }
+    }
+    return scratch[0]
 }
 
 // MARK: - Stage 2: Colleague (Chebyshev companion) matrix
@@ -174,9 +194,9 @@ private func deCasteljau(_ b: [Double], degree n: Int, at t: Double) -> Double {
 ///   Row 0:       C[0,1] = 1
 ///   Row k (0 < k < deg−1):  C[k,k−1] = 1/2,  C[k,k+1] = 1/2
 ///   Row deg−1:   C[deg−1,k] = −c[k]/(2c[deg]),  plus C[deg−1,deg−2] += 1/2
-private func buildColleagueMatrix(c: [Double], deg: Int) -> [Double] {
+private func buildColleagueMatrix(c: [Double], deg: Int, into A: UnsafeMutablePointer<Double>) {
     let n = deg
-    var A = [Double](repeating: 0, count: n * n)
+    A.initialize(repeating: 0, count: n * n)
     A[0 * n + 1] = 1.0
     for k in 1..<(n - 1) {
         A[k * n + (k - 1)] = 0.5
@@ -185,16 +205,15 @@ private func buildColleagueMatrix(c: [Double], deg: Int) -> [Double] {
     let cn2 = 2.0 * c[n]
     for k in 0..<n { A[(n - 1) * n + k] = -c[k] / cn2 }
     A[(n - 1) * n + (n - 2)] += 0.5
-    return A
 }
 
 // MARK: - Stage 3a: Hessenberg reduction
 
 /// Reduce A (n×n, row-major) to upper Hessenberg form in place
 /// via Householder similarity: A ← P A P for each column.
-private func hessenbergReduce(_ A: UnsafeMutablePointer<Double>, n: Int) {
+/// scratch must point to at least n Doubles of temporary storage.
+private func hessenbergReduce(_ A: UnsafeMutablePointer<Double>, n: Int, scratch v: UnsafeMutablePointer<Double>) {
     guard n > 2 else { return }
-    var v = [Double](repeating: 0, count: n)
     for j in 0..<(n - 2) {
         // Build Householder vector v for column j, rows j+1..n−1
         var norm2 = 0.0
@@ -301,6 +320,7 @@ private func qrEigenvalues(_ H: UnsafeMutablePointer<Double>, n: Int) -> [Double
 
 /// One Francis implicit double-shift QR step on the active block H[p..q, p..q].
 /// Uses 3-element Householder reflections at every chase position.
+@inline(__always)
 private func francisStep(_ H: UnsafeMutablePointer<Double>, n: Int, p: Int, q: Int) {
     // Double shift from trailing 2×2
     let s = H[(q - 1) * n + (q - 1)] + H[q * n + q]

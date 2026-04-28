@@ -248,4 +248,5 @@ class PolynomialTests: XCTestCase {
             XCTAssertEqual(chebyshevRoots[0], 0.0, accuracy: accuracy)
         }
     }
+
 }
