@@ -409,13 +409,14 @@ internal class Utils {
         let maxIntersections = curve1.order * curve2.order
 
         // Splits: [0, ≤4 breakpoints, 1] = ≤6 entries per curve.
-        // Stack: 64 × (MonoSeg, MonoSeg). Max depth ≈ 3×log2(1/accuracy)+1: for accuracy=1e-10, ~100.
+        // Stack: 80 × (MonoSeg, MonoSeg). We always split exactly one curve per step (the larger),
+        // so stack depth ≤ 2×log2(span/accuracy)+1 ≈ 67 for accuracy=1e-10.
         // Results: collected into a fixed buffer, bulk-copied to output once at the end.
         return withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 6) { s1Buf -> Bool in
         withUnsafeTemporaryAllocation(of: CGPoint.self, capacity: 6) { p1Buf -> Bool in
         withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 6) { s2Buf -> Bool in
         withUnsafeTemporaryAllocation(of: CGPoint.self, capacity: 6) { p2Buf -> Bool in
-        withUnsafeTemporaryAllocation(of: (MonoSeg, MonoSeg).self, capacity: 64) { stackBuf -> Bool in
+        withUnsafeTemporaryAllocation(of: (MonoSeg, MonoSeg).self, capacity: 80) { stackBuf -> Bool in
         withUnsafeTemporaryAllocation(of: Intersection.self, capacity: maxIntersections + 1) { resBuf -> Bool in
             var resCount = 0
 
@@ -540,32 +541,23 @@ internal class Utils {
                     resBuf[resCount] = Intersection(t1: s1.t1, t2: s2.t2)
                     resCount += 1
                 }
-            } else if r1 && r2 {
-                guard top + 4 <= stackCapacity else { return false }
-                let mT1 = (s1.t1 + s1.t2) * 0.5, pM1 = c1.point(at: mT1)
-                let ls1 = MonoSeg(t1: s1.t1, t2: mT1, p1: s1.p1, p2: pM1)
-                let rs1 = MonoSeg(t1: mT1, t2: s1.t2, p1: pM1, p2: s1.p2)
-                let mT2 = (s2.t1 + s2.t2) * 0.5, pM2 = c2.point(at: mT2)
-                let ls2 = MonoSeg(t1: s2.t1, t2: mT2, p1: s2.p1, p2: pM2)
-                let rs2 = MonoSeg(t1: mT2, t2: s2.t2, p1: pM2, p2: s2.p2)
-                if monoOverlap(rs1, rs2) { stackBuf[top] = (rs1, rs2); top += 1 }
-                if monoOverlap(ls1, rs2) { stackBuf[top] = (ls1, rs2); top += 1 }
-                if monoOverlap(rs1, ls2) { stackBuf[top] = (rs1, ls2); top += 1 }
-                if monoOverlap(ls1, ls2) { stackBuf[top] = (ls1, ls2); top += 1 }
-            } else if r1 {
-                guard top + 2 <= stackCapacity else { return false }
-                let mT1 = (s1.t1 + s1.t2) * 0.5, pM1 = c1.point(at: mT1)
-                let ls1 = MonoSeg(t1: s1.t1, t2: mT1, p1: s1.p1, p2: pM1)
-                let rs1 = MonoSeg(t1: mT1, t2: s1.t2, p1: pM1, p2: s1.p2)
-                if monoOverlap(rs1, s2) { stackBuf[top] = (rs1, s2); top += 1 }
-                if monoOverlap(ls1, s2) { stackBuf[top] = (ls1, s2); top += 1 }
             } else {
+                // Split only the curve with the larger span (or the only splittable one).
+                // Each step evaluates one curve midpoint and pushes at most 2 pairs.
                 guard top + 2 <= stackCapacity else { return false }
-                let mT2 = (s2.t1 + s2.t2) * 0.5, pM2 = c2.point(at: mT2)
-                let ls2 = MonoSeg(t1: s2.t1, t2: mT2, p1: s2.p1, p2: pM2)
-                let rs2 = MonoSeg(t1: mT2, t2: s2.t2, p1: pM2, p2: s2.p2)
-                if monoOverlap(s1, rs2) { stackBuf[top] = (s1, rs2); top += 1 }
-                if monoOverlap(s1, ls2) { stackBuf[top] = (s1, ls2); top += 1 }
+                if r1 && (!r2 || s1.span >= s2.span) {
+                    let mT1 = (s1.t1 + s1.t2) * 0.5, pM1 = c1.point(at: mT1)
+                    let ls1 = MonoSeg(t1: s1.t1, t2: mT1, p1: s1.p1, p2: pM1)
+                    let rs1 = MonoSeg(t1: mT1, t2: s1.t2, p1: pM1, p2: s1.p2)
+                    if monoOverlap(rs1, s2) { stackBuf[top] = (rs1, s2); top += 1 }
+                    if monoOverlap(ls1, s2) { stackBuf[top] = (ls1, s2); top += 1 }
+                } else {
+                    let mT2 = (s2.t1 + s2.t2) * 0.5, pM2 = c2.point(at: mT2)
+                    let ls2 = MonoSeg(t1: s2.t1, t2: mT2, p1: s2.p1, p2: pM2)
+                    let rs2 = MonoSeg(t1: mT2, t2: s2.t2, p1: pM2, p2: s2.p2)
+                    if monoOverlap(s1, rs2) { stackBuf[top] = (s1, rs2); top += 1 }
+                    if monoOverlap(s1, ls2) { stackBuf[top] = (s1, ls2); top += 1 }
+                }
             }
         }
         return true

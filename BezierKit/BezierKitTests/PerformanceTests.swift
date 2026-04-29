@@ -117,7 +117,7 @@ class PerformanceTests: XCTestCase {
         // test the performance of `intersections(with:,accuracy:)`
         // -Onone 0.57 seconds
         // -Os 0.075 seconds
-        let dataCount = 50
+        let dataCount = 500
         let curves = generateRandomCurves(count: dataCount, reseed: 2)
         self.measure {
             var count = 0
@@ -133,7 +133,7 @@ class PerformanceTests: XCTestCase {
         // test the performance of `intersections(with:,accuracy:)`
         // -Onone 0.89 seconds
         // -Os 0.059 seconds
-        let dataCount = 250
+        let dataCount = 2500
         let curves = generateRandomCurves(count: dataCount, reseed: 3)
         self.measure {
             var count = 0
@@ -156,7 +156,7 @@ class PerformanceTests: XCTestCase {
         // curve2 starts at curve1's endpoint with its first control point doubling back in the
         // anti-tangent direction (mirroring the cubic-cubic test), creating a tangent intersection
         // that is hard for divide-and-conquer subdivision algorithms
-        let dataCount = 250
+        let dataCount = 2500
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 13)
         self.measure {
             var count = 0
@@ -193,7 +193,7 @@ class PerformanceTests: XCTestCase {
     func testCubicQuadraticIntersectionsPerformanceTangentEndpoint() {
         // cubic-quadratic: curve1 is cubic, curve2 is quadratic whose first control point
         // doubles back in the anti-tangent direction (mirroring testCubicIntersectionsPerformanceTangentEndpoint)
-        let dataCount = 250
+        let dataCount = 2500
         let curves = generateRandomCurves(count: dataCount, reseed: 14)
         self.measure {
             var count = 0
@@ -229,7 +229,7 @@ class PerformanceTests: XCTestCase {
 
     func testQuadraticIntersectionsPerformance() {
         // test the performance of `intersections(with:,accuracy:)` for quadratic-quadratic pairs
-        let dataCount = 50
+        let dataCount = 500
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 10)
         self.measure {
             var count = 0
@@ -243,7 +243,7 @@ class PerformanceTests: XCTestCase {
 
     func testQuadraticCubicIntersectionsPerformance() {
         // test the performance of `intersections(with:,accuracy:)` for quadratic-cubic pairs
-        let dataCount = 50
+        let dataCount = 500
         let quadratics = generateRandomQuadraticCurves(count: dataCount, reseed: 11)
         let cubics = generateRandomCurves(count: dataCount, reseed: 12)
         self.measure {
