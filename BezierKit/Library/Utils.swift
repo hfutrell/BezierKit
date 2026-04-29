@@ -344,22 +344,23 @@ internal class Utils {
     // split() + boundingBox() recomputation.
     private struct MonoSeg {
         var t1, t2: CGFloat  // curve parameter range (for Intersection output and point(at:))
-        var p1, p2: CGPoint  // curve(t1), curve(t2)
-        var span: CGFloat { Swift.abs(p2.x - p1.x) + Swift.abs(p2.y - p1.y) }
+        var bbox: BoundingBox
+        var span: CGFloat { (bbox.max.x - bbox.min.x) + (bbox.max.y - bbox.min.y) }
         var canSplit: Bool {
             let mid = (t1 + t2) * 0.5
             return mid > t1 && mid < t2
+        }
+        func p1(xFwd: Bool, yFwd: Bool) -> CGPoint {
+            CGPoint(x: xFwd ? bbox.min.x : bbox.max.x, y: yFwd ? bbox.min.y : bbox.max.y)
+        }
+        func p2(xFwd: Bool, yFwd: Bool) -> CGPoint {
+            CGPoint(x: xFwd ? bbox.max.x : bbox.min.x, y: yFwd ? bbox.max.y : bbox.min.y)
         }
     }
 
     @inline(__always)
     private static func monoOverlap(_ a: MonoSeg, _ b: MonoSeg) -> Bool {
-        let aMinX = Swift.min(a.p1.x, a.p2.x), aMaxX = Swift.max(a.p1.x, a.p2.x)
-        let bMinX = Swift.min(b.p1.x, b.p2.x), bMaxX = Swift.max(b.p1.x, b.p2.x)
-        guard aMinX <= bMaxX, bMinX <= aMaxX else { return false }
-        let aMinY = Swift.min(a.p1.y, a.p2.y), aMaxY = Swift.max(a.p1.y, a.p2.y)
-        let bMinY = Swift.min(b.p1.y, b.p2.y), bMaxY = Swift.max(b.p1.y, b.p2.y)
-        return aMinY <= bMaxY && bMinY <= aMaxY
+        return a.bbox.overlaps(b.bbox)
     }
 
     // Writes sorted breakpoints for curve into buf[0..<return_value].
@@ -437,11 +438,17 @@ internal class Utils {
             p2Buf[n2 - 1] = curve2.endingPoint
 
             for i in 0..<n1 - 1 {
-                let seg1 = MonoSeg(t1: s1Buf[i], t2: s1Buf[i + 1], p1: p1Buf[i], p2: p1Buf[i + 1])
+                let xFwd1 = p1Buf[i].x <= p1Buf[i + 1].x, yFwd1 = p1Buf[i].y <= p1Buf[i + 1].y
+                let seg1 = MonoSeg(t1: s1Buf[i], t2: s1Buf[i + 1], bbox: BoundingBox(
+                    min: CGPoint(x: xFwd1 ? p1Buf[i].x : p1Buf[i+1].x, y: yFwd1 ? p1Buf[i].y : p1Buf[i+1].y),
+                    max: CGPoint(x: xFwd1 ? p1Buf[i+1].x : p1Buf[i].x, y: yFwd1 ? p1Buf[i+1].y : p1Buf[i].y)))
                 for j in 0..<n2 - 1 {
-                    let seg2 = MonoSeg(t1: s2Buf[j], t2: s2Buf[j + 1], p1: p2Buf[j], p2: p2Buf[j + 1])
+                    let xFwd2 = p2Buf[j].x <= p2Buf[j + 1].x, yFwd2 = p2Buf[j].y <= p2Buf[j + 1].y
+                    let seg2 = MonoSeg(t1: s2Buf[j], t2: s2Buf[j + 1], bbox: BoundingBox(
+                        min: CGPoint(x: xFwd2 ? p2Buf[j].x : p2Buf[j+1].x, y: yFwd2 ? p2Buf[j].y : p2Buf[j+1].y),
+                        max: CGPoint(x: xFwd2 ? p2Buf[j+1].x : p2Buf[j].x, y: yFwd2 ? p2Buf[j+1].y : p2Buf[j].y)))
                     guard monoOverlap(seg1, seg2) else { continue }
-                    guard monoPairiteration(curve1, seg1, curve2, seg2,
+                    guard monoPairiteration(curve1, seg1, xFwd1, yFwd1, curve2, seg2, xFwd2, yFwd2,
                                             resBuf, &resCount,
                                             accuracy, maxIntersections,
                                             stackBuf, &totalIterations) else { return false }
@@ -460,10 +467,12 @@ internal class Utils {
     // Iterative intersection for pairs of monotone subcurves.
     // Accepts pre-allocated stack and result buffers from preSplitIntersections so that
     // no heap allocation occurs inside the tight loop.
+    // xFwd1/yFwd1/xFwd2/yFwd2 are the monotone directions of s1 and s2; subdivision preserves
+    // them so they are constant throughout the call.
     // swiftlint:disable:next function_parameter_count
     private static func monoPairiteration<C1: BezierCurve, C2: BezierCurve>(
-        _ c1: C1, _ s1initial: MonoSeg,
-        _ c2: C2, _ s2initial: MonoSeg,
+        _ c1: C1, _ s1initial: MonoSeg, _ xFwd1: Bool, _ yFwd1: Bool,
+        _ c2: C2, _ s2initial: MonoSeg, _ xFwd2: Bool, _ yFwd2: Bool,
         _ resBuf: UnsafeMutableBufferPointer<Intersection>,
         _ resCount: inout Int,
         _ accuracy: CGFloat,
@@ -473,30 +482,30 @@ internal class Utils {
     ) -> Bool {
         let stackCapacity = stackBuf.count
         var top = 0
-        stackBuf[top] = (s1initial, s2initial)
-        top = 1
+        var curS1 = s1initial, curS2 = s2initial
 
-        while top > 0 {
-            top -= 1
-            let (s1, s2) = stackBuf[top]
+        while true {
+            assert(monoOverlap(curS1, curS2), "monoPairiteration invariant: every stack pair must overlap")
 
             totalIterations += 1
             guard totalIterations <= 900 else { return false }
             guard resCount <= maxIntersections else { return false }
 
-            let r1 = s1.canSplit && s1.span >= accuracy
-            let r2 = s2.canSplit && s2.span >= accuracy
+            let r1 = curS1.canSplit && curS1.span >= accuracy
+            let r2 = curS2.canSplit && curS2.span >= accuracy
 
             if !r1 && !r2 {
                 // Use Cramer's rule directly to avoid false positives from FP-coincident
                 // endpoints when both curves are tangent near a shared boundary point.
-                let b1x = s1.p2.x - s1.p1.x, b1y = s1.p2.y - s1.p1.y
-                let b2x = s2.p2.x - s2.p1.x, b2y = s2.p2.y - s2.p1.y
+                let sp1 = curS1.p1(xFwd: xFwd1, yFwd: yFwd1), sp2 = curS1.p2(xFwd: xFwd1, yFwd: yFwd1)
+                let tp1 = curS2.p1(xFwd: xFwd2, yFwd: yFwd2), tp2 = curS2.p2(xFwd: xFwd2, yFwd: yFwd2)
+                let b1x = sp2.x - sp1.x, b1y = sp2.y - sp1.y
+                let b2x = tp2.x - tp1.x, b2y = tp2.y - tp1.y
                 let det = b1x * (-b2y) - (-b2x) * b1y
                 let scale = (Swift.abs(b1x) + Swift.abs(b1y)) * (Swift.abs(b2x) + Swift.abs(b2y))
                 let inv_det = 1.0 / det
                 if Swift.abs(det) > CGFloat(Utils.epsilon) * scale {
-                    let ex = s2.p1.x - s1.p1.x, ey = s2.p1.y - s1.p1.y
+                    let ex = tp1.x - sp1.x, ey = tp1.y - sp1.y
                     var lt1 = (ex * (-b2y) - (-b2x) * ey) * inv_det
                     var lt2 = (b1x * ey - ex * b1y) * inv_det
                     // When an endpoint snaps, reproject from that exact point so both
@@ -504,59 +513,95 @@ internal class Utils {
                     if Utils.approximately(Double(lt1), 0, precision: Utils.epsilon) {
                         lt1 = 0
                         lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
-                            ? (s1.p1.x - s2.p1.x) / b2x
-                            : (s1.p1.y - s2.p1.y) / b2y
+                            ? (sp1.x - tp1.x) / b2x
+                            : (sp1.y - tp1.y) / b2y
                     } else if Utils.approximately(Double(lt1), 1, precision: Utils.epsilon) {
                         lt1 = 1
                         lt2 = Swift.abs(b2x) >= Swift.abs(b2y)
-                            ? (s1.p2.x - s2.p1.x) / b2x
-                            : (s1.p2.y - s2.p1.y) / b2y
+                            ? (sp2.x - tp1.x) / b2x
+                            : (sp2.y - tp1.y) / b2y
                     }
                     if Utils.approximately(Double(lt2), 0, precision: Utils.epsilon) {
                         lt2 = 0
                         if lt1 != 0 && lt1 != 1 {
                             lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
-                                ? (s2.p1.x - s1.p1.x) / b1x
-                                : (s2.p1.y - s1.p1.y) / b1y
+                                ? (tp1.x - sp1.x) / b1x
+                                : (tp1.y - sp1.y) / b1y
                         }
                     } else if Utils.approximately(Double(lt2), 1, precision: Utils.epsilon) {
                         lt2 = 1
                         if lt1 != 0 && lt1 != 1 {
                             lt1 = Swift.abs(b1x) >= Swift.abs(b1y)
-                                ? (s2.p2.x - s1.p1.x) / b1x
-                                : (s2.p2.y - s1.p1.y) / b1y
+                                ? (tp2.x - sp1.x) / b1x
+                                : (tp2.y - sp1.y) / b1y
                         }
                     }
                     if lt1 >= 0, lt1 <= 1, lt2 >= 0, lt2 <= 1 {
-                        let gt1 = lt1 == 0 ? s1.t1 : lt1 == 1 ? s1.t2 : lt1 * s1.t2 + (1 - lt1) * s1.t1
-                        let gt2 = lt2 == 0 ? s2.t1 : lt2 == 1 ? s2.t2 : lt2 * s2.t2 + (1 - lt2) * s2.t1
+                        let gt1 = lt1 == 0 ? curS1.t1 : lt1 == 1 ? curS1.t2 : lt1 * curS1.t2 + (1 - lt1) * curS1.t1
+                        let gt2 = lt2 == 0 ? curS2.t1 : lt2 == 1 ? curS2.t2 : lt2 * curS2.t2 + (1 - lt2) * curS2.t1
                         resBuf[resCount] = Intersection(t1: gt1, t2: gt2)
                         resCount += 1
                     }
-                } else if s1.p2 == c1.endingPoint && s2.p1 == c2.startingPoint {
+                } else if sp2 == c1.endingPoint && tp1 == c2.startingPoint {
                     // Parallel segments sharing a genuine curve endpoint (e.g. tangent junction).
-                    resBuf[resCount] = Intersection(t1: s1.t2, t2: s2.t1)
+                    resBuf[resCount] = Intersection(t1: curS1.t2, t2: curS2.t1)
                     resCount += 1
-                } else if s1.p1 == c1.startingPoint && s2.p2 == c2.endingPoint {
-                    resBuf[resCount] = Intersection(t1: s1.t1, t2: s2.t2)
+                } else if sp1 == c1.startingPoint && tp2 == c2.endingPoint {
+                    resBuf[resCount] = Intersection(t1: curS1.t1, t2: curS2.t2)
                     resCount += 1
                 }
+                // Pop next pair or exit.
+                guard top > 0 else { break }
+                top -= 1
+                (curS1, curS2) = stackBuf[top]
             } else {
                 // Split only the curve with the larger span (or the only splittable one).
-                // Each step evaluates one curve midpoint and pushes at most 2 pairs.
-                guard top + 2 <= stackCapacity else { return false }
-                if r1 && (!r2 || s1.span >= s2.span) {
-                    let mT1 = (s1.t1 + s1.t2) * 0.5, pM1 = c1.point(at: mT1)
-                    let ls1 = MonoSeg(t1: s1.t1, t2: mT1, p1: s1.p1, p2: pM1)
-                    let rs1 = MonoSeg(t1: mT1, t2: s1.t2, p1: pM1, p2: s1.p2)
-                    if monoOverlap(rs1, s2) { stackBuf[top] = (rs1, s2); top += 1 }
-                    if monoOverlap(ls1, s2) { stackBuf[top] = (ls1, s2); top += 1 }
+                //
+                // Overlap check shortcut: the parent pair already overlaps (invariant), so
+                // the parent endpoint of each half is already inside the fixed curve's bounds.
+                // Only the midpoint side needs checking — one comparison per axis per half.
+                //
+                // Tail-loop optimisation: 66% of split steps produce exactly one overlapping
+                // child. In that case we just overwrite curS1/curS2 and continue without
+                // touching the stack. The stack only grows when both children overlap (15%).
+                guard top + 1 <= stackCapacity else { return false }
+                let splitFirst = r1 && (!r2 || curS1.span >= curS2.span)
+                let sA = splitFirst ? curS1 : curS2
+                let sB = splitFirst ? curS2 : curS1
+                let xFwdA = splitFirst ? xFwd1 : xFwd2
+                let yFwdA = splitFirst ? yFwd1 : yFwd2
+                let mTA = (sA.t1 + sA.t2) * 0.5
+                let pMA = splitFirst ? c1.point(at: mTA) : c2.point(at: mTA)
+                // rsA inherits sA.p2 (already in-bounds); lsA inherits sA.p1 (already in-bounds).
+                let rsOK = (xFwdA ? pMA.x <= sB.bbox.max.x : pMA.x >= sB.bbox.min.x) &&
+                           (yFwdA ? pMA.y <= sB.bbox.max.y : pMA.y >= sB.bbox.min.y)
+                let lsOK = (xFwdA ? pMA.x >= sB.bbox.min.x : pMA.x <= sB.bbox.max.x) &&
+                           (yFwdA ? pMA.y >= sB.bbox.min.y : pMA.y <= sB.bbox.max.y)
+                let makeLsA = {
+                    MonoSeg(t1: sA.t1, t2: mTA, bbox: BoundingBox(
+                        min: CGPoint(x: xFwdA ? sA.bbox.min.x : pMA.x, y: yFwdA ? sA.bbox.min.y : pMA.y),
+                        max: CGPoint(x: xFwdA ? pMA.x : sA.bbox.max.x, y: yFwdA ? pMA.y : sA.bbox.max.y))
+                    )
+                }
+                let makeRsA = {
+                    MonoSeg(t1: mTA, t2: sA.t2, bbox: BoundingBox(
+                        min: CGPoint(x: xFwdA ? pMA.x : sA.bbox.min.x, y: yFwdA ? pMA.y : sA.bbox.min.y),
+                        max: CGPoint(x: xFwdA ? sA.bbox.max.x : pMA.x, y: yFwdA ? sA.bbox.max.y : pMA.y))
+                    )
+                }
+                if rsOK && lsOK {
+                    // Two children: push rsA, tail-loop with lsA.
+                    stackBuf[top] = splitFirst ? (makeRsA(), sB) : (sB, makeRsA()); top += 1
+                    if splitFirst { curS1 = makeLsA() } else { curS2 = makeLsA() }
+                } else if lsOK {
+                    if splitFirst { curS1 = makeLsA() } else { curS2 = makeLsA() }
+                } else if rsOK {
+                    if splitFirst { curS1 = makeRsA() } else { curS2 = makeRsA() }
                 } else {
-                    let mT2 = (s2.t1 + s2.t2) * 0.5, pM2 = c2.point(at: mT2)
-                    let ls2 = MonoSeg(t1: s2.t1, t2: mT2, p1: s2.p1, p2: pM2)
-                    let rs2 = MonoSeg(t1: mT2, t2: s2.t2, p1: pM2, p2: s2.p2)
-                    if monoOverlap(s1, rs2) { stackBuf[top] = (s1, rs2); top += 1 }
-                    if monoOverlap(s1, ls2) { stackBuf[top] = (s1, ls2); top += 1 }
+                    // No children: pop next pair or exit.
+                    guard top > 0 else { break }
+                    top -= 1
+                    (curS1, curS2) = stackBuf[top]
                 }
             }
         }
