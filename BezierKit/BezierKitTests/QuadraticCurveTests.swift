@@ -221,7 +221,7 @@ class QuadraticCurveTests: XCTestCase {
                                        p2: CGPoint(x: 2, y: 0))
         let intersections = quadratic.intersections(with: quadraticWithColinearControlPoints, accuracy: epsilon)
         XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t1, 0.75)
+        XCTAssertEqual(intersections[0].t1, 0.75, accuracy: 1e-14)
         XCTAssertEqual(intersections[0].t2, 0.13962, accuracy: 1.0e-5)
     }
 

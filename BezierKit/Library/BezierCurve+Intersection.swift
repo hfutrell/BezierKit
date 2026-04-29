@@ -119,6 +119,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
 
     // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
     var clipIntersections: [Intersection] = []
+    clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
     var clipIterations = 0
     if Utils.bezierClipping(curve1, curve2, &clipIntersections, accuracy, &clipIterations) {
         // Slow-convergence subdivisions can produce near-duplicate intersections when

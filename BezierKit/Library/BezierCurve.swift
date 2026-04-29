@@ -312,6 +312,24 @@ internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Impli
     func withPointsDo<R>(_ body: (Int, (Int) -> CGPoint) -> R) -> R
 }
 
+internal extension NonlinearBezierCurve {
+    // Axis-aligned bounding box of the control polygon — always an outer bound of the true
+    // curve bounding box (Bézier curves lie within the convex hull of their control points).
+    // Cheaper than `boundingBox` because it needs no droots/sqrt computation.
+    var controlPolygonBounds: BoundingBox {
+        return withPointsDo { n, pt in
+            var minX = CGFloat.infinity; var maxX = -CGFloat.infinity
+            var minY = CGFloat.infinity; var maxY = -CGFloat.infinity
+            for i in 0..<n {
+                let p = pt(i)
+                if p.x < minX { minX = p.x }; if p.x > maxX { maxX = p.x }
+                if p.y < minY { minY = p.y }; if p.y > maxY { maxY = p.y }
+            }
+            return BoundingBox(min: CGPoint(x: minX, y: minY), max: CGPoint(x: maxX, y: maxY))
+        }
+    }
+}
+
 public protocol Flatness: BezierCurve {
     // the flatness of a curve is defined as the square of the maximum distance it is from a line connecting its endpoints https://jeremykun.com/2013/05/11/bezier-curves-and-picasso/
     var flatnessSquared: CGFloat { get }
