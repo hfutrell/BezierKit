@@ -464,6 +464,45 @@ internal class Utils {
         }}}}}}
     }
 
+    // Inner split step for monoPairiteration. Splits `splitting` at its midpoint, evaluates
+    // overlap of each half against `fixed`, and updates splitting/stack accordingly.
+    // splitIsS1 is a compile-time constant at each inlined call site, so the compiler
+    // eliminates the stack-ordering branch entirely.
+    @inline(__always)
+    private static func monoSplitStep<C: BezierCurve>(
+        splitting: inout MonoSeg, fixed: MonoSeg,
+        curve: C, xFwd: Bool, yFwd: Bool,
+        splitIsS1: Bool,
+        stackBuf: UnsafeMutableBufferPointer<(MonoSeg, MonoSeg)>,
+        top: inout Int
+    ) -> Bool {
+        let mT = (splitting.t1 + splitting.t2) * 0.5
+        let pM = curve.point(at: mT)
+        let rsOK = (xFwd ? pM.x <= fixed.bbox.max.x : pM.x >= fixed.bbox.min.x) &&
+                   (yFwd ? pM.y <= fixed.bbox.max.y : pM.y >= fixed.bbox.min.y)
+        let lsOK = (xFwd ? pM.x >= fixed.bbox.min.x : pM.x <= fixed.bbox.max.x) &&
+                   (yFwd ? pM.y >= fixed.bbox.min.y : pM.y <= fixed.bbox.max.y)
+        let s = splitting
+        let makeLs = { MonoSeg(t1: s.t1, t2: mT, bbox: BoundingBox(
+            min: CGPoint(x: xFwd ? s.bbox.min.x : pM.x, y: yFwd ? s.bbox.min.y : pM.y),
+            max: CGPoint(x: xFwd ? pM.x : s.bbox.max.x, y: yFwd ? pM.y : s.bbox.max.y))) }
+        let makeRs = { MonoSeg(t1: mT, t2: s.t2, bbox: BoundingBox(
+            min: CGPoint(x: xFwd ? pM.x : s.bbox.min.x, y: yFwd ? pM.y : s.bbox.min.y),
+            max: CGPoint(x: xFwd ? s.bbox.max.x : pM.x, y: yFwd ? s.bbox.max.y : pM.y))) }
+        if rsOK && lsOK {
+            stackBuf[top] = splitIsS1 ? (makeRs(), fixed) : (fixed, makeRs()); top += 1
+            splitting = makeLs()
+            return true
+        } else if lsOK {
+            splitting = makeLs()
+            return true
+        } else if rsOK {
+            splitting = makeRs()
+            return true
+        }
+        return false
+    }
+
     // Iterative intersection for pairs of monotone subcurves.
     // Accepts pre-allocated stack and result buffers from preSplitIntersections so that
     // no heap allocation occurs inside the tight loop.
@@ -556,48 +595,16 @@ internal class Utils {
                 (curS1, curS2) = stackBuf[top]
             } else {
                 // Split only the curve with the larger span (or the only splittable one).
-                //
-                // Overlap check shortcut: the parent pair already overlaps (invariant), so
-                // the parent endpoint of each half is already inside the fixed curve's bounds.
-                // Only the midpoint side needs checking — one comparison per axis per half.
-                //
-                // Tail-loop optimisation: 66% of split steps produce exactly one overlapping
-                // child. In that case we just overwrite curS1/curS2 and continue without
-                // touching the stack. The stack only grows when both children overlap (15%).
                 guard top + 1 <= stackCapacity else { return false }
-                let splitFirst = r1 && (!r2 || curS1.span >= curS2.span)
-                let sA = splitFirst ? curS1 : curS2
-                let sB = splitFirst ? curS2 : curS1
-                let xFwdA = splitFirst ? xFwd1 : xFwd2
-                let yFwdA = splitFirst ? yFwd1 : yFwd2
-                let mTA = (sA.t1 + sA.t2) * 0.5
-                let pMA = splitFirst ? c1.point(at: mTA) : c2.point(at: mTA)
-                // rsA inherits sA.p2 (already in-bounds); lsA inherits sA.p1 (already in-bounds).
-                let rsOK = (xFwdA ? pMA.x <= sB.bbox.max.x : pMA.x >= sB.bbox.min.x) &&
-                           (yFwdA ? pMA.y <= sB.bbox.max.y : pMA.y >= sB.bbox.min.y)
-                let lsOK = (xFwdA ? pMA.x >= sB.bbox.min.x : pMA.x <= sB.bbox.max.x) &&
-                           (yFwdA ? pMA.y >= sB.bbox.min.y : pMA.y <= sB.bbox.max.y)
-                let makeLsA = {
-                    MonoSeg(t1: sA.t1, t2: mTA, bbox: BoundingBox(
-                        min: CGPoint(x: xFwdA ? sA.bbox.min.x : pMA.x, y: yFwdA ? sA.bbox.min.y : pMA.y),
-                        max: CGPoint(x: xFwdA ? pMA.x : sA.bbox.max.x, y: yFwdA ? pMA.y : sA.bbox.max.y))
-                    )
-                }
-                let makeRsA = {
-                    MonoSeg(t1: mTA, t2: sA.t2, bbox: BoundingBox(
-                        min: CGPoint(x: xFwdA ? pMA.x : sA.bbox.min.x, y: yFwdA ? pMA.y : sA.bbox.min.y),
-                        max: CGPoint(x: xFwdA ? sA.bbox.max.x : pMA.x, y: yFwdA ? sA.bbox.max.y : pMA.y))
-                    )
-                }
-                if rsOK && lsOK {
-                    // Two children: push rsA, tail-loop with lsA.
-                    stackBuf[top] = splitFirst ? (makeRsA(), sB) : (sB, makeRsA()); top += 1
-                    if splitFirst { curS1 = makeLsA() } else { curS2 = makeLsA() }
-                } else if lsOK {
-                    if splitFirst { curS1 = makeLsA() } else { curS2 = makeLsA() }
-                } else if rsOK {
-                    if splitFirst { curS1 = makeRsA() } else { curS2 = makeRsA() }
+                let hadChild: Bool
+                if r1 && (!r2 || curS1.span >= curS2.span) {
+                    hadChild = monoSplitStep(splitting: &curS1, fixed: curS2, curve: c1, xFwd: xFwd1, yFwd: yFwd1,
+                                             splitIsS1: true, stackBuf: stackBuf, top: &top)
                 } else {
+                    hadChild = monoSplitStep(splitting: &curS2, fixed: curS1, curve: c2, xFwd: xFwd2, yFwd: yFwd2,
+                                             splitIsS1: false, stackBuf: stackBuf, top: &top)
+                }
+                if !hadChild {
                     // No children: pop next pair or exit.
                     guard top > 0 else { break }
                     top -= 1
