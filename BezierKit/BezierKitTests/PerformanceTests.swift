@@ -278,6 +278,19 @@ class PerformanceTests: XCTestCase {
         print("Quadratic-Quadratic: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
     }
 
+    func testCubicIntersectionsAccuracy() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomCurves(count: 50, reseed: 2)
+        for i in 0..<curves.count {
+            for j in 0..<curves.count {
+                let ixs = curves[i].intersections(with: curves[j], accuracy: accuracy)
+                if ixs.isEmpty { continue }
+                let maxErr = ixs.map { distance(curves[i].point(at: $0.t1), curves[j].point(at: $0.t2)) }.max()!
+                print("PAIR \(i) \(j): \(ixs.count) intersections, maxErr=\(maxErr)")
+            }
+        }
+    }
+
     func testQuadraticCubicIntersectionsAccuracy() {
         // measures the geometric distance between intersection points found on each curve;
         // print results to compare accuracy before and after algorithm changes

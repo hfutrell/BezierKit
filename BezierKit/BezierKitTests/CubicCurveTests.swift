@@ -639,6 +639,27 @@ class CubicCurveTests: XCTestCase {
 
     // MARK: -
 
+    func testIntersectionsWithSelf() {
+        // curve.intersections(with: curve) must always return exactly two intersections
+        // at (t1:0, t2:0) and (t1:1, t2:1), representing full coincidence over the whole range.
+        // Regression: the preSplitIntersections path found cross-piece geometric intersections
+        // and the inline isCoincident check passed through spurious roots from a near-zero
+        // composition polynomial, producing 3–5 results instead of 2.
+        let accuracy: CGFloat = 1.0e-5
+        let c = CubicCurve(p0: CGPoint(x: 0.9124326534374667, y: 0.1590829089722945),
+                           p1: CGPoint(x: 0.5732627807102624, y: 0.8015068332633248),
+                           p2: CGPoint(x: 0.553675300337165,  y: 0.21773456594381457),
+                           p3: CGPoint(x: 0.6829848805412801, y: 0.6121018899549071))
+        let ixs = c.intersections(with: c, accuracy: accuracy)
+        XCTAssertEqual(ixs.count, 2)
+        if ixs.count >= 2 {
+            XCTAssertEqual(ixs[0].t1, 0, accuracy: accuracy)
+            XCTAssertEqual(ixs[0].t2, 0, accuracy: accuracy)
+            XCTAssertEqual(ixs[1].t1, 1, accuracy: accuracy)
+            XCTAssertEqual(ixs[1].t2, 1, accuracy: accuracy)
+        }
+    }
+
     func testEquatable() {
         let p0 = CGPoint(x: 1.0, y: 2.0)
         let p1 = CGPoint(x: 2.0, y: 3.0)

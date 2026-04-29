@@ -125,21 +125,19 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         return pairIntersections.sortedAndUniqued()
     }
 
-    // Subdivision failed (curves are likely coincident). Use curve implicitization.
+    // Subdivision failed (curves are likely coincident). Check for geometric coincidence
+    // before running the root finder — the composition polynomial is theoretically zero
+    // for coincident curves, but floating-point noise can produce spurious roots.
     let insignificantDistance: CGFloat = 0.5 * accuracy
+    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        return coincidence
+    }
+
+    // Not coincident — find intersections using curve implicitization.
     let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
     let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
     let c1 = curve1.curve.copy(using: transform)
     let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
-
-    // Detect coincidence: if all Bernstein coefficients of the composition are near zero,
-    // c1 lies on c2's algebraic curve everywhere. The threshold accounts for the implicit
-    // polynomial's scale: a point at distance d from the curve gives a value O(d * S^(2m-1))
-    // where S is the spatial scale of c2 and m is its order.
-    let bbSize = c2.boundingBox.size
-    let S = max(max(bbSize.x, bbSize.y), accuracy)
-    let coincidenceThreshold = accuracy * pow(S, CGFloat(2 * c2.order - 1))
-    let isCoincident = equation.coefficients.allSatisfy { abs($0) <= coincidenceThreshold }
 
     let t1Tolerance = insignificantDistance / c1.derivativeBounds
     let t2Tolerance = insignificantDistance / c2.derivativeBounds
@@ -154,21 +152,6 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
             t2 = 1
         }
         guard distance(point, c2.point(at: t2)) < accuracy else { return nil }
-        return Intersection(t1: t1, t2: t2)
-    }
-
-    // Symmetric helper for finding the t1 on c1 that corresponds to a t2 endpoint of c2.
-    // Only used in the coincident case, where c2's endpoints may fall within c1's segment.
-    func intersectionFromC2Endpoint(at t2: CGFloat) -> Intersection? {
-        let point = c2.point(at: t2)
-        guard c1.boundingBox.contains(point) else { return nil }
-        var t1 = c1.project(point).t
-        if t1 < t1Tolerance {
-            t1 = 0
-        } else if t1 > 1 - t1Tolerance {
-            t1 = 1
-        }
-        guard distance(point, c1.point(at: t1)) < accuracy else { return nil }
         return Intersection(t1: t1, t2: t2)
     }
 
@@ -187,19 +170,6 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     if intersections.contains(where: { $0.t1 == 1 }) == false {
         if let intersection = intersectionIfCloseEnough(at: 1) {
             intersections.append(intersection)
-        }
-    }
-    // When coincident, c2's endpoints may lie within c1's parameter range — check them too.
-    if isCoincident {
-        if intersections.contains(where: { $0.t2 == 0 }) == false {
-            if let intersection = intersectionFromC2Endpoint(at: 0) {
-                intersections.append(intersection)
-            }
-        }
-        if intersections.contains(where: { $0.t2 == 1 }) == false {
-            if let intersection = intersectionFromC2Endpoint(at: 1) {
-                intersections.append(intersection)
-            }
         }
     }
     // TODO: handle case where curve2 self-intersects and curve intersects it there
