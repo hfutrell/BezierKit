@@ -495,46 +495,40 @@ internal class Utils {
     // Compute the fat line of `other` and clip `curve`'s [0,1] parameter range
     // to where it might intersect `other`. Returns nil if no intersection possible.
     private static func fatLineClip<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(curve: C1, fatOf other: C2) -> (CGFloat, CGFloat)? {
-        let q0  = other.startingPoint
-        let qn  = other.endingPoint
-        let dir = qn - q0
+        let ocp = other.controlPolygon
+        let q0  = ocp.p0
+        let dir = ocp[ocp.count - 1] - q0
         guard dir.lengthSquared > 0 else { return (0, 1) }
 
         // Tight fat-line bounds (Sederberg & Nishita 1990):
         // For a quadratic, the curve lies within ½ of the control point's distance from the chord.
         // For a cubic when both interior points are on the same side, within ¾ of the max.
         // Tighter bounds → fewer bezier clipping iterations.
-        // Return-value pattern avoids mutable var captures (and the swift_beginAccess overhead they incur).
-        let (dMin, dMax) = other.withPointsDo { n, pt -> (CGFloat, CGFloat) in
-            if n == 3 {
-                // Quadratic: single interior point, tight factor = 1/2
-                let d = 0.5 * (pt(1) - q0).cross(dir)
-                return (min(0, d), max(0, d))
-            } else if n == 4 {
-                // Cubic: two interior points; use 3/4 factor when both have the same sign
-                let d1 = (pt(1) - q0).cross(dir)
-                let d2 = (pt(2) - q0).cross(dir)
-                let factor: CGFloat = (d1 * d2 > 0) ? 0.75 : 1.0
-                return (min(0, factor * min(d1, d2)), max(0, factor * max(d1, d2)))
-            } else {
-                var lo: CGFloat = 0, hi: CGFloat = 0
-                for i in 1..<n-1 {
-                    let d = (pt(i) - q0).cross(dir)
-                    if d < lo { lo = d } else if d > hi { hi = d }
-                }
-                return (lo, hi)
+        let dMin: CGFloat
+        let dMax: CGFloat
+        if ocp.count == 3 {
+            let d = 0.5 * (ocp.p1 - q0).cross(dir)
+            dMin = min(0, d); dMax = max(0, d)
+        } else if ocp.count == 4 {
+            let d1 = (ocp.p1 - q0).cross(dir)
+            let d2 = (ocp.p2 - q0).cross(dir)
+            let factor: CGFloat = (d1 * d2 > 0) ? 0.75 : 1.0
+            dMin = min(0, factor * min(d1, d2)); dMax = max(0, factor * max(d1, d2))
+        } else {
+            var lo: CGFloat = 0, hi: CGFloat = 0
+            for i in 1..<ocp.count - 1 {
+                let d = (ocp[i] - q0).cross(dir)
+                if d < lo { lo = d } else if d > hi { hi = d }
             }
+            dMin = lo; dMax = hi
         }
 
-        // Pre-compute all d values before entering convexHullClipInterval to avoid
-        // indirect closure dispatch inside the inner loop.
-        return curve.withPointsDo { n, pt in
-            let e0 = (pt(0) - q0).cross(dir)
-            let e1 = (pt(1) - q0).cross(dir)
-            let e2: CGFloat = n > 2 ? (pt(2) - q0).cross(dir) : 0
-            let e3: CGFloat = n > 3 ? (pt(3) - q0).cross(dir) : 0
-            return convexHullClipInterval(d0: e0, d1: e1, d2: e2, d3: e3, n: n, dLow: dMin, dHigh: dMax)
-        }
+        let ccp = curve.controlPolygon
+        let e0 = (ccp.p0 - q0).cross(dir)
+        let e1 = (ccp.p1 - q0).cross(dir)
+        let e2: CGFloat = ccp.count > 2 ? (ccp.p2 - q0).cross(dir) : 0
+        let e3: CGFloat = ccp.count > 3 ? (ccp.p3 - q0).cross(dir) : 0
+        return convexHullClipInterval(d0: e0, d1: e1, d2: e2, d3: e3, n: ccp.count, dLow: dMin, dHigh: dMax)
     }
 
     // Bezier clipping main recursive entry.  Returns false if the iteration

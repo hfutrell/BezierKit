@@ -23,11 +23,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         return [p0, p1, p2, p3]
     }
 
-    internal func withPointsDo<R>(_ body: (Int, (Int) -> CGPoint) -> R) -> R {
-        return body(4) { i in
-            switch i { case 0: return p0; case 1: return p1; case 2: return p2; default: return p3 }
-        }
-    }
+    internal var controlPolygon: ControlPolygon { ControlPolygon(p0, p1, p2, p3) }
 
     public var order: Int {
         return 3
@@ -192,6 +188,17 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         let temp2 = b*p1
         let temp3 = c*p2
         return temp1 + temp2 + temp3
+    }
+
+    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint) {
+        if t == 0 { return (p0, 3*(p1-p0)) }
+        if t == 1 { return (p3, 3*(p3-p2)) }
+        let mt: CGFloat = 1 - t
+        let mt2: CGFloat = mt * mt
+        let t2: CGFloat  = t * t
+        let pt = mt2*mt * p0 + mt2*t*3 * p1 + mt*t2*3 * p2 + t*t2 * p3
+        let dp = mt2 * (3*(p1-p0)) + mt*t*2 * (3*(p2-p1)) + t2 * (3*(p3-p2))
+        return (pt, dp)
     }
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {

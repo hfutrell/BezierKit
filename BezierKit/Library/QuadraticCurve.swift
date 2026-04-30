@@ -56,11 +56,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         return [p0, p1, p2]
     }
 
-    internal func withPointsDo<R>(_ body: (Int, (Int) -> CGPoint) -> R) -> R {
-        return body(3) { i in
-            switch i { case 0: return p0; case 1: return p1; default: return p2 }
-        }
-    }
+    internal var controlPolygon: ControlPolygon { ControlPolygon(p0, p1, p2) }
 
     public var startingPoint: CGPoint {
         get {
@@ -113,6 +109,15 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         let a = mt
         let b = t
         return a*p0 + b*p1
+    }
+
+    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint) {
+        if t == 0 { return (p0, 2*(p1-p0)) }
+        if t == 1 { return (p2, 2*(p2-p1)) }
+        let mt: CGFloat = 1 - t
+        let pt = mt*mt * p0 + mt*t*2 * p1 + t*t * p2
+        let dp = mt * (2*(p1-p0)) + t * (2*(p2-p1))
+        return (pt, dp)
     }
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticCurve {
