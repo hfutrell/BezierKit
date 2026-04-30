@@ -13,6 +13,8 @@ import Foundation
 
 public protocol BernsteinPolynomial: Equatable {
     func value(at x: CGFloat) -> CGFloat
+    /// Returns (value, derivative) at x. Conformers can override to share de Casteljau intermediates.
+    func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat)
     var order: Int { get }
     var coefficients: [CGFloat] { get }
 //    var last: CGFloat { get }
@@ -114,6 +116,9 @@ public extension BernsteinPolynomial {
     func value(at x: CGFloat) -> CGFloat {
         let oneMinusX = 1.0 - x
         return self.reduce(a1: oneMinusX, a2: x)
+    }
+    func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        return (value(at: x), derivative.value(at: x))
     }
     var derivative: NextLowerOrderPolynomial {
         let order = CGFloat(self.order)
@@ -331,6 +336,14 @@ public struct BernsteinPolynomial4: BernsteinPolynomial, Sendable {
         let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22
         return s * c30 + t * c31
     }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        let s = 1 - x, t = x
+        let c10 = s * b0 + t * b1; let c11 = s * b1 + t * b2
+        let c12 = s * b2 + t * b3; let c13 = s * b3 + t * b4
+        let c20 = s * c10 + t * c11; let c21 = s * c11 + t * c12; let c22 = s * c12 + t * c13
+        let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22
+        return (s * c30 + t * c31, 4 * (c31 - c30))
+    }
     public var order: Int { return 4 }
 }
 
@@ -389,6 +402,16 @@ public struct BernsteinPolynomial5: BernsteinPolynomial, Sendable {
         let c40 = s * c30 + t * c31; let c41 = s * c31 + t * c32
         return s * c40 + t * c41
     }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        let s = 1 - x, t = x
+        let c10 = s * b0 + t * b1; let c11 = s * b1 + t * b2
+        let c12 = s * b2 + t * b3; let c13 = s * b3 + t * b4; let c14 = s * b4 + t * b5
+        let c20 = s * c10 + t * c11; let c21 = s * c11 + t * c12
+        let c22 = s * c12 + t * c13; let c23 = s * c13 + t * c14
+        let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22; let c32 = s * c22 + t * c23
+        let c40 = s * c30 + t * c31; let c41 = s * c31 + t * c32
+        return (s * c40 + t * c41, 5 * (c41 - c40))
+    }
     public var order: Int { return 5 }
 }
 
@@ -396,9 +419,8 @@ private func newton<P: BernsteinPolynomial>(polynomial: P, derivative: P.NextLow
     let maxIterations = 20
     var x = guess
     for _ in 0..<maxIterations {
-        let f = polynomial.value(at: x)
+        let (f, fPrime) = polynomial.valueAndDerivative(at: x)
         guard f != 0.0 else { break }
-        let fPrime = derivative.value(at: x)
         let delta = relaxation * f / fPrime
         let previous = x
         x -= delta
@@ -412,8 +434,10 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     var low = start
     var high = end
     let lowSign = polynomial.value(at: low).sign
+    #if DEBUG
     let highSign = polynomial.value(at: high).sign
     assert(lowSign != highSign)
+    #endif
     let maxIterations = 20
     var iterations = 0
     while high - low > 1.0e-5 {
@@ -425,7 +449,9 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
         } else if nextGuessF.sign == lowSign {
             low = guess
         } else {
+            #if DEBUG
             assert(nextGuessF.sign == highSign)
+            #endif
             high = guess
         }
         iterations += 1

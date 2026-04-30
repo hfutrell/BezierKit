@@ -595,9 +595,9 @@ internal class Utils {
                     // du = -F.cross(d2) / d1.cross(d2),  dv = d1.cross(F) / d1.cross(d2)
                     var u: CGFloat = 0.5, v: CGFloat = 0.5
                     for _ in 0..<6 {
-                        let f = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
-                        let d1 = c1Reduced.curve.derivative(at: u)
-                        let d2 = c2Reduced.curve.derivative(at: v)
+                        let (q1, d1) = c1Reduced.curve.pointAndDerivative(at: u)
+                        let (q2, d2) = c2Reduced.curve.pointAndDerivative(at: v)
+                        let f = q1 - q2
                         let denom = d1.cross(d2)
                         guard denom != 0 else { break }
                         let du = -f.cross(d2) / denom
@@ -611,6 +611,40 @@ internal class Utils {
                 }
                 results.append(Intersection(t1: t1, t2: t2))
                 return true
+            }
+
+            // Hybrid clipping (Lou & Liu 2011): once both sub-intervals are narrow, switch
+            // from fat-line clipping to Newton-Raphson. Newton is O(n) per step vs O(n²) for
+            // de Casteljau splits, and both have quadratic convergence — so Newton wins once
+            // we are inside its convergence basin. The distance check rejects false positives.
+            let c1Range = c1Reduced.t2 - c1Reduced.t1
+            let c2Range = c2Reduced.t2 - c2Reduced.t1
+            if c1Range < 0.25 && c2Range < 0.25 && c1Ratio <= 0.8 && c2Ratio <= 0.8 {
+                var u: CGFloat = 0.5, v: CGFloat = 0.5
+                for _ in 0 ..< 20 {
+                    let (q1, d1) = c1Reduced.curve.pointAndDerivative(at: u)
+                    let (q2, d2) = c2Reduced.curve.pointAndDerivative(at: v)
+                    let f = q1 - q2
+                    let denom = d1.cross(d2)
+                    guard denom != 0 else { break }
+                    let du = -f.cross(d2) / denom
+                    let dv =  d1.cross(f) / denom
+                    u += du; if u < 0 { u = 0 } else if u > 1 { u = 1 }
+                    v += dv; if v < 0 { v = 0 } else if v > 1 { v = 1 }
+                    guard du * du + dv * dv > CGFloat(1.0e-28) else { break }
+                }
+                let t1Candidate = u * c1Reduced.t2 + (1 - u) * c1Reduced.t1
+                let t2Candidate = v * c2Reduced.t2 + (1 - v) * c2Reduced.t1
+                // Only accept interior solutions in global parameter space — endpoint
+                // intersections are handled more precisely by the existing exact-endpoint path.
+                if t1Candidate > 1.0e-6 && t1Candidate < 1.0 - 1.0e-6 &&
+                   t2Candidate > 1.0e-6 && t2Candidate < 1.0 - 1.0e-6 {
+                    let f = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
+                    if f.x * f.x + f.y * f.y <= accuracy * accuracy {
+                        results.append(Intersection(t1: t1Candidate, t2: t2Candidate))
+                        return true
+                    }
+                }
             }
 
             // If either curve reduced by less than 20 %, convergence is slow — subdivide.
