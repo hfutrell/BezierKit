@@ -633,16 +633,21 @@ internal class Utils {
                     v += dv; if v < 0 { v = 0 } else if v > 1 { v = 1 }
                     guard du * du + dv * dv > CGFloat(1.0e-28) else { break }
                 }
-                let t1Candidate = u * c1Reduced.t2 + (1 - u) * c1Reduced.t1
-                let t2Candidate = v * c2Reduced.t2 + (1 - v) * c2Reduced.t1
-                // Only accept interior solutions in global parameter space — endpoint
-                // intersections are handled more precisely by the existing exact-endpoint path.
-                if t1Candidate > 1.0e-6 && t1Candidate < 1.0 - 1.0e-6 &&
-                   t2Candidate > 1.0e-6 && t2Candidate < 1.0 - 1.0e-6 {
-                    let f = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
-                    if f.x * f.x + f.y * f.y <= accuracy * accuracy {
-                        results.append(Intersection(t1: t1Candidate, t2: t2Candidate))
-                        return true
+                // Only accept if Newton stayed interior — if u or v is clamped to a
+                // subcurve boundary the true root is outside the current interval, so
+                // let fat-line clipping continue rather than reporting a boundary hit.
+                if u > 1.0e-10 && u < 1.0 - 1.0e-10 && v > 1.0e-10 && v < 1.0 - 1.0e-10 {
+                    let t1Candidate = u * c1Reduced.t2 + (1 - u) * c1Reduced.t1
+                    let t2Candidate = v * c2Reduced.t2 + (1 - v) * c2Reduced.t1
+                    // Only accept interior solutions in global parameter space — endpoint
+                    // intersections are handled more precisely by the existing exact-endpoint path.
+                    if t1Candidate > 1.0e-6 && t1Candidate < 1.0 - 1.0e-6 &&
+                       t2Candidate > 1.0e-6 && t2Candidate < 1.0 - 1.0e-6 {
+                        let f = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
+                        if f.x * f.x + f.y * f.y <= accuracy * accuracy {
+                            results.append(Intersection(t1: t1Candidate, t2: t2Candidate))
+                            return true
+                        }
                     }
                 }
             }
