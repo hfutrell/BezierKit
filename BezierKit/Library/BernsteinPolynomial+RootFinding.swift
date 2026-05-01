@@ -69,6 +69,7 @@ extension BernsteinPolynomial5: BezierClippingPolynomial {
 private let clippingErrorThreshold: CGFloat = 1e-5
 
 
+
 private func rootsCore<P: BezierClippingPolynomial>(
     polynomial: P,
     start rangeStart: CGFloat,
@@ -100,34 +101,57 @@ private func rootsCore<P: BezierClippingPolynomial>(
         if c0 * cN < 0 {
             let scale = Swift.max(Swift.abs(c0), Swift.abs(cN))
             let residualThreshold = scale * CGFloat.ulpOfOne.squareRoot()
-            var x = CGFloat(0.5)
-            var newtonSucceeded = false
-            for _ in 0..<20 {
-                let (f, fPrime) = polynomial.valueAndDerivative(at: x)
-                if f == 0 { newtonSucceeded = true; break }
-                guard fPrime != 0 else { break }
-                let delta = f / fPrime
-                x -= delta
-                guard x >= 0, x <= 1 else { break }
-                if Swift.abs(delta) <= 1e-10 {
-                    newtonSucceeded = Swift.abs(polynomial.value(at: x)) <= residualThreshold
-                    break
+            // Convert Bernstein coefficients to power basis once via iterated forward
+            // differences (c_k = C(n,k) · Δ^k b[0]), then use Horner's method for all
+            // Newton and bisection evaluations — O(n) per call vs O(n²) de Casteljau.
+            var result = CGFloat(0)
+            withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: count) { buf in
+                var idx = 0
+                polynomial.forEachCoefficient { buf[idx] = $0; idx += 1 }
+                for k in 1..<count {
+                    for i in stride(from: n, through: k, by: -1) { buf[i] -= buf[i - 1] }
                 }
+                for k in 0...n { buf[k] *= Utils.binomialCoefficient(n, choose: k) }
+
+                func hValue(_ t: CGFloat) -> CGFloat {
+                    var v = buf[n]
+                    for k in stride(from: n - 1, through: 0, by: -1) { v = v * t + buf[k] }
+                    return v
+                }
+                func hValueAndDerivative(_ t: CGFloat) -> (CGFloat, CGFloat) {
+                    var v = buf[n], d = CGFloat(0)
+                    for k in stride(from: n - 1, through: 0, by: -1) { d = d * t + v; v = v * t + buf[k] }
+                    return (v, d)
+                }
+
+                var x = CGFloat(0.5)
+                var newtonSucceeded = false
+                for _ in 0..<20 {
+                    let (f, fPrime) = hValueAndDerivative(x)
+                    if f == 0 { newtonSucceeded = true; break }
+                    guard fPrime != 0 else { break }
+                    let delta = f / fPrime
+                    x -= delta
+                    guard x >= 0, x <= 1 else { break }
+                    if Swift.abs(delta) <= 1e-10 {
+                        newtonSucceeded = Swift.abs(hValue(x)) <= residualThreshold
+                        break
+                    }
+                }
+                if newtonSucceeded { result = x; return }
+
+                var lo = CGFloat(0), hi = CGFloat(1), fL = c0, fH = cN
+                for _ in 0..<52 {
+                    let mid = CGFloat(0.5) * (lo + hi)
+                    guard mid > lo else { break }
+                    let fMid = hValue(mid)
+                    if fMid == 0 { lo = mid; hi = mid; break }
+                    if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid; fH = fMid }
+                }
+                _ = fH
+                result = 0.5 * (lo + hi)
             }
-            if newtonSucceeded {
-                callback(Utils.linearInterpolate(rangeStart, rangeEnd, x))
-                return
-            }
-            var lo = CGFloat(0), hi = CGFloat(1), fL = c0, fH = cN
-            for _ in 0..<52 {
-                let mid = CGFloat(0.5) * (lo + hi)
-                guard mid > lo else { break }
-                let fMid = polynomial.value(at: mid)
-                if fMid == 0 { lo = mid; hi = mid; break }
-                if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid; fH = fMid }
-            }
-            _ = fH
-            callback(Utils.linearInterpolate(rangeStart, rangeEnd, 0.5 * (lo + hi)))
+            callback(Utils.linearInterpolate(rangeStart, rangeEnd, result))
             return
         }
     }
