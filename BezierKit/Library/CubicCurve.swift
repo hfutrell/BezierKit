@@ -238,7 +238,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         func mul(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
-        let c = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        let c = CubicCurve(p0: p0 - point, p1: p1 - point, p2: p2 - point, p3: p3 - point)
         let q = QuadraticCurve(p0: self.p1 - self.p0, p1: self.p2 - self.p1, p2: self.p3 - self.p2)
         // p0, p1, p2, p3 form the control points of a Cubic Bezier Curve formed
         // by multiplying the polynomials q and l
