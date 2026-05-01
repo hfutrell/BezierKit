@@ -137,6 +137,7 @@ extension BernsteinPolynomialN {
             if lastSign != 0, s != lastSign { signChanges += 1 }
             lastSign = s
         }
+        guard signChanges > 0 || coefficients[0] == 0 || coefficients[count - 1] == 0 else { return }
         if signChanges == 1 {
             let fLo = Double(coefficients[0])
             let fHi = Double(coefficients[count - 1])

@@ -170,6 +170,15 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(polynomial.split(from: 1, to: 0), polynomial.reversed())
     }
 
+    func testDegreeNNoRootSpuriousHullCrossing() {
+        // [1, -1e-11, 1] has no real roots (min value ≈ 0.5), but one control point
+        // lies just below y=0. Without the signChanges == 0 early-exit guard the hull
+        // sees that tiny dip, converges to an interval of width ~1e-11, and reports a
+        // false root at t ≈ 0.5.
+        let polynomial = BernsteinPolynomialN(coefficients: [1.0, -1e-11, 1.0])
+        XCTAssertTrue(polynomial.distinctRealRootsInUnitInterval().isEmpty)
+    }
+
     func testDegreeNRealWorldIssue() {
         // this input would cause a stack overflow if the division step of the interval
         // occurred before checking the interval's size
