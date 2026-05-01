@@ -51,8 +51,6 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         return [p0, p1, p2]
     }
 
-    internal var controlPolygon: ControlPolygon { ControlPolygon(p0, p1, p2) }
-
     public var startingPoint: CGPoint {
         get {
             return p0

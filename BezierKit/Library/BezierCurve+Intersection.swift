@@ -113,7 +113,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     var clipIntersections: [Intersection] = []
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
     var clipIterations = 0
-    if Utils.bezierClipping(curve1, curve2, &clipIntersections, &clipIterations) {
+    if bezierClipping(curve1, curve2, &clipIntersections, &clipIterations) {
         // Slow-convergence subdivisions can produce near-duplicate intersections when
         // the same crossing is found in both halves of a split. Remove spatially-close
         // duplicates: keep only the first intersection whose curve1 point is further than

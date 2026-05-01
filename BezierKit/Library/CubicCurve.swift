@@ -23,8 +23,6 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         return [p0, p1, p2, p3]
     }
 
-    internal var controlPolygon: ControlPolygon { ControlPolygon(p0, p1, p2, p3) }
-
     public var order: Int {
         return 3
     }

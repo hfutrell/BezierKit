@@ -45,7 +45,7 @@ internal class Utils {
     // swiftlint:enable comma
 
     static func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
-        precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+        assert(n >= 0 && k >= 0 && n <= 9 && k <= 9)
         return binomialTable[n &* 10 &+ k]
     }
 
