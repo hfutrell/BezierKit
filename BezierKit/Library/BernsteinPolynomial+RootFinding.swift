@@ -119,9 +119,9 @@ private func rootsCore<P: BezierClippingPolynomial>(
                 return
             }
             var lo = CGFloat(0), hi = CGFloat(1), fL = c0, fH = cN
-            let threshold = clippingErrorThreshold / (rangeEnd - rangeStart)
-            while hi - lo > threshold {
+            for _ in 0..<52 {
                 let mid = CGFloat(0.5) * (lo + hi)
+                guard mid > lo else { break }
                 let fMid = polynomial.value(at: mid)
                 if fMid == 0 { lo = mid; hi = mid; break }
                 if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid; fH = fMid }
