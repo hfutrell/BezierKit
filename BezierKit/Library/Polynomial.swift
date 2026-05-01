@@ -21,6 +21,7 @@ public protocol BernsteinPolynomial: Equatable, Sendable {
     var derivative: NextLowerOrderPolynomial { get }
     /// Returns (value, derivative) at x. Conformers can override to share de Casteljau intermediates.
     func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat)
+    func split(at t: CGFloat) -> (left: Self, right: Self)
 }
 
 extension BernsteinPolynomial0: AnalyticalRootsCallback {
@@ -58,6 +59,12 @@ public extension BernsteinPolynomial {
     func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
         (value(at: x), derivative.value(at: x))
     }
+    func split(from t1: CGFloat, to t2: CGFloat) -> Self {
+        guard t1 != 0 else { return split(at: t2).left }
+        let right = split(at: t1).right
+        guard t2 != 1 else { return right }
+        return right.split(at: (t2 - t1) / (1 - t1)).left
+    }
 }
 
 public struct BernsteinPolynomial0: BernsteinPolynomial {
@@ -66,6 +73,9 @@ public struct BernsteinPolynomial0: BernsteinPolynomial {
     public var b0: CGFloat
     public func value(at x: CGFloat) -> CGFloat { b0 }
     public var derivative: BernsteinPolynomial0 { BernsteinPolynomial0(b0: 0.0) }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial0, right: BernsteinPolynomial0) {
+        (left: self, right: self)
+    }
 }
 
 public struct BernsteinPolynomial1: BernsteinPolynomial {
@@ -77,6 +87,11 @@ public struct BernsteinPolynomial1: BernsteinPolynomial {
     public var b0, b1: CGFloat
     public func value(at x: CGFloat) -> CGFloat { (1.0 - x) * b0 + x * b1 }
     public var derivative: BernsteinPolynomial0 { BernsteinPolynomial0(b0: b1 - b0) }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial1, right: BernsteinPolynomial1) {
+        let h = Utils.linearInterpolate(b0, b1, t)
+        return (left: BernsteinPolynomial1(b0: b0, b1: h),
+                right: BernsteinPolynomial1(b0: h, b1: b1))
+    }
 }
 
 public struct BernsteinPolynomial2: BernsteinPolynomial {
@@ -93,6 +108,13 @@ public struct BernsteinPolynomial2: BernsteinPolynomial {
     }
     public var derivative: BernsteinPolynomial1 {
         BernsteinPolynomial1(b0: 2 * (b1 - b0), b1: 2 * (b2 - b1))
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial2, right: BernsteinPolynomial2) {
+        let h00 = Utils.linearInterpolate(b0, b1, t)
+        let h01 = Utils.linearInterpolate(b1, b2, t)
+        let h10 = Utils.linearInterpolate(h00, h01, t)
+        return (left: BernsteinPolynomial2(b0: b0, b1: h00, b2: h10),
+                right: BernsteinPolynomial2(b0: h10, b1: h01, b2: b2))
     }
 }
 
@@ -113,6 +135,16 @@ public struct BernsteinPolynomial3: BernsteinPolynomial {
     }
     public var derivative: BernsteinPolynomial2 {
         BernsteinPolynomial2(b0: 3 * (b1 - b0), b1: 3 * (b2 - b1), b2: 3 * (b3 - b2))
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial3, right: BernsteinPolynomial3) {
+        let h00 = Utils.linearInterpolate(b0, b1, t)
+        let h01 = Utils.linearInterpolate(b1, b2, t)
+        let h02 = Utils.linearInterpolate(b2, b3, t)
+        let h10 = Utils.linearInterpolate(h00, h01, t)
+        let h11 = Utils.linearInterpolate(h01, h02, t)
+        let h20 = Utils.linearInterpolate(h10, h11, t)
+        return (left: BernsteinPolynomial3(b0: b0, b1: h00, b2: h10, b3: h20),
+                right: BernsteinPolynomial3(b0: h20, b1: h11, b2: h02, b3: b3))
     }
 }
 
@@ -145,6 +177,20 @@ public struct BernsteinPolynomial4: BernsteinPolynomial {
         let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22
         return (s * c30 + t * c31, 4 * (c31 - c30))
     }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial4, right: BernsteinPolynomial4) {
+        let h00 = Utils.linearInterpolate(b0, b1, t)
+        let h01 = Utils.linearInterpolate(b1, b2, t)
+        let h02 = Utils.linearInterpolate(b2, b3, t)
+        let h03 = Utils.linearInterpolate(b3, b4, t)
+        let h10 = Utils.linearInterpolate(h00, h01, t)
+        let h11 = Utils.linearInterpolate(h01, h02, t)
+        let h12 = Utils.linearInterpolate(h02, h03, t)
+        let h20 = Utils.linearInterpolate(h10, h11, t)
+        let h21 = Utils.linearInterpolate(h11, h12, t)
+        let h30 = Utils.linearInterpolate(h20, h21, t)
+        return (left: BernsteinPolynomial4(b0: b0, b1: h00, b2: h10, b3: h20, b4: h30),
+                right: BernsteinPolynomial4(b0: h30, b1: h21, b2: h12, b3: h03, b4: b4))
+    }
 }
 
 public struct BernsteinPolynomial5: BernsteinPolynomial {
@@ -160,6 +206,25 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
     public var b0, b1, b2, b3, b4, b5: CGFloat
     public var derivative: BernsteinPolynomial4 {
         BernsteinPolynomial4(b0: 5 * (b1 - b0), b1: 5 * (b2 - b1), b2: 5 * (b3 - b2), b3: 5 * (b4 - b3), b4: 5 * (b5 - b4))
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial5, right: BernsteinPolynomial5) {
+        let h00 = Utils.linearInterpolate(b0, b1, t)
+        let h01 = Utils.linearInterpolate(b1, b2, t)
+        let h02 = Utils.linearInterpolate(b2, b3, t)
+        let h03 = Utils.linearInterpolate(b3, b4, t)
+        let h04 = Utils.linearInterpolate(b4, b5, t)
+        let h10 = Utils.linearInterpolate(h00, h01, t)
+        let h11 = Utils.linearInterpolate(h01, h02, t)
+        let h12 = Utils.linearInterpolate(h02, h03, t)
+        let h13 = Utils.linearInterpolate(h03, h04, t)
+        let h20 = Utils.linearInterpolate(h10, h11, t)
+        let h21 = Utils.linearInterpolate(h11, h12, t)
+        let h22 = Utils.linearInterpolate(h12, h13, t)
+        let h30 = Utils.linearInterpolate(h20, h21, t)
+        let h31 = Utils.linearInterpolate(h21, h22, t)
+        let h40 = Utils.linearInterpolate(h30, h31, t)
+        return (left: BernsteinPolynomial5(b0: b0, b1: h00, b2: h10, b3: h20, b4: h30, b5: h40),
+                right: BernsteinPolynomial5(b0: h40, b1: h31, b2: h22, b3: h13, b4: h04, b5: b5))
     }
     public func value(at x: CGFloat) -> CGFloat {
         let s = 1 - x, t = x

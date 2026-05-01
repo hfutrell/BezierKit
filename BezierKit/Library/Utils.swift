@@ -202,8 +202,9 @@ internal class Utils {
         let scale = Swift.abs(p0) + 3 * Swift.abs(p1) + 3 * Swift.abs(p2) + Swift.abs(p3)
         // When `d` is small relative to coefficient magnitudes, dividing by it amplifies rounding errors.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
-            BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
-                .distinctRealRootsInUnitInterval().forEach(callback)
+            // rare case: we couldn't to find the root due to numerical instability, so use the most numerically stable approach we have.
+            let poly = BernsteinPolynomial3(b0: p0, b1: p1, b2: p2, b3: p3)
+            findDistinctRootsCallbackBezierClipping(poly, callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d

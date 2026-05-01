@@ -173,39 +173,26 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[0], CGFloat(0.9999932), accuracy: 1.0e-5)
     }
 
-    func testDegreeN() {
-        // 2x^2 + 2x + 1
-        let polynomial = BernsteinPolynomialN(coefficients: [1, 2, 5])
-        XCTAssertEqual(polynomial.derivative, BernsteinPolynomialN(coefficients: [2, 6]))
-        XCTAssertEqual(polynomial.reversed(), BernsteinPolynomialN(coefficients: [5, 2, 1]))
-        // some edge cases
-        XCTAssertEqual(BernsteinPolynomialN(coefficients: [42]).split(from: 0.1, to: 0.9),
-                       BernsteinPolynomialN(coefficients: [42]))
-        XCTAssertEqual(polynomial.split(from: 1, to: 0), polynomial.reversed())
-    }
-
-    func testDegreeNNoRootSpuriousHullCrossing() {
+    func testBezierClippingNoRootSpuriousHullCrossing() {
         // [1, -1e-11, 1] has no real roots (min value ≈ 0.5), but one control point
         // lies just below y=0. Without the signChanges == 0 early-exit guard the hull
         // sees that tiny dip, converges to an interval of width ~1e-11, and reports a
         // false root at t ≈ 0.5.
-        let polynomial = BernsteinPolynomialN(coefficients: [1.0, -1e-11, 1.0])
-        XCTAssertTrue(polynomial.distinctRealRootsInUnitInterval().isEmpty)
+        let polynomial = BernsteinPolynomial2(b0: 1.0, b1: -1e-11, b2: 1.0)
+        var roots: [CGFloat] = []
+        findDistinctRootsCallbackBezierClipping(polynomial) { roots.append($0) }
+        XCTAssertTrue(roots.isEmpty)
     }
 
-    func testDegreeNRealWorldIssue() {
+    func testBezierClippingRealWorldIssue() {
         // this input would cause a stack overflow if the division step of the interval
-        // occurred before checking the interval's size
-        // the equation has 1st, 2nd, 3rd, and 4th derivative equal to zero
-        // which means that only a small portion of the interval can be clipped
-        // off. This means the code always takes the divide and conquer path.
-        let accuracy: CGFloat = 1.0e-5
-        let polynomial = BernsteinPolynomialN(coefficients: [0, 0, 0, 0, 0, -1])
-        let configuration = RootFindingConfiguration(errorThreshold: accuracy)
-        let roots = polynomial.distinctRealRootsInUnitInterval(configuration: configuration)
+        // occurred before checking the interval's size:
+        // the 1st–4th derivatives are all zero, so only a tiny portion of the interval
+        // is clipped each pass, forcing divide-and-conquer every time.
+        let polynomial = BernsteinPolynomial5(b0: 0, b1: 0, b2: 0, b3: 0, b4: 0, b5: -1)
+        var roots: [CGFloat] = []
+        findDistinctRootsCallbackBezierClipping(polynomial) { roots.append($0) }
         XCTAssertEqual(roots.count, 1)
-        if roots.isEmpty == false {
-            XCTAssertEqual(roots[0], 0, accuracy: accuracy)
-        }
+        XCTAssertEqual(roots.first ?? -1, 0, accuracy: 1.0e-5)
     }
 }
