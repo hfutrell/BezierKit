@@ -159,7 +159,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testQuadraticCurveSplitFromToPerformance() {
-        let dataCount = 10000000
+        let dataCount = 40000000
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 5)
         srand48(5)
         let params: [(CGFloat, CGFloat)] = (0..<dataCount).map { _ in
@@ -177,8 +177,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testCubicCurveSplitFromToPerformance() {
-        // -Onone ~0.019, -Os ~0.0005
-        let dataCount = 10000000
+        let dataCount = 20000000
         let curves = generateRandomCurves(count: dataCount, reseed: 4)
         srand48(4)
         let params: [(CGFloat, CGFloat)] = (0..<dataCount).map { _ in
