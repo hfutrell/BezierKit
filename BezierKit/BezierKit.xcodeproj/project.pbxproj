@@ -11,12 +11,12 @@
 		FD05111920153EAE000D035E /* BoundingBoxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05111720153EAE000D035E /* BoundingBoxTests.swift */; };
 		FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
 		FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD06332221E03A58001181B6 /* CGPointTests.swift */; };
-		FD067AC8246F1200006DA36B /* Polynomial.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067AC7246F1200006DA36B /* Polynomial.swift */; };
-		FD067AC9246F1200006DA36B /* Polynomial.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067AC7246F1200006DA36B /* Polynomial.swift */; };
+		FD067AC8246F1200006DA36B /* BernsteinPolynomial.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067AC7246F1200006DA36B /* BernsteinPolynomial.swift */; };
+		FD067AC9246F1200006DA36B /* BernsteinPolynomial.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067AC7246F1200006DA36B /* BernsteinPolynomial.swift */; };
 		FD067ACB246F12B5006DA36B /* PolynomialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067ACA246F12B5006DA36B /* PolynomialTests.swift */; };
 		FD067ACC246F12B5006DA36B /* PolynomialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067ACA246F12B5006DA36B /* PolynomialTests.swift */; };
-		FD07BC20261BC97400ED39FF /* RootFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD07BC1D261BC97400ED39FF /* RootFinding.swift */; };
-		FD07BC21261BC97400ED39FF /* RootFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD07BC1D261BC97400ED39FF /* RootFinding.swift */; };
+		FD07BC20261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */; };
+		FD07BC21261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */; };
 
 
 		FD12F1E22288CF6900404CE1 /* UtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD12F1E12288CF6900404CE1 /* UtilsTests.swift */; };
@@ -161,9 +161,9 @@
 /* Begin PBXFileReference section */
 		FD05111720153EAE000D035E /* BoundingBoxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingBoxTests.swift; sourceTree = "<group>"; };
 		FD06332221E03A58001181B6 /* CGPointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGPointTests.swift; sourceTree = "<group>"; };
-		FD067AC7246F1200006DA36B /* Polynomial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Polynomial.swift; sourceTree = "<group>"; };
+		FD067AC7246F1200006DA36B /* BernsteinPolynomial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BernsteinPolynomial.swift; sourceTree = "<group>"; };
 		FD067ACA246F12B5006DA36B /* PolynomialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolynomialTests.swift; sourceTree = "<group>"; };
-		FD07BC1D261BC97400ED39FF /* RootFinding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RootFinding.swift; path = Library/RootFinding.swift; sourceTree = SOURCE_ROOT; };
+		FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BernsteinPolynomial+RootFinding.swift; path = Library/BernsteinPolynomial+RootFinding.swift; sourceTree = SOURCE_ROOT; };
 
 
 		FD0F54F51DC43FFB0084CDCD /* MacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -360,7 +360,7 @@
 				FDB6011A25BB9B3700BAB067 /* BezierCurve+Polynomial.swift */,
 
 
-				FD07BC1D261BC97400ED39FF /* RootFinding.swift */,
+				FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */,
 				FD5CF14B22400FCA00FE15A6 /* BezierCurve+Intersection.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicCurve.swift */,
 				FDB6B3FC1EAFD6DF00001C61 /* CGPoint+Overloads.swift */,
@@ -373,7 +373,7 @@
 				FD5CAEF4256C42C00081A964 /* Path+Projection.swift */,
 				FDB6B3FD1EAFD6DF00001C61 /* PathComponent.swift */,
 				FD84360422B0091500AA90EF /* PathComponent+WindingCount.swift */,
-				FD067AC7246F1200006DA36B /* Polynomial.swift */,
+				FD067AC7246F1200006DA36B /* BernsteinPolynomial.swift */,
 				FDB6B3FE1EAFD6DF00001C61 /* QuadraticCurve.swift */,
 				FD4A63FD200AA50B00930E10 /* Shape.swift */,
 				FDB6B3FF1EAFD6DF00001C61 /* Types.swift */,
@@ -650,7 +650,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FDB6B4111EAFD6DF00001C61 /* QuadraticCurve.swift in Sources */,
-				FD067AC9246F1200006DA36B /* Polynomial.swift in Sources */,
+				FD067AC9246F1200006DA36B /* BernsteinPolynomial.swift in Sources */,
 				FD5CF14D22400FCA00FE15A6 /* BezierCurve+Intersection.swift in Sources */,
 				FDC7D7042111323A00A9EEF0 /* Path.swift in Sources */,
 				FDC859642119274A00AF7642 /* BoundingBoxHierarchy.swift in Sources */,
@@ -661,7 +661,7 @@
 				FD84360622B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */,
 				FDB6B40F1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
 				FDB6B4151EAFD6DF00001C61 /* Utils.swift in Sources */,
-				FD07BC21261BC97400ED39FF /* RootFinding.swift in Sources */,
+				FD07BC21261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */,
 				FDCE99A6223C404E00597989 /* Path+Data.swift in Sources */,
 				FDB6011C25BB9B3700BAB067 /* BezierCurve+Polynomial.swift in Sources */,
 				FDC2EB4B2298735C007768FC /* Lock.swift in Sources */,
@@ -682,7 +682,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FDB6B4101EAFD6DF00001C61 /* QuadraticCurve.swift in Sources */,
-				FD067AC8246F1200006DA36B /* Polynomial.swift in Sources */,
+				FD067AC8246F1200006DA36B /* BernsteinPolynomial.swift in Sources */,
 				FD5CF14C22400FCA00FE15A6 /* BezierCurve+Intersection.swift in Sources */,
 				FDC7D7032111323A00A9EEF0 /* Path.swift in Sources */,
 				FDC455EE211D057E00DBF2B2 /* BoundingBoxHierarchy.swift in Sources */,
@@ -693,7 +693,7 @@
 				FD84360522B0091500AA90EF /* PathComponent+WindingCount.swift in Sources */,
 				FDB6B40E1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
 				FDB6B4141EAFD6DF00001C61 /* Utils.swift in Sources */,
-				FD07BC20261BC97400ED39FF /* RootFinding.swift in Sources */,
+				FD07BC20261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */,
 				FDCE99A5223C404E00597989 /* Path+Data.swift in Sources */,
 				FDB6011B25BB9B3700BAB067 /* BezierCurve+Polynomial.swift in Sources */,
 				FDC2EB4A2298735C007768FC /* Lock.swift in Sources */,
