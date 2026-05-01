@@ -293,7 +293,7 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
     return guess
 }
 
-// Zero-allocation root finder. Calls `callback` for each root in sorted order.
+// Zero-allocation root finder for arbitrary intervals. Calls `callback` for each root in sorted order.
 // For degree ≤ 3, delegates to Utils.droots (analytical). For higher degrees,
 // finds critical points of the derivative recursively and searches each interval.
 // Intervals are stored in a withUnsafeTemporaryAllocation buffer (stack for small sizes).
@@ -351,14 +351,30 @@ func findDistinctRootsCallback<P: BernsteinPolynomial>(
     }
 }
 
-public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
-    var result: [CGFloat] = []
-    findDistinctRootsCallback(of: polynomial, between: 0, and: 1) { result.append($0) }
-    return result
-}
-
 func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
     var result: [CGFloat] = []
     findDistinctRootsCallback(of: polynomial, between: start, and: end) { result.append($0) }
+    return result
+}
+
+// Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–5.
+// With WMO the conformance check is a compile-time constant and generates no branch overhead.
+public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
+    var result: [CGFloat] = []
+    if let analytical = polynomial as? AnalyticalRootsCallback {
+        // Expand the search window by a tiny epsilon so roots that land just outside
+        // [0,1] due to floating-point rounding in the analytical formula aren't silently
+        // dropped, then clamp back. Roots come in sorted order from the analytical path,
+        // so deduplication via result.last is safe.
+        let eps: CGFloat = 1e-10
+        analytical.forEachAnalyticalDistinctRoot(between: -eps, and: 1 + eps) {
+            let t = Swift.max(0, Swift.min(1, $0))
+            if result.last.map({ t - $0 > eps }) ?? true { result.append(t) }
+        }
+    } else if let p4 = polynomial as? BernsteinPolynomial4 {
+        findDistinctRootsCallbackBezierClipping(p4) { result.append($0) }
+    } else if let p5 = polynomial as? BernsteinPolynomial5 {
+        findDistinctRootsCallbackBezierClipping(p5) { result.append($0) }
+    }
     return result
 }

@@ -10,102 +10,64 @@ import CoreGraphics
 #endif
 import Foundation
 
-// Internal protocol providing per-index coefficient access for the bezier clipping algorithm.
-// BP0–BP5 all conform so `findDistinctRootsCallbackBezierClipping` can be generic.
+// Internal protocol for the bezier clipping algorithm.
+// `forEachCoefficient` lets the sign-change and convex hull loops iterate without
+// a branch-cascaded switch per step; `coefficient(at:)` is kept for skipped-root checks.
 protocol BezierClippingPolynomial: BernsteinPolynomial {
     var degree: Int { get }
     func coefficient(at i: Int) -> CGFloat
+    func forEachCoefficient(_ body: (CGFloat) -> Void)
 }
 
 extension BernsteinPolynomial0: BezierClippingPolynomial {
     var degree: Int { 0 }
     func coefficient(at i: Int) -> CGFloat { b0 }
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0) }
 }
 
 extension BernsteinPolynomial1: BezierClippingPolynomial {
     var degree: Int { 1 }
-    func coefficient(at i: Int) -> CGFloat {
-        switch i {
-        case 0: return b0
-        default: return b1
-        }
-    }
+    func coefficient(at i: Int) -> CGFloat { i == 0 ? b0 : b1 }
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1) }
 }
 
 extension BernsteinPolynomial2: BezierClippingPolynomial {
     var degree: Int { 2 }
     func coefficient(at i: Int) -> CGFloat {
-        switch i {
-        case 0: return b0
-        case 1: return b1
-        default: return b2
-        }
+        switch i { case 0: return b0; case 1: return b1; default: return b2 }
     }
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2) }
 }
 
 extension BernsteinPolynomial3: BezierClippingPolynomial {
     var degree: Int { 3 }
     func coefficient(at i: Int) -> CGFloat {
-        switch i {
-        case 0: return b0
-        case 1: return b1
-        case 2: return b2
-        default: return b3
-        }
+        switch i { case 0: return b0; case 1: return b1; case 2: return b2; default: return b3 }
     }
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3) }
 }
 
 extension BernsteinPolynomial4: BezierClippingPolynomial {
     var degree: Int { 4 }
     func coefficient(at i: Int) -> CGFloat {
-        switch i {
-        case 0: return b0
-        case 1: return b1
-        case 2: return b2
-        case 3: return b3
-        default: return b4
-        }
+        switch i { case 0: return b0; case 1: return b1; case 2: return b2; case 3: return b3; default: return b4 }
     }
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4) }
 }
 
 extension BernsteinPolynomial5: BezierClippingPolynomial {
     var degree: Int { 5 }
     func coefficient(at i: Int) -> CGFloat {
-        switch i {
-        case 0: return b0
-        case 1: return b1
-        case 2: return b2
-        case 3: return b3
-        case 4: return b4
-        default: return b5
-        }
+        switch i { case 0: return b0; case 1: return b1; case 2: return b2; case 3: return b3; case 4: return b4; default: return b5 }
     }
-}
-
-// Converts Bernstein control points to power basis using iterative forward differences.
-// a[m] = C(n,m) * Δ^m b_0, so p(t) = Σ a[m] * t^m.
-private func bernsteinToPowerBasis<P: BezierClippingPolynomial>(_ polynomial: P) -> [Double] {
-    let n = polynomial.degree
-    let count = n + 1
-    var diffs = (0..<count).map { Double(polynomial.coefficient(at: $0)) }
-    var result = [Double](repeating: 0, count: count)
-    for m in 0...n {
-        result[m] = Double(Utils.binomialCoefficient(n, choose: m)) * diffs[0]
-        for k in 0..<(n - m) { diffs[k] = diffs[k + 1] - diffs[k] }
-    }
-    return result
-}
-
-private func horner(_ c: [Double], at t: Double) -> Double {
-    var v = c[c.count - 1]
-    for i in stride(from: c.count - 2, through: 0, by: -1) { v = v * t + c[i] }
-    return v
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5) }
 }
 
 // Bezier clipping convergence threshold (Sederberg & Nishita 1990).
 // The convex hull property guarantees at least 50% reduction per step in the single-root case,
 // giving quadratic convergence; we stop once the mapped interval is below this tolerance.
 private let clippingErrorThreshold: CGFloat = 1e-5
+
 
 private func rootsCore<P: BezierClippingPolynomial>(
     polynomial: P,
@@ -119,13 +81,13 @@ private func rootsCore<P: BezierClippingPolynomial>(
     let count = n + 1
 
     var coeffScale = 0.0
-    for i in 0..<count { coeffScale = Swift.max(coeffScale, Swift.abs(Double(polynomial.coefficient(at: i)))) }
+    polynomial.forEachCoefficient { coeffScale = Swift.max(coeffScale, Swift.abs(Double($0))) }
     let signThreshold = coeffScale * 1e-10
     var lastSign = 0
     var signChanges = 0
-    for i in 0..<count {
-        let c = Double(polynomial.coefficient(at: i))
-        guard Swift.abs(c) > signThreshold else { continue }
+    polynomial.forEachCoefficient { coeff in
+        let c = Double(coeff)
+        guard Swift.abs(c) > signThreshold else { return }
         let s = c > 0 ? 1 : -1
         if lastSign != 0, s != lastSign { signChanges += 1 }
         lastSign = s
@@ -135,42 +97,64 @@ private func rootsCore<P: BezierClippingPolynomial>(
     guard signChanges > 0 || c0 == 0 || cN == 0 else { return }
 
     if signChanges == 1 {
-        let fLo = Double(c0)
-        let fHi = Double(cN)
-        if fLo * fHi < 0 {
-            let pow = bernsteinToPowerBasis(polynomial)
-            var lo = 0.0, hi = 1.0, fL = fLo, fH = fHi
-            let threshold = Double(clippingErrorThreshold) / Double(rangeEnd - rangeStart)
+        if c0 * cN < 0 {
+            let scale = Swift.max(Swift.abs(c0), Swift.abs(cN))
+            let residualThreshold = scale * CGFloat.ulpOfOne.squareRoot()
+            var x = CGFloat(0.5)
+            var newtonSucceeded = false
+            for _ in 0..<20 {
+                let (f, fPrime) = polynomial.valueAndDerivative(at: x)
+                if f == 0 { newtonSucceeded = true; break }
+                guard fPrime != 0 else { break }
+                let delta = f / fPrime
+                x -= delta
+                guard x >= 0, x <= 1 else { break }
+                if Swift.abs(delta) <= 1e-10 {
+                    newtonSucceeded = Swift.abs(polynomial.value(at: x)) <= residualThreshold
+                    break
+                }
+            }
+            if newtonSucceeded {
+                callback(Utils.linearInterpolate(rangeStart, rangeEnd, x))
+                return
+            }
+            var lo = CGFloat(0), hi = CGFloat(1), fL = c0, fH = cN
+            let threshold = clippingErrorThreshold / (rangeEnd - rangeStart)
             while hi - lo > threshold {
-                let mid = 0.5 * (lo + hi)
-                let fMid = horner(pow, at: mid)
+                let mid = CGFloat(0.5) * (lo + hi)
+                let fMid = polynomial.value(at: mid)
                 if fMid == 0 { lo = mid; hi = mid; break }
                 if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid; fH = fMid }
             }
             _ = fH
-            callback(Utils.linearInterpolate(rangeStart, rangeEnd, CGFloat(0.5 * (lo + hi))))
+            callback(Utils.linearInterpolate(rangeStart, rangeEnd, 0.5 * (lo + hi)))
             return
         }
     }
 
     var lowerBound = CGFloat.infinity
     var upperBound = -CGFloat.infinity
-    for i in 0..<n {
-        for j in (i + 1)...n {
-            let p1x = CGFloat(i) / CGFloat(n)
-            let p1y = polynomial.coefficient(at: i)
-            let p2x = CGFloat(j) / CGFloat(n)
-            let p2y = polynomial.coefficient(at: j)
-            guard p1y != 0 || p2y != 0 else {
-                if p1x < lowerBound { lowerBound = p1x }
-                if p2x > upperBound { upperBound = p2x }
-                continue
-            }
-            let tLine = -p1y / (p2y - p1y)
-            if tLine >= 0, tLine <= 1 {
-                let tIntersect = Utils.linearInterpolate(p1x, p2x, tLine)
-                if tIntersect < lowerBound { lowerBound = tIntersect }
-                if tIntersect > upperBound { upperBound = tIntersect }
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: count) { buf in
+        var idx = 0
+        polynomial.forEachCoefficient { buf[idx] = $0; idx += 1 }
+        let nF = CGFloat(n)
+        for i in 0..<n {
+            let p1x = CGFloat(i) / nF
+            let p1y = buf[i]
+            for j in (i + 1)...n {
+                let p2x = CGFloat(j) / nF
+                let p2y = buf[j]
+                guard p1y != 0 || p2y != 0 else {
+                    if p1x < lowerBound { lowerBound = p1x }
+                    if p2x > upperBound { upperBound = p2x }
+                    continue
+                }
+                let tLine = -p1y / (p2y - p1y)
+                if tLine >= 0, tLine <= 1 {
+                    let tIntersect = Utils.linearInterpolate(p1x, p2x, tLine)
+                    if tIntersect < lowerBound { lowerBound = tIntersect }
+                    if tIntersect > upperBound { upperBound = tIntersect }
+                }
             }
         }
     }
@@ -209,4 +193,10 @@ func findDistinctRootsCallbackBezierClipping<P: BezierClippingPolynomial>(
         lastRoot = $0
         callback($0)
     }
+}
+
+func findDistinctRootsInUnitIntervalBezierClipping<P: BezierClippingPolynomial>(of polynomial: P) -> [CGFloat] {
+    var result: [CGFloat] = []
+    findDistinctRootsCallbackBezierClipping(polynomial) { result.append($0) }
+    return result
 }

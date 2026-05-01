@@ -78,15 +78,15 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 2, accuracy: accuracy)
     }
 
-//    func testDegree3RootExactlyZero() {
-//        // root is exactly t = 0 (at the start of unit interval),
-//        // so may be accidentally discarded due to numerical precision
-//        let polynomial = BernsteinPolynomial3(b0: 0, b1: 96, b2: -24, b3: -36)
-//        let roots = findRoots(of: polynomial, between: 0, and: 1)
-//        XCTAssertEqual(roots.count, 2)
-//        XCTAssertEqual(roots[0], 0.0)
-//        XCTAssertEqual(roots[1], 2.0 / 3.0, accuracy: accuracy)
-//    }
+    func testDegree3RootExactlyZero() {
+        // root is exactly t = 0 (at the start of unit interval),
+        // so may be accidentally discarded due to numerical precision
+        let polynomial = BernsteinPolynomial3(b0: 0, b1: 96, b2: -24, b3: -36)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.0)
+        XCTAssertEqual(roots[1], 2.0 / 3.0, accuracy: accuracy)
+    }
 
     func testDegree4() {
         // x^4 - 2.44x^2 + 1.44
@@ -162,7 +162,6 @@ class PolynomialTests: XCTestCase {
     }
 
     func testDegree4SpuriousRootIssue() {
-        // Newton's method in the no-sign-change branch could produce a spurious root just outside [0,1].
         let polynomial = BernsteinPolynomial4(b0: -0.14644808172857054,
                                               b1: -0.07322397770821555,
                                               b2: -0.024407908361312264,

@@ -429,6 +429,7 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+
     #if canImport(CoreGraphics)
 
     func testPathProjectPerformance() {
