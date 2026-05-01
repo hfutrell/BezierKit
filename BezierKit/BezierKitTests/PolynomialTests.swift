@@ -41,6 +41,74 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(quad.b2, 0)
     }
 
+    func testDegree1() {
+        let polynomial = BernsteinPolynomial1(b0: -3.0, b1: 2.0)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots[0], 0.6, accuracy: accuracy)
+    }
+
+    func testDegree2() {
+        // (t - 0.25)(t - 0.75) in Bernstein form
+        let polynomial = BernsteinPolynomial2(b0: 0.1875, b1: -0.3125, b2: 0.1875)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.25, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.75, accuracy: accuracy)
+    }
+
+    func testDegree3() {
+        // (t - 0.25)(t - 0.5)(t - 0.75) in Bernstein form
+        let polynomial = BernsteinPolynomial3(b0: -3.0/32.0, b1: 13.0/96.0, b2: -13.0/96.0, b3: 3.0/32.0)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 3)
+        XCTAssertEqual(roots[0], 0.25, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.5, accuracy: accuracy)
+        XCTAssertEqual(roots[2], 0.75, accuracy: accuracy)
+    }
+
+    func testDegree3RepeatedRoot1() {
+        // (t - 0.5)^2 * (t - 0.8) in Bernstein form; double root at 0.5 and simple root at 0.8
+        let polynomial = BernsteinPolynomial3(b0: -0.2, b1: 0.15, b2: -0.1, b3: 0.05)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.5, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.8, accuracy: accuracy)
+    }
+
+    func testDegree4() {
+        // (t - 0.2)(t - 0.4)(t - 0.6)(t - 0.8) in Bernstein form
+        let polynomial = BernsteinPolynomial4(b0: 24.0/625.0, b1: -77.0/1250.0, b2: 269.0/3750.0, b3: -77.0/1250.0, b4: 24.0/625.0)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 4)
+        XCTAssertEqual(roots[0], 0.2, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.4, accuracy: accuracy)
+        XCTAssertEqual(roots[2], 0.6, accuracy: accuracy)
+        XCTAssertEqual(roots[3], 0.8, accuracy: accuracy)
+    }
+
+    func testDegree4RepeatedRoots() {
+        // (t - 0.25)(t - 0.5)^2(t - 0.75) in Bernstein form
+        // double root at 0.5 produces no sign change; bezier clipping finds 0.25 and 0.75 only
+        let polynomial = BernsteinPolynomial4(b0: 3.0/64.0, b1: -1.0/16.0, b2: 13.0/192.0, b3: -1.0/16.0, b4: 3.0/64.0)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 2)
+        XCTAssertEqual(roots[0], 0.25, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.75, accuracy: accuracy)
+    }
+
+    func testDegree5() {
+        // (t - 0.2)(t - 0.4)(t - 0.5)(t - 0.6)(t - 0.8) in Bernstein form
+        let polynomial = BernsteinPolynomial5(b0: -0.0192, b1: 0.02848, b2: -0.03384, b3: 0.03384, b4: -0.02848, b5: 0.0192)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 5)
+        XCTAssertEqual(roots[0], 0.2, accuracy: accuracy)
+        XCTAssertEqual(roots[1], 0.4, accuracy: accuracy)
+        XCTAssertEqual(roots[2], 0.5, accuracy: accuracy)
+        XCTAssertEqual(roots[3], 0.6, accuracy: accuracy)
+        XCTAssertEqual(roots[4], 0.8, accuracy: accuracy)
+    }
+
     func testDegree3RootExactlyZero() {
         // root is exactly t = 0 (at the start of unit interval),
         // so may be accidentally discarded due to numerical precision
