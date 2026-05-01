@@ -11,7 +11,7 @@ import CoreGraphics
 #endif
 import Foundation
 
-internal protocol AnalyticalRootsCallback {
+protocol AnalyticalRootsCallback {
     func forEachAnalyticalDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void)
 }
 
@@ -29,7 +29,7 @@ extension BernsteinPolynomial0: AnalyticalRootsCallback {
 
 extension BernsteinPolynomial1: AnalyticalRootsCallback {
     func forEachAnalyticalDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {
-        Utils.droots(self.b0, self.b1) {
+        Utils.droots(b0, b1) {
             guard $0 >= start, $0 <= end else { return }
             callback($0)
         }
@@ -38,7 +38,7 @@ extension BernsteinPolynomial1: AnalyticalRootsCallback {
 
 extension BernsteinPolynomial2: AnalyticalRootsCallback {
     func forEachAnalyticalDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {
-        Utils.droots(self.b0, self.b1, self.b2) {
+        Utils.droots(b0, b1, b2) {
             guard $0 >= start, $0 <= end else { return }
             callback($0)
         }
@@ -47,7 +47,7 @@ extension BernsteinPolynomial2: AnalyticalRootsCallback {
 
 extension BernsteinPolynomial3: AnalyticalRootsCallback {
     func forEachAnalyticalDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {
-        Utils.droots(self.b0, self.b1, self.b2, self.b3) {
+        Utils.droots(b0, b1, b2, b3) {
             guard $0 >= start, $0 <= end else { return }
             callback($0)
         }
@@ -56,7 +56,7 @@ extension BernsteinPolynomial3: AnalyticalRootsCallback {
 
 public extension BernsteinPolynomial {
     func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
-        return (value(at: x), derivative.value(at: x))
+        (value(at: x), derivative.value(at: x))
     }
 }
 
@@ -64,9 +64,8 @@ public struct BernsteinPolynomial0: BernsteinPolynomial {
     public init(b0: CGFloat) { self.b0 = b0 }
     public typealias NextLowerOrderPolynomial = BernsteinPolynomial0
     public var b0: CGFloat
-    public var coefficients: [CGFloat] { return [b0] }
-    public func value(at x: CGFloat) -> CGFloat { return b0 }
-    public var derivative: BernsteinPolynomial0 { return BernsteinPolynomial0(b0: 0.0) }
+    public func value(at x: CGFloat) -> CGFloat { b0 }
+    public var derivative: BernsteinPolynomial0 { BernsteinPolynomial0(b0: 0.0) }
 }
 
 public struct BernsteinPolynomial1: BernsteinPolynomial {
@@ -76,9 +75,8 @@ public struct BernsteinPolynomial1: BernsteinPolynomial {
     }
     public typealias NextLowerOrderPolynomial = BernsteinPolynomial0
     public var b0, b1: CGFloat
-    public var coefficients: [CGFloat] { return [b0, b1] }
-    public func value(at x: CGFloat) -> CGFloat { return (1.0 - x) * b0 + x * b1 }
-    public var derivative: BernsteinPolynomial0 { return BernsteinPolynomial0(b0: b1 - b0) }
+    public func value(at x: CGFloat) -> CGFloat { (1.0 - x) * b0 + x * b1 }
+    public var derivative: BernsteinPolynomial0 { BernsteinPolynomial0(b0: b1 - b0) }
 }
 
 public struct BernsteinPolynomial2: BernsteinPolynomial {
@@ -89,13 +87,12 @@ public struct BernsteinPolynomial2: BernsteinPolynomial {
     }
     public typealias NextLowerOrderPolynomial = BernsteinPolynomial1
     public var b0, b1, b2: CGFloat
-    public var coefficients: [CGFloat] { return [b0, b1, b2] }
     public func value(at x: CGFloat) -> CGFloat {
         let s = 1 - x, t = x
         return s * (s * b0 + t * b1) + t * (s * b1 + t * b2)
     }
     public var derivative: BernsteinPolynomial1 {
-        return BernsteinPolynomial1(b0: 2 * (b1 - b0), b1: 2 * (b2 - b1))
+        BernsteinPolynomial1(b0: 2 * (b1 - b0), b1: 2 * (b2 - b1))
     }
 }
 
@@ -108,7 +105,6 @@ public struct BernsteinPolynomial3: BernsteinPolynomial {
     }
     public typealias NextLowerOrderPolynomial = BernsteinPolynomial2
     public var b0, b1, b2, b3: CGFloat
-    public var coefficients: [CGFloat] { return [b0, b1, b2, b3] }
     public func value(at x: CGFloat) -> CGFloat {
         let s = 1 - x, t = x
         let c10 = s * b0 + t * b1; let c11 = s * b1 + t * b2; let c12 = s * b2 + t * b3
@@ -116,7 +112,7 @@ public struct BernsteinPolynomial3: BernsteinPolynomial {
         return s * c20 + t * c21
     }
     public var derivative: BernsteinPolynomial2 {
-        return BernsteinPolynomial2(b0: 3 * (b1 - b0), b1: 3 * (b2 - b1), b2: 3 * (b3 - b2))
+        BernsteinPolynomial2(b0: 3 * (b1 - b0), b1: 3 * (b2 - b1), b2: 3 * (b3 - b2))
     }
 }
 
@@ -130,9 +126,8 @@ public struct BernsteinPolynomial4: BernsteinPolynomial {
     }
     public typealias NextLowerOrderPolynomial = BernsteinPolynomial3
     public var b0, b1, b2, b3, b4: CGFloat
-    public var coefficients: [CGFloat] { return [b0, b1, b2, b3, b4] }
     public var derivative: BernsteinPolynomial3 {
-        return BernsteinPolynomial3(b0: 4 * (b1 - b0), b1: 4 * (b2 - b1), b2: 4 * (b3 - b2), b3: 4 * (b4 - b3))
+        BernsteinPolynomial3(b0: 4 * (b1 - b0), b1: 4 * (b2 - b1), b2: 4 * (b3 - b2), b3: 4 * (b4 - b3))
     }
     public func value(at x: CGFloat) -> CGFloat {
         let s = 1 - x, t = x
@@ -163,9 +158,8 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
     }
     public typealias NextLowerOrderPolynomial = BernsteinPolynomial4
     public var b0, b1, b2, b3, b4, b5: CGFloat
-    public var coefficients: [CGFloat] { return [b0, b1, b2, b3, b4, b5] }
     public var derivative: BernsteinPolynomial4 {
-        return BernsteinPolynomial4(b0: 5 * (b1 - b0), b1: 5 * (b2 - b1), b2: 5 * (b3 - b2), b3: 5 * (b4 - b3), b4: 5 * (b5 - b4))
+        BernsteinPolynomial4(b0: 5 * (b1 - b0), b1: 5 * (b2 - b1), b2: 5 * (b3 - b2), b3: 5 * (b4 - b3), b4: 5 * (b5 - b4))
     }
     public func value(at x: CGFloat) -> CGFloat {
         let s = 1 - x, t = x
@@ -241,7 +235,7 @@ private func findRootBisection<P: BernsteinPolynomial>(of polynomial: P, start: 
 // Capacity is 6: BernsteinPolynomial5 is the highest-order type defined in this library,
 // and a degree-5 polynomial needs at most [start] + 4 critical points + [end] = 6 slots.
 // A compile-time constant lets the compiler stack-allocate the buffer without a dynamic alloca.
-internal func findDistinctRootsCallback<P: BernsteinPolynomial>(
+func findDistinctRootsCallback<P: BernsteinPolynomial>(
     of polynomial: P,
     between start: CGFloat, and end: CGFloat,
     _ callback: (CGFloat) -> Void
@@ -298,7 +292,7 @@ public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomia
     return result
 }
 
-internal func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
+func findDistinctRoots<P: BernsteinPolynomial>(of polynomial: P, between start: CGFloat, and end: CGFloat) -> [CGFloat] {
     var result: [CGFloat] = []
     findDistinctRootsCallback(of: polynomial, between: start, and: end) { result.append($0) }
     return result
