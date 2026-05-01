@@ -324,7 +324,7 @@ internal struct ControlPolygon {
     }
 }
 
-internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable {
+internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials {
     // Fixed-size control point storage without heap allocation or closure dispatch.
     var controlPolygon: ControlPolygon { get }
     // Combined evaluation: avoids recomputing shared basis intermediates (mt², t²) that

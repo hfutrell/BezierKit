@@ -15,12 +15,11 @@ class PolynomialTests: XCTestCase {
 
     func testEvaluation() {
         let point = BernsteinPolynomial0(b0: 3.0)
-        XCTAssertEqual(point.reduce(a1: 1, a2: 2), 0)
         XCTAssertEqual(point.value(at: 0), 3)
         XCTAssertEqual(point.value(at: 0.5), 3)
         XCTAssertEqual(point.value(at: 1), 3)
         XCTAssertEqual(point.derivative, BernsteinPolynomial0(b0: 0.0))
-        XCTAssertEqual(point.distinctAnalyticalRoots(between: 0, and: 1), [])
+        XCTAssertEqual(findDistinctRoots(of: point, between: 0, and: 1), [])
         XCTAssertEqual(point.coefficients, [3.0])
 
         let line = BernsteinPolynomial1(b0: 2.0, b1: 4.0)
@@ -28,8 +27,8 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(line.value(at: 0.5), 3)
         XCTAssertEqual(line.value(at: 1), 4)
         XCTAssertEqual(line.derivative, BernsteinPolynomial0(b0: 2))
-        XCTAssertEqual(line.distinctAnalyticalRoots(between: -2, and: 1), [-1])
-        XCTAssertEqual(line.distinctAnalyticalRoots(between: 0, and: 1), [])
+        XCTAssertEqual(findDistinctRoots(of: line, between: -2, and: 1), [-1])
+        XCTAssertEqual(findDistinctRoots(of: line, between: 0, and: 1), [])
         XCTAssertEqual(line.coefficients, [2, 4])
 
         let quad = BernsteinPolynomial2(b0: -1, b1: 1.0, b2: 0.0)

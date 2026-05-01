@@ -661,29 +661,14 @@ class CubicCurveTests: XCTestCase {
     // MARK: - Adversarial intersection cases
 
     // Verify the algorithm finds the right number of intersections for adversarial cases.
-    // If implicitization is needed for any case, it reports which ones triggered it.
     func testAdversarialIntersections() {
         continueAfterFailure = true
-        #if ENABLE_TESTABILITY
-        IntersectionPathCounter.clippingSuccess = 0
-        IntersectionPathCounter.coincidenceCheck = 0
-        IntersectionPathCounter.implicitization = 0
-        #endif
 
         var failures: [(label: String, expected: Int, got: Int)] = []
-        var implicitizationTriggers: [(label: String, expected: Int, got: Int)] = []
 
         func check(_ label: String, _ c1: CubicCurve, _ c2: CubicCurve,
                    expected: Int, accuracy: CGFloat = 1e-5) {
-            #if ENABLE_TESTABILITY
-            let prevImpl = IntersectionPathCounter.implicitization
-            #endif
             let result = c1.intersections(with: c2, accuracy: accuracy)
-            #if ENABLE_TESTABILITY
-            if IntersectionPathCounter.implicitization > prevImpl {
-                implicitizationTriggers.append((label, expected, result.count))
-            }
-            #endif
             if result.count != expected {
                 failures.append((label, expected, result.count))
             }
@@ -821,27 +806,6 @@ class CubicCurveTests: XCTestCase {
                                 p3: CGPoint(x:1,    y:  1 - delta))
             check("S-curve a=\(aVal) δ=\(delta) (expect 1)", sa, sb, expected: 1)
         }
-
-        #if ENABLE_TESTABILITY
-        let s = IntersectionPathCounter.clippingSuccess
-        let c = IntersectionPathCounter.coincidenceCheck
-        let i = IntersectionPathCounter.implicitization
-
-        // A trigger with a correct count means implicitization is live and working.
-        // A trigger with a wrong count means implicitization is live and broken.
-        if !implicitizationTriggers.isEmpty {
-            let impl_right = implicitizationTriggers.filter { $0.got == $0.expected }
-            let impl_wrong = implicitizationTriggers.filter { $0.got != $0.expected }
-            if !impl_right.isEmpty {
-                let desc = impl_right.map { "  ✓ \($0.label): got \($0.got) (correct via implicitization)" }.joined(separator: "\n")
-                XCTFail("Implicitization is LIVE code — triggered correctly \(impl_right.count) time(s):\n\(desc)\nCounts — clipping:\(s) coincidence:\(c) implicitization:\(i)")
-            }
-            if !impl_wrong.isEmpty {
-                let desc = impl_wrong.map { "  ✗ \($0.label): expected \($0.expected), got \($0.got)" }.joined(separator: "\n")
-                XCTFail("Implicitization triggered and WRONG \(impl_wrong.count) time(s):\n\(desc)")
-            }
-        }
-        #endif
 
         if !failures.isEmpty {
             let desc = failures.map { "  \($0.label): expected \($0.expected), got \($0.got)" }.joined(separator: "\n")
