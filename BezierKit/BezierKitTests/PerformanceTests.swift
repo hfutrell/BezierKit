@@ -235,7 +235,7 @@ class PerformanceTests: XCTestCase {
             for _ in 0..<2500 {
                 var result: [Intersection] = []
                 var iters = 0
-                _ = Utils.bezierClipping(sub1, sub2, &result, 1e-5, &iters)
+                _ = Utils.bezierClipping(sub1, sub2, &result, &iters)
                 total += result.count
             }
             _ = total
@@ -493,5 +493,6 @@ class PerformanceTests: XCTestCase {
     }
 
     #endif
+
 }
 #endif

@@ -537,11 +537,10 @@ internal class Utils {
     static func bezierClipping<C1, C2>(
         _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
         _ results: inout [Intersection],
-        _ accuracy: CGFloat,
         _ totalIterations: inout Int
     ) -> Bool where C1: NonlinearBezierCurve, C2: NonlinearBezierCurve {
 
-        let maximumIterations    = 900
+        let maximumIterations    = 5000
         let maximumIntersections = c1.curve.order * c2.curve.order
 
         // Quick bounding-box rejection using control polygon bounds (cheap: no root-finding).
@@ -565,60 +564,21 @@ internal class Utils {
             let c2Ratio   = clip2.1 - clip2.0
             let c2Reduced = c2.split(from: clip2.0, to: clip2.1)
 
-            // Geometric convergence check: both subcurves fit inside the accuracy threshold.
-            let b1 = c1Reduced.curve.boundingBox
-            let b2 = c2Reduced.curve.boundingBox
-            if b1.size.x + b1.size.y < accuracy && b2.size.x + b2.size.y < accuracy {
-                // Reject false positives: nearby non-intersecting sub-curves can both pass the
-                // size threshold. Require the reduced bounding boxes to be spatially close.
-                // Expand by `accuracy` to absorb floating-point rounding on degenerate curves.
-                guard b1.max.x + accuracy >= b2.min.x && b2.max.x + accuracy >= b1.min.x &&
-                      b1.max.y + accuracy >= b2.min.y && b2.max.y + accuracy >= b1.min.y else { return true }
-                let p1s = c1Reduced.curve.startingPoint
-                let p1e = c1Reduced.curve.endingPoint
-                let p2s = c2Reduced.curve.startingPoint
-                let p2e = c2Reduced.curve.endingPoint
-                var t1: CGFloat
-                var t2: CGFloat
-                if p1s == p2s {
-                    t1 = c1Reduced.t1; t2 = c2Reduced.t1
-                } else if p1s == p2e {
-                    t1 = c1Reduced.t1; t2 = c2Reduced.t2
-                } else if p1e == p2s {
-                    t1 = c1Reduced.t2; t2 = c2Reduced.t1
-                } else if p1e == p2e {
-                    t1 = c1Reduced.t2; t2 = c2Reduced.t2
-                } else {
-                    // Newton-Raphson from midpoint. Sub-curves are tiny at convergence so
-                    // the root is always within 0.5 of the midpoint — first step stays in [0,1].
-                    // F(u,v) = c1(u) - c2(v) = 0; J = [d1, -d2].
-                    // du = -F.cross(d2) / d1.cross(d2),  dv = d1.cross(F) / d1.cross(d2)
-                    var u: CGFloat = 0.5, v: CGFloat = 0.5
-                    for _ in 0..<6 {
-                        let (q1, d1) = c1Reduced.curve.pointAndDerivative(at: u)
-                        let (q2, d2) = c2Reduced.curve.pointAndDerivative(at: v)
-                        let f = q1 - q2
-                        let denom = d1.cross(d2)
-                        guard denom != 0 else { break }
-                        let du = -f.cross(d2) / denom
-                        let dv = d1.cross(f) / denom
-                        u += du; if u < 0 { u = 0 } else if u > 1 { u = 1 }
-                        v += dv; if v < 0 { v = 0 } else if v > 1 { v = 1 }
-                        guard du * du + dv * dv > CGFloat(1e-28) else { break }
-                    }
-                    t1 = u * c1Reduced.t2 + (1 - u) * c1Reduced.t1
-                    t2 = v * c2Reduced.t2 + (1 - v) * c2Reduced.t1
-                }
-                results.append(Intersection(t1: t1, t2: t2))
+            let c1Range = c1Reduced.t2 - c1Reduced.t1
+            let c2Range = c2Reduced.t2 - c2Reduced.t1
+
+            // Sederberg-Nishita convergence: parameter intervals have shrunk to machine precision.
+            // Fat-line naturally eliminates non-intersecting regions before this fires.
+            if c1Range < 1e-10 && c2Range < 1e-10 {
+                results.append(Intersection(t1: (c1Reduced.t1 + c1Reduced.t2) / 2,
+                                            t2: (c2Reduced.t1 + c2Reduced.t2) / 2))
                 return true
             }
 
             // Hybrid clipping (Lou & Liu 2011): once both sub-intervals are narrow, switch
             // from fat-line clipping to Newton-Raphson. Newton is O(n) per step vs O(n²) for
             // de Casteljau splits, and both have quadratic convergence — so Newton wins once
-            // we are inside its convergence basin. The distance check rejects false positives.
-            let c1Range = c1Reduced.t2 - c1Reduced.t1
-            let c2Range = c2Reduced.t2 - c2Reduced.t1
+            // we are inside its convergence basin.
             if c1Range < 0.25 && c2Range < 0.25 && c1Ratio <= 0.8 && c2Ratio <= 0.8 {
                 var u: CGFloat = 0.5, v: CGFloat = 0.5
                 for _ in 0 ..< 20 {
@@ -643,8 +603,13 @@ internal class Utils {
                     // intersections are handled more precisely by the existing exact-endpoint path.
                     if t1Candidate > 1.0e-6 && t1Candidate < 1.0 - 1.0e-6 &&
                        t2Candidate > 1.0e-6 && t2Candidate < 1.0 - 1.0e-6 {
-                        let f = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
-                        if f.x * f.x + f.y * f.y <= accuracy * accuracy {
+                        // Verify convergence to a true intersection, not a nearest-approach point
+                        // on non-intersecting curves. For a real root |f| ≈ machine-epsilon × scale;
+                        // for a phantom |f| ≈ δ (separation). Use chord length as the scale reference.
+                        let fFinal = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
+                        let chord = (c1Reduced.curve.endingPoint - c1Reduced.curve.startingPoint).length
+                        let scale = max(chord, CGFloat(1e-10))
+                        if fFinal.x * fFinal.x + fFinal.y * fFinal.y < scale * scale * CGFloat(1e-12) {
                             results.append(Intersection(t1: t1Candidate, t2: t2Candidate))
                             return true
                         }
@@ -661,8 +626,6 @@ internal class Utils {
                 // subdivide.  The range threshold is conservative: tangent cases reach this scale
                 // quickly via fast convergence, while nearly-coincident cases exhaust their budget
                 // long before reaching it.
-                let c1Range = c1Reduced.t2 - c1Reduced.t1
-                let c2Range = c2Reduced.t2 - c2Reduced.t1
                 if c1Range < 0.05 && c2Range < 0.05 {
                     let p1s = c1Reduced.curve.startingPoint; let p1e = c1Reduced.curve.endingPoint
                     let p2s = c2Reduced.curve.startingPoint; let p2e = c2Reduced.curve.endingPoint
@@ -676,22 +639,22 @@ internal class Utils {
                     guard c1Reduced.canSplit else {
                         guard c2Reduced.canSplit else { return true }
                         let h = c2Reduced.split(at: 0.5)
-                        guard bezierClipping(c1Reduced, h.left,  &results, accuracy, &totalIterations) else { return false }
-                        return  bezierClipping(c1Reduced, h.right, &results, accuracy, &totalIterations)
+                        guard bezierClipping(c1Reduced, h.left,  &results, &totalIterations) else { return false }
+                        return  bezierClipping(c1Reduced, h.right, &results, &totalIterations)
                     }
                     let h = c1Reduced.split(at: 0.5)
-                    guard bezierClipping(h.left,  c2Reduced, &results, accuracy, &totalIterations) else { return false }
-                    return  bezierClipping(h.right, c2Reduced, &results, accuracy, &totalIterations)
+                    guard bezierClipping(h.left,  c2Reduced, &results, &totalIterations) else { return false }
+                    return  bezierClipping(h.right, c2Reduced, &results, &totalIterations)
                 } else {
                     guard c2Reduced.canSplit else {
                         guard c1Reduced.canSplit else { return true }
                         let h = c1Reduced.split(at: 0.5)
-                        guard bezierClipping(h.left,  c2Reduced, &results, accuracy, &totalIterations) else { return false }
-                        return  bezierClipping(h.right, c2Reduced, &results, accuracy, &totalIterations)
+                        guard bezierClipping(h.left,  c2Reduced, &results, &totalIterations) else { return false }
+                        return  bezierClipping(h.right, c2Reduced, &results, &totalIterations)
                     }
                     let h = c2Reduced.split(at: 0.5)
-                    guard bezierClipping(c1Reduced, h.left,  &results, accuracy, &totalIterations) else { return false }
-                    return  bezierClipping(c1Reduced, h.right, &results, accuracy, &totalIterations)
+                    guard bezierClipping(c1Reduced, h.left,  &results, &totalIterations) else { return false }
+                    return  bezierClipping(c1Reduced, h.right, &results, &totalIterations)
                 }
             }
 

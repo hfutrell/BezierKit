@@ -15,6 +15,15 @@ import Foundation
 
 let tinyValue = 1.0e-10
 
+#if ENABLE_TESTABILITY
+enum IntersectionPathCounter {
+    static var clippingSuccess: Int = 0
+    static var coincidenceCheck: Int = 0
+    static var implicitization: Int = 0
+}
+#endif
+
+
 public extension BezierCurve {
     func intersects(_ curve: BezierCurve) -> Bool {
         return self.intersects(curve, accuracy: BezierKit.defaultIntersectionAccuracy)
@@ -121,11 +130,14 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     var clipIntersections: [Intersection] = []
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
     var clipIterations = 0
-    if Utils.bezierClipping(curve1, curve2, &clipIntersections, accuracy, &clipIterations) {
+    if Utils.bezierClipping(curve1, curve2, &clipIntersections, &clipIterations) {
         // Slow-convergence subdivisions can produce near-duplicate intersections when
         // the same crossing is found in both halves of a split. Remove spatially-close
         // duplicates: keep only the first intersection whose curve1 point is further than
         // `accuracy` from every previously kept one.
+        #if ENABLE_TESTABILITY
+        IntersectionPathCounter.clippingSuccess += 1
+        #endif
         let sorted = clipIntersections.sorted()
         var result: [Intersection] = []
         for ix in sorted {
@@ -141,10 +153,16 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     // subdivision failed, check if the curves are coincident
     let insignificantDistance: CGFloat = 0.5 * accuracy
     if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        #if ENABLE_TESTABILITY
+        IntersectionPathCounter.coincidenceCheck += 1
+        #endif
         return coincidence
     }
 
     // find any intersections using curve implicitization
+    #if ENABLE_TESTABILITY
+    IntersectionPathCounter.implicitization += 1
+    #endif
     let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
     let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
 
