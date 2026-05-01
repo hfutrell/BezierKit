@@ -13,7 +13,7 @@ import Foundation
 // Internal protocol for the bezier clipping algorithm.
 // `forEachCoefficient` lets the sign-change and convex hull loops iterate without
 // a branch-cascaded switch per step; `coefficient(at:)` is kept for skipped-root checks.
-protocol BezierClippingPolynomial: BernsteinPolynomial {
+protocol BezierClippingPolynomial: ClippableBernsteinPolynomial {
     var degree: Int { get }
     func coefficient(at i: Int) -> CGFloat
     func forEachCoefficient(_ body: (CGFloat) -> Void)

@@ -307,26 +307,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sen
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-// Fixed-size control point storage — avoids heap allocation and opaque closure dispatch
-// in the bezier-clipping hot path. Holds up to 4 points; count distinguishes order.
-internal struct ControlPolygon {
-    let count: Int
-    let p0, p1, p2, p3: CGPoint
-
-    init(_ p0: CGPoint, _ p1: CGPoint, _ p2: CGPoint) {
-        count = 3; self.p0 = p0; self.p1 = p1; self.p2 = p2; self.p3 = .zero
-    }
-    init(_ p0: CGPoint, _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint) {
-        count = 4; self.p0 = p0; self.p1 = p1; self.p2 = p2; self.p3 = p3
-    }
-    subscript(_ i: Int) -> CGPoint {
-        switch i { case 0: return p0; case 1: return p1; case 2: return p2; default: return p3 }
-    }
-}
-
-internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials {
-    // Fixed-size control point storage without heap allocation or closure dispatch.
-    var controlPolygon: ControlPolygon { get }
+internal protocol NonlinearBezierCurve: BezierClippingCurve, ComponentPolynomials {
     // Combined evaluation: avoids recomputing shared basis intermediates (mt², t²) that
     // point(at:) and derivative(at:) would otherwise each compute independently.
     func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint)
@@ -335,21 +316,6 @@ internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials {
 internal extension NonlinearBezierCurve {
     func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint) {
         return (point(at: t), derivative(at: t))
-    }
-
-    // Axis-aligned bounding box of the control polygon — always an outer bound of the true
-    // curve bounding box (Bézier curves lie within the convex hull of their control points).
-    // Cheaper than `boundingBox` because it needs no droots/sqrt computation.
-    var controlPolygonBounds: BoundingBox {
-        let cp = controlPolygon
-        var minX = CGFloat.infinity; var maxX = -CGFloat.infinity
-        var minY = CGFloat.infinity; var maxY = -CGFloat.infinity
-        for i in 0..<cp.count {
-            let p = cp[i]
-            if p.x < minX { minX = p.x }; if p.x > maxX { maxX = p.x }
-            if p.y < minY { minY = p.y }; if p.y > maxY { maxY = p.y }
-        }
-        return BoundingBox(min: CGPoint(x: minX, y: minY), max: CGPoint(x: maxX, y: maxY))
     }
 }
 
