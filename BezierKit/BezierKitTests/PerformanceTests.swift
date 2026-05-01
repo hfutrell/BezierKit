@@ -152,6 +152,49 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+    func generateRandomQuadraticCurves(count: Int, reseed: Int? = nil) -> [QuadraticCurve] {
+        if let reseed = reseed { srand48(reseed) }
+        func rp() -> CGPoint { CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())) }
+        return (0..<count).map { _ in QuadraticCurve(p0: rp(), p1: rp(), p2: rp()) }
+    }
+
+    func testQuadraticCurveSplitFromToPerformance() {
+        let dataCount = 10000000
+        let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 5)
+        srand48(5)
+        let params: [(CGFloat, CGFloat)] = (0..<dataCount).map { _ in
+            let a = CGFloat(drand48()), b = CGFloat(drand48())
+            return a < b ? (a, b) : (b, a)
+        }
+        self.measure {
+            var sink = CGPoint.zero
+            for i in 0..<dataCount {
+                let s = curves[i].split(from: params[i].0, to: params[i].1)
+                sink.x += s.p0.x
+            }
+            XCTAssertNotEqual(sink, CGPoint.zero)
+        }
+    }
+
+    func testCubicCurveSplitFromToPerformance() {
+        let dataCount = 10000000
+        let curves = generateRandomCurves(count: dataCount, reseed: 4)
+        srand48(4)
+        let params: [(CGFloat, CGFloat)] = (0..<dataCount).map { _ in
+            let a = CGFloat(drand48())
+            let b = CGFloat(drand48())
+            return a < b ? (a, b) : (b, a)
+        }
+        self.measure {
+            var sink = CGPoint.zero
+            for i in 0..<dataCount {
+                let s = curves[i].split(from: params[i].0, to: params[i].1)
+                sink.x += s.p0.x
+            }
+            XCTAssertNotEqual(sink, CGPoint.zero)
+        }
+    }
+
     func testCubicCurveProjectPerformance() {
         let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
                            p1: CGPoint(x: 3, y: 1),
