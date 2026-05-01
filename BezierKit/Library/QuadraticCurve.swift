@@ -143,7 +143,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         func multiplyCoordinates(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
-        let q = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        let q = QuadraticCurve(p0: p0 - point, p1: p1 - point, p2: p2 - point)
         // p0, p1, p2, p3 form the control points of a cubic Bezier curve
         // created by multiplying the curve with its derivative
         let qd0 = q.p1 - q.p0
