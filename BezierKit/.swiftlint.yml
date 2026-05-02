@@ -4,7 +4,7 @@ disabled_rules: # rule identifiers to exclude from running
   - force_cast
   - cyclomatic_complexity
   - todo
-  - function_parameter_count
+  - function_parameter_count  # performance-critical internal functions have algorithm-mandated parameter counts
 # configurable rules can be customized from this configuration file
 # binary rules can set their severity level
 type_body_length:
