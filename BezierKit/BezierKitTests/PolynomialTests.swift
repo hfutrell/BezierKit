@@ -67,6 +67,7 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[2], 0.75, accuracy: accuracy)
     }
 
+    #if !os(WASI) // repeated-root separation requires 64-bit precision
     func testDegree3RepeatedRoot1() {
         // (t - 0.5)^2 * (t - 0.8) in Bernstein form; double root at 0.5 and simple root at 0.8
         let polynomial = BernsteinPolynomial3(b0: -0.2, b1: 0.15, b2: -0.1, b3: 0.05)
@@ -75,6 +76,7 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[0], 0.5, accuracy: accuracy)
         XCTAssertEqual(roots[1], 0.8, accuracy: accuracy)
     }
+    #endif
 
     func testDegree4() {
         // (t - 0.2)(t - 0.4)(t - 0.6)(t - 0.8) in Bernstein form
@@ -149,6 +151,7 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 0.5, accuracy: accuracy)
     }
 
+    #if !os(WASI) // near-endpoint root with tiny coefficients requires 64-bit precision
     func testDegree4SpuriousRootIssue() {
         let polynomial = BernsteinPolynomial4(b0: -0.14644808172857054,
                                               b1: -0.07322397770821555,
@@ -159,6 +162,7 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots.count, 1)
         XCTAssertEqual(roots[0], CGFloat(0.9999932), accuracy: 1.0e-5)
     }
+    #endif
 
     func testBezierClippingNoRootSpuriousHullCrossing() {
         // [1, -1e-11, 1] has no real roots (min value ≈ 0.5), but one control point

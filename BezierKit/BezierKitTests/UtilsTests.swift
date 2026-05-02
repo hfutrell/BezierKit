@@ -68,6 +68,7 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(r[0], CGFloat(0.0014849), accuracy: 1.0e-4)
     }
 
+    #if !os(WASI) // tiny cubic coefficient causes catastrophic cancellation in 32-bit
     func testDrootsCubicWorldIssue4() {
         // Cardano's formula returned ~0.9997828 instead of ~0.999858 (issue #92).
         // The cubic coefficient is small relative to the control point magnitudes, causing
@@ -77,6 +78,7 @@ class UtilsTests: XCTestCase {
         XCTAssertEqual(r.count, 1)
         XCTAssertEqual(r[0], CGFloat(0.999858), accuracy: 1.0e-5)
     }
+    #endif
 
     func testDrootsCubicWorldIssue3() {
         // this data causes issue #81 on GitHub

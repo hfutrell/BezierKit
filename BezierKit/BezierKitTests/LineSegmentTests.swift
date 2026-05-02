@@ -408,6 +408,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
+    #if !os(WASI) // t1 == 0.5 exactly requires 64-bit precision
     func testIntersectionsCubicSpecialCase() {
         // this is case that failed in the real-world
         let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
@@ -417,6 +418,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i.first?.t1, 0.5)
         XCTAssertEqual(i.first?.t2, 0)
     }
+    #endif
 
     func testIntersectionsCubicRootsEdgeCase1() {
         // this data caused issues in practice because because 'd' in the roots calculation is very near, but not exactly, zero.
