@@ -33,7 +33,6 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
     }
 
-
     public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5) {
         // shortcuts, although they're really dumb
         if t == 0 {

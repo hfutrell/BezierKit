@@ -80,7 +80,6 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
                   p3: quadratic.p2)
     }
 
-
 /**
      Returns a CubicCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
      

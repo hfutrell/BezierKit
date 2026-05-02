@@ -303,12 +303,6 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func generateRandomQuadraticCurves(count: Int, reseed: Int? = nil) -> [QuadraticCurve] {
-        if let reseed = reseed { srand48(reseed) }
-        func rp() -> CGPoint { CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())) }
-        return (0..<count).map { _ in QuadraticCurve(p0: rp(), p1: rp(), p2: rp()) }
-    }
-
     func testQuadraticCurveSplitFromToPerformance() {
         let dataCount = 10000000
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 5)

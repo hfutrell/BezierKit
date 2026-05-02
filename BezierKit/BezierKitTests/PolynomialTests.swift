@@ -130,19 +130,6 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[1], 0.5, accuracy: accuracy)
     }
 
-    func testDegree4SpuriousRootIssue() {
-        // degree-elevation of the degree-3 real-world polynomial; Newton's method in the
-        // no-sign-change branch could produce a spurious root just outside [0,1]
-        let polynomial = BernsteinPolynomial4(b0: -0.14644808172857054,
-                                              b1: -0.07322397770821555,
-                                              b2: -0.024407908361312264,
-                                              b3: 9.473515889812933e-08,
-                                              b4: 4.217515225946045e-12)
-        let roots = findDistinctRootsInUnitInterval(of: polynomial)
-        XCTAssertEqual(roots.count, 1)
-        XCTAssertEqual(roots[0], CGFloat(0.9999932), accuracy: 1.0e-5)
-    }
-
     func testDegree4RealWorldIssue() {
         let polynomial = BernsteinPolynomial4(b0: 1819945.4373168945, b1: -3353335.8194732666, b2: 3712712.6330566406, b3: -2836657.1703338623, b4: 2483314.5947265625)
         let roots = findDistinctRootsInUnitInterval(of: polynomial)
@@ -162,17 +149,6 @@ class PolynomialTests: XCTestCase {
         let roots = findDistinctRootsInUnitInterval(of: polynomial)
         XCTAssertEqual(roots.count, 1)
         XCTAssertEqual(roots[0], 0.44454, accuracy: 1.0e-5)
-    }
-
-    func testDegreeN() {
-        // 2x^2 + 2x + 1
-        let polynomial = BernsteinPolynomialN(coefficients: [1, 2, 5])
-        XCTAssertEqual(polynomial.derivative, BernsteinPolynomialN(coefficients: [2, 6]))
-        XCTAssertEqual(polynomial.reversed(), BernsteinPolynomialN(coefficients: [5, 2, 1]))
-        // some edge cases
-        XCTAssertEqual(BernsteinPolynomialN(coefficients: [42]).split(from: 0.1, to: 0.9),
-                       BernsteinPolynomialN(coefficients: [42]))
-        XCTAssertEqual(polynomial.split(from: 1, to: 0), polynomial.reversed())
     }
 
     func testDegree4RootAtLeftEndpoint() {

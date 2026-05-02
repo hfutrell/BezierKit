@@ -40,7 +40,6 @@ internal extension ClippableBernsteinPolynomial {
     }
 }
 
-
 extension BernsteinPolynomial0: AnalyticalRootsCallback {
     func forEachAnalyticalDistinctRoot(between start: CGFloat, and end: CGFloat, _ callback: (CGFloat) -> Void) {}
 }

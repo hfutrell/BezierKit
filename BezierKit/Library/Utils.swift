@@ -319,7 +319,6 @@ internal class Utils {
         return atan2(d1.cross(d2), d1.dot(d2))
     }
 
-
     static func hull(_ p: [CGPoint], _ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count
         var q: [CGPoint] = p

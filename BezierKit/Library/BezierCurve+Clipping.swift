@@ -238,7 +238,6 @@ private func fatLineClip<C1: BezierClippingCurve, C2: BezierClippingCurve>(curve
 
 // Bezier clipping main recursive entry.  Returns false if the iteration
 // budget was exceeded (caller falls back to implicitization).
-// swiftlint:disable function_parameter_count
 func bezierClipping<C1, C2>(
     _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
     _ results: inout [Intersection],
@@ -368,4 +367,3 @@ func bezierClipping<C1, C2>(
         c2 = c2Reduced
     }
 }
-// swiftlint:enable function_parameter_count
