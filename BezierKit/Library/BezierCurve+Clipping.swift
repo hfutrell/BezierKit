@@ -24,7 +24,10 @@ struct ControlPolygon {
         count = 4; self.p0 = p0; self.p1 = p1; self.p2 = p2; self.p3 = p3
     }
     subscript(_ i: Int) -> CGPoint {
-        switch i { case 0: return p0; case 1: return p1; case 2: return p2; default: return p3 }
+        if i == 0 { return p0 }
+        if i == 1 { return p1 }
+        if i == 2 { return p2 }
+        return p3
     }
 }
 
@@ -60,6 +63,78 @@ extension QuadraticCurve: BezierClippingCurve {
 
 // MARK: - Bezier Clipping (Sederberg & Nishita, 1990)
 
+// n=4 specialization of convexHullClipInterval (cubic curves — by far the most common case).
+// Eliminates the generic loop + withUnsafeTemporaryAllocation overhead by using a
+// static branch tree over precomputed cross products. tMin/tMax are passed explicitly
+// to avoid captured-var exclusivity overhead even after inlining.
+private func convexHullClipIntervalCubic(
+    d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
+    dLow: CGFloat, dHigh: CGFloat
+) -> (CGFloat, CGFloat)? {
+    // Processes one convex hull edge from (ta, da) to (ta+dt, db) against [dLow,dHigh].
+    // Returns updated (lo, hi). With @inline(__always), the call sites become pure
+    // local-variable arithmetic — no closure captures, no swift_beginAccess overhead.
+    @inline(__always) func check(_ da: CGFloat, _ db: CGFloat,
+                                 _ ta: CGFloat, _ dt: CGFloat,
+                                 _ lo: CGFloat, _ hi: CGFloat) -> (CGFloat, CGFloat) {
+        var lo = lo, hi = hi
+        if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
+        let dDelta = db - da
+        if dDelta != 0 {
+            // Sign-based crossing detection: avoid division when the edge doesn't cross
+            // the boundary (the sign product is positive when both ends are on the same side).
+            let dLowA = dLow - da; let dLowB = dLow - db
+            if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
+            let dHighA = dHigh - da; let dHighB = dHigh - db
+            if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
+        }
+        return (lo, hi)
+    }
+    var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
+    // Cross products proportional to cross2d for the 4 uniformly-spaced points
+    // (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
+    //   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
+    //   c023 = cross2d(0,2,3) = d0 - 3·d2 + 2·d3
+    //   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
+    //   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
+    let c012 = d0 - 2*d1 + d2
+    // Lower hull (pop vertex when cross2d ≤ 0) and upper hull (pop when cross2d ≥ 0)
+    // share identical structure; the sign factor flips the inequality.
+    // sign=+1 → lower hull, sign=-1 → upper hull.
+    func processHull(sign: CGFloat) {
+        if sign * c012 <= 0 {
+            let c023 = d0 - 3*d2 + 2*d3
+            if sign * c023 <= 0 {
+                (tMin, tMax) = check(d0, d3, 0, 1, tMin, tMax)
+            } else {
+                (tMin, tMax) = check(d0, d2, 0, 2.0/3, tMin, tMax)
+                (tMin, tMax) = check(d2, d3, 2.0/3, 1.0/3, tMin, tMax)
+            }
+        } else {
+            let c123 = d1 - 2*d2 + d3
+            if sign * c123 <= 0 {
+                let c013 = 2*d0 - 3*d1 + d3
+                if sign * c013 <= 0 {
+                    (tMin, tMax) = check(d0, d3, 0, 1, tMin, tMax)
+                } else {
+                    (tMin, tMax) = check(d0, d1, 0, 1.0/3, tMin, tMax)
+                    (tMin, tMax) = check(d1, d3, 1.0/3, 2.0/3, tMin, tMax)
+                }
+            } else {
+                (tMin, tMax) = check(d0, d1, 0, 1.0/3, tMin, tMax)
+                (tMin, tMax) = check(d1, d2, 1.0/3, 1.0/3, tMin, tMax)
+                (tMin, tMax) = check(d2, d3, 2.0/3, 1.0/3, tMin, tMax)
+            }
+        }
+    }
+    processHull(sign: 1)    // lower hull
+    processHull(sign: -1)   // upper hull
+    // d3 at t=1 is always the final vertex of both hulls.
+    if d3 >= dLow && d3 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
+    guard tMin <= tMax else { return nil }
+    return (max(0, tMin), min(1, tMax))
+}
+
 // Given n Bernstein coefficients d0..d3 (curve at t_i = i/(n-1)) and a horizontal band
 // [dLow, dHigh], returns the sub-interval [tMin, tMax] of [0,1] where the convex hull
 // of {(t_i, d(i))} intersects the band. Returns nil if hull and band are disjoint.
@@ -77,85 +152,15 @@ private func convexHullClipInterval(
     // Fast path: all control points inside the band → entire curve is inside.
     if dvMin >= dLow && dvMax <= dHigh { return (0, 1) }
 
-    // n=4 specialization (cubic curves — by far the most common case).
-    // Eliminates the generic loop + withUnsafeTemporaryAllocation overhead by using a
-    // static branch tree over precomputed cross products. tMin/tMax are passed explicitly
-    // to avoid captured-var exclusivity overhead even after inlining.
-    if n == 4 {
-        // Processes one convex hull edge from (ta, da) to (ta+dt, db) against [dLow,dHigh].
-        // Returns updated (lo, hi). With @inline(__always), the call sites become pure
-        // local-variable arithmetic — no closure captures, no swift_beginAccess overhead.
-        @inline(__always) func check(_ da: CGFloat, _ db: CGFloat,
-                                     _ ta: CGFloat, _ dt: CGFloat,
-                                     _ lo: CGFloat, _ hi: CGFloat) -> (CGFloat, CGFloat) {
-            var lo = lo, hi = hi
-            if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
-            let dDelta = db - da
-            if dDelta != 0 {
-                // Sign-based crossing detection: avoid division when the edge doesn't cross
-                // the boundary (the sign product is positive when both ends are on the same side).
-                let dLowA = dLow - da; let dLowB = dLow - db
-                if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
-                let dHighA = dHigh - da; let dHighB = dHigh - db
-                if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
-            }
-            return (lo, hi)
-        }
-
-        var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
-
-        // Cross products proportional to cross2d for the 4 uniformly-spaced points
-        // (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
-        //   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
-        //   c023 = cross2d(0,2,3) = d0 - 3·d2 + 2·d3
-        //   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
-        //   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
-        let c012 = d0 - 2*d1 + d2
-
-        // Lower hull (pop vertex when cross2d ≤ 0) and upper hull (pop when cross2d ≥ 0)
-        // share identical structure; the sign factor flips the inequality.
-        // sign=+1 → lower hull, sign=-1 → upper hull.
-        func processHull(sign: CGFloat) {
-            if sign * c012 <= 0 {
-                let c023 = d0 - 3*d2 + 2*d3
-                if sign * c023 <= 0 {
-                    (tMin, tMax) = check(d0, d3, 0,       1,       tMin, tMax)
-                } else {
-                    (tMin, tMax) = check(d0, d2, 0,       2.0/3,   tMin, tMax)
-                    (tMin, tMax) = check(d2, d3, 2.0/3,   1.0/3,   tMin, tMax)
-                }
-            } else {
-                let c123 = d1 - 2*d2 + d3
-                if sign * c123 <= 0 {
-                    let c013 = 2*d0 - 3*d1 + d3
-                    if sign * c013 <= 0 {
-                        (tMin, tMax) = check(d0, d3, 0,       1,       tMin, tMax)
-                    } else {
-                        (tMin, tMax) = check(d0, d1, 0,       1.0/3,   tMin, tMax)
-                        (tMin, tMax) = check(d1, d3, 1.0/3,   2.0/3,   tMin, tMax)
-                    }
-                } else {
-                    (tMin, tMax) = check(d0, d1, 0,       1.0/3,   tMin, tMax)
-                    (tMin, tMax) = check(d1, d2, 1.0/3,   1.0/3,   tMin, tMax)
-                    (tMin, tMax) = check(d2, d3, 2.0/3,   1.0/3,   tMin, tMax)
-                }
-            }
-        }
-        processHull(sign: 1)    // lower hull
-        processHull(sign: -1)   // upper hull
-
-        // d3 at t=1 is always the final vertex of both hulls.
-        if d3 >= dLow && d3 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
-
-        guard tMin <= tMax else { return nil }
-        return (max(0, tMin), min(1, tMax))
-    }
+    if n == 4 { return convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh) }
 
     // Generic path for n ≠ 4 (quadratic curves, n=3).
     let nf = CGFloat(n - 1)
 
     func dAt(_ i: Int) -> CGFloat {
-        switch i { case 0: return d0; case 1: return d1; default: return d2 }
+        if i == 0 { return d0 }
+        if i == 1 { return d1 }
+        return d2
     }
     func cross2d(_ a: Int, _ b: Int, _ c: Int) -> CGFloat {
         let da = dAt(a); let db = dAt(b); let dc = dAt(c)
@@ -323,47 +328,59 @@ func bezierClipping<C1, C2>(
 
         // If either curve reduced by less than 20 %, convergence is slow — subdivide.
         if c1Ratio > 0.8 || c2Ratio > 0.8 {
-            // For tangent intersections at a shared endpoint, fat-line clipping near the
-            // endpoint gives ratio ≈ 1.0, causing exponential blowup.  When both sub-curves
-            // have already been narrowed to a small parameter range (fast convergence already
-            // did its job), detect exact shared endpoints directly rather than continuing to
-            // subdivide.  The range threshold is conservative: tangent cases reach this scale
-            // quickly via fast convergence, while nearly-coincident cases exhaust their budget
-            // long before reaching it.
-            if c1Range < 0.05 && c2Range < 0.05 {
-                let p1s = c1Reduced.curve.startingPoint; let p1e = c1Reduced.curve.endingPoint
-                let p2s = c2Reduced.curve.startingPoint; let p2e = c2Reduced.curve.endingPoint
-                if p1e == p2s { results.append(Intersection(t1: c1Reduced.t2, t2: c2Reduced.t1)); return true }
-                if p1e == p2e { results.append(Intersection(t1: c1Reduced.t2, t2: c2Reduced.t2)); return true }
-                if p1s == p2s { results.append(Intersection(t1: c1Reduced.t1, t2: c2Reduced.t1)); return true }
-                if p1s == p2e { results.append(Intersection(t1: c1Reduced.t1, t2: c2Reduced.t2)); return true }
-            }
-            // Subdivide whichever has the larger global parameter range.
-            if (c1Reduced.t2 - c1Reduced.t1) >= (c2Reduced.t2 - c2Reduced.t1) {
-                guard c1Reduced.canSplit else {
-                    guard c2Reduced.canSplit else { return true }
-                    let h = c2Reduced.split(at: 0.5)
-                    guard bezierClipping(c1Reduced, h.left,  &results, &totalIterations) else { return false }
-                    return  bezierClipping(c1Reduced, h.right, &results, &totalIterations)
-                }
-                let h = c1Reduced.split(at: 0.5)
-                guard bezierClipping(h.left,  c2Reduced, &results, &totalIterations) else { return false }
-                return  bezierClipping(h.right, c2Reduced, &results, &totalIterations)
-            } else {
-                guard c2Reduced.canSplit else {
-                    guard c1Reduced.canSplit else { return true }
-                    let h = c1Reduced.split(at: 0.5)
-                    guard bezierClipping(h.left,  c2Reduced, &results, &totalIterations) else { return false }
-                    return  bezierClipping(h.right, c2Reduced, &results, &totalIterations)
-                }
-                let h = c2Reduced.split(at: 0.5)
-                guard bezierClipping(c1Reduced, h.left,  &results, &totalIterations) else { return false }
-                return  bezierClipping(c1Reduced, h.right, &results, &totalIterations)
-            }
+            return subdivideBezierClipping(c1Reduced, c2Reduced, &results, &totalIterations)
         }
 
         // Good convergence — continue alternating clipping passes.
         c1 = c1Reduced
         c2 = c2Reduced
+    }
+}
+
+// Subdivide the larger-range sub-curve and recurse. Before subdividing, checks for
+// exact shared endpoints (handles near-tangent cases that cause slow convergence).
+private func subdivideBezierClipping<C1, C2>(
+    _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
+    _ results: inout [Intersection],
+    _ totalIterations: inout Int
+) -> Bool where C1: NonlinearBezierCurve, C2: NonlinearBezierCurve {
+    // For tangent intersections at a shared endpoint, fat-line clipping near the
+    // endpoint gives ratio ≈ 1.0, causing exponential blowup.  When both sub-curves
+    // have already been narrowed to a small parameter range (fast convergence already
+    // did its job), detect exact shared endpoints directly rather than continuing to
+    // subdivide.  The range threshold is conservative: tangent cases reach this scale
+    // quickly via fast convergence, while nearly-coincident cases exhaust their budget
+    // long before reaching it.
+    let c1Range = c1.t2 - c1.t1
+    let c2Range = c2.t2 - c2.t1
+    if c1Range < 0.05 && c2Range < 0.05 {
+        let p1s = c1.curve.startingPoint; let p1e = c1.curve.endingPoint
+        let p2s = c2.curve.startingPoint; let p2e = c2.curve.endingPoint
+        if p1e == p2s { results.append(Intersection(t1: c1.t2, t2: c2.t1)); return true }
+        if p1e == p2e { results.append(Intersection(t1: c1.t2, t2: c2.t2)); return true }
+        if p1s == p2s { results.append(Intersection(t1: c1.t1, t2: c2.t1)); return true }
+        if p1s == p2e { results.append(Intersection(t1: c1.t1, t2: c2.t2)); return true }
+    }
+    // Subdivide whichever has the larger global parameter range.
+    if (c1.t2 - c1.t1) >= (c2.t2 - c2.t1) {
+        guard c1.canSplit else {
+            guard c2.canSplit else { return true }
+            let h = c2.split(at: 0.5)
+            guard bezierClipping(c1, h.left, &results, &totalIterations) else { return false }
+            return bezierClipping(c1, h.right, &results, &totalIterations)
+        }
+        let h = c1.split(at: 0.5)
+        guard bezierClipping(h.left, c2, &results, &totalIterations) else { return false }
+        return bezierClipping(h.right, c2, &results, &totalIterations)
+    } else {
+        guard c2.canSplit else {
+            guard c1.canSplit else { return true }
+            let h = c1.split(at: 0.5)
+            guard bezierClipping(h.left, c2, &results, &totalIterations) else { return false }
+            return bezierClipping(h.right, c2, &results, &totalIterations)
+        }
+        let h = c2.split(at: 0.5)
+        guard bezierClipping(c1, h.left, &results, &totalIterations) else { return false }
+        return bezierClipping(c1, h.right, &results, &totalIterations)
     }
 }
