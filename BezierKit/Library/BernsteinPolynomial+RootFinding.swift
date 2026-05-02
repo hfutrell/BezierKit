@@ -68,8 +68,6 @@ extension BernsteinPolynomial5: BezierClippingPolynomial {
 // giving quadratic convergence; we stop once the mapped interval is below this tolerance.
 private let clippingErrorThreshold: CGFloat = 1e-5
 
-
-
 private func rootsCore<P: BezierClippingPolynomial>(
     polynomial: P,
     start rangeStart: CGFloat,
@@ -132,12 +130,13 @@ private func rootsCore<P: BezierClippingPolynomial>(
                     guard fPrime != 0 else { break }
                     let delta = f / fPrime
                     x -= delta
-                    guard x >= 0, x <= 1 else { break }
                     if Swift.abs(delta) <= 1e-10 {
+                        x = Swift.max(0, Swift.min(1, x))
                         newtonSucceeded = Swift.abs(hValue(x)) <= residualThreshold
                         break
                     }
                 }
+                x = Swift.max(0, Swift.min(1, x))
                 if newtonSucceeded { result = x; return }
 
                 var lo = CGFloat(0), hi = CGFloat(1), fL = c0, fH = cN
