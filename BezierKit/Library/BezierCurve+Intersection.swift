@@ -130,7 +130,9 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         return result
     }
     // subdivision failed, check if the curves are coincident
-    return coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) ?? []
+    let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy)
+    assert(coincidence != nil, "bezierClipping budget exhausted but coincidenceCheck found nothing — possible missed intersection")
+    return coincidence ?? []
 }
 
 internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reversed: Bool = false) -> [Intersection] where U: NonlinearBezierCurve {
