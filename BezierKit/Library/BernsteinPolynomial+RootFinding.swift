@@ -12,54 +12,54 @@ import Foundation
 
 // Internal protocol for the bezier clipping algorithm.
 // `forEachCoefficient` lets the sign-change and convex hull loops iterate without
-// a branch-cascaded switch per step; `coefficient(at:)` is kept for skipped-root checks.
+// a branch-cascaded switch per step; `firstCoefficient`/`lastCoefficient` are used
+// for endpoint sign checks.
 protocol BezierClippingPolynomial: ClippableBernsteinPolynomial {
     var degree: Int { get }
-    func coefficient(at i: Int) -> CGFloat
+    var firstCoefficient: CGFloat { get }
+    var lastCoefficient: CGFloat { get }
     func forEachCoefficient(_ body: (CGFloat) -> Void)
 }
 
 extension BernsteinPolynomial0: BezierClippingPolynomial {
     var degree: Int { 0 }
-    func coefficient(at i: Int) -> CGFloat { b0 }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b0 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0) }
 }
 
 extension BernsteinPolynomial1: BezierClippingPolynomial {
     var degree: Int { 1 }
-    func coefficient(at i: Int) -> CGFloat { i == 0 ? b0 : b1 }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b1 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1) }
 }
 
 extension BernsteinPolynomial2: BezierClippingPolynomial {
     var degree: Int { 2 }
-    func coefficient(at i: Int) -> CGFloat {
-        switch i { case 0: return b0; case 1: return b1; default: return b2 }
-    }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b2 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2) }
 }
 
 extension BernsteinPolynomial3: BezierClippingPolynomial {
     var degree: Int { 3 }
-    func coefficient(at i: Int) -> CGFloat {
-        switch i { case 0: return b0; case 1: return b1; case 2: return b2; default: return b3 }
-    }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b3 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3) }
 }
 
 extension BernsteinPolynomial4: BezierClippingPolynomial {
     var degree: Int { 4 }
-    func coefficient(at i: Int) -> CGFloat {
-        switch i { case 0: return b0; case 1: return b1; case 2: return b2; case 3: return b3; default: return b4 }
-    }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b4 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4) }
 }
 
 extension BernsteinPolynomial5: BezierClippingPolynomial {
     var degree: Int { 5 }
-    func coefficient(at i: Int) -> CGFloat {
-        switch i { case 0: return b0; case 1: return b1; case 2: return b2; case 3: return b3; case 4: return b4; default: return b5 }
-    }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b5 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5) }
 }
 
@@ -91,8 +91,8 @@ private func rootsCore<P: BezierClippingPolynomial>(
         if lastSign != 0, s != lastSign { signChanges += 1 }
         lastSign = s
     }
-    let c0 = polynomial.coefficient(at: 0)
-    let cN = polynomial.coefficient(at: n)
+    let c0 = polynomial.firstCoefficient
+    let cN = polynomial.lastCoefficient
     guard signChanges > 0 || c0 == 0 || cN == 0 else { return }
 
     if signChanges == 1 {
@@ -139,15 +139,14 @@ private func rootsCore<P: BezierClippingPolynomial>(
                 x = Swift.max(0, Swift.min(1, x))
                 if newtonSucceeded { result = x; return }
 
-                var lo = CGFloat(0), hi = CGFloat(1), fL = c0, fH = cN
+                var lo = CGFloat(0), hi = CGFloat(1), fL = c0
                 for _ in 0..<52 {
                     let mid = CGFloat(0.5) * (lo + hi)
                     guard mid > lo else { break }
                     let fMid = hValue(mid)
                     if fMid == 0 { lo = mid; hi = mid; break }
-                    if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid; fH = fMid }
+                    if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid }
                 }
-                _ = fH
                 result = 0.5 * (lo + hi)
             }
             callback(Utils.linearInterpolate(rangeStart, rangeEnd, result))
@@ -197,9 +196,9 @@ private func rootsCore<P: BezierClippingPolynomial>(
     }
     let subcurve = polynomial.split(from: lowerBound, to: upperBound)
     let skippedRoot = { (a: CGFloat, b: CGFloat) in a > 0 && b < 0 || a < 0 && b > 0 }
-    if skippedRoot(c0, subcurve.coefficient(at: 0)) { callback(nextRangeStart) }
+    if skippedRoot(c0, subcurve.firstCoefficient) { callback(nextRangeStart) }
     rootsCore(polynomial: subcurve, start: nextRangeStart, end: nextRangeEnd, depth: depth + 1, callback: callback)
-    if skippedRoot(subcurve.coefficient(at: n), cN) { callback(nextRangeEnd) }
+    if skippedRoot(subcurve.lastCoefficient, cN) { callback(nextRangeEnd) }
 }
 
 /// Calls `callback` for each distinct root in `[0, 1]` using the Bezier clipping algorithm
@@ -208,8 +207,9 @@ func findDistinctRootsCallbackBezierClipping<P: BezierClippingPolynomial>(
     _ polynomial: P,
     _ callback: (CGFloat) -> Void
 ) {
-    let n = polynomial.degree
-    guard (0...n).contains(where: { polynomial.coefficient(at: $0) != .zero }) else { return }
+    var hasNonZero = false
+    polynomial.forEachCoefficient { if $0 != .zero { hasNonZero = true } }
+    guard hasNonZero else { return }
     var lastRoot = CGFloat.infinity
     rootsCore(polynomial: polynomial, start: 0, end: 1, depth: 0) {
         guard $0 != lastRoot else { return }

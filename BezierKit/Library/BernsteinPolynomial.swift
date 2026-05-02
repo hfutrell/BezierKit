@@ -242,7 +242,7 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
 }
 
 // Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–5.
-// With WMO the conformance check is a compile-time constant and generates no branch overhead.
+// With WMO (whole-module optimization) the conformance check is a compile-time constant and generates no branch overhead.
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
     var result: [CGFloat] = []
     if let analytical = polynomial as? AnalyticalRootsCallback {
