@@ -255,22 +255,27 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
             $0 + $1.offset(distance: d)
         }
         guard offsetCurves.isEmpty == false else { return nil }
-        // force the set of curves to be contiguous
-        for i in 0..<offsetCurves.count-1 {
-            let start = offsetCurves[i+1].startingPoint
-            let end = offsetCurves[i].endingPoint
-            let average = Utils.linearInterpolate(start, end, 0.5)
-            offsetCurves[i].endingPoint = average
-            offsetCurves[i+1].startingPoint = average
+        let count = offsetCurves.count
+        // Snapshot original offset endpoints so junction computation is not affected
+        // by modifications made earlier in the loop.
+        let starts = offsetCurves.map { $0.startingPoint }
+        let ends = offsetCurves.map { $0.endingPoint }
+        // Make adjacent offset curves contiguous using the projected intersection of
+        // the lines through each curve's endpoints (falls back to linear average when
+        // the lines are parallel, e.g. collinear straight segments).
+        func makeContiguous(_ i: Int, _ j: Int) {
+            guard ends[i] != starts[j] else { return }
+            let pt = Utils.linesIntersection(starts[i], ends[i], starts[j], ends[j])
+                     ?? Utils.linearInterpolate(ends[i], starts[j], 0.5)
+            offsetCurves[i].endingPoint = pt
+            offsetCurves[j].startingPoint = pt
         }
-        // we've touched everything but offsetCurves[0].startingPoint and offsetCurves[count-1].endingPoint
-        // if we are a closed componenet, keep the offset component closed as well
+        for i in 0..<count-1 {
+            makeContiguous(i, i+1)
+        }
+        // if we are a closed component, keep the offset component closed as well
         if self.isClosed {
-            let start = offsetCurves[0].startingPoint
-            let end = offsetCurves[offsetCurves.count-1].endingPoint
-            let average = Utils.linearInterpolate(start, end, 0.5)
-            offsetCurves[0].startingPoint = average
-            offsetCurves[offsetCurves.count-1].endingPoint = average
+            makeContiguous(count-1, 0)
         }
         return PathComponent(curves: offsetCurves)
     }

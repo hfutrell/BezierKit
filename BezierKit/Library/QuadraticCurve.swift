@@ -104,22 +104,25 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         return a*p0 + b*p1
     }
 
-    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint) {
-        if t == 0 { return (p0, 2*(p1-p0)) }
-        if t == 1 { return (p2, 2*(p2-p1)) }
-        let mt: CGFloat = 1 - t
-        let pt = mt*mt * p0 + mt*t*2 * p1 + t*t * p2
-        let dp = mt * (2*(p1-p0)) + t * (2*(p2-p1))
-        return (pt, dp)
+    @inline(__always) internal func pointAndDerivative(at t: CGFloat) -> (point: CGPoint, derivative: CGPoint) {
+        let mt: CGFloat = 1.0 - t
+        let dp0 = 2.0 * (p1 - p0)
+        let dp1 = 2.0 * (p2 - p1)
+        let mt_2 = mt * mt; let tmt2 = 2.0 * mt * t; let t_2 = t * t
+        var ptx = mt_2 * p0.x; ptx = ptx.addingProduct(tmt2, p1.x); ptx = ptx.addingProduct(t_2, p2.x)
+        var pty = mt_2 * p0.y; pty = pty.addingProduct(tmt2, p1.y); pty = pty.addingProduct(t_2, p2.y)
+        var dtx = mt * dp0.x; dtx = dtx.addingProduct(t, dp1.x)
+        var dty = mt * dp0.y; dty = dty.addingProduct(t, dp1.y)
+        return (CGPoint(x: ptx, y: pty), CGPoint(x: dtx, y: dty))
     }
 
     public func split(from t1: CGFloat, to t2: CGFloat) -> QuadraticCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let k = (t2 - t1) / 2
-        let p0 = self.point(at: t1)
-        let p2 = self.point(at: t2)
-        let p1 = (p0 + p2) / 2 + k / 2 * (self.derivative(at: t1) - self.derivative(at: t2))
-        return QuadraticCurve(p0: p0, p1: p1, p2: p2)
+        let (q0, qd0) = pointAndDerivative(at: t1)
+        let (q2, qd2) = pointAndDerivative(at: t2)
+        let q1 = (q0 + q2) / 2 + k / 2 * (qd0 - qd2)
+        return QuadraticCurve(p0: q0, p1: q1, p2: q2)
     }
 
     public func split(at t: CGFloat) -> (left: QuadraticCurve, right: QuadraticCurve) {
@@ -141,7 +144,7 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         func multiplyCoordinates(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
-        let q = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        let q = QuadraticCurve(p0: p0 - point, p1: p1 - point, p2: p2 - point)
         // p0, p1, p2, p3 form the control points of a cubic Bezier curve
         // created by multiplying the curve with its derivative
         let qd0 = q.p1 - q.p0

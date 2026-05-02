@@ -61,6 +61,83 @@ class PathComponentTests: XCTestCase {
         }
     }
 
+    // MARK: - Offset corner tests (issue #78)
+
+    func testOffsetClosedRectangle() {
+        // Regression test for GitHub issue #78: offset of a closed path made entirely of
+        // straight segments should place each corner at the projected intersection of the
+        // two adjacent offset lines, not at their linear average.
+        //
+        // Square (0,0)-(10,0)-(10,10)-(0,10), offset inward by d=1.
+        // Normals: l1→(0,1), l2→(-1,0), l3→(0,-1), l4→(1,0)
+        // Offset lines: l1→y=1, l2→x=9, l3→y=9, l4→x=1
+        // Correct corners (projected intersections): (9,1), (9,9), (1,9), (1,1)
+        // Buggy corners (linear averages):           (9.5,0.5), (9.5,9.5), (0.5,9.5), (0.5,0.5)
+        let l1 = LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 10, y: 0))
+        let l2 = LineSegment(p0: CGPoint(x: 10, y: 0), p1: CGPoint(x: 10, y: 10))
+        let l3 = LineSegment(p0: CGPoint(x: 10, y: 10), p1: CGPoint(x: 0, y: 10))
+        let l4 = LineSegment(p0: CGPoint(x: 0, y: 10), p1: CGPoint(x: 0, y: 0))
+        let square = PathComponent(curves: [l1, l2, l3, l4])
+
+        let d: CGFloat = 1.0
+        guard let offset = square.offset(distance: d) else {
+            XCTFail("offset returned nil")
+            return
+        }
+
+        let accuracy: CGFloat = 1e-10
+        // curve[0] is the offset of l1: should run from (1,1) to (9,1)
+        XCTAssertEqual(offset.curves[0].startingPoint.x, 1.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[0].startingPoint.y, 1.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[0].endingPoint.x, 9.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[0].endingPoint.y, 1.0, accuracy: accuracy)
+        // curve[1] is the offset of l2: should run from (9,1) to (9,9)
+        XCTAssertEqual(offset.curves[1].startingPoint.x, 9.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[1].startingPoint.y, 1.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[1].endingPoint.x, 9.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[1].endingPoint.y, 9.0, accuracy: accuracy)
+        // curve[2] is the offset of l3: should run from (9,9) to (1,9)
+        XCTAssertEqual(offset.curves[2].startingPoint.x, 9.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[2].startingPoint.y, 9.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[2].endingPoint.x, 1.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[2].endingPoint.y, 9.0, accuracy: accuracy)
+        // curve[3] is the offset of l4: should run from (1,9) to (1,1)
+        XCTAssertEqual(offset.curves[3].startingPoint.x, 1.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[3].startingPoint.y, 9.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[3].endingPoint.x, 1.0, accuracy: accuracy)
+        XCTAssertEqual(offset.curves[3].endingPoint.y, 1.0, accuracy: accuracy)
+    }
+
+    func testOffsetStraightMeetsCurve() {
+        // Regression test for GitHub issue #78 (mixed straight + curve case, analogous
+        // to the letter D): the corner where a straight segment meets a curved segment
+        // must lie on the correct offset of the straight segment (i.e. exactly d units
+        // from that segment), not at the linear average of the two offset endpoints.
+        //
+        // L1 goes right along y=0; its offset (d=1) is the line y=1.
+        // Q1 starts going upward from (10,0); its offset starts at (9,0).
+        // With the bug the junction is at the average ((10,1)+(9,0))/2 = (9.5, 0.5).
+        // With the fix the junction is on the line y=1 (intersection of L1's offset
+        // with the projected line through Q1's offset).
+        let l1 = LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 10, y: 0))
+        let q1 = QuadraticCurve(p0: CGPoint(x: 10, y: 0),
+                                p1: CGPoint(x: 10, y: 5),
+                                p2: CGPoint(x: 5, y: 10))
+        let path = PathComponent(curves: [l1, q1])
+
+        let d: CGFloat = 1.0
+        guard let offset = path.offset(distance: d) else {
+            XCTFail("offset returned nil")
+            return
+        }
+
+        // The junction (end of l1's offset / start of q1's offset) must lie on y=1
+        // (the line at distance d from l1) – not at y=0.5 (the linear-average value).
+        let junction = offset.curves[0].endingPoint
+        XCTAssertEqual(junction.y, d, accuracy: 1e-10)
+        XCTAssertEqual(offset.curves[1].startingPoint, junction)
+    }
+
     private let p1 = CGPoint(x: 0.0, y: 1.0)
     private let p2 = CGPoint(x: 2.0, y: 1.0)
     private let p3 = CGPoint(x: 2.5, y: 0.5)
