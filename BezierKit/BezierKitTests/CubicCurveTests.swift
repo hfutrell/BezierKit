@@ -491,6 +491,7 @@ class CubicCurveTests: XCTestCase {
         }
     }
 
+    #if !os(WASI) // accuracy: 1e-8 requires 64-bit CGFloat (32-bit machine epsilon ~1e-7)
     func testBasicTangentIntersection() {
         let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
                             p1: CGPoint(x: 0, y: 3),
@@ -504,6 +505,7 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5), expectedIntersections)
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
     }
+    #endif
 
     // Skip on platforms where CGFloat is 32bit
     #if !(arch(i386) || arch(arm) || arch(wasm32))
@@ -719,11 +721,13 @@ class CubicCurveTests: XCTestCase {
     }
 
     // High-amplitude S-curve pair: 9 transversal crossings. a=8.
+    #if !os(WASI) // control points reach ±8; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
     func testIntersectionsExtremeSCurve_a8() {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:8), p2: CGPoint(x:0.66,y:-7), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:1), p1: CGPoint(x:8,y:0.66), p2: CGPoint(x:-7,y:0.33), p3: CGPoint(x:1,y:0))
         XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 9)
     }
+    #endif
 
     // High-amplitude S-curve pair: 9 transversal crossings. a=16.
     func testIntersectionsExtremeSCurve_a16() {
