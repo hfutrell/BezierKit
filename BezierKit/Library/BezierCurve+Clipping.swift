@@ -353,6 +353,7 @@ func bezierClipping<C1, C2>(
                     // Verify convergence to a true intersection, not a nearest-approach point
                     // on non-intersecting curves. For a real root |f| ≈ machine-epsilon × scale;
                     // for a phantom |f| ≈ δ (separation). Use chord length as the scale reference.
+                    // Compare squared distances to avoid sqrt (max(chord,1e-10)² = max(chord²,1e-20)).
                     let fFinal = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
                     // Use lengthSquared to avoid sqrt — the threshold is squared below anyway.
                     let chordSq = (c1Reduced.curve.endingPoint - c1Reduced.curve.startingPoint).lengthSquared
