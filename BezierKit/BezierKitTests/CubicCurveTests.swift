@@ -665,8 +665,7 @@ class CubicCurveTests: XCTestCase {
     // MARK: 15. Near-coincident crossing S-curves at sub-accuracy separations.
     // a4/δ=8e-6 and a8/δ=1.2e-5 do not converge even at bezier clipping budget=5000.
     // a4/δ=1.2e-5 needs ~4000 bezier clipping iterations (budget=64 insufficient).
-    // Implicitization fails for all three: the near-tangent crossing lies below the
-    // precision floor of the implicit composition polynomial.
+    // All three are handled by the Newton midpoint fallback.
     #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
     func testAdversarialIntersectionsMark15() {
         let mark15Cases: [(aVal: CGFloat, delta: CGFloat)] = [

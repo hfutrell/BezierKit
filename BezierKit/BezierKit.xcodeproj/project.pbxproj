@@ -17,8 +17,6 @@
 		FD067ACC246F12B5006DA36B /* PolynomialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD067ACA246F12B5006DA36B /* PolynomialTests.swift */; };
 		FD07BC20261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */; };
 		FD07BC21261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */; };
-		0242D341982E553D7A619988 /* BezierCurve+Implicitization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C79F6CDFB197DA54C8B715 /* BezierCurve+Implicitization.swift */; };
-		82A874AE2F91ADC4CD63CC5D /* BezierCurve+Implicitization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C79F6CDFB197DA54C8B715 /* BezierCurve+Implicitization.swift */; };
 		FD12F1E22288CF6900404CE1 /* UtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD12F1E12288CF6900404CE1 /* UtilsTests.swift */; };
 		FD12F1E32288CF6900404CE1 /* UtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD12F1E12288CF6900404CE1 /* UtilsTests.swift */; };
 		FD149EBA2135CBFF009E791D /* AugmentedGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD149EB92135CBFF009E791D /* AugmentedGraph.swift */; };
@@ -165,7 +163,6 @@
 		FD067AC7246F1200006DA36B /* BernsteinPolynomial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BernsteinPolynomial.swift; sourceTree = "<group>"; };
 		FD067ACA246F12B5006DA36B /* PolynomialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolynomialTests.swift; sourceTree = "<group>"; };
 		FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "BernsteinPolynomial+RootFinding.swift"; path = "Library/BernsteinPolynomial+RootFinding.swift"; sourceTree = SOURCE_ROOT; };
-		38C79F6CDFB197DA54C8B715 /* BezierCurve+Implicitization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "BezierCurve+Implicitization.swift"; path = "Library/BezierCurve+Implicitization.swift"; sourceTree = SOURCE_ROOT; };
 		FD0F54F51DC43FFB0084CDCD /* MacDemos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacDemos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0F55081DC43FFB0084CDCD /* BezierKitTestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierKitTestHelpers.swift; sourceTree = "<group>"; };
 		FD0F550A1DC43FFB0084CDCD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -360,7 +357,6 @@
 				FDB6011A25BB9B3700BAB067 /* BezierCurve+Polynomial.swift */,
 				FD067AC7246F1200006DA36B /* BernsteinPolynomial.swift */,
 				FD07BC1D261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift */,
-				38C79F6CDFB197DA54C8B715 /* BezierCurve+Implicitization.swift */,
 				FD5CF14B22400FCA00FE15A6 /* BezierCurve+Intersection.swift */,
 				FDB6B3F81EAFD6DF00001C61 /* CubicCurve.swift */,
 				FDB6B3FC1EAFD6DF00001C61 /* CGPoint+Overloads.swift */,
@@ -660,7 +656,6 @@
 				FDB6B40F1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
 				FDB6B4151EAFD6DF00001C61 /* Utils.swift in Sources */,
 				FD07BC21261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */,
-				82A874AE2F91ADC4CD63CC5D /* BezierCurve+Implicitization.swift in Sources */,
 				FDCE99A6223C404E00597989 /* Path+Data.swift in Sources */,
 				FDB6011C25BB9B3700BAB067 /* BezierCurve+Polynomial.swift in Sources */,
 				2787808C8BFA4DE9ABA2441F /* BezierCurve+Clipping.swift in Sources */,
@@ -692,7 +687,6 @@
 				FDB6B40E1EAFD6DF00001C61 /* PathComponent.swift in Sources */,
 				FDB6B4141EAFD6DF00001C61 /* Utils.swift in Sources */,
 				FD07BC20261BC97400ED39FF /* BernsteinPolynomial+RootFinding.swift in Sources */,
-				0242D341982E553D7A619988 /* BezierCurve+Implicitization.swift in Sources */,
 				FDCE99A5223C404E00597989 /* Path+Data.swift in Sources */,
 				FDB6011B25BB9B3700BAB067 /* BezierCurve+Polynomial.swift in Sources */,
 				2CA20E1CA9FD45929A2EAA19 /* BezierCurve+Clipping.swift in Sources */,
