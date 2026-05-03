@@ -40,7 +40,7 @@ internal extension BezierClippingCurve {
     // Axis-aligned bounding box of the control polygon — always an outer bound of the true
     // curve bounding box (Bézier curves lie within the convex hull of their control points).
     // Cheaper than `boundingBox` because it needs no droots/sqrt computation.
-    var controlPolygonBounds: BoundingBox {
+    @inline(__always) var controlPolygonBounds: BoundingBox {
         let cp = controlPolygon
         var minX = CGFloat.infinity; var maxX = -CGFloat.infinity
         var minY = CGFloat.infinity; var maxY = -CGFloat.infinity
