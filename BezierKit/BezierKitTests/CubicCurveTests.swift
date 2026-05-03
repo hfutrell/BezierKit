@@ -663,8 +663,10 @@ class CubicCurveTests: XCTestCase {
     // MARK: - Adversarial intersection cases
 
     // MARK: 15. Near-coincident crossing S-curves at sub-accuracy separations.
-    // These also fail on master's subdivision algorithm — sub-accuracy near-coincident
-    // crossings are beyond the precision floor of any reasonable iteration budget.
+    // a4/δ=8e-6 and a8/δ=1.2e-5 do not converge even at bezier clipping budget=5000.
+    // a4/δ=1.2e-5 needs ~4000 bezier clipping iterations (budget=64 insufficient).
+    // Implicitization fails for all three: the near-tangent crossing lies below the
+    // precision floor of the implicit composition polynomial.
     // #if !os(WASI)
     // func testAdversarialIntersectionsMark15() {
     //     let mark15Cases: [(aVal: CGFloat, delta: CGFloat)] = [
@@ -737,10 +739,10 @@ class CubicCurveTests: XCTestCase {
 
     // Nearly-coincident CROSSING S-curves (a=4).
     // s2 shifts p0,p1 by +δ and p2,p3 by −δ → diff_y = δ·(1−6t²+4t³), monotone, one zero.
-    // delta7e_6 and delta1e_5 also fail on master — sub-accuracy separations are beyond
-    // the precision floor of both subdivision and bezier clipping.
+    // delta7e_6 and delta1e_5: bezier clipping does not converge even at budget=5000;
+    // implicitization also fails (delta below the precision floor of the composition polynomial).
     #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
-    // func testIntersectionsCrossingSCurve_a4_delta7e_6() {  // also fails on master
+    // func testIntersectionsCrossingSCurve_a4_delta7e_6() {  // bezier clipping: no convergence at budget=5000; implicitization: fails
     //     let delta: CGFloat = 7e-6
     //     let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
     //     let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
@@ -748,7 +750,7 @@ class CubicCurveTests: XCTestCase {
     //     XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 1)
     // }
 
-    // func testIntersectionsCrossingSCurve_a4_delta1e_5() {  // also fails on master
+    // func testIntersectionsCrossingSCurve_a4_delta1e_5() {  // bezier clipping: no convergence at budget=5000; implicitization: fails
     //     let delta: CGFloat = 1e-5
     //     let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
     //     let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
@@ -766,9 +768,10 @@ class CubicCurveTests: XCTestCase {
 
     // Nearly-coincident PARALLEL S-curves (a=4): s2 = s1 + (0,δ) exactly.
     // diff_y(t) = δ everywhere — no crossing. Expected: 0.
-    // All delta variants also fail on master — sub-accuracy near-coincident curves
-    // produce spurious intersections regardless of algorithm.
-    // func testIntersectionsParallelSCurve_delta3e_6() {  // also fails on master
+    // All delta variants: bezier clipping reports a spurious intersection (sub-accuracy
+    // separation is numerically indistinguishable from coincident); implicitization also
+    // returns a spurious root.
+    // func testIntersectionsParallelSCurve_delta3e_6() {  // bezier clipping: spurious intersection; implicitization: spurious root
     //     let delta: CGFloat = 3e-6
     //     let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
     //     let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
@@ -776,7 +779,7 @@ class CubicCurveTests: XCTestCase {
     //     XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
     // }
     #endif
-    // func testIntersectionsParallelSCurve_delta5e_6() {  // also fails on master
+    // func testIntersectionsParallelSCurve_delta5e_6() {  // bezier clipping: spurious intersection; implicitization: spurious root
     //     let delta: CGFloat = 5e-6
     //     let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
     //     let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
@@ -784,7 +787,7 @@ class CubicCurveTests: XCTestCase {
     //     XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
     // }
 
-    // func testIntersectionsParallelSCurve_delta7e_6() {  // also fails on master
+    // func testIntersectionsParallelSCurve_delta7e_6() {  // bezier clipping: spurious intersection; implicitization: spurious root
     //     let delta: CGFloat = 7e-6
     //     let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
     //     let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
@@ -792,7 +795,7 @@ class CubicCurveTests: XCTestCase {
     //     XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
     // }
 
-    // func testIntersectionsParallelSCurve_delta1e_5() {  // also fails on master
+    // func testIntersectionsParallelSCurve_delta1e_5() {  // bezier clipping: spurious intersection; implicitization: spurious root
     //     let delta: CGFloat = 1e-5
     //     let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
     //     let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
@@ -858,10 +861,10 @@ class CubicCurveTests: XCTestCase {
     }
 
     // Crossing S-curve sweep: diff_y = δ·(1−6t²+4t³), one zero for any (a,δ). Expected: 1.
-    // delta8e_6 and a8_delta1p2e_5 also fail on master — sub-accuracy separations exceed
-    // the precision floor of both subdivision and bezier clipping.
+    // delta8e_6: bezier clipping does not converge at budget=5000; implicitization fails.
+    // a8_delta1p2e_5: bezier clipping does not converge at budget=5000 (a=8 slows convergence further); implicitization fails.
     #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
-    // func testIntersectionsCrossingSCurve_a4_delta8e_6() {  // also fails on master
+    // func testIntersectionsCrossingSCurve_a4_delta8e_6() {  // bezier clipping: no convergence at budget=5000; implicitization: fails
     //     let (a, delta): (CGFloat, CGFloat) = (4, 8e-6)
     //     let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
     //     let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
@@ -869,8 +872,7 @@ class CubicCurveTests: XCTestCase {
     //     XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1)
     // }
 
-    // func testIntersectionsCrossingSCurve_a4_delta1p2e_5() {  // requires ~4000 bezier clipping iterations;
-    //     // implicitization also misses this near-tangent crossing at delta=1.2e-5
+    // func testIntersectionsCrossingSCurve_a4_delta1p2e_5() {  // bezier clipping: ~4000 iterations needed (budget=64 insufficient); implicitization: fails
     //     let (a, delta): (CGFloat, CGFloat) = (4, 1.2e-5)
     //     let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
     //     let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
@@ -878,7 +880,7 @@ class CubicCurveTests: XCTestCase {
     //     XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1)
     // }
 
-    // func testIntersectionsCrossingSCurve_a8_delta1p2e_5() {  // also fails on master
+    // func testIntersectionsCrossingSCurve_a8_delta1p2e_5() {  // bezier clipping: no convergence at budget=5000; implicitization: fails
     //     let (a, delta): (CGFloat, CGFloat) = (8, 1.2e-5)
     //     let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
     //     let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
