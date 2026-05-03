@@ -175,8 +175,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
     let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
     let c1 = curve1.curve.copy(using: transform)
-    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
-    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+    let roots = c2.implicitPolynomial.findRoots(xPolynomial: c1.xPolynomial, yPolynomial: c1.yPolynomial)
     let t1Tolerance = insignificantDistance / c1.derivativeBounds
     let t2Tolerance = insignificantDistance / c2.derivativeBounds
     func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {

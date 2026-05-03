@@ -15,6 +15,80 @@ internal protocol Implicitizeable {
     var implicitPolynomial: ImplicitPolynomial { get }
 }
 
+// A Bernstein polynomial of dynamic degree, used only during implicit polynomial composition.
+// Conforms to BezierClippingPolynomial so findDistinctRootsCallbackBezierClipping can find its roots.
+private struct ImplicitizationPolynomial: BezierClippingPolynomial, Sendable {
+    typealias NextLowerOrderPolynomial = ImplicitizationPolynomial
+
+    let coefficients: [CGFloat]
+
+    init(_ coefficients: [CGFloat]) {
+        assert(!coefficients.isEmpty)
+        self.coefficients = coefficients
+    }
+
+    var order: Int { coefficients.count - 1 }
+    var degree: Int { order }
+    var firstCoefficient: CGFloat { coefficients[0] }
+    var lastCoefficient: CGFloat { coefficients[order] }
+
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { coefficients.forEach(body) }
+
+    func value(at t: CGFloat) -> CGFloat { split(at: t).left.coefficients.last! }
+
+    var derivative: ImplicitizationPolynomial {
+        let n = order
+        guard n > 0 else { return ImplicitizationPolynomial([0]) }
+        return ImplicitizationPolynomial((0..<n).map { CGFloat(n) * (coefficients[$0 + 1] - coefficients[$0]) })
+    }
+
+    func split(at t: CGFloat) -> (left: ImplicitizationPolynomial, right: ImplicitizationPolynomial) {
+        let n = order
+        guard n > 0 else { return (self, self) }
+        var scratch = coefficients
+        var left = [CGFloat](repeating: 0, count: n + 1)
+        var right = [CGFloat](repeating: 0, count: n + 1)
+        left[0] = scratch[0]
+        right[n] = scratch[n]
+        for j in 1...n {
+            for i in 0...(n - j) {
+                scratch[i] = (1 - t) * scratch[i] + t * scratch[i + 1]
+            }
+            left[j] = scratch[0]
+            right[n - j] = scratch[n - j]
+        }
+        return (ImplicitizationPolynomial(left), ImplicitizationPolynomial(right))
+    }
+
+    static func == (l: ImplicitizationPolynomial, r: ImplicitizationPolynomial) -> Bool {
+        l.coefficients == r.coefficients
+    }
+
+    static func + (l: ImplicitizationPolynomial, r: ImplicitizationPolynomial) -> ImplicitizationPolynomial {
+        assert(l.order == r.order)
+        return ImplicitizationPolynomial(zip(l.coefficients, r.coefficients).map(+))
+    }
+
+    static func * (scalar: CGFloat, poly: ImplicitizationPolynomial) -> ImplicitizationPolynomial {
+        ImplicitizationPolynomial(poly.coefficients.map { scalar * $0 })
+    }
+
+    // Multiplication in Bernstein form (Sederberg, CAGD §9.3)
+    static func * (l: ImplicitizationPolynomial, r: ImplicitizationPolynomial) -> ImplicitizationPolynomial {
+        let m = l.order
+        let n = r.order
+        let result = (0...(m + n)).map { k -> CGFloat in
+            let sum = (max(k - n, 0)...min(m, k)).reduce(CGFloat.zero) { acc, i in
+                let j = k - i
+                return acc + CGFloat(Utils.binomialCoefficient(m, choose: i) * Utils.binomialCoefficient(n, choose: j))
+                    * l.coefficients[i] * r.coefficients[j]
+            }
+            return sum / CGFloat(Utils.binomialCoefficient(m + n, choose: k))
+        }
+        return ImplicitizationPolynomial(result)
+    }
+}
+
 /// represents an implicit polynomial, otherwise known as an algebraic curve.
 /// The values on the polynomial are the zero set of the polynomial f(x, y) = 0
 internal struct ImplicitPolynomial {
@@ -46,40 +120,43 @@ internal struct ImplicitPolynomial {
         assert(i >= 0 && i <= order && j >= 0 && j <= order)
         return coefficients[(order + 1) * i + j]
     }
-    /// composes the implicit polynomial with a parametric polynomial whose coordinates are x(t) and y(t)
-    /// the roots of the resulting polynomial are the intersection between the implicit and parametric polynomials
-    func value<P: BernsteinPolynomial>(_ x: P, _ y: P) -> BernsteinPolynomialN {
 
+    /// Composes the implicit polynomial with parametric coordinate polynomials x(t) and y(t),
+    /// then returns the distinct roots in [0,1] — the parameter values where the parametric
+    /// curve intersects the implicit curve.
+    func findRoots<P: BernsteinPolynomial>(xPolynomial x: P, yPolynomial y: P) -> [CGFloat] {
+        let poly = compose(xPolynomial: x, yPolynomial: y)
+        var roots: [CGFloat] = []
+        findDistinctRootsCallbackBezierClipping(poly) { roots.append($0) }
+        return roots
+    }
+
+    /// Composes the implicit polynomial with parametric polynomials x(t) and y(t).
+    private func compose<P: BernsteinPolynomial>(xPolynomial x: P, yPolynomial y: P) -> ImplicitizationPolynomial {
         assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
         let polynomialOrder = x.order
-        let x = BernsteinPolynomialN(coefficients: x.coefficients)
-        let y = BernsteinPolynomialN(coefficients: y.coefficients)
-        var xPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
-        var yPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
+        let xPoly = ImplicitizationPolynomial(x.coefficients)
+        let yPoly = ImplicitizationPolynomial(y.coefficients)
+        var xPowers: [ImplicitizationPolynomial] = [ImplicitizationPolynomial([1])]
+        var yPowers: [ImplicitizationPolynomial] = [ImplicitizationPolynomial([1])]
         for i in 1...order {
-            xPowers.append(xPowers[i - 1] * x)
-            yPowers.append(yPowers[i - 1] * y)
+            xPowers.append(xPowers[i - 1] * xPoly)
+            yPowers.append(yPowers[i - 1] * yPoly)
         }
 
         let resultOrder = order * polynomialOrder
-        var sum: BernsteinPolynomialN = BernsteinPolynomialN(coefficients: [CGFloat](repeating: 0, count: resultOrder + 1))
+        var sum = ImplicitizationPolynomial([CGFloat](repeating: 0, count: resultOrder + 1))
         for i in 0...order {
-            let xPower: BernsteinPolynomialN = xPowers[i]
+            let xPower = xPowers[i]
             for j in 0...order {
-
                 let c: CGFloat = coefficient(i, j)
                 guard c != 0 else { continue }
-
-                let yPower: BernsteinPolynomialN = yPowers[j]
-
+                let yPower = yPowers[j]
                 let k = resultOrder - xPower.order - yPower.order
-
-                var term: BernsteinPolynomialN = (xPower * yPower)
-
                 // swiftlint:disable shorthand_operator
+                var term = xPower * yPower
                 if k > 0 {
-                    // bring the term up to degree k
-                    term = term * BernsteinPolynomialN(coefficients: [CGFloat](repeating: 1, count: k + 1))
+                    term = term * ImplicitizationPolynomial([CGFloat](repeating: 1, count: k + 1))
                 } else {
                     assert(k == 0, "for k < 0 we should have c == 0")
                 }
