@@ -90,7 +90,6 @@ private func convexHullClipIntervalCubic(
         }
         return (lo, hi)
     }
-    var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
     // Cross products proportional to cross2d for the 4 uniformly-spaced points
     // (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
     //   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
@@ -98,37 +97,40 @@ private func convexHullClipIntervalCubic(
     //   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
     //   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
     let c012 = d0 - 2*d1 + d2
-    // Lower hull (pop vertex when cross2d ≤ 0) and upper hull (pop when cross2d ≥ 0)
-    // share identical structure; the sign factor flips the inequality.
-    // sign=+1 → lower hull, sign=-1 → upper hull.
-    func processHull(sign: CGFloat) {
+    // processHull takes (lo, hi) explicitly and returns updated (lo, hi).
+    // Passing rather than capturing avoids heap-boxing tMin/tMax and eliminates the
+    // swift_beginAccess calls the compiler inserts for each access to a captured var.
+    @inline(__always) func processHull(sign: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> (CGFloat, CGFloat) {
+        var lo = lo, hi = hi
         if sign * c012 <= 0 {
             let c023 = d0 - 3*d2 + 2*d3
             if sign * c023 <= 0 {
-                (tMin, tMax) = check(d0, d3, 0, 1, tMin, tMax)
+                (lo, hi) = check(d0, d3, 0, 1, lo, hi)
             } else {
-                (tMin, tMax) = check(d0, d2, 0, 2.0/3, tMin, tMax)
-                (tMin, tMax) = check(d2, d3, 2.0/3, 1.0/3, tMin, tMax)
+                (lo, hi) = check(d0, d2, 0, 2.0/3, lo, hi)
+                (lo, hi) = check(d2, d3, 2.0/3, 1.0/3, lo, hi)
             }
         } else {
             let c123 = d1 - 2*d2 + d3
             if sign * c123 <= 0 {
                 let c013 = 2*d0 - 3*d1 + d3
                 if sign * c013 <= 0 {
-                    (tMin, tMax) = check(d0, d3, 0, 1, tMin, tMax)
+                    (lo, hi) = check(d0, d3, 0, 1, lo, hi)
                 } else {
-                    (tMin, tMax) = check(d0, d1, 0, 1.0/3, tMin, tMax)
-                    (tMin, tMax) = check(d1, d3, 1.0/3, 2.0/3, tMin, tMax)
+                    (lo, hi) = check(d0, d1, 0, 1.0/3, lo, hi)
+                    (lo, hi) = check(d1, d3, 1.0/3, 2.0/3, lo, hi)
                 }
             } else {
-                (tMin, tMax) = check(d0, d1, 0, 1.0/3, tMin, tMax)
-                (tMin, tMax) = check(d1, d2, 1.0/3, 1.0/3, tMin, tMax)
-                (tMin, tMax) = check(d2, d3, 2.0/3, 1.0/3, tMin, tMax)
+                (lo, hi) = check(d0, d1, 0, 1.0/3, lo, hi)
+                (lo, hi) = check(d1, d2, 1.0/3, 1.0/3, lo, hi)
+                (lo, hi) = check(d2, d3, 2.0/3, 1.0/3, lo, hi)
             }
         }
+        return (lo, hi)
     }
-    processHull(sign: 1)    // lower hull
-    processHull(sign: -1)   // upper hull
+    var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
+    (tMin, tMax) = processHull(sign: 1, tMin, tMax)      // lower hull
+    (tMin, tMax) = processHull(sign: -1, tMin, tMax)     // upper hull
     // d3 at t=1 is always the final vertex of both hulls.
     if d3 >= dLow && d3 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
     guard tMin <= tMax else { return nil }
@@ -316,9 +318,10 @@ func bezierClipping<C1, C2>(
                     // on non-intersecting curves. For a real root |f| ≈ machine-epsilon × scale;
                     // for a phantom |f| ≈ δ (separation). Use chord length as the scale reference.
                     let fFinal = c1Reduced.curve.point(at: u) - c2Reduced.curve.point(at: v)
-                    let chord = (c1Reduced.curve.endingPoint - c1Reduced.curve.startingPoint).length
-                    let scale = max(chord, CGFloat(1e-10))
-                    if fFinal.x * fFinal.x + fFinal.y * fFinal.y < scale * scale * CGFloat(1e-12) {
+                    // Use lengthSquared to avoid sqrt — the threshold is squared below anyway.
+                    let chordSq = (c1Reduced.curve.endingPoint - c1Reduced.curve.startingPoint).lengthSquared
+                    let scaleSq = max(chordSq, CGFloat(1e-20))
+                    if fFinal.x * fFinal.x + fFinal.y * fFinal.y < scaleSq * CGFloat(1e-12) {
                         results.append(Intersection(t1: t1Candidate, t2: t2Candidate))
                         return true
                     }
