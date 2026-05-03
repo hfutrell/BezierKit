@@ -85,49 +85,71 @@ extension QuadraticCurve: BezierClippingCurve {
 // n=4 specialization of convexHullClipInterval (cubic curves — by far the most common case).
 // Eliminates the generic loop + withUnsafeTemporaryAllocation overhead by using a
 // static branch tree over precomputed cross products.
+//
+// Lower and upper hull conditions are spelled out separately rather than using a
+// sign-parameterised nested function. A nested function capturing mutable tMin/tMax
+// forces Swift to box those variables on the heap (2 × swift_allocObject per call),
+// adding significant overhead in the bezierClipping hot loop. The duplication is
+// intentional and load-bearing.
 private func convexHullClipIntervalCubic(
     d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
     dLow: CGFloat, dHigh: CGFloat
 ) -> (CGFloat, CGFloat)? {
     var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
-    // Cross products proportional to cross2d for the 4 uniformly-spaced points
-    // (t ∈ {0, 1/3, 2/3, 1}):
-    //   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
-    //   c023 = cross2d(0,2,3) = d0 - 3·d2 + 2·d3
-    //   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
-    //   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
+    // Cross products for 4 uniformly-spaced points (t ∈ {0, 1/3, 2/3, 1}):
+    //   c012 = d0 - 2·d1 + d2,  c023 = d0 - 3·d2 + 2·d3
+    //   c123 = d1 - 2·d2 + d3,  c013 = 2·d0 - 3·d1 + d3
     let c012 = d0 - 2*d1 + d2
-    // Lower hull (pop vertex when cross2d ≤ 0) and upper hull (pop when cross2d ≥ 0)
-    // share identical structure; the sign factor flips the inequality.
-    // sign=+1 → lower hull, sign=-1 → upper hull.
-    func processHull(sign: CGFloat) {
-        if sign * c012 <= 0 {
-            let c023 = d0 - 3*d2 + 2*d3
-            if sign * c023 <= 0 {
+    // Lower hull: pop vertex when cross2d ≤ 0  (c012 ≤ 0 ↔ sign=+1 condition)
+    if c012 <= 0 {
+        let c023 = d0 - 3*d2 + 2*d3
+        if c023 <= 0 {
+            convexHullClipEdge(d0, d3, 0, 1, dLow, dHigh, &tMin, &tMax)
+        } else {
+            convexHullClipEdge(d0, d2, 0, 2.0/3, dLow, dHigh, &tMin, &tMax)
+            convexHullClipEdge(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
+        }
+    } else {
+        let c123 = d1 - 2*d2 + d3
+        if c123 <= 0 {
+            let c013 = 2*d0 - 3*d1 + d3
+            if c013 <= 0 {
                 convexHullClipEdge(d0, d3, 0, 1, dLow, dHigh, &tMin, &tMax)
             } else {
-                convexHullClipEdge(d0, d2, 0, 2.0/3, dLow, dHigh, &tMin, &tMax)
-                convexHullClipEdge(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
+                convexHullClipEdge(d0, d1, 0, 1.0/3, dLow, dHigh, &tMin, &tMax)
+                convexHullClipEdge(d1, d3, 1.0/3, 2.0/3, dLow, dHigh, &tMin, &tMax)
             }
         } else {
-            let c123 = d1 - 2*d2 + d3
-            if sign * c123 <= 0 {
-                let c013 = 2*d0 - 3*d1 + d3
-                if sign * c013 <= 0 {
-                    convexHullClipEdge(d0, d3, 0, 1, dLow, dHigh, &tMin, &tMax)
-                } else {
-                    convexHullClipEdge(d0, d1, 0, 1.0/3, dLow, dHigh, &tMin, &tMax)
-                    convexHullClipEdge(d1, d3, 1.0/3, 2.0/3, dLow, dHigh, &tMin, &tMax)
-                }
-            } else {
-                convexHullClipEdge(d0, d1, 0, 1.0/3, dLow, dHigh, &tMin, &tMax)
-                convexHullClipEdge(d1, d2, 1.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
-                convexHullClipEdge(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
-            }
+            convexHullClipEdge(d0, d1, 0, 1.0/3, dLow, dHigh, &tMin, &tMax)
+            convexHullClipEdge(d1, d2, 1.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
+            convexHullClipEdge(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
         }
     }
-    processHull(sign: 1)    // lower hull
-    processHull(sign: -1)   // upper hull
+    // Upper hull: pop vertex when cross2d ≥ 0  (c012 ≥ 0 ↔ sign=−1 condition)
+    if c012 >= 0 {
+        let c023 = d0 - 3*d2 + 2*d3
+        if c023 >= 0 {
+            convexHullClipEdge(d0, d3, 0, 1, dLow, dHigh, &tMin, &tMax)
+        } else {
+            convexHullClipEdge(d0, d2, 0, 2.0/3, dLow, dHigh, &tMin, &tMax)
+            convexHullClipEdge(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
+        }
+    } else {
+        let c123 = d1 - 2*d2 + d3
+        if c123 >= 0 {
+            let c013 = 2*d0 - 3*d1 + d3
+            if c013 >= 0 {
+                convexHullClipEdge(d0, d3, 0, 1, dLow, dHigh, &tMin, &tMax)
+            } else {
+                convexHullClipEdge(d0, d1, 0, 1.0/3, dLow, dHigh, &tMin, &tMax)
+                convexHullClipEdge(d1, d3, 1.0/3, 2.0/3, dLow, dHigh, &tMin, &tMax)
+            }
+        } else {
+            convexHullClipEdge(d0, d1, 0, 1.0/3, dLow, dHigh, &tMin, &tMax)
+            convexHullClipEdge(d1, d2, 1.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
+            convexHullClipEdge(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, &tMin, &tMax)
+        }
+    }
     // d3 at t=1 is always the final vertex of both hulls.
     if d3 >= dLow && d3 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
     guard tMin <= tMax else { return nil }
