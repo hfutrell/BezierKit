@@ -730,11 +730,13 @@ class CubicCurveTests: XCTestCase {
     #endif
 
     // High-amplitude S-curve pair: 9 transversal crossings. a=16.
+    #if !os(WASI) // control points reach ±16; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
     func testIntersectionsExtremeSCurve_a16() {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:16), p2: CGPoint(x:0.66,y:-15), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:1), p1: CGPoint(x:16,y:0.66), p2: CGPoint(x:-15,y:0.33), p3: CGPoint(x:1,y:0))
         XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 9)
     }
+    #endif
 
     // Nearly-coincident CROSSING S-curves (a=4).
     // s2 shifts p0,p1 by +δ and p2,p3 by −δ → diff_y = δ·(1−6t²+4t³), monotone, one zero.
@@ -779,6 +781,7 @@ class CubicCurveTests: XCTestCase {
     }
     #endif
 
+    #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
     func testIntersectionsParallelSCurve_delta5e_6() {
         let delta: CGFloat = 5e-6
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
@@ -802,6 +805,7 @@ class CubicCurveTests: XCTestCase {
                             p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
         XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
     }
+    #endif
 
     // Two nested arches sharing only endpoints (0,0) and (2,0). Expected: 2.
     func testIntersectionsNestedArches() {
