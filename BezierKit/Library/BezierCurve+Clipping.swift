@@ -63,6 +63,28 @@ extension QuadraticCurve: BezierClippingCurve {
 
 // MARK: - Bezier Clipping (Sederberg & Nishita, 1990)
 
+// Clips one convex-hull edge (ta, da)→(ta+dt, db) against the fat-line band [dLow, dHigh].
+// Returns updated (lo, hi). Accepting (lo, hi) explicitly avoids captured-var exclusivity
+// overhead (swift_beginAccess) that the compiler inserts for captured `var` bindings.
+@inline(__always)
+private func hullEdgeClipInterval(
+    _ da: CGFloat, _ db: CGFloat, _ ta: CGFloat, _ dt: CGFloat,
+    _ dLow: CGFloat, _ dHigh: CGFloat,
+    _ lo: CGFloat, _ hi: CGFloat
+) -> (CGFloat, CGFloat) {
+    var lo = lo, hi = hi
+    if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
+    let dDelta = db - da
+    if dDelta != 0 {
+        // Sign-based crossing detection: no division when both ends are on the same side.
+        let dLowA = dLow - da; let dLowB = dLow - db
+        if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
+        let dHighA = dHigh - da; let dHighB = dHigh - db
+        if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
+    }
+    return (lo, hi)
+}
+
 // n=4 specialization of convexHullClipInterval (cubic curves — by far the most common case).
 // Eliminates the generic loop + withUnsafeTemporaryAllocation overhead by using a
 // static branch tree over precomputed cross products. tMin/tMax are passed explicitly
@@ -71,24 +93,11 @@ private func convexHullClipIntervalCubic(
     d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
     dLow: CGFloat, dHigh: CGFloat
 ) -> (CGFloat, CGFloat)? {
-    // Processes one convex hull edge from (ta, da) to (ta+dt, db) against [dLow,dHigh].
-    // Returns updated (lo, hi). With @inline(__always), the call sites become pure
-    // local-variable arithmetic — no closure captures, no swift_beginAccess overhead.
+    // Thin wrapper so call sites can omit dLow/dHigh; @inline(__always) ensures zero overhead.
     @inline(__always) func check(_ da: CGFloat, _ db: CGFloat,
                                  _ ta: CGFloat, _ dt: CGFloat,
                                  _ lo: CGFloat, _ hi: CGFloat) -> (CGFloat, CGFloat) {
-        var lo = lo, hi = hi
-        if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
-        let dDelta = db - da
-        if dDelta != 0 {
-            // Sign-based crossing detection: avoid division when the edge doesn't cross
-            // the boundary (the sign product is positive when both ends are on the same side).
-            let dLowA = dLow - da; let dLowB = dLow - db
-            if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
-            let dHighA = dHigh - da; let dHighB = dHigh - db
-            if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
-        }
-        return (lo, hi)
+        hullEdgeClipInterval(da, db, ta, dt, dLow, dHigh, lo, hi)
     }
     // Cross products proportional to cross2d for the 4 uniformly-spaced points
     // (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
@@ -137,6 +146,32 @@ private func convexHullClipIntervalCubic(
     return (max(0, tMin), min(1, tMax))
 }
 
+// n=3 specialization of convexHullClipInterval (quadratic curves).
+// Eliminates the withUnsafeTemporaryAllocation + generic-hull-loop overhead.
+// c012 alone determines which of the two hull shapes applies:
+//   c012 <= 0: lower=[0,2], upper=[0,1,2]   (d1 above chord d0→d2)
+//   c012 > 0:  lower=[0,1,2], upper=[0,2]   (d1 below chord d0→d2)
+private func convexHullClipIntervalQuadratic(
+    d0: CGFloat, d1: CGFloat, d2: CGFloat,
+    dLow: CGFloat, dHigh: CGFloat
+) -> (CGFloat, CGFloat)? {
+    let c012 = d0 - 2*d1 + d2
+    var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
+    if c012 <= 0 {
+        (tMin, tMax) = hullEdgeClipInterval(d0, d2, 0, 1,   dLow, dHigh, tMin, tMax) // lower: 0→2
+        (tMin, tMax) = hullEdgeClipInterval(d0, d1, 0, 0.5, dLow, dHigh, tMin, tMax) // upper: 0→1
+        (tMin, tMax) = hullEdgeClipInterval(d1, d2, 0.5, 0.5, dLow, dHigh, tMin, tMax) // upper: 1→2
+    } else {
+        (tMin, tMax) = hullEdgeClipInterval(d0, d1, 0, 0.5, dLow, dHigh, tMin, tMax) // lower: 0→1
+        (tMin, tMax) = hullEdgeClipInterval(d1, d2, 0.5, 0.5, dLow, dHigh, tMin, tMax) // lower: 1→2
+        (tMin, tMax) = hullEdgeClipInterval(d0, d2, 0, 1,   dLow, dHigh, tMin, tMax) // upper: 0→2
+    }
+    // d2 at t=1 is always the final vertex of both hulls.
+    if d2 >= dLow && d2 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
+    guard tMin <= tMax else { return nil }
+    return (max(0, tMin), min(1, tMax))
+}
+
 // Given n Bernstein coefficients d0..d3 (curve at t_i = i/(n-1)) and a horizontal band
 // [dLow, dHigh], returns the sub-interval [tMin, tMax] of [0,1] where the convex hull
 // of {(t_i, d(i))} intersects the band. Returns nil if hull and band are disjoint.
@@ -155,8 +190,9 @@ private func convexHullClipInterval(
     if dvMin >= dLow && dvMax <= dHigh { return (0, 1) }
 
     if n == 4 { return convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh) }
+    if n == 3 { return convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh) }
 
-    // Generic path for n ≠ 4 (quadratic curves, n=3).
+    // Generic path for n ≥ 5 (higher-order curves, not currently used).
     let nf = CGFloat(n - 1)
 
     func dAt(_ i: Int) -> CGFloat {
