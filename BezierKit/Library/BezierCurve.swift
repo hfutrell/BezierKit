@@ -308,7 +308,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sen
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol NonlinearBezierCurve: BezierClippingCurve, ComponentPolynomials {
+internal protocol NonlinearBezierCurve: BezierClippingCurve, ComponentPolynomials, Implicitizeable where Polynomial: BezierClippingPolynomial {
     // Combined evaluation: avoids recomputing shared basis intermediates (mt², t²) that
     // point(at:) and derivative(at:) would otherwise each compute independently.
     func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint)
