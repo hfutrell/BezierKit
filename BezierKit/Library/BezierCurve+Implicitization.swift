@@ -124,7 +124,7 @@ internal struct ImplicitPolynomial {
     /// Composes the implicit polynomial with parametric coordinate polynomials x(t) and y(t),
     /// then returns the distinct roots in [0,1] — the parameter values where the parametric
     /// curve intersects the implicit curve.
-    func findRoots<P: BernsteinPolynomial>(xPolynomial x: P, yPolynomial y: P) -> [CGFloat] {
+    func findRoots<P: BezierClippingPolynomial>(xPolynomial x: P, yPolynomial y: P) -> [CGFloat] {
         let poly = compose(xPolynomial: x, yPolynomial: y)
         var roots: [CGFloat] = []
         findDistinctRootsCallbackBezierClipping(poly) { roots.append($0) }
@@ -132,11 +132,15 @@ internal struct ImplicitPolynomial {
     }
 
     /// Composes the implicit polynomial with parametric polynomials x(t) and y(t).
-    private func compose<P: BernsteinPolynomial>(xPolynomial x: P, yPolynomial y: P) -> ImplicitizationPolynomial {
-        assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
-        let polynomialOrder = x.order
-        let xPoly = ImplicitizationPolynomial(x.coefficients)
-        let yPoly = ImplicitizationPolynomial(y.coefficients)
+    private func compose<P: BezierClippingPolynomial>(xPolynomial x: P, yPolynomial y: P) -> ImplicitizationPolynomial {
+        assert(x.degree == y.degree, "x and y coordinate polynomials must have same degree")
+        let polynomialOrder = x.degree
+        var xCoeffs: [CGFloat] = []; xCoeffs.reserveCapacity(polynomialOrder + 1)
+        var yCoeffs: [CGFloat] = []; yCoeffs.reserveCapacity(polynomialOrder + 1)
+        x.forEachCoefficient { xCoeffs.append($0) }
+        y.forEachCoefficient { yCoeffs.append($0) }
+        let xPoly = ImplicitizationPolynomial(xCoeffs)
+        let yPoly = ImplicitizationPolynomial(yCoeffs)
         var xPowers: [ImplicitizationPolynomial] = [ImplicitizationPolynomial([1])]
         var yPowers: [ImplicitizationPolynomial] = [ImplicitizationPolynomial([1])]
         for i in 1...order {

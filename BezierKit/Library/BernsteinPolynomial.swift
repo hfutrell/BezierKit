@@ -19,8 +19,6 @@ public protocol BernsteinPolynomial: Equatable, Sendable {
     associatedtype NextLowerOrderPolynomial: BernsteinPolynomial
     func value(at x: CGFloat) -> CGFloat
     var derivative: NextLowerOrderPolynomial { get }
-    var order: Int { get }
-    var coefficients: [CGFloat] { get }
 }
 
 /// Internal protocol for types that also support splitting and combined value/derivative evaluation.
@@ -82,8 +80,6 @@ public struct BernsteinPolynomial0: BernsteinPolynomial {
     public func split(at t: CGFloat) -> (left: BernsteinPolynomial0, right: BernsteinPolynomial0) {
         (left: self, right: self)
     }
-    public var order: Int { 0 }
-    public var coefficients: [CGFloat] { [b0] }
 }
 
 public struct BernsteinPolynomial1: BernsteinPolynomial {
@@ -100,8 +96,6 @@ public struct BernsteinPolynomial1: BernsteinPolynomial {
         return (left: BernsteinPolynomial1(b0: b0, b1: h),
                 right: BernsteinPolynomial1(b0: h, b1: b1))
     }
-    public var order: Int { 1 }
-    public var coefficients: [CGFloat] { [b0, b1] }
 }
 
 public struct BernsteinPolynomial2: BernsteinPolynomial {
@@ -126,8 +120,6 @@ public struct BernsteinPolynomial2: BernsteinPolynomial {
         return (left: BernsteinPolynomial2(b0: b0, b1: h00, b2: h10),
                 right: BernsteinPolynomial2(b0: h10, b1: h01, b2: b2))
     }
-    public var order: Int { 2 }
-    public var coefficients: [CGFloat] { [b0, b1, b2] }
 }
 
 public struct BernsteinPolynomial3: BernsteinPolynomial {
@@ -158,8 +150,6 @@ public struct BernsteinPolynomial3: BernsteinPolynomial {
         return (left: BernsteinPolynomial3(b0: b0, b1: h00, b2: h10, b3: h20),
                 right: BernsteinPolynomial3(b0: h20, b1: h11, b2: h02, b3: b3))
     }
-    public var order: Int { 3 }
-    public var coefficients: [CGFloat] { [b0, b1, b2, b3] }
 }
 
 public struct BernsteinPolynomial4: BernsteinPolynomial {
@@ -200,8 +190,6 @@ public struct BernsteinPolynomial4: BernsteinPolynomial {
         return (left: BernsteinPolynomial4(b0: b0, b1: h00, b2: h10, b3: h20, b4: h30),
                 right: BernsteinPolynomial4(b0: h30, b1: h21, b2: h12, b3: h03, b4: b4))
     }
-    public var order: Int { 4 }
-    public var coefficients: [CGFloat] { [b0, b1, b2, b3, b4] }
 }
 
 public struct BernsteinPolynomial5: BernsteinPolynomial {
@@ -250,8 +238,6 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
         return (left: BernsteinPolynomial5(b0: b0, b1: h00, b2: h10, b3: h20, b4: h30, b5: h40),
                 right: BernsteinPolynomial5(b0: h40, b1: h31, b2: h22, b3: h13, b4: h04, b5: b5))
     }
-    public var order: Int { 5 }
-    public var coefficients: [CGFloat] { [b0, b1, b2, b3, b4, b5] }
 }
 
 // Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–5.
