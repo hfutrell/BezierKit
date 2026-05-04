@@ -165,9 +165,6 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
     var clipIterations = 0
     let clippingConverged = bezierClipping(curve1, curve2, &clipIntersections, &clipIterations)
-#if DEBUG
-    ClippingStats.shared.record(iterations: clipIterations)
-#endif
     if clippingConverged {
         guard !clipIntersections.isEmpty else {
             // Clipping converged to empty: fat-line clips eliminated all overlap.
