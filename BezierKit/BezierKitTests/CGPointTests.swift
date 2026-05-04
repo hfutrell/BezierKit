@@ -37,6 +37,7 @@ class CGPointTests: XCTestCase {
         XCTAssertEqual(p5[1], 6.25)
     }
 
+    #if !os(WASI) // distance() uses sqrt which differs in 32-bit CGFloat
     func testFunctions() {
         let a = CGPoint(x: 3, y: 4)
         let b = CGPoint(x: -1, y: 5)
@@ -49,4 +50,5 @@ class CGPointTests: XCTestCase {
         XCTAssertEqual(distanceSquared(a, b), 17.0)
         XCTAssertEqual(a.perpendicular, CGPoint(x: -4, y: 3))
     }
+    #endif
 }

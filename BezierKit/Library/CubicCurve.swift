@@ -80,28 +80,6 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
                   p3: quadratic.p2)
     }
 
-    var downgradedToQuadratic: (quadratic: QuadraticCurve, error: CGFloat) {
-        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
-        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
-        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
-        let d = 0.5 * d1 + 0.5 * d2
-        let p1 = 1.5 * d + line.point(at: 0.5)
-        let error = 0.144334 * (d1 - d2).length
-        let quadratic = QuadraticCurve(p0: line.startingPoint,
-                                       p1: p1,
-                                       p2: line.endingPoint)
-        return (quadratic: quadratic, error: error)
-    }
-
-    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
-        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
-        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
-        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
-        let dmaxx = max(d1.x * d1.x, d2.x * d2.x)
-        let dmaxy = max(d1.y * d1.y, d2.y * d2.y)
-        let error = 3 / 4 * sqrt(dmaxx + dmaxy)
-        return (lineSegment: line, error: error)
-    }
 
 /**
      Returns a CubicCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.

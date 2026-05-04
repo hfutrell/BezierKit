@@ -63,3 +63,17 @@ BezierKit aims for 100% unit test code coverage. Every public and internal API m
 BezierKit aims for no "dead code". Every line of code you add must be reachable through public APIs. When you remove usage of an internal type or caller you must run the tests to check if the code has become unused or unreachable (dead). Code and internal types which are dead must be removed.
 
 **Platform-specific test guards.** WASM targets use 32-bit `CGFloat`. Tests that require 64-bit floating-point precision (sub-1e-5 accuracy, catastrophic-cancellation sensitivity, near-degenerate geometry) must be guarded with `#if !os(WASI)`. Add a short comment on the guard explaining the precision requirement (e.g. `// tiny cubic coefficient causes catastrophic cancellation in 32-bit`). Do not skip WASI tests for any reason other than 32-bit precision.
+
+**Running WASM tests locally.** Requires the Swift 6.3 toolchain and `wasmtime`. Install the toolchain once:
+```
+curl -L https://download.swift.org/swift-6.3-release/xcode/swift-6.3-RELEASE/swift-6.3-RELEASE-osx.pkg -o /tmp/swift-6.3.pkg
+pkgutil --expand /tmp/swift-6.3.pkg /tmp/swift-6.3-expanded
+mkdir -p /tmp/swift-6.3-toolchain && cd /tmp/swift-6.3-toolchain
+cat /tmp/swift-6.3-expanded/swift-6.3-RELEASE-osx-package.pkg/Payload | gunzip | cpio -id
+```
+Then run the tests (from the repo root):
+```
+export PATH="/tmp/swift-6.3-toolchain/usr/bin:$PATH"
+swift test --swift-sdk 6.3-RELEASE-wasm32-unknown-wasip1
+wasmtime --dir=. .build/wasm32-unknown-wasip1/debug/BezierKitPackageTests.xctest
+```
