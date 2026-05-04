@@ -76,14 +76,11 @@ private func hullEdgeClipInterval(
     if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
     let dDelta = db - da
     if dDelta != 0 {
-        // Precompute reciprocal once; both potential t values use FMA (ta + d * recip)
-        // instead of a separate FMUL + FDIV per crossing — saves one FDIV in the common
-        // case where both band boundaries are crossed.
-        let recip = dt / dDelta
+        // Sign-based crossing detection: no division when both ends are on the same side.
         let dLowA = dLow - da; let dLowB = dLow - db
-        if dLowA * dLowB <= 0 { let t = ta.addingProduct(dLowA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
+        if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
         let dHighA = dHigh - da; let dHighB = dHigh - db
-        if dHighA * dHighB <= 0 { let t = ta.addingProduct(dHighA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
+        if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
     }
     return (lo, hi)
 }
