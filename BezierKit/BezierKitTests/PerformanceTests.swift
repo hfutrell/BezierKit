@@ -82,6 +82,12 @@ private extension PerformanceTests {
 }
 
 class PerformanceTests: XCTestCase {
+    private static let measureOptions: XCTMeasureOptions = {
+        let options = XCTMeasureOptions()
+        options.iterationCount = 10
+        return options
+    }()
+
 
     func testCubicSelfIntersectionsPerformanceNoIntersect() {
         // test the performance of `selfIntersections` when the curves DO NOT self-intersect
@@ -89,7 +95,7 @@ class PerformanceTests: XCTestCase {
         // -Os 0.004 seconds
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 0)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for curve in curves {
                 count += curve.selfIntersections.count
@@ -104,7 +110,7 @@ class PerformanceTests: XCTestCase {
         // -Os 0.014 seconds
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: true, reseed: 1)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for curve in curves {
                 count += curve.selfIntersections.count
@@ -117,7 +123,7 @@ class PerformanceTests: XCTestCase {
         // test the performance of `intersections(with:,accuracy:)`
         let dataCount = 50
         let curves = generateRandomCurves(count: dataCount, reseed: 2)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for _ in 0..<100 {
                 for curve1 in curves {
@@ -135,7 +141,7 @@ class PerformanceTests: XCTestCase {
         // -Os 0.059 seconds
         let dataCount = 250
         let curves = generateRandomCurves(count: dataCount, reseed: 3)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for _ in 0..<10 {
                 for curve1 in curves {
@@ -157,7 +163,7 @@ class PerformanceTests: XCTestCase {
         // test the performance of `intersections(with:,accuracy:)` for quadratic-quadratic pairs
         let dataCount = 50
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 10)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for _ in 0..<10 {
                 for curve1 in curves {
@@ -172,7 +178,7 @@ class PerformanceTests: XCTestCase {
     func testQuadraticIntersectionsPerformanceTangentEndpoint() {
         let dataCount = 250
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 13)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for _ in 0..<10 {
                 for curve1 in curves {
@@ -206,7 +212,7 @@ class PerformanceTests: XCTestCase {
         let dataCount = 50
         let quadratics = generateRandomQuadraticCurves(count: dataCount, reseed: 11)
         let cubics = generateRandomCurves(count: dataCount, reseed: 12)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for _ in 0..<10 {
                 for curve1 in quadratics {
@@ -221,7 +227,7 @@ class PerformanceTests: XCTestCase {
     func testCubicQuadraticIntersectionsPerformanceTangentEndpoint() {
         let dataCount = 250
         let curves = generateRandomCurves(count: dataCount, reseed: 14)
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var count = 0
             for _ in 0..<10 {
                 for curve1 in curves {
@@ -304,7 +310,7 @@ class PerformanceTests: XCTestCase {
         let q = QuadraticCurve(p0: CGPoint(x: -1, y: -1),
                                p1: CGPoint(x: 0, y: 2),
                                p2: CGPoint(x: 1, y: -1))
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             // roughly 0.043 -Onone, 0.022 with -Ospeed
             // if comparing with cubic performance, be sure to note `by` parameter in stride
             for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
@@ -321,7 +327,7 @@ class PerformanceTests: XCTestCase {
             let a = CGFloat(drand48()), b = CGFloat(drand48())
             return a < b ? (a, b) : (b, a)
         }
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var sink = CGPoint.zero
             for i in 0..<dataCount {
                 let s = curves[i].split(from: params[i].0, to: params[i].1)
@@ -340,7 +346,7 @@ class PerformanceTests: XCTestCase {
             let b = CGFloat(drand48())
             return a < b ? (a, b) : (b, a)
         }
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var sink = CGPoint.zero
             for i in 0..<dataCount {
                 let s = curves[i].split(from: params[i].0, to: params[i].1)
@@ -355,7 +361,7 @@ class PerformanceTests: XCTestCase {
                            p1: CGPoint(x: 3, y: 1),
                            p2: CGPoint(x: -3, y: 1),
                            p3: CGPoint(x: 1, y: -1))
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             // roughly 0.029 -Onone, 0.004 with -Ospeed
             for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
                 _ = c.project(CGPoint(x: cos(theta), y: sin(theta)))
@@ -383,7 +389,7 @@ class PerformanceTests: XCTestCase {
         }
         let spiral = parametricPath(numCurves: 100, theta: theta, dthetadt: dthetadt, r: r, drdt: drdt)
         // about 0.31s in -Onone, 0.033s in -Ospeed
-        self.measure {
+        self.measure(options: Self.measureOptions) {
             var pointsTested = 0
             var totalDistance: CGFloat = 0.0
             for x in stride(from: -maxRadius, through: maxRadius, by: 10) {
@@ -422,7 +428,7 @@ class PerformanceTests: XCTestCase {
         let numPoints = 300
         let path1 = circlePath(origin: CGPoint(x: 0, y: 0), radius: 100, numPoints: numPoints)
         let path2 = circlePath(origin: CGPoint(x: 1, y: 0), radius: 100, numPoints: numPoints)
-        self.measure { // roughly 0.018s in debug mode
+        self.measure(options: Self.measureOptions) { // roughly 0.018s in debug mode
             _ = path1.subtract(path2, accuracy: 1.0e-3)
         }
     }
