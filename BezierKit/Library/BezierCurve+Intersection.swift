@@ -161,6 +161,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
     var clipIterations = 0
     if bezierClipping(curve1, curve2, &clipIntersections, &clipIterations) {
+        guard !clipIntersections.isEmpty else { return [] }
         // Verify each clipping result with Newton and return Newton-refined t values.
         // Near-coincident non-intersecting curves can cause clipping to converge to
         // spurious points; Newton rejection filters these out. When multiple subdivisions
