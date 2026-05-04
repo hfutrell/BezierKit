@@ -71,11 +71,9 @@ pkgutil --expand /tmp/swift-6.3.pkg /tmp/swift-6.3-expanded
 mkdir -p /tmp/swift-6.3-toolchain && cd /tmp/swift-6.3-toolchain
 cat /tmp/swift-6.3-expanded/swift-6.3-RELEASE-osx-package.pkg/Payload | gunzip | cpio -id
 ```
-Then run the tests (from the repo root, with `LinuxMain.swift` removed so SPM uses auto-discovery):
+Then run the tests (from the repo root):
 ```
-rm BezierKit/LinuxMain.swift
 export PATH="/tmp/swift-6.3-toolchain/usr/bin:$PATH"
 swift test --swift-sdk 6.3-RELEASE-wasm32-unknown-wasip1
 wasmtime --dir=. .build/wasm32-unknown-wasip1/debug/BezierKitPackageTests.xctest
 ```
-Restore `LinuxMain.swift` afterwards with `git checkout BezierKit/LinuxMain.swift`.
