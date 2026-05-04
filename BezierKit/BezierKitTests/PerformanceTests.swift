@@ -119,7 +119,7 @@ class PerformanceTests: XCTestCase {
         let curves = generateRandomCurves(count: dataCount, reseed: 2)
         self.measure {
             var count = 0
-            for _ in 0..<10 {
+            for _ in 0..<100 {
                 for curve1 in curves {
                     for curve2 in curves {
                         count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
@@ -137,16 +137,18 @@ class PerformanceTests: XCTestCase {
         let curves = generateRandomCurves(count: dataCount, reseed: 3)
         self.measure {
             var count = 0
-            for curve1 in curves {
-                // create a curve that starts at the other curve's endpoint
-                // and whose first tangent double's back on the curve
-                // this is a difficult edge case for divide-and-conquer
-                // algorithms
-                let curve2 = CubicCurve(p0: curve1.endingPoint,
-                                        p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
-                                        p2: CGPoint(x: drand48(), y: drand48()),
-                                        p3: CGPoint(x: drand48(), y: drand48()))
-                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    // create a curve that starts at the other curve's endpoint
+                    // and whose first tangent double's back on the curve
+                    // this is a difficult edge case for divide-and-conquer
+                    // algorithms
+                    let curve2 = CubicCurve(p0: curve1.endingPoint,
+                                            p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                            p2: CGPoint(x: drand48(), y: drand48()),
+                                            p3: CGPoint(x: drand48(), y: drand48()))
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
             }
         }
     }
@@ -157,9 +159,11 @@ class PerformanceTests: XCTestCase {
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 10)
         self.measure {
             var count = 0
-            for curve1 in curves {
-                for curve2 in curves {
-                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    for curve2 in curves {
+                        count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                    }
                 }
             }
         }
@@ -170,11 +174,13 @@ class PerformanceTests: XCTestCase {
         let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 13)
         self.measure {
             var count = 0
-            for curve1 in curves {
-                let curve2 = QuadraticCurve(p0: curve1.endingPoint,
-                                            p1: CGFloat(drand48()) * (curve1.p1 - curve1.p2) + curve1.endingPoint,
-                                            p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
-                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                                p1: CGFloat(drand48()) * (curve1.p1 - curve1.p2) + curve1.endingPoint,
+                                                p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
             }
         }
     }
@@ -202,9 +208,11 @@ class PerformanceTests: XCTestCase {
         let cubics = generateRandomCurves(count: dataCount, reseed: 12)
         self.measure {
             var count = 0
-            for curve1 in quadratics {
-                for curve2 in cubics {
-                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<10 {
+                for curve1 in quadratics {
+                    for curve2 in cubics {
+                        count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                    }
                 }
             }
         }
@@ -215,11 +223,13 @@ class PerformanceTests: XCTestCase {
         let curves = generateRandomCurves(count: dataCount, reseed: 14)
         self.measure {
             var count = 0
-            for curve1 in curves {
-                let curve2 = QuadraticCurve(p0: curve1.endingPoint,
-                                            p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
-                                            p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
-                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                                p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                                p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
             }
         }
     }
