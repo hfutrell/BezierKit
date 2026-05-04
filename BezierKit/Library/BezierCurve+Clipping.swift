@@ -343,16 +343,20 @@ func bezierClipping<C1, C2>(
                 v = Utils.clamp(v + dv, 0, 1)
                 guard du * du + dv * dv > CGFloat(1.0e-28) else { break }
             }
-            // Only accept if Newton stayed interior — if u or v is clamped to a
-            // subcurve boundary the true root is outside the current interval, so
-            // let fat-line clipping continue rather than reporting a boundary hit.
-            if u > 1.0e-10 && u < 1.0 - 1.0e-10 && v > 1.0e-10 && v < 1.0 - 1.0e-10 {
+            // Require at least one parameter to be interior in its subcurve's local space.
+            // If BOTH are clamped the Newton system failed (near-parallel tangents, etc.)
+            // and the nearest-approach point is a phantom; skip rather than reporting.
+            // One clamped parameter is fine: endpoint-interior intersections have Newton
+            // converge to the subcurve boundary that coincides with curve2's actual endpoint.
+            if (u > 1.0e-10 && u < 1.0 - 1.0e-10) || (v > 1.0e-10 && v < 1.0 - 1.0e-10) {
                 let t1Candidate = u * c1Reduced.t2 + (1 - u) * c1Reduced.t1
                 let t2Candidate = v * c2Reduced.t2 + (1 - v) * c2Reduced.t1
-                // Only accept interior solutions in global parameter space — endpoint
-                // intersections are handled more precisely by the existing exact-endpoint path.
-                if t1Candidate > 1.0e-6 && t1Candidate < 1.0 - 1.0e-6 &&
-                   t2Candidate > 1.0e-6 && t2Candidate < 1.0 - 1.0e-6 {
+                // Accept when at least one global parameter is interior. Endpoint-endpoint
+                // cases (both at 0 or 1) are handled by addEndpointIntersections.
+                // Endpoint-interior cases (one endpoint, one interior) are valid here;
+                // newtonIsGenuineRoot below filters any false positives.
+                if (t1Candidate > 1.0e-6 && t1Candidate < 1.0 - 1.0e-6) ||
+                   (t2Candidate > 1.0e-6 && t2Candidate < 1.0 - 1.0e-6) {
                     // Verify convergence to a true intersection, not a nearest-approach point
                     // on non-intersecting curves. For a real root |f| ≈ machine-epsilon × scale;
                     // for a phantom |f| ≈ δ (separation). Use chord length as the scale reference.

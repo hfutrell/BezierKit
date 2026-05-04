@@ -136,9 +136,9 @@ private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCu
     _ c1: C1, _ c2: C2, u: CGFloat, v: CGFloat
 ) -> Bool {
     let f = c1.point(at: u) - c2.point(at: v)
-    let chord = (c1.endingPoint - c1.startingPoint).length
-    let scale = max(chord, CGFloat(1.0e-10))
-    return f.x * f.x + f.y * f.y < scale * scale * CGFloat(1.0e-12)
+    let chordSq = (c1.endingPoint - c1.startingPoint).lengthSquared
+    let scaleSq = max(chordSq, CGFloat(1.0e-20))
+    return f.lengthSquared < scaleSq * CGFloat(1.0e-12)
 }
 
 // Ensures exact curve-endpoint intersections are represented precisely in `result`.
@@ -164,8 +164,19 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     var clipIntersections: [Intersection] = []
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
     var clipIterations = 0
-    if bezierClipping(curve1, curve2, &clipIntersections, &clipIterations) {
-        guard !clipIntersections.isEmpty else { return [] }
+    let clippingConverged = bezierClipping(curve1, curve2, &clipIntersections, &clipIterations)
+#if DEBUG
+    ClippingStats.shared.record(iterations: clipIterations)
+#endif
+    if clippingConverged {
+        guard !clipIntersections.isEmpty else {
+            // Clipping converged to empty: fat-line clips eliminated all overlap.
+            // Endpoint-endpoint intersections (tangential approach, equal start/end points)
+            // may be missed by pure convergence; check all corner combinations explicitly.
+            var result: [Intersection] = []
+            addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
+            return result.sortedAndUniqued()
+        }
         // Verify each clipping result with Newton and return Newton-refined t values.
         // Near-coincident non-intersecting curves can cause clipping to converge to
         // spurious points; Newton rejection filters these out. When multiple subdivisions
