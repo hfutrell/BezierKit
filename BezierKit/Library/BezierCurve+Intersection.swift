@@ -141,17 +141,21 @@ private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCu
     return f.x * f.x + f.y * f.y < scale * scale * CGFloat(1.0e-12)
 }
 
-// Appends any curve-endpoint intersections not already in `result`.
-// Bezier clipping can miss endpoint intersections when near-coincident sections
-// exhaust the iteration budget before the endpoint interval converges.
+// Ensures exact curve-endpoint intersections are represented precisely in `result`.
+// When Newton refinement nudges a clipping result slightly away from an exact endpoint,
+// this replaces the near-endpoint result with the exact (u, v) corner value.
+// Also appends any endpoint intersections that bezier clipping missed entirely.
 private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
     _ result: inout [Intersection], curve1: C1, curve2: C2, accuracy: CGFloat
 ) {
     for (u, v) in [(CGFloat(0), CGFloat(0)), (CGFloat(0), CGFloat(1)), (CGFloat(1), CGFloat(0)), (CGFloat(1), CGFloat(1))] {
         guard newtonIsGenuineRoot(curve1, curve2, u: u, v: v) else { continue }
         let p1 = curve1.point(at: u)
-        guard !result.contains(where: { distanceSquared(p1, curve1.point(at: $0.t1)) < accuracy * accuracy }) else { continue }
-        result.append(Intersection(t1: u, t2: v))
+        if let idx = result.firstIndex(where: { distanceSquared(p1, curve1.point(at: $0.t1)) < accuracy * accuracy }) {
+            result[idx] = Intersection(t1: u, t2: v)
+        } else {
+            result.append(Intersection(t1: u, t2: v))
+        }
     }
 }
 
