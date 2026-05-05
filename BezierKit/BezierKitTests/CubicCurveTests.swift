@@ -893,4 +893,135 @@ class CubicCurveTests: XCTestCase {
     }
     #endif
 
+    #if !os(WASI) // near-endpoint and clustered crossings require 64-bit floating-point precision
+    func testCubicIntersectionsMissedNearEndpointCrossing() {
+        // Pair (26,25) from reseed=2: the correct answer is 2 intersections.
+        // The crossing at t1≈0.017 (near the start of c1) was missed by the bezier-clipping engine.
+        let accuracy: CGFloat = 1.0e-5
+        let c1 = CubicCurve(
+            p0: CGPoint(x: 0.7739957146610017, y: 0.3469060708319205),
+            p1: CGPoint(x: 0.2508713555163915, y: 0.8733596721301708),
+            p2: CGPoint(x: 0.7448806962307977, y: 0.0876272439812027),
+            p3: CGPoint(x: 0.49754253316441677, y: 0.36155474380293384))
+        let c2 = CubicCurve(
+            p0: CGPoint(x: 0.3498261426176761, y: 0.7594413124420498),
+            p1: CGPoint(x: 0.8266628588367375, y: 0.32087078009337944),
+            p2: CGPoint(x: 0.8273988019452538, y: 0.09048818708153306),
+            p3: CGPoint(x: 0.8843766467764418, y: 0.9066274694531486))
+        let intersections = c1.intersections(with: c2, accuracy: accuracy)
+        XCTAssertEqual(intersections.count, 2)
+        for ix in intersections {
+            XCTAssertTrue(distance(c1.point(at: ix.t1), c2.point(at: ix.t2)) < accuracy)
+        }
+    }
+
+    func testCubicIntersectionsMissedClusteredCrossings() {
+        // Pair (11,5) from reseed=2: the correct answer is 3 intersections.
+        // The crossing at t1≈0.619 in a tight cluster of three was missed by the bezier-clipping engine.
+        let accuracy: CGFloat = 1.0e-5
+        let c1 = CubicCurve(
+            p0: CGPoint(x: 0.4310345885746507, y: 0.8134436896912689),
+            p1: CGPoint(x: 0.45530872717186455, y: 0.21013169304732315),
+            p2: CGPoint(x: 0.1047902540404273, y: 0.06739539662028449),
+            p3: CGPoint(x: 0.22857986645345463, y: 0.9845499880879558))
+        let c2 = CubicCurve(
+            p0: CGPoint(x: 0.3238263245421287, y: 0.1250335338407922),
+            p1: CGPoint(x: 0.19854299885848192, y: 0.6096623626886881),
+            p2: CGPoint(x: 0.006476722543641955, y: 0.63499973706611),
+            p3: CGPoint(x: 0.4422275024945712, y: 0.8554909210417847))
+        let intersections = c1.intersections(with: c2, accuracy: accuracy)
+        XCTAssertEqual(intersections.count, 3)
+        for ix in intersections {
+            XCTAssertTrue(distance(c1.point(at: ix.t1), c2.point(at: ix.t2)) < accuracy)
+        }
+    }
+
+    // Cat1/Cat2/Cat3 regression matrix: check all six adversarial pairs against master counts.
+    // Regression tests for six adversarial curve pairs (random curves, reseed=2).
+    // All pairs have genuine intersections that were previously missed by the
+    // bezier-clipping engine due to fast fat-line convergence to one intersection
+    // while excluding a nearby second/third intersection from the search window.
+    func testAdversarialIntersectionMatrix() {
+        let curve0 = CubicCurve(
+            p0: CGPoint(x: 0.9124326534374667,  y: 0.1590829089722945),
+            p1: CGPoint(x: 0.5732627807102624,  y: 0.8015068332633248),
+            p2: CGPoint(x: 0.553675300337165,   y: 0.21773456594381457),
+            p3: CGPoint(x: 0.6829848805412801,  y: 0.6121018899549071))
+        let curve5 = CubicCurve(
+            p0: CGPoint(x: 0.3238263245421287,  y: 0.1250335338407922),
+            p1: CGPoint(x: 0.19854299885848192, y: 0.6096623626886881),
+            p2: CGPoint(x: 0.006476722543641955, y: 0.63499973706611),
+            p3: CGPoint(x: 0.4422275024945712,  y: 0.8554909210417847))
+        let curve11 = CubicCurve(
+            p0: CGPoint(x: 0.4310345885746507,  y: 0.8134436896912689),
+            p1: CGPoint(x: 0.45530872717186455, y: 0.21013169304732315),
+            p2: CGPoint(x: 0.1047902540404273,  y: 0.06739539662028449),
+            p3: CGPoint(x: 0.22857986645345463, y: 0.9845499880879558))
+        let curve13 = CubicCurve(
+            p0: CGPoint(x: 0.4469776939343184,  y: 0.5960724088200777),
+            p1: CGPoint(x: 0.9730032009862661,  y: 0.8021402773027617),
+            p2: CGPoint(x: 0.14487261888813308, y: 0.4684348738493469),
+            p3: CGPoint(x: 0.4832980163922649,  y: 0.6076500368385425))
+        let curve21 = CubicCurve(
+            p0: CGPoint(x: 0.647838332396109,   y: 0.11739671075736169),
+            p1: CGPoint(x: 0.9187152782878165,  y: 0.10720974592013732),
+            p2: CGPoint(x: 0.3422453455069565,  y: 0.9983760778699349),
+            p3: CGPoint(x: 0.5217178910730773,  y: 0.18751642611345432))
+        let curve25 = CubicCurve(
+            p0: CGPoint(x: 0.3498261426176761,  y: 0.7594413124420498),
+            p1: CGPoint(x: 0.8266628588367375,  y: 0.32087078009337944),
+            p2: CGPoint(x: 0.8273988019452538,  y: 0.09048818708153306),
+            p3: CGPoint(x: 0.8843766467764418,  y: 0.9066274694531486))
+        let curve26 = CubicCurve(
+            p0: CGPoint(x: 0.7739957146610017,  y: 0.3469060708319205),
+            p1: CGPoint(x: 0.2508713555163915,  y: 0.8733596721301708),
+            p2: CGPoint(x: 0.7448806962307977,  y: 0.0876272439812027),
+            p3: CGPoint(x: 0.49754253316441677, y: 0.36155474380293384))
+        let curve34 = CubicCurve(
+            p0: CGPoint(x: 0.5422449432060752,  y: 0.4203078896607906),
+            p1: CGPoint(x: 0.35387217175907537, y: 0.8052063589730167),
+            p2: CGPoint(x: 0.862027735150054,   y: 0.5977362444660201),
+            p3: CGPoint(x: 0.9191207773661993,  y: 0.4070648967728161))
+        let curve35 = CubicCurve(
+            p0: CGPoint(x: 0.1100812959313977,  y: 0.9690361458845587),
+            p1: CGPoint(x: 0.5791416858383904,  y: 0.7444142775407627),
+            p2: CGPoint(x: 0.6333031742149622,  y: 0.1613833592649172),
+            p3: CGPoint(x: 0.667579029934867,   y: 0.8117369651173973))
+        let curve42 = CubicCurve(
+            p0: CGPoint(x: 0.9820064312126,     y: 0.9017789540651222),
+            p1: CGPoint(x: 0.12481300745703194, y: 0.6208649653583578),
+            p2: CGPoint(x: 0.9425248645585675,  y: 0.22771922413794243),
+            p3: CGPoint(x: 0.6920056051257255,  y: 0.2706114193146263))
+        let accuracy: CGFloat = 1e-5
+        for (c1, c2, expected) in [
+            (curve0,  curve42, 2),
+            (curve0,  curve21, 2),
+            (curve13, curve34, 2),
+            (curve25, curve35, 2),
+            (curve26, curve25, 2),
+            (curve11, curve5,  3)
+        ] as [(CubicCurve, CubicCurve, Int)] {
+            let ixs = c1.intersections(with: c2, accuracy: accuracy)
+            XCTAssertEqual(ixs.count, expected)
+            for ix in ixs {
+                XCTAssertTrue(distance(c1.point(at: ix.t1), c2.point(at: ix.t2)) < accuracy)
+            }
+        }
+    }
+
+    #endif
+
+    // Regression: Horner Newton-bisection had catastrophic cancellation in the
+    // Bernstein→power-basis conversion for this polynomial, producing a spurious root
+    // at t=0.5. The de Casteljau fallback in refineBracketedRoot eliminates it.
+    // curve 44 from generateRandomCurves(count: 50, reseed: 2); selfIntersects=false
+    func testCubicSpuriousSelfIntersectionRegression() {
+        let c = CubicCurve(
+            p0: CGPoint(x: 0.4143415324441584,  y: 0.40199194973487806),
+            p1: CGPoint(x: 0.9724439664323761,  y: 0.2587359426145852),
+            p2: CGPoint(x: 0.9011918984060294,  y: 0.08685736804942223),
+            p3: CGPoint(x: 0.8496873486430694,  y: 0.5254748576157553))
+        XCTAssertEqual(c.intersections(with: c, accuracy: 1e-5).count, 2)
+    }
+
 }

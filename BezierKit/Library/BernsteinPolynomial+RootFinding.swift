@@ -68,61 +68,89 @@ extension BernsteinPolynomial5: BezierClippingPolynomial {
 // giving quadratic convergence; we stop once the mapped interval is below this tolerance.
 private let clippingErrorThreshold: CGFloat = 1e-5
 
-// Finds the unique root in [0,1] of a polynomial whose first and last Bernstein coefficients
-// bracket zero (c0 * cN < 0), using Newton–Raphson with a bisection fallback.
+// Finds the unique root in [0,1] of a polynomial bracketed by c0 * lastCoefficient < 0.
+// Fast path: Horner Newton-bisection (O(n) per eval). Validates via one de Casteljau evaluation
+// (reusing the power-basis scratch area); falls back to de Casteljau Newton-bisection when the
+// power-basis conversion has catastrophic cancellation from deep bezier-clipping subdivision.
 private func refineBracketedRoot<P: BezierClippingPolynomial>(
     polynomial: P,
     n: Int,
-    c0: CGFloat,
-    cN: CGFloat
+    c0: CGFloat
 ) -> CGFloat {
-    let scale = Swift.max(Swift.abs(c0), Swift.abs(cN))
-    let residualThreshold = scale * CGFloat.ulpOfOne.squareRoot()
     let count = n + 1
-    // Convert Bernstein coefficients to power basis once via iterated forward
-    // differences (c_k = C(n,k) · Δ^k b[0]), then use Horner's method for all
-    // Newton and bisection evaluations — O(n) per call vs O(n²) de Casteljau.
+    let nF = CGFloat(n)
     var result = CGFloat(0)
-    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: count) { buf in
+    // buf[0..<count]: Bernstein coefficients (preserved for de Casteljau fallback)
+    // buf[count..<2*count]: power-basis during Horner Newton, then reused as de Casteljau scratch
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 2 * count) { buf in
         var idx = 0
         polynomial.forEachCoefficient { buf[idx] = $0; idx += 1 }
+        // Convert Bernstein → power basis in buf[count..] via forward differences + binomial scaling.
+        for k in 0..<count { buf[count + k] = buf[k] }
         for k in 1..<count {
-            for i in stride(from: n, through: k, by: -1) { buf[i] -= buf[i - 1] }
+            for i in stride(from: n, through: k, by: -1) { buf[count + i] -= buf[count + i - 1] }
         }
-        for k in 0...n { buf[k] *= Utils.binomialCoefficient(n, choose: k) }
-        func hValue(_ t: CGFloat) -> CGFloat {
-            var v = buf[n]
-            for k in stride(from: n - 1, through: 0, by: -1) { v = v * t + buf[k] }
-            return v
+        var binom: CGFloat = 1.0
+        for k in 0...n {
+            buf[count + k] *= binom
+            if k < n { binom = binom * CGFloat(n - k) / CGFloat(k + 1) }
         }
+        // Horner simultaneous value + derivative (synthetic-division identity).
         func hValueAndDerivative(_ t: CGFloat) -> (CGFloat, CGFloat) {
-            var v = buf[n], d = CGFloat(0)
-            for k in stride(from: n - 1, through: 0, by: -1) { d = d * t + v; v = v * t + buf[k] }
+            var v = buf[count + n], d = CGFloat(0)
+            for k in stride(from: n - 1, through: 0, by: -1) { d = d * t + v; v = v * t + buf[count + k] }
             return (v, d)
         }
+        // Bracket-enforcing Newton-bisection; prevents stuck-at-boundary failure when Newton
+        // overshoots and plain clamping keeps it at the edge indefinitely.
+        var lo = CGFloat(0), hi = CGFloat(1), fLo = c0
         var x = CGFloat(0.5)
-        var newtonSucceeded = false
-        for _ in 0..<20 {
-            let (f, fPrime) = hValueAndDerivative(x)
-            if f == 0 { newtonSucceeded = true; break }
-            guard fPrime != 0 else { break }
-            let delta = f / fPrime
-            x -= delta
-            if Swift.abs(delta) <= 1e-10 {
-                x = Swift.max(0, Swift.min(1, x))
-                newtonSucceeded = Swift.abs(hValue(x)) <= residualThreshold
-                break
-            }
-        }
-        x = Swift.max(0, Swift.min(1, x))
-        if newtonSucceeded { result = x; return }
-        var lo = CGFloat(0), hi = CGFloat(1), fL = c0
         for _ in 0..<52 {
-            let mid = CGFloat(0.5) * (lo + hi)
-            guard mid > lo else { break }
-            let fMid = hValue(mid)
-            if fMid == 0 { lo = mid; hi = mid; break }
-            if (fL > 0) == (fMid > 0) { lo = mid; fL = fMid } else { hi = mid }
+            let (f, fPrime) = hValueAndDerivative(x)
+            if f == 0 { lo = x; hi = x; break }
+            if (fLo > 0) == (f > 0) { lo = x; fLo = f } else { hi = x }
+            guard fPrime != 0 else { break }
+            let newton = x - f / fPrime
+            x = (newton > lo && newton < hi) ? newton : 0.5 * (lo + hi)
+            if hi - lo <= 1e-10 { break }
+        }
+        let candidate = 0.5 * (lo + hi)
+        // Validate via one de Casteljau evaluation using buf[count..] as scratch.
+        // If Horner had catastrophic cancellation the polynomial value at candidate will be
+        // large relative to the coefficient scale and we fall back to full de Casteljau.
+        var coeffScale = CGFloat(0)
+        for k in 0..<count { coeffScale = Swift.max(coeffScale, Swift.abs(buf[k])) }
+        for k in 0..<count { buf[count + k] = buf[k] }
+        let mt = 1.0 - candidate
+        for round in 1..<n {
+            for i in 0...(n - round) { buf[count + i] = mt * buf[count + i] + candidate * buf[count + i + 1] }
+        }
+        let dcValue = mt * buf[count] + candidate * buf[count + 1]
+        guard Swift.abs(dcValue) > coeffScale * 1e-6 else { result = candidate; return }
+        // Horner had catastrophic cancellation in the power-basis conversion — exceedingly rare
+        // in practice (0% hit rate on typical workloads), but occurs for specific polynomials
+        // produced by deep bezier-clipping subdivision. See testAdversarialIntersectionMatrix
+        // and testProjectRealWorldIssue for cases that exercise this path.
+        // Fall back to de Casteljau Newton-bisection, which is numerically stable.
+        // B'(t) = n × (d^{n−1}_1 − d^{n−1}_0) from the penultimate reduction row.
+        func dcEval(_ t: CGFloat) -> (CGFloat, CGFloat) {
+            for k in 0..<count { buf[count + k] = buf[k] }
+            let mt2 = 1.0 - t
+            for round in 1..<n {
+                for i in 0...(n - round) { buf[count + i] = mt2 * buf[count + i] + t * buf[count + i + 1] }
+            }
+            let deriv = nF * (buf[count + 1] - buf[count])
+            return (mt2 * buf[count] + t * buf[count + 1], deriv)
+        }
+        lo = 0.0; hi = 1.0; fLo = c0
+        x = 0.5
+        for _ in 0..<52 {
+            guard hi - lo > 1e-10 else { break }
+            let (f, fPrime) = dcEval(x)
+            if f == 0 { lo = x; hi = x; break }
+            if (fLo > 0) == (f > 0) { lo = x; fLo = f } else { hi = x }
+            let newton = (fPrime != 0) ? x - f / fPrime : CGFloat.infinity
+            x = (newton > lo && newton < hi) ? newton : 0.5 * (lo + hi)
         }
         result = 0.5 * (lo + hi)
     }
@@ -157,7 +185,7 @@ private func rootsCore<P: BezierClippingPolynomial>(
     guard signChanges > 0 || c0 == 0 || cN == 0 else { return }
 
     if signChanges == 1, c0 * cN < 0 {
-        let result = refineBracketedRoot(polynomial: polynomial, n: n, c0: c0, cN: cN)
+        let result = refineBracketedRoot(polynomial: polynomial, n: n, c0: c0)
         callback(Utils.linearInterpolate(rangeStart, rangeEnd, result))
         return
     }

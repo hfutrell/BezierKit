@@ -76,11 +76,14 @@ private func hullEdgeClipInterval(
     if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
     let dDelta = db - da
     if dDelta != 0 {
-        // Sign-based crossing detection: no division when both ends are on the same side.
+        // Precompute reciprocal once; both potential t values use FMA (ta + d * recip)
+        // instead of a separate FMUL + FDIV per crossing — saves one FDIV in the common
+        // case where both band boundaries are crossed.
+        let recip = dt / dDelta
         let dLowA = dLow - da; let dLowB = dLow - db
-        if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
+        if dLowA * dLowB <= 0 { let t = ta.addingProduct(dLowA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
         let dHighA = dHigh - da; let dHighB = dHigh - db
-        if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < lo { lo = t }; if t > hi { hi = t } }
+        if dHighA * dHighB <= 0 { let t = ta.addingProduct(dHighA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
     }
     return (lo, hi)
 }
@@ -363,8 +366,14 @@ func bezierClipping<C1, C2>(
                     let chordSq = (c1Reduced.curve.endingPoint - c1Reduced.curve.startingPoint).lengthSquared
                     let scaleSq = max(chordSq, CGFloat(1e-20))
                     if fFinal.x * fFinal.x + fFinal.y * fFinal.y < scaleSq * CGFloat(1e-12) {
-                        results.append(Intersection(t1: t1Candidate, t2: t2Candidate))
-                        return true
+                        let isDuplicate = results.contains {
+                            Swift.abs($0.t1 - t1Candidate) < 1e-5 && Swift.abs($0.t2 - t2Candidate) < 1e-5
+                        }
+                        if !isDuplicate { results.append(Intersection(t1: t1Candidate, t2: t2Candidate)) }
+                        // If the window still spans multiple potential intersections, subdivide to
+                        // catch nearby crossings that Newton converged away from.
+                        guard c1Range > 0.01 || c2Range > 0.01 else { return true }
+                        return subdivideBezierClipping(c1Reduced, c2Reduced, &results, &totalIterations)
                     }
                 }
             }
