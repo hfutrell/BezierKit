@@ -28,20 +28,25 @@ internal extension Array where Element: Comparable {
 
 internal class Utils {
 
-    private static let binomialTable: [[CGFloat]] = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                              [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                                              [1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
-                                              [1, 3, 3, 1, 0, 0, 0, 0, 0, 0],
-                                              [1, 4, 6, 4, 1, 0, 0, 0, 0, 0],
-                                              [1, 5, 10, 10, 5, 1, 0, 0, 0, 0],
-                                              [1, 6, 15, 20, 15, 6, 1, 0, 0, 0],
-                                              [1, 7, 21, 35, 35, 21, 7, 1, 0, 0],
-                                              [1, 8, 28, 56, 70, 56, 28, 8, 1, 0],
-                                              [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]]
+    // Flat 10×10 table (row-major, stride 10) avoids the double heap indirection of [[CGFloat]].
+    // swiftlint:disable comma
+    private static let binomialTable: [CGFloat] = [
+        1,  0,   0,   0,   0,   0,  0,  0, 0, 0,  // n=0
+        1,  1,   0,   0,   0,   0,  0,  0, 0, 0,  // n=1
+        1,  2,   1,   0,   0,   0,  0,  0, 0, 0,  // n=2
+        1,  3,   3,   1,   0,   0,  0,  0, 0, 0,  // n=3
+        1,  4,   6,   4,   1,   0,  0,  0, 0, 0,  // n=4
+        1,  5,  10,  10,   5,   1,  0,  0, 0, 0,  // n=5
+        1,  6,  15,  20,  15,   6,  1,  0, 0, 0,  // n=6
+        1,  7,  21,  35,  35,  21,  7,  1, 0, 0,  // n=7
+        1,  8,  28,  56,  70,  56, 28,  8, 1, 0,  // n=8
+        1,  9,  36,  84, 126, 126, 84, 36, 9, 1   // n=9
+    ]
+    // swiftlint:enable comma
 
     static func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
-        precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
-        return binomialTable[n][k]
+        assert(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+        return binomialTable[n &* 10 &+ k]
     }
 
     // float precision significant decimal
@@ -195,11 +200,11 @@ internal class Utils {
             return
         }
         let scale = Swift.abs(p0) + 3 * Swift.abs(p1) + 3 * Swift.abs(p2) + Swift.abs(p3)
-        // When `d` is small relative to the Bernstein coefficient magnitudes, dividing by it
-        // amplifies rounding errors. Fall back to a different root finding method.
+        // When `d` is small relative to coefficient magnitudes, dividing by it amplifies rounding errors.
         guard Swift.abs(d) >= 1.0e-4 * scale else {
-            BernsteinPolynomialN(coefficients: [CGFloat(p0), CGFloat(p1), CGFloat(p2), CGFloat(p3)])
-                .distinctRealRootsInUnitInterval().forEach(callback)
+            // rare case: we couldn't to find the root due to numerical instability, so use the most numerically stable approach we have.
+            let poly = BernsteinPolynomial3(b0: p0, b1: p1, b2: p2, b3: p3)
+            findDistinctRootsCallbackBezierClipping(poly, callback)
             return
         }
         let a = (3 * p0 - 6 * p1 + 3 * p2) / d
@@ -313,79 +318,6 @@ internal class Utils {
         let d2 = v2 - o
         return atan2(d1.cross(d2), d1.dot(d2))
     }
-
-    @inline(__always) private static func shouldRecurse<C>(for subcurve: Subcurve<C>, boundingBoxSize: CGPoint, accuracy: CGFloat) -> Bool {
-        guard subcurve.canSplit else { return false }
-        guard boundingBoxSize.x + boundingBoxSize.y >= accuracy else { return false }
-        if MemoryLayout<CGFloat>.size == 4 {
-            let curve = subcurve.curve
-            // limit recursion when we exceed Float32 precision
-            let midPoint = curve.point(at: 0.5)
-            if midPoint == curve.startingPoint ||
-                midPoint == curve.endingPoint {
-                guard curve.selfIntersects else { return false }
-            }
-        }
-        return true
-    }
-
-    // disable this SwiftLint warning about function having more than 5 parameters
-    // swiftlint:disable function_parameter_count
-
-    static func pairiteration<C1, C2>(_ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-                                      _ c1b: BoundingBox, _ c2b: BoundingBox,
-                                      _ results: inout [Intersection],
-                                      _ accuracy: CGFloat,
-                                      _ totalIterations: inout Int) -> Bool {
-
-        let maximumIterations = 900
-        let maximumIntersections = c1.curve.order * c2.curve.order
-
-        totalIterations += 1
-        guard totalIterations <= maximumIterations else { return false }
-        guard results.count <= maximumIntersections else { return false }
-        guard c1b.overlaps(c2b) else { return true }
-
-        let shouldRecurse1 = shouldRecurse(for: c1, boundingBoxSize: c1b.size, accuracy: accuracy)
-        let shouldRecurse2 = shouldRecurse(for: c2, boundingBoxSize: c2b.size, accuracy: accuracy)
-
-        if shouldRecurse1 == false, shouldRecurse2 == false {
-            // subcurves are small enough or we simply cannot recurse any more
-            let l1 = LineSegment(p0: c1.curve.startingPoint, p1: c1.curve.endingPoint)
-            let l2 = LineSegment(p0: c2.curve.startingPoint, p1: c2.curve.endingPoint)
-            guard let intersection = l1.intersections(with: l2, checkCoincidence: false).first else { return true }
-            let t1 = intersection.t1
-            let t2 = intersection.t2
-            results.append(Intersection(t1: t1 * c1.t2 + (1.0 - t1) * c1.t1,
-                                        t2: t2 * c2.t2 + (1.0 - t2) * c2.t1))
-        } else if shouldRecurse1, shouldRecurse2 {
-            let cc1 = c1.split(at: 0.5)
-            let cc2 = c2.split(at: 0.5)
-            let cc1lb = cc1.left.curve.boundingBox
-            let cc1rb = cc1.right.curve.boundingBox
-            let cc2lb = cc2.left.curve.boundingBox
-            let cc2rb = cc2.right.curve.boundingBox
-            guard Utils.pairiteration(cc1.left, cc2.left, cc1lb, cc2lb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.left, cc2.right, cc1lb, cc2rb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.right, cc2.left, cc1rb, cc2lb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.right, cc2.right, cc1rb, cc2rb, &results, accuracy, &totalIterations) else { return false }
-        } else if shouldRecurse1 {
-            let cc1 = c1.split(at: 0.5)
-            let cc1lb = cc1.left.curve.boundingBox
-            let cc1rb = cc1.right.curve.boundingBox
-            guard Utils.pairiteration(cc1.left, c2, cc1lb, c2b, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(cc1.right, c2, cc1rb, c2b, &results, accuracy, &totalIterations) else { return false }
-        } else if shouldRecurse2 {
-            let cc2 = c2.split(at: 0.5)
-            let cc2lb = cc2.left.curve.boundingBox
-            let cc2rb = cc2.right.curve.boundingBox
-            guard Utils.pairiteration(c1, cc2.left, c1b, cc2lb, &results, accuracy, &totalIterations) else { return false }
-            guard Utils.pairiteration(c1, cc2.right, c1b, cc2rb, &results, accuracy, &totalIterations) else { return false }
-        }
-        return true
-    }
-
-    // swiftlint:enable function_parameter_count
 
     static func hull(_ p: [CGPoint], _ t: CGFloat) -> [CGPoint] {
         let c: Int = p.count

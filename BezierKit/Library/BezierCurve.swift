@@ -308,8 +308,16 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sen
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable {
-    // intentionally empty, just declare conformance if you're not a line
+internal protocol NonlinearBezierCurve: BezierClippingCurve, ComponentPolynomials where Polynomial: BezierClippingPolynomial {
+    // Combined evaluation: avoids recomputing shared basis intermediates (mt², t²) that
+    // point(at:) and derivative(at:) would otherwise each compute independently.
+    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint)
+}
+
+internal extension NonlinearBezierCurve {
+    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint) {
+        return (point(at: t), derivative(at: t))
+    }
 }
 
 public protocol Flatness: BezierCurve {

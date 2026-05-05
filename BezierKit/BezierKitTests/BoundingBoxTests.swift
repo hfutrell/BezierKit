@@ -45,6 +45,7 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertTrue(BoundingBox(min: CGPoint(x: 5, y: 3), max: CGPoint(x: 4, y: 4)).isEmpty)
     }
 
+    #if !os(WASI) // sqrt comparisons require 64-bit precision
     func testLowerAndUpperBounds() {
         let box = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))
 
@@ -66,6 +67,7 @@ class BoundingBoxTests: XCTestCase {
         XCTAssertEqual(box.upperBoundOfDistance(to: p4), sqrt(17.0))
         XCTAssertEqual(box.upperBoundOfDistance(to: p5), sqrt(52.0))
     }
+    #endif
 
     func testArea() {
         let box = BoundingBox(p1: CGPoint(x: 2.0, y: 3.0), p2: CGPoint(x: 3.0, y: 5.0))

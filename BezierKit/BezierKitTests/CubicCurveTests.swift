@@ -491,6 +491,7 @@ class CubicCurveTests: XCTestCase {
         }
     }
 
+    #if !os(WASI) // accuracy: 1e-8 requires 64-bit CGFloat (32-bit machine epsilon ~1e-7)
     func testBasicTangentIntersection() {
         let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0),
                             p1: CGPoint(x: 0, y: 3),
@@ -504,6 +505,7 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5), expectedIntersections)
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
     }
+    #endif
 
     // Skip on platforms where CGFloat is 32bit
     #if !(arch(i386) || arch(arm) || arch(wasm32))
@@ -657,4 +659,238 @@ class CubicCurveTests: XCTestCase {
         XCTAssertNotEqual(c1, c4)
         XCTAssertNotEqual(c1, c5)
     }
+
+    // MARK: - Adversarial intersection cases
+
+    // MARK: 15. Near-coincident crossing S-curves at sub-accuracy separations.
+    // a4/δ=8e-6 and a8/δ=1.2e-5 do not converge even at bezier clipping budget=5000.
+    // a4/δ=1.2e-5 needs ~4000 bezier clipping iterations (budget=64 insufficient).
+    // All three are handled by the Newton midpoint fallback.
+    #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
+    func testAdversarialIntersectionsMark15() {
+        let mark15Cases: [(aVal: CGFloat, delta: CGFloat)] = [
+            (4.0, 8e-6), (4.0, 1.2e-5),
+            (8.0, 1.2e-5)
+        ]
+        for (aVal, delta) in mark15Cases {
+            let sa = CubicCurve(p0: .zero,
+                                p1: CGPoint(x:0.33, y:aVal),
+                                p2: CGPoint(x:0.66, y:1-aVal),
+                                p3: CGPoint(x:1,    y:1))
+            let sb = CubicCurve(p0: CGPoint(x:0,    y:  delta),
+                                p1: CGPoint(x:0.33, y:  aVal + delta),
+                                p2: CGPoint(x:0.66, y:  1 - aVal - delta),
+                                p3: CGPoint(x:1,    y:  1 - delta))
+            XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1,
+                           "S-curve a=\(aVal) δ=\(delta) (expect 1)")
+        }
+    }
+    #endif
+
+    // MARK: - Individual adversarial intersection tests
+
+    // Osculating curves: share p0, p1, p2; differ only at p3.
+    // diff(t) = t³·(p3A − p3B) → they agree only at t=0.
+    func testIntersectionsOsculatingAtStart() {
+        let c1 = CubicCurve(p0: .zero, p1: CGPoint(x:1,y:0), p2: CGPoint(x:2,y:0), p3: CGPoint(x:3,y:1))
+        let c2 = CubicCurve(p0: .zero, p1: CGPoint(x:1,y:0), p2: CGPoint(x:2,y:0), p3: CGPoint(x:3,y:-1))
+        XCTAssertEqual(c1.intersections(with: c2).count, 1)
+    }
+
+    // Osculating curves: share p1, p2, p3; differ only at p0.
+    // diff(t) = (1−t)³·(p0A − p0B) → they agree only at t=1.
+    func testIntersectionsOsculatingAtEnd() {
+        let c1 = CubicCurve(p0: CGPoint(x:-3,y:1), p1: CGPoint(x:-2,y:0), p2: CGPoint(x:-1,y:0), p3: .zero)
+        let c2 = CubicCurve(p0: CGPoint(x:-3,y:-1), p1: CGPoint(x:-2,y:0), p2: CGPoint(x:-1,y:0), p3: .zero)
+        XCTAssertEqual(c1.intersections(with: c2).count, 1)
+    }
+
+    // Osculating at t=0 with p3 strongly diverging.
+    // diff_y(t) = 2t³ ≥ 0 → agree only at t=0, no interior crossing.
+    func testIntersectionsOsculatingAtStartStrongDivergence() {
+        let c1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.5,y:0), p2: CGPoint(x:1,y:0), p3: CGPoint(x:1,y:1))
+        let c2 = CubicCurve(p0: .zero, p1: CGPoint(x:0.5,y:0), p2: CGPoint(x:1,y:0), p3: CGPoint(x:1,y:-1))
+        XCTAssertEqual(c1.intersections(with: c2).count, 1)
+    }
+
+    // High-amplitude S-curve pair: 9 transversal crossings. a=4.
+    func testIntersectionsExtremeSCurve_a4() {
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:1), p1: CGPoint(x:4,y:0.66), p2: CGPoint(x:-3,y:0.33), p3: CGPoint(x:1,y:0))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 9)
+    }
+
+    // High-amplitude S-curve pair: 9 transversal crossings. a=8.
+    #if !os(WASI) // control points reach ±8; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
+    func testIntersectionsExtremeSCurve_a8() {
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:8), p2: CGPoint(x:0.66,y:-7), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:1), p1: CGPoint(x:8,y:0.66), p2: CGPoint(x:-7,y:0.33), p3: CGPoint(x:1,y:0))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 9)
+    }
+    #endif
+
+    // High-amplitude S-curve pair: 9 transversal crossings. a=16.
+    #if !os(WASI) // control points reach ±16; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
+    func testIntersectionsExtremeSCurve_a16() {
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:16), p2: CGPoint(x:0.66,y:-15), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:1), p1: CGPoint(x:16,y:0.66), p2: CGPoint(x:-15,y:0.33), p3: CGPoint(x:1,y:0))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 9)
+    }
+    #endif
+
+    // Nearly-coincident CROSSING S-curves (a=4).
+    // s2 shifts p0,p1 by +δ and p2,p3 by −δ → diff_y = δ·(1−6t²+4t³), monotone, one zero.
+    // delta7e_6 and delta1e_5: bezier clipping does not converge even at budget=5000;
+    // implicitization also fails (delta below the precision floor of the composition polynomial).
+    #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
+    func testIntersectionsCrossingSCurve_a4_delta7e_6() {
+        let delta: CGFloat = 7e-6
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3-delta), p3: CGPoint(x:1,y:1-delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 1)
+    }
+
+    func testIntersectionsCrossingSCurve_a4_delta1e_5() {
+        let delta: CGFloat = 1e-5
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3-delta), p3: CGPoint(x:1,y:1-delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 1)
+    }
+
+    func testIntersectionsCrossingSCurve_a4_delta1p5e_5() {
+        let delta: CGFloat = 1.5e-5
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3-delta), p3: CGPoint(x:1,y:1-delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 1)
+    }
+
+    // Nearly-coincident PARALLEL S-curves (a=4): s2 = s1 + (0,δ) exactly.
+    // diff_y(t) = δ everywhere — no crossing. Expected: 0.
+    // All delta variants: bezier clipping reports a spurious intersection (sub-accuracy
+    // separation is numerically indistinguishable from coincident); implicitization also
+    // returns a spurious root.
+    func testIntersectionsParallelSCurve_delta3e_6() {
+        let delta: CGFloat = 3e-6
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
+    }
+    #endif
+
+    #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
+    func testIntersectionsParallelSCurve_delta5e_6() {
+        let delta: CGFloat = 5e-6
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
+    }
+
+    func testIntersectionsParallelSCurve_delta7e_6() {
+        let delta: CGFloat = 7e-6
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
+    }
+
+    func testIntersectionsParallelSCurve_delta1e_5() {
+        let delta: CGFloat = 1e-5
+        let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
+        let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
+                            p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
+        XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
+    }
+    #endif
+
+    // Two nested arches sharing only endpoints (0,0) and (2,0). Expected: 2.
+    func testIntersectionsNestedArches() {
+        let arch1 = CubicCurve(p0: .zero, p1: CGPoint(x:0,y:1), p2: CGPoint(x:2,y:1), p3: CGPoint(x:2,y:0))
+        let arch2 = CubicCurve(p0: .zero, p1: CGPoint(x:0,y:2), p2: CGPoint(x:2,y:2), p3: CGPoint(x:2,y:0))
+        XCTAssertEqual(arch1.intersections(with: arch2).count, 2)
+    }
+
+    // Cusp (p0==p1) vs horizontal-line cubic at y=0.5.
+    // The cusp's max y = 4/9 ≈ 0.444 < 0.5 → no intersection. Expected: 0.
+    func testIntersectionsCuspVsHorizontalLine() {
+        let cusp = CubicCurve(p0: .zero, p1: .zero, p2: CGPoint(x:1,y:1), p3: CGPoint(x:2,y:0))
+        let line = CubicCurve(p0: CGPoint(x:0,y:0.5), p1: CGPoint(x:0.5,y:0.5),
+                              p2: CGPoint(x:1.5,y:0.5), p3: CGPoint(x:2,y:0.5))
+        XCTAssertEqual(cusp.intersections(with: line).count, 0)
+    }
+
+    // S-curve vs itself reversed — geometrically coincident. Expected: 2 (endpoints).
+    func testIntersectionsSCurveVsReversed() {
+        let sc = CubicCurve(p0: .zero, p1: CGPoint(x:1,y:2), p2: CGPoint(x:2,y:-2), p3: CGPoint(x:3,y:0))
+        XCTAssertEqual(sc.intersections(with: sc.reversed()).count, 2)
+    }
+
+    // Crossing at the inflection point of an S-curve.
+    // x_inflect(t) = 3t (uniform x spacing) → unique crossing at t=0.5 for x=1.5. Expected: 1.
+    #if !os(WASI) // near-tangent at inflection point requires 64-bit precision
+    func testIntersectionsAtInflectionPoint() {
+        let inflect = CubicCurve(p0: .zero, p1: CGPoint(x:1,y:1), p2: CGPoint(x:2,y:-1), p3: CGPoint(x:3,y:0))
+        let cross = CubicCurve(p0: CGPoint(x:1.5,y:-1), p1: CGPoint(x:1.5,y:0),
+                               p2: CGPoint(x:1.5,y:1), p3: CGPoint(x:1.5,y:2))
+        XCTAssertEqual(inflect.intersections(with: cross).count, 1)
+    }
+    #endif
+
+    // Arch and its reversal trace the same geometric path — coincident. Expected: 2 (endpoints).
+    func testIntersectionsArchVsReversedArch() {
+        let arch = CubicCurve(p0: .zero, p1: CGPoint(x:0,y:2), p2: CGPoint(x:2,y:2), p3: CGPoint(x:2,y:0))
+        XCTAssertEqual(arch.intersections(with: arch.reversed()).count, 2)
+    }
+
+    // Degenerate cubic (actually a quadratic) vs a regular cubic. Expected: 2.
+    func testIntersectionsDegenerateCubicQuadraticVsNormal() {
+        let degQ = CubicCurve(p0: CGPoint(x:1,y:1), p1: CGPoint(x:2,y:4),
+                              p2: CGPoint(x:3,y:4), p3: CGPoint(x:4,y:1))
+        let normal = CubicCurve(p0: .zero, p1: CGPoint(x:2,y:4),
+                                p2: CGPoint(x:4,y:3), p3: CGPoint(x:6,y:3))
+        XCTAssertEqual(degQ.intersections(with: normal).count, 2)
+    }
+
+    // Degenerate cubic (actually linear) vs a regular cubic. Expected: 1.
+    func testIntersectionsDegenerateCubicLinearVsNormal() {
+        let degL = CubicCurve(p0: CGPoint(x:3,y:2), p1: CGPoint(x:4,y:3),
+                              p2: CGPoint(x:5,y:4), p3: CGPoint(x:6,y:5))
+        let normal = CubicCurve(p0: CGPoint(x:1,y:0), p1: CGPoint(x:3,y:6),
+                                p2: CGPoint(x:5,y:2), p3: CGPoint(x:7,y:0))
+        XCTAssertEqual(degL.intersections(with: normal).count, 1)
+    }
+
+    // Crossing S-curve sweep: diff_y = δ·(1−6t²+4t³), one zero for any (a,δ). Expected: 1.
+    // delta8e_6: bezier clipping does not converge at budget=5000; implicitization fails.
+    // a8_delta1p2e_5: bezier clipping does not converge at budget=5000 (a=8 slows convergence further); implicitization fails.
+    #if !os(WASI) // sub-accuracy deltas are indistinguishable in 32-bit CGFloat
+    func testIntersectionsCrossingSCurve_a4_delta8e_6() {
+        let (a, delta): (CGFloat, CGFloat) = (4, 8e-6)
+        let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
+        let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
+                            p2: CGPoint(x:0.66,y:1-a-delta), p3: CGPoint(x:1,y:1-delta))
+        XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1)
+    }
+
+    func testIntersectionsCrossingSCurve_a4_delta1p2e_5() {
+        let (a, delta): (CGFloat, CGFloat) = (4, 1.2e-5)
+        let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
+        let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
+                            p2: CGPoint(x:0.66,y:1-a-delta), p3: CGPoint(x:1,y:1-delta))
+        XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1)
+    }
+
+    func testIntersectionsCrossingSCurve_a8_delta1p2e_5() {
+        let (a, delta): (CGFloat, CGFloat) = (8, 1.2e-5)
+        let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
+        let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
+                            p2: CGPoint(x:0.66,y:1-a-delta), p3: CGPoint(x:1,y:1-delta))
+        XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1)
+    }
+    #endif
+
 }
