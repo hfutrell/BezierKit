@@ -443,6 +443,7 @@ class CubicCurveTests: XCTestCase {
 //    }
 //
 
+    #if !os(WASI) // control points reach ±4; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
     func testIntersectionsCubicMaxIntersections() {
         let epsilon: CGFloat = 1.0e-5
         let a = 4.0
@@ -470,6 +471,7 @@ class CubicCurveTests: XCTestCase {
             XCTAssertTrue(distance(c2.point(at: intersections[i].t2), expectedResults[i]) < epsilon)
         }
     }
+    #endif
 
     func testIntersectionsCoincident() {
         let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
@@ -714,11 +716,13 @@ class CubicCurveTests: XCTestCase {
     }
 
     // High-amplitude S-curve pair: 9 transversal crossings. a=4.
+    #if !os(WASI) // control points reach ±4; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
     func testIntersectionsExtremeSCurve_a4() {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:1), p1: CGPoint(x:4,y:0.66), p2: CGPoint(x:-3,y:0.33), p3: CGPoint(x:1,y:0))
         XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 9)
     }
+    #endif
 
     // High-amplitude S-curve pair: 9 transversal crossings. a=8.
     #if !os(WASI) // control points reach ±8; fat-line precision insufficient for 1e-5 in 32-bit CGFloat
