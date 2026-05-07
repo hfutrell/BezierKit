@@ -290,7 +290,7 @@ func bezierClipping<C1, C2>(
     _ totalIterations: inout Int
 ) -> Bool where C1: NonlinearBezierCurve, C2: NonlinearBezierCurve {
 
-    let maximumIterations    = 64
+    let maximumIterations    = 512
     let maximumIntersections = c1.curve.order * c2.curve.order
 
     // Quick bounding-box rejection using control polygon bounds (cheap: no root-finding).
