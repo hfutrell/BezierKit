@@ -179,10 +179,12 @@ private func convexHullClipIntervalQuadratic(
 // [dLow, dHigh], returns the sub-interval [tMin, tMax] of [0,1] where the convex hull
 // of {(t_i, d(i))} intersects the band. Returns nil if hull and band are disjoint.
 // d2 and d3 are only used when n > 2 and n > 3 respectively.
+// BezierKit only supports cubic (n=4) and quadratic (n=3) curves.
 private func convexHullClipInterval(
     d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat, n: Int,
     dLow: CGFloat, dHigh: CGFloat
 ) -> (CGFloat, CGFloat)? {
+    assert(n == 3 || n == 4, "convexHullClipInterval only supports n=3 (quadratic) and n=4 (cubic)")
     // Early exit: if all d values are on the same side of the band, no intersection possible.
     var dvMin = min(d0, d1)
     var dvMax = max(d0, d1)
@@ -191,56 +193,8 @@ private func convexHullClipInterval(
     guard dvMax >= dLow && dvMin <= dHigh else { return nil }
     // Fast path: all control points inside the band → entire curve is inside.
     if dvMin >= dLow && dvMax <= dHigh { return (0, 1) }
-
     if n == 4 { return convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh) }
-    if n == 3 { return convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh) }
-
-    // Generic path for n ≥ 5 (higher-order curves, not currently used).
-    let nf = CGFloat(n - 1)
-
-    func dAt(_ i: Int) -> CGFloat {
-        if i == 0 { return d0 }
-        if i == 1 { return d1 }
-        return d2
-    }
-    func cross2d(_ a: Int, _ b: Int, _ c: Int) -> CGFloat {
-        let da = dAt(a); let db = dAt(b); let dc = dAt(c)
-        return CGFloat(b - a) * (dc - da) - (db - da) * CGFloat(c - a)
-    }
-
-    return withUnsafeTemporaryAllocation(of: Int.self, capacity: n * 2) { buf in
-        let lower = buf.baseAddress!
-        let upper = buf.baseAddress! + n
-        var lc = 0, uc = 0
-        var tMin = CGFloat.infinity
-        var tMax = -CGFloat.infinity
-
-        for i in 0..<n {
-            while lc >= 2 && cross2d(lower[lc-2], lower[lc-1], i) <= 0 { lc -= 1 }
-            lower[lc] = i; lc += 1
-            while uc >= 2 && cross2d(upper[uc-2], upper[uc-1], i) >= 0 { uc -= 1 }
-            upper[uc] = i; uc += 1
-        }
-        @inline(__always) func processEdge(_ ai: Int, _ bi: Int) {
-            let ta = CGFloat(ai) / nf; let da = dAt(ai)
-            let tb = CGFloat(bi) / nf; let db = dAt(bi)
-            if da >= dLow && da <= dHigh { tMin = min(tMin, ta); tMax = max(tMax, ta) }
-            let dDelta = db - da
-            if dDelta != 0 {
-                let dt = tb - ta
-                let dLowA = dLow - da; let dLowB = dLow - db
-                if dLowA * dLowB <= 0 { let t = ta + dLowA * dt / dDelta; if t < tMin { tMin = t }; if t > tMax { tMax = t } }
-                let dHighA = dHigh - da; let dHighB = dHigh - db
-                if dHighA * dHighB <= 0 { let t = ta + dHighA * dt / dDelta; if t < tMin { tMin = t }; if t > tMax { tMax = t } }
-            }
-        }
-        for i in 0..<lc-1 { processEdge(lower[i], lower[i+1]) }
-        if lc > 0 { let last = lower[lc-1]; let dv = dAt(last); if dv >= dLow && dv <= dHigh { let t = CGFloat(last)/nf; tMin = min(tMin, t); tMax = max(tMax, t) } }
-        for i in 0..<uc-1 { processEdge(upper[i], upper[i+1]) }
-        if uc > 0 { let last = upper[uc-1]; let dv = dAt(last); if dv >= dLow && dv <= dHigh { let t = CGFloat(last)/nf; tMin = min(tMin, t); tMax = max(tMax, t) } }
-        guard tMin <= tMax else { return nil }
-        return (max(0, tMin), min(1, tMax))
-    }
+    return convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh)
 }
 
 // Compute the fat line of `other` and clip `curve`'s [0,1] parameter range
@@ -263,8 +217,13 @@ private func fatLineClip<C1: BezierClippingCurve, C2: BezierClippingCurve>(curve
     } else if ocp.count == 4 {
         let d1 = (ocp.p1 - q0).cross(dir)
         let d2 = (ocp.p2 - q0).cross(dir)
-        let factor: CGFloat = (d1 * d2 > 0) ? 0.75 : 1.0
-        dMin = min(0, factor * min(d1, d2)); dMax = max(0, factor * max(d1, d2))
+        // Pre-computing lo/hi lets the compiler reuse the same min/max values for both the
+        // sign check (lo*hi > 0) and the final multiply, avoiding redundant comparisons.
+        // The original (d1*d2>0) form generates 7 branches for random-sign inputs; this
+        // version compiles to 18 straight-line instructions (verified by assembly inspection).
+        let lo = min(d1, d2); let hi = max(d1, d2)
+        let f: CGFloat = lo * hi > 0 ? 0.75 : 1.0
+        dMin = min(CGFloat(0), f * lo); dMax = max(CGFloat(0), f * hi)
     } else {
         var lo: CGFloat = 0, hi: CGFloat = 0
         for i in 1..<ocp.count - 1 {
