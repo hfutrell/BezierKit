@@ -802,4 +802,159 @@ class PathVectorBooleanTests: XCTestCase {
 //    }
 
     #endif
+
+    // MARK: - Adversarial tests for winding-count-based edge classification
+
+    func testContainmentNoIntersection() {
+        // When one path is fully inside the other and they share no intersections, the seed
+        // computation must use the correct winding count to classify all edges.
+        let outer = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 4, y: 0)),
+            LineSegment(p0: CGPoint(x: 4, y: 0), p1: CGPoint(x: 4, y: 4)),
+            LineSegment(p0: CGPoint(x: 4, y: 4), p1: CGPoint(x: 0, y: 4)),
+            LineSegment(p0: CGPoint(x: 0, y: 4), p1: CGPoint(x: 0, y: 0))
+        ])])
+        let inner = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 1, y: 1), p1: CGPoint(x: 3, y: 1)),
+            LineSegment(p0: CGPoint(x: 3, y: 1), p1: CGPoint(x: 3, y: 3)),
+            LineSegment(p0: CGPoint(x: 3, y: 3), p1: CGPoint(x: 1, y: 3)),
+            LineSegment(p0: CGPoint(x: 1, y: 3), p1: CGPoint(x: 1, y: 1))
+        ])])
+        // inner is entirely inside outer, no intersections
+        XCTAssert(outer.intersections(with: inner).isEmpty)
+        // intersect should yield inner (the shared region)
+        let intersected = outer.intersect(inner)
+        XCTAssertEqual(intersected.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(intersected.components[0], inner.components[0]))
+        // union should yield outer (inner adds nothing new)
+        let united = outer.union(inner)
+        XCTAssertEqual(united.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(united.components[0], outer.components[0]))
+    }
+
+    func testIntersectionAtCornerOfPath() {
+        // Tests intersection at t=1 of a line element (a corner vertex of the path).
+        // The convention is that intersections at t=0 of element i are stored as t=1 of
+        // element i-1 (for closed paths), so the winding-count delta formula always uses
+        // the incoming tangent — confirmed to give the correct result here.
+        //
+        // square1 corners: (0,0),(2,0),(2,2),(0,2).
+        // diamond: a rotated square with a vertex at exactly (2,0) — the bottom-right
+        // corner of square1. The corner-to-corner intersection tests that the winding
+        // count delta at a t=1 corner node is computed correctly.
+        let square1 = createSquare1()  // corners (0,0),(2,0),(2,2),(0,2)
+        // Diamond centered at (3,1) with vertices at (2,0),(4,0),(4,2),(2,2) — wait,
+        // that is a square, not a diamond. Use a proper diamond:
+        // vertices at (2,0), (3,-1), (4,0), (3,1) — all outside square1 except the one point
+        let diamond = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 2, y: 0), p1: CGPoint(x: 3, y: -1)),
+            LineSegment(p0: CGPoint(x: 3, y: -1), p1: CGPoint(x: 4, y: 0)),
+            LineSegment(p0: CGPoint(x: 4, y: 0), p1: CGPoint(x: 3, y: 1)),
+            LineSegment(p0: CGPoint(x: 3, y: 1), p1: CGPoint(x: 2, y: 0))
+        ])])
+        // The two paths share only the single point (2,0). Neither contains the other.
+        // union should produce a path whose bounding box covers both shapes.
+        let united = square1.union(diamond)
+        XCTAssertFalse(united.isEmpty)
+        XCTAssertGreaterThan(united.boundingBox.size.x, 2.0)  // extends beyond x=2
+        // intersect of two paths touching at a single point has no interior area
+        let intersected = square1.intersect(diamond)
+        XCTAssertTrue(intersected.isEmpty || intersected.boundingBox.area < 1e-6)
+    }
+
+    func testIntersectionAtCornerToInterior() {
+        // One path's CORNER vertex lies on the INTERIOR of the other path's edge.
+        // On path1, the intersection is at t=1 of the element whose endpoint is the corner.
+        // On path2, the intersection is at an interior t value (not a corner).
+        // This exercises the case where only one of the two participants is at a corner.
+        //
+        // square1 corners: (0,0),(2,0),(2,2),(0,2).
+        // path2 is a rectangle whose left edge passes through square1's corner (2,0):
+        // path2 has corners at (2,-1),(4,-1),(4,1),(2,1) — its left edge at x=2 runs
+        // through (2,0) (which is a corner of square1, but only an interior point of path2).
+        let square1 = createSquare1()  // corners (0,0),(2,0),(2,2),(0,2)
+        let path2 = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 2, y: -1), p1: CGPoint(x: 4, y: -1)),
+            LineSegment(p0: CGPoint(x: 4, y: -1), p1: CGPoint(x: 4, y: 1)),
+            LineSegment(p0: CGPoint(x: 4, y: 1), p1: CGPoint(x: 2, y: 1)),
+            LineSegment(p0: CGPoint(x: 2, y: 1), p1: CGPoint(x: 2, y: -1))
+        ])])
+        // The intersection points are:
+        //   (2,0): corner of square1 (t=1 of E0=(0,0)→(2,0)) × interior of path2's left edge
+        //   (2,1): interior of square1's right edge × corner of path2
+        // subtract should remove the part of square1 that lies inside path2
+        let subtracted = square1.subtract(path2)
+        // The overlap region is the rectangle (2,0)-(2,1) — zero width, so no area overlap.
+        // Actually path2 covers x∈[2,4], square1 covers x∈[0,2]. They only share the line x=2.
+        // So subtract(path2) should leave square1 unchanged (no interior overlap).
+        XCTAssertEqual(subtracted.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(subtracted.components[0], square1.components[0]))
+    }
+
+    func testDegenerateFirstElementInPath() {
+        // A path that starts with a zero-length segment. The seed-point normal is NaN for
+        // zero-length elements, so the code falls back to the midpoint without an offset.
+        // The test verifies that boolean ops do not crash and produce a plausible result.
+        let square = createSquare1()
+        // Build a path identical to square1 but with a zero-length first element inserted.
+        let zeroPoint = CGPoint(x: 0, y: 0)
+        let degeneratePath = Path(components: [PathComponent(curves: [
+            LineSegment(p0: zeroPoint, p1: zeroPoint),   // zero-length element
+            LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 2, y: 0)),
+            LineSegment(p0: CGPoint(x: 2, y: 0), p1: CGPoint(x: 2, y: 2)),
+            LineSegment(p0: CGPoint(x: 2, y: 2), p1: CGPoint(x: 0, y: 2)),
+            LineSegment(p0: CGPoint(x: 0, y: 2), p1: CGPoint(x: 0, y: 0))
+        ])])
+        // Should not crash regardless of first element being degenerate.
+        _ = degeneratePath.union(square)
+        _ = degeneratePath.intersect(square)
+        _ = degeneratePath.subtract(square)
+    }
+
+    func testTangentIntersectionProducesNoWindingCountChange() {
+        // Two circles tangent to each other externally — their cross product of normals
+        // at the tangent point is zero, so windingCountDelta returns 0.
+        // union of two externally-tangent circles should be two components.
+        #if canImport(CoreGraphics)
+        let circle1 = Path(cgPath: CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 2, height: 2), transform: nil))
+        let circle2 = Path(cgPath: CGPath(ellipseIn: CGRect(x: 2, y: 0, width: 2, height: 2), transform: nil))
+        // The circles are tangent at (2,1). They share no interior.
+        let united = circle1.union(circle2)
+        // Two externally-tangent shapes either produce 2 components (if tangent point is ignored)
+        // or 1 component (if the tangent point is treated as a connection). Either is acceptable —
+        // this test just verifies no crash and no empty result.
+        XCTAssertFalse(united.isEmpty)
+        #endif
+    }
+
+    func testWindingCountSeedPointWithNearbyEdge() {
+        // Regression test: the seed point (midpoint of first edge of each component, offset
+        // slightly by smallDistance in the normal direction) must not accidentally land on the
+        // WRONG side of the other path's boundary due to a gap smaller than smallDistance.
+        //
+        // Two squares where the first square's bottom edge is at y=1e-7 above the second
+        // square's top edge (gap = 1e-7, smaller than smallDistance = 1e-6 on 64-bit).
+        // Without careful offset handling the seed winding count would be wrong.
+        //
+        // Since smallDistance is meant only for the seed point (which is at a guaranteed
+        // interior location of the edge, away from intersections), this specific geometry
+        // should still work correctly because the paths don't intersect.
+        let top = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 0, y: 1e-7), p1: CGPoint(x: 2, y: 1e-7)),
+            LineSegment(p0: CGPoint(x: 2, y: 1e-7), p1: CGPoint(x: 2, y: 2)),
+            LineSegment(p0: CGPoint(x: 2, y: 2), p1: CGPoint(x: 0, y: 2)),
+            LineSegment(p0: CGPoint(x: 0, y: 2), p1: CGPoint(x: 0, y: 1e-7))
+        ])])
+        let bottom = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 2, y: 0)),
+            LineSegment(p0: CGPoint(x: 2, y: 0), p1: CGPoint(x: 2, y: -2)),
+            LineSegment(p0: CGPoint(x: 2, y: -2), p1: CGPoint(x: 0, y: -2)),
+            LineSegment(p0: CGPoint(x: 0, y: -2), p1: CGPoint(x: 0, y: 0))
+        ])])
+        // Paths don't intersect (gap = 1e-7)
+        XCTAssert(top.intersections(with: bottom).isEmpty)
+        // union of two non-overlapping paths = two separate components
+        let united = top.union(bottom)
+        XCTAssertEqual(united.components.count, 2)
+    }
 }

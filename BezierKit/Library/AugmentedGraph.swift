@@ -303,23 +303,19 @@ private extension AugmentedGraph {
         guard !nodes.isEmpty, let firstEdge = nodes[0].forwardEdge else { return }
 
         // Compute the initial winding count of otherPath at a point just to the LEFT of
-        // the first edge's midpoint.  For binary operations the midpoint lies on one path
-        // but not on the other, so windingCount is exact.  For removeCrossings the midpoint
-        // is on the path itself, so we add a tiny left-side offset (the one remaining use
-        // of smallDistance in this algorithm — but only once per component, at a point
-        // guaranteed to be in the interior of an edge and therefore far from any intersection).
+        // the first edge's midpoint.  We always apply a tiny left-normal offset so that
+        // a seed point exactly on otherPath's boundary (e.g. operating a path against an
+        // identical copy of itself) doesn't return 0 due to the strict inequality in the
+        // ray-cast winding algorithm.  The seed is at t=0.5 of the first edge's element,
+        // which is guaranteed to be in the interior of an edge and far from any intersection.
         let midLocation = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
         let firstEdgeComponent = firstEdge.component
         let midPoint = firstEdgeComponent.point(at: midLocation)
-
-        let initialWinding: Int
-        if self.operation == .removeCrossings {
-            let normal = firstEdgeComponent.normal(at: midLocation)
-            let seedPoint = midPoint + AugmentedGraph.smallDistance * normal
-            initialWinding = otherPath.windingCount(seedPoint)
-        } else {
-            initialWinding = otherPath.windingCount(midPoint)
-        }
+        let normal = firstEdgeComponent.normal(at: midLocation)
+        let seedPoint = normal.x.isFinite && normal.y.isFinite
+            ? midPoint + AugmentedGraph.smallDistance * normal
+            : midPoint
+        let initialWinding = otherPath.windingCount(seedPoint)
 
         // Determine which path the "other" neighbors belong to so we can filter correctly.
         // For removeCrossings graph2 === graph1, so all neighbors are from the same path.
