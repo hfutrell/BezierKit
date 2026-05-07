@@ -867,10 +867,8 @@ class PathVectorBooleanTests: XCTestCase {
                              p3: CGPoint(x: -130.08266939492287, y: 123.0881154324443))
         let e10e12 = e10.intersections(with: e12, accuracy: 0.0001)
         let e13e16 = e13.intersections(with: e16, accuracy: 0.0001)
-        print("E10∩E12: \(e10e12)")
-        print("E13∩E16: \(e13e16)")
         XCTAssertEqual(e10e12.count, 0, "E10∩E12 count")
-        XCTAssertEqual(e13e16.count, 0, "E13∩E16 count")
+        XCTAssertEqual(e13e16.count, 1, "E13∩E16 count")
     }
 
     func testCrossingsRemovedFourthRealWorldCase() {

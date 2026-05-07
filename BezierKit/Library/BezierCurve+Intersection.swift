@@ -159,7 +159,81 @@ private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBez
     }
 }
 
+private func helperArcIntersectsCurve<T: NonlinearBezierCurve>(
+    arc: Arc, arcSubcurve: (t1: CGFloat, t2: CGFloat),
+    curve2: Subcurve<T>, accuracy: CGFloat
+) -> [Intersection] {
+    func mapT1(_ t: CGFloat) -> CGFloat { Utils.map(t, 0, 1, arcSubcurve.t1, arcSubcurve.t2) }
+    func mapT2(_ t: CGFloat) -> CGFloat { Utils.map(t, 0, 1, curve2.t1, curve2.t2) }
+    if let cubic2 = curve2.curve as? CubicCurve {
+        if let arc2 = cubic2.asArc(accuracy: accuracy) {
+            return arcArcIntersections(arc, arc2, accuracy: accuracy).map {
+                Intersection(t1: mapT1($0.t1), t2: mapT2($0.t2))
+            }
+        }
+        return arcCubicIntersections(arc, cubic2, accuracy: accuracy).map {
+            Intersection(t1: mapT1($0.tArc), t2: mapT2($0.tCubic))
+        }
+    }
+    if let quad2 = curve2.curve as? QuadraticCurve {
+        let (line2, lineErr) = quad2.downgradedToLineSegment
+        if lineErr <= accuracy {
+            return arcLineIntersections(arc, line2, accuracy: accuracy).map {
+                Intersection(t1: mapT1($0.tArc), t2: mapT2($0.tLine))
+            }
+        }
+        return arcQuadraticIntersections(arc, quad2, accuracy: accuracy).map {
+            Intersection(t1: mapT1($0.tArc), t2: mapT2($0.tQuad))
+        }
+    }
+    return []
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+    // Arc detection for cubics: algebraic intersection avoids bezier-clipping budget issues
+    // on nearly-circular curves.
+    if let cubic1 = curve1.curve as? CubicCurve, let arc1 = cubic1.asArc(accuracy: accuracy) {
+        if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
+            let centerDist = distance(arc1.center, arc2.center)
+            let avgRadius = (arc1.radius + arc2.radius) * 0.5
+            let sameCircleThreshold = max(accuracy, avgRadius * 1.0e-2)
+            if centerDist < sameCircleThreshold && abs(arc1.radius - arc2.radius) < sameCircleThreshold {
+                // Same-circle arcs: use coincidenceCheck so AugmentedGraph handles overlap correctly.
+                if let coincidence = coincidenceCheck(cubic1, cubic2, accuracy: accuracy) {
+                    return coincidence.map {
+                        Intersection(t1: Utils.map($0.t1, 0, 1, curve1.t1, curve1.t2),
+                                     t2: Utils.map($0.t2, 0, 1, curve2.t1, curve2.t2))
+                    }
+                }
+                return []
+            }
+            // Different circles: algebraic arc-arc with distance verification to filter false positives
+            // (cubic curves may be close to—but not actually intersecting—their respective arcs).
+            let chord1 = distance(cubic1.startingPoint, cubic1.endingPoint)
+            let chord2 = distance(cubic2.startingPoint, cubic2.endingPoint)
+            let arcTol = max(max(accuracy, chord1 * 2.0e-3), max(accuracy, chord2 * 2.0e-3))
+            let maxDist = 3.0 * arcTol
+            let rawResults = arcArcIntersections(arc1, arc2, accuracy: accuracy)
+            var arcResult: [Intersection] = []
+            for r in rawResults {
+                let pt1 = cubic1.point(at: r.t1)
+                let pt2 = cubic2.point(at: r.t2)
+                guard distance(pt1, pt2) <= maxDist else { continue }
+                arcResult.append(Intersection(
+                    t1: Utils.map(r.t1, 0, 1, curve1.t1, curve1.t2),
+                    t2: Utils.map(r.t2, 0, 1, curve2.t1, curve2.t2)
+                ))
+            }
+            return arcResult
+        }
+        return helperArcIntersectsCurve(arc: arc1, arcSubcurve: (t1: curve1.t1, t2: curve1.t2),
+                                        curve2: curve2, accuracy: accuracy)
+    }
+    if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
+        return helperArcIntersectsCurve(arc: arc2, arcSubcurve: (t1: curve2.t1, t2: curve2.t2),
+                                        curve2: curve1, accuracy: accuracy)
+            .map { Intersection(t1: $0.t2, t2: $0.t1) }
+    }
     // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
     var clipIntersections: [Intersection] = []
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
@@ -183,7 +257,8 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         var result: [Intersection] = []
         for ix in sorted {
             let (uV, vV) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: ix.t1, v: ix.t2, iterations: 10)
-            guard newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV) else { continue }
+            let isGenuine = newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV)
+            guard isGenuine else { continue }
             let p1 = curve1.curve.point(at: uV)
             let isDuplicate = result.contains(where: { distanceSquared(p1, curve1.curve.point(at: $0.t1)) < accuracy * accuracy })
             if !isDuplicate {
