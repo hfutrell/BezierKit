@@ -145,47 +145,41 @@ private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCu
     return f.lengthSquared < scaleSq * CGFloat(1.0e-12)
 }
 
+// Checks one corner (u,v) ∈ {0,1}² of the (curve1,curve2) parameter space.
+// File-level (not nested) so WMO can specialize+inline without closure-capture exclusivity overhead.
+private func processEndpointCorner<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ result: inout ClipBuffer, curve1: C1, curve2: C2, u: CGFloat, v: CGFloat, accuracy: CGFloat
+) {
+    guard newtonIsGenuineRoot(curve1, curve2, u: u, v: v) else { return }
+    let p1 = curve1.point(at: u)
+    if let idx = result.firstIndex(where: { distanceSquared(p1, curve1.point(at: $0.t1)) < accuracy * accuracy }) {
+        result[idx] = Intersection(t1: u, t2: v)
+    } else {
+        result.append(Intersection(t1: u, t2: v))
+    }
+}
+
 // Ensures exact curve-endpoint intersections are represented precisely in `result`.
 // When Newton refinement nudges a clipping result slightly away from an exact endpoint,
 // this replaces the near-endpoint result with the exact (u, v) corner value.
 // Also appends any endpoint intersections that bezier clipping missed entirely.
 private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
-    _ result: inout [Intersection], curve1: C1, curve2: C2, accuracy: CGFloat
+    _ result: inout ClipBuffer, curve1: C1, curve2: C2, accuracy: CGFloat
 ) {
-    for (u, v) in [(CGFloat(0), CGFloat(0)), (CGFloat(0), CGFloat(1)), (CGFloat(1), CGFloat(0)), (CGFloat(1), CGFloat(1))] {
-        guard newtonIsGenuineRoot(curve1, curve2, u: u, v: v) else { continue }
-        let p1 = curve1.point(at: u)
-        if let idx = result.firstIndex(where: { distanceSquared(p1, curve1.point(at: $0.t1)) < accuracy * accuracy }) {
-            result[idx] = Intersection(t1: u, t2: v)
-        } else {
-            result.append(Intersection(t1: u, t2: v))
-        }
-    }
+    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 0, v: 0, accuracy: accuracy)
+    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 0, v: 1, accuracy: accuracy)
+    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 1, v: 0, accuracy: accuracy)
+    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 1, v: 1, accuracy: accuracy)
 }
 
-// Compares two concrete Equatable values without going through BezierCurve's global == operator.
-// The global `func == (BezierCurve, BezierCurve)` allocates [CGPoint] arrays via .points; this
-// helper forces the synthesized struct == (direct field comparison, zero allocation).
-private func equatableCurvesMatch<C: Equatable>(_ a: C, _ b: C) -> Bool { a == b }
-
-internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-    // Identical full-range curves are fully coincident (CLAUDE.md: self-pair contract).
-    // Skip bezier clipping (which exhausts 64 iterations) and coincidenceCheck (expensive
-    // point projections). This fires whenever the same curve value appears on both sides,
-    // which happens in all-pairs performance tests and any caller passing the same curve twice.
-    if curve1.t1 == 0, curve1.t2 == 1, curve2.t1 == 0, curve2.t2 == 1 {
-        if let c1 = curve1.curve as? CubicCurve, let c2 = curve2.curve as? CubicCurve,
-           equatableCurvesMatch(c1, c2) {
-            return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
-        }
-        if let c1 = curve1.curve as? QuadraticCurve, let c2 = curve2.curve as? QuadraticCurve,
-           equatableCurvesMatch(c1, c2) {
-            return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
-        }
-    }
+// Shared bezier-clipping + Newton refinement body.
+// The identical-curve fast path is handled by concrete-type overloads in
+// extension CubicCurve / extension QuadraticCurve, which shadow the protocol extension
+// for statically-typed receivers, eliminating as? runtime casts entirely.
+private func helperIntersectsCurveCurveImpl<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection]
+where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
-    var clipIntersections: [Intersection] = []
-    clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
+    var clipIntersections = ClipBuffer()
     var clipIterations = 0
     let clippingConverged = bezierClipping(curve1, curve2, &clipIntersections, &clipIterations)
     if clippingConverged {
@@ -193,9 +187,9 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
             // Clipping converged to empty: fat-line clips eliminated all overlap.
             // Endpoint-endpoint intersections (tangential approach, equal start/end points)
             // may be missed by pure convergence; check all corner combinations explicitly.
-            var result: [Intersection] = []
+            var result = ClipBuffer()
             addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
-            return result.sortedAndUniqued()
+            return result.toSortedAndUniquedArray()
         }
         // Verify each clipping result with Newton and return Newton-refined t values.
         // Near-coincident non-intersecting curves can cause clipping to converge to
@@ -203,8 +197,9 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         // converge to nearby parameters of the same genuine crossing, refining to the
         // true (u,v) makes them spatially identical, so deduplication collapses them to one.
         clipIntersections.sort()
-        var result: [Intersection] = []
-        for ix in clipIntersections {
+        var result = ClipBuffer()
+        for j in 0..<clipIntersections.count {
+            let ix = clipIntersections[j]
             let (uV, vV) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: ix.t1, v: ix.t2, iterations: 10)
             guard newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV) else { continue }
             let p1 = curve1.curve.point(at: uV)
@@ -215,7 +210,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         }
         if !result.isEmpty {
             addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
-            return result.sorted()
+            return result.toSortedArray()
         }
         // All clipping results failed Newton verification (near-coincident non-intersecting curves).
         // Fall through to coincidence check and Newton midpoint fallback.
@@ -230,7 +225,7 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
     // at the crossing for symmetric near-coincident pairs (|f| ≈ 0 → accepted). For parallel
     // pairs the tangents are nearly identical (denom ≈ 0), Newton breaks on the robust denom
     // check, and |f| ≈ δ exceeds the threshold, so the fallback produces nothing.
-    var fallback: [Intersection] = []
+    var fallback = ClipBuffer()
     let (uN, vN) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: 0.5, v: 0.5, iterations: 20)
     if uN > 1.0e-6 && uN < 1.0 - 1.0e-6 && vN > 1.0e-6 && vN < 1.0 - 1.0e-6 &&
        newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uN, v: vN) {
@@ -239,7 +234,12 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         fallback.append(Intersection(t1: t1Candidate, t2: t2Candidate))
     }
     addEndpointIntersections(&fallback, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
-    return fallback.sortedAndUniqued()
+    return fallback.toSortedAndUniquedArray()
+}
+
+internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection]
+where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+    return helperIntersectsCurveCurveImpl(curve1, curve2, accuracy: accuracy)
 }
 
 internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reversed: Bool = false) -> [Intersection] where U: NonlinearBezierCurve {
@@ -347,6 +347,27 @@ extension CubicCurve {
     public var selfIntersections: [Intersection] {
         guard let i = selfIntersection else { return [] }
         return [i]
+    }
+
+    // Concrete overload: shadows the NonlinearBezierCurve extension for statically-typed
+    // CubicCurve receivers. Uses synthesized struct == (no as? runtime metadata lookup)
+    // for the identical-curve fast path; eliminates __swift_instantiateConcreteTypeFromMangledNameV2.
+    public func intersections(with curve: CubicCurve, accuracy: CGFloat) -> [Intersection] {
+        if self == curve {
+            return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
+        }
+        return helperIntersectsCurveCurveImpl(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
+    }
+}
+
+extension QuadraticCurve {
+    // Concrete overload: shadows the NonlinearBezierCurve extension for statically-typed
+    // QuadraticCurve receivers. Uses synthesized struct == for the identical-curve fast path.
+    public func intersections(with curve: QuadraticCurve, accuracy: CGFloat) -> [Intersection] {
+        if self == curve {
+            return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
+        }
+        return helperIntersectsCurveCurveImpl(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
     }
 }
 

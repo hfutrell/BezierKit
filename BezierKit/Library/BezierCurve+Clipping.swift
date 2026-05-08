@@ -34,9 +34,16 @@ struct ControlPolygon {
 /// Protocol for curves that support bezier clipping via a fixed-size control polygon.
 internal protocol BezierClippingCurve: BezierCurve {
     var controlPolygon: ControlPolygon { get }
-    // Protocol requirement (not extension default) so WMO can devirtualize and inline
-    // the concrete implementation at call sites where the type is statically known.
+    // Protocol requirements (not extension defaults) so WMO can devirtualize and inline
+    // the concrete implementations at call sites where the type is statically known.
     var controlPolygonBounds: BoundingBox { get }
+    // Given pre-computed distances d0..d3 from the fat-line chord, returns the
+    // parameter sub-interval of [0,1] where the curve might cross [dLow,dHigh].
+    // Protocol requirement (not a free function) so WMO devirtualizes to the
+    // type-specific implementation, eliminating n-dispatch branches.
+    // swiftlint:disable:next function_parameter_count
+    func clipInterval(d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
+                      dLow: CGFloat, dHigh: CGFloat) -> (CGFloat, CGFloat)?
 }
 
 internal extension BezierClippingCurve {
@@ -68,6 +75,13 @@ extension CubicCurve: BezierClippingCurve {
                     max: CGPoint(x: max(max(p0.x, p1.x), max(p2.x, p3.x)),
                                  y: max(max(p0.y, p1.y), max(p2.y, p3.y))))
     }
+
+    @inline(never)
+    // swiftlint:disable:next function_parameter_count
+    func clipInterval(d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
+                      dLow: CGFloat, dHigh: CGFloat) -> (CGFloat, CGFloat)? {
+        convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh)
+    }
 }
 
 extension QuadraticCurve: BezierClippingCurve {
@@ -79,6 +93,109 @@ extension QuadraticCurve: BezierClippingCurve {
                                  y: min(min(p0.y, p1.y), p2.y)),
                     max: CGPoint(x: max(max(p0.x, p1.x), p2.x),
                                  y: max(max(p0.y, p1.y), p2.y)))
+    }
+
+    @inline(never)
+    // swiftlint:disable:next function_parameter_count
+    func clipInterval(d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
+                      dLow: CGFloat, dHigh: CGFloat) -> (CGFloat, CGFloat)? {
+        // d3 unused: quadratic has only 3 control points
+        convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh)
+    }
+}
+
+// MARK: - ClipBuffer
+
+// Stack-allocated result buffer for bezierClipping.
+// Capacity 13 covers the worst case: up to order₁×order₂ ≤ 9 Newton-refined intersections
+// plus up to 4 endpoint intersections added by addEndpointIntersections.
+// Individual stored properties (not a tuple) keep SwiftLint's large_tuple rule satisfied.
+struct ClipBuffer {
+    private var s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12: Intersection
+    private(set) var count: Int
+
+    init() {
+        let z = Intersection(t1: 0, t2: 0)
+        s0 = z; s1 = z; s2 = z; s3 = z; s4 = z; s5 = z; s6 = z
+        s7 = z; s8 = z; s9 = z; s10 = z; s11 = z; s12 = z; count = 0
+    }
+
+    var isEmpty: Bool { count == 0 }
+
+    subscript(i: Int) -> Intersection {
+        get {
+            switch i {
+            case 0: return s0
+            case 1: return s1
+            case 2: return s2
+            case 3: return s3
+            case 4: return s4
+            case 5: return s5
+            case 6: return s6
+            case 7: return s7
+            case 8: return s8
+            case 9: return s9
+            case 10: return s10
+            case 11: return s11
+            default: return s12
+            }
+        }
+        set {
+            switch i {
+            case 0: s0 = newValue
+            case 1: s1 = newValue
+            case 2: s2 = newValue
+            case 3: s3 = newValue
+            case 4: s4 = newValue
+            case 5: s5 = newValue
+            case 6: s6 = newValue
+            case 7: s7 = newValue
+            case 8: s8 = newValue
+            case 9: s9 = newValue
+            case 10: s10 = newValue
+            case 11: s11 = newValue
+            default: s12 = newValue
+            }
+        }
+    }
+
+    mutating func append(_ intersection: Intersection) {
+        self[count] = intersection
+        count += 1
+    }
+
+    func contains(where predicate: (Intersection) -> Bool) -> Bool {
+        for i in 0..<count where predicate(self[i]) { return true }
+        return false
+    }
+
+    func firstIndex(where predicate: (Intersection) -> Bool) -> Int? {
+        for i in 0..<count where predicate(self[i]) { return i }
+        return nil
+    }
+
+    mutating func sort() {
+        for i in 1..<count {
+            let key = self[i]
+            var j = i - 1
+            while j >= 0 && self[j] > key { self[j + 1] = self[j]; j -= 1 }
+            self[j + 1] = key
+        }
+    }
+
+    func toSortedArray() -> [Intersection] {
+        var copy = self; copy.sort()
+        return (0..<copy.count).map { copy[$0] }
+    }
+
+    func toSortedAndUniquedArray() -> [Intersection] {
+        guard count > 0 else { return [] }
+        var copy = self; copy.sort()
+        var arr: [Intersection] = []
+        arr.reserveCapacity(copy.count)
+        arr.append(copy[0])
+        for i in 1..<copy.count where copy[i] != copy[i - 1] { arr.append(copy[i]) }
+        return arr
     }
 }
 
@@ -146,15 +263,14 @@ private func processHullCubic(
     return (lo, hi)
 }
 
-// n=4 specialization of convexHullClipInterval (cubic curves — by far the most common case).
-// Eliminates the generic loop + withUnsafeTemporaryAllocation overhead by using a
-// static branch tree over precomputed cross products.
-// Cross products proportional to cross2d for the 4 uniformly-spaced points
-// (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
-//   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
-//   c023 = cross2d(0,2,3) = d0 - 3·d2 + 2·d3
-//   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
-//   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
+// n=4 specialization: returns the sub-interval [tMin,tMax] ⊆ [0,1] where d0..d3 might
+// lie within [dLow,dHigh]. Includes fast-path early-exit so the caller (clipInterval,
+// which @inline(__always) into fatLineClip → bezierClipping) need not duplicate this logic.
+// Cross products proportional to cross2d for 4 uniformly-spaced points (t ∈ {0, 1/3, 2/3, 1}):
+//   c012 = d0 - 2·d1 + d2
+//   c023 = d0 - 3·d2 + 2·d3
+//   c123 = d1 - 2·d2 + d3
+//   c013 = 2·d0 - 3·d1 + d3
 private func convexHullClipIntervalCubic(
     d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
     dLow: CGFloat, dHigh: CGFloat
@@ -173,8 +289,7 @@ private func convexHullClipIntervalCubic(
     return (max(0, tMin), min(1, tMax))
 }
 
-// n=3 specialization of convexHullClipInterval (quadratic curves).
-// Eliminates the withUnsafeTemporaryAllocation + generic-hull-loop overhead.
+// n=3 specialization (quadratic curves). Early-exit handled by clipInterval thunk.
 // c012 alone determines which of the two hull shapes applies:
 //   c012 <= 0: lower=[0,2], upper=[0,1,2]   (d1 above chord d0→d2)
 //   c012 > 0:  lower=[0,1,2], upper=[0,2]   (d1 below chord d0→d2)
@@ -185,40 +300,18 @@ private func convexHullClipIntervalQuadratic(
     let c012 = d0 - 2*d1 + d2
     var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
     if c012 <= 0 {
-        (tMin, tMax) = hullEdgeClipInterval(d0, d2, 0, 1,   dLow, dHigh, tMin, tMax) // lower: 0→2
+        (tMin, tMax) = hullEdgeClipInterval(d0, d2, 0, 1, dLow, dHigh, tMin, tMax) // lower: 0→2
         (tMin, tMax) = hullEdgeClipInterval(d0, d1, 0, 0.5, dLow, dHigh, tMin, tMax) // upper: 0→1
         (tMin, tMax) = hullEdgeClipInterval(d1, d2, 0.5, 0.5, dLow, dHigh, tMin, tMax) // upper: 1→2
     } else {
         (tMin, tMax) = hullEdgeClipInterval(d0, d1, 0, 0.5, dLow, dHigh, tMin, tMax) // lower: 0→1
         (tMin, tMax) = hullEdgeClipInterval(d1, d2, 0.5, 0.5, dLow, dHigh, tMin, tMax) // lower: 1→2
-        (tMin, tMax) = hullEdgeClipInterval(d0, d2, 0, 1,   dLow, dHigh, tMin, tMax) // upper: 0→2
+        (tMin, tMax) = hullEdgeClipInterval(d0, d2, 0, 1, dLow, dHigh, tMin, tMax) // upper: 0→2
     }
     // d2 at t=1 is always the final vertex of both hulls.
     if d2 >= dLow && d2 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
     guard tMin <= tMax else { return nil }
     return (max(0, tMin), min(1, tMax))
-}
-
-// Given n Bernstein coefficients d0..d3 (curve at t_i = i/(n-1)) and a horizontal band
-// [dLow, dHigh], returns the sub-interval [tMin, tMax] of [0,1] where the convex hull
-// of {(t_i, d(i))} intersects the band. Returns nil if hull and band are disjoint.
-// d2 and d3 are only used when n > 2 and n > 3 respectively.
-// BezierKit only supports cubic (n=4) and quadratic (n=3) curves.
-private func convexHullClipInterval(
-    d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat, n: Int,
-    dLow: CGFloat, dHigh: CGFloat
-) -> (CGFloat, CGFloat)? {
-    assert(n == 3 || n == 4, "convexHullClipInterval only supports n=3 (quadratic) and n=4 (cubic)")
-    // Early exit: if all d values are on the same side of the band, no intersection possible.
-    var dvMin = min(d0, d1)
-    var dvMax = max(d0, d1)
-    if n > 2 { dvMin = min(dvMin, d2); dvMax = max(dvMax, d2) }
-    if n > 3 { dvMin = min(dvMin, d3); dvMax = max(dvMax, d3) }
-    guard dvMax >= dLow && dvMin <= dHigh else { return nil }
-    // Fast path: all control points inside the band → entire curve is inside.
-    if dvMin >= dLow && dvMax <= dHigh { return (0, 1) }
-    if n == 4 { return convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh) }
-    return convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh)
 }
 
 // Compute the fat line of `other` and clip `curve`'s [0,1] parameter range
@@ -228,7 +321,6 @@ private func fatLineClip<C1: BezierClippingCurve, C2: BezierClippingCurve>(curve
     let ocp = other.controlPolygon
     let q0  = ocp.p0
     let dir = ocp[ocp.count - 1] - q0
-    guard dir.lengthSquared > 0 else { return (0, 1) }
 
     // Tight fat-line bounds (Sederberg & Nishita 1990):
     // For a quadratic, the curve lies within ½ of the control point's distance from the chord.
@@ -263,14 +355,14 @@ private func fatLineClip<C1: BezierClippingCurve, C2: BezierClippingCurve>(curve
     let e1 = (ccp.p1 - q0).cross(dir)
     let e2: CGFloat = ccp.count > 2 ? (ccp.p2 - q0).cross(dir) : 0
     let e3: CGFloat = ccp.count > 3 ? (ccp.p3 - q0).cross(dir) : 0
-    return convexHullClipInterval(d0: e0, d1: e1, d2: e2, d3: e3, n: ccp.count, dLow: dMin, dHigh: dMax)
+    return curve.clipInterval(d0: e0, d1: e1, d2: e2, d3: e3, dLow: dMin, dHigh: dMax)
 }
 
 // Bezier clipping main recursive entry.  Returns false if the iteration
 // budget was exceeded (caller falls back to implicitization).
 func bezierClipping<C1, C2>(
     _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-    _ results: inout [Intersection],
+    _ results: inout ClipBuffer,
     _ totalIterations: inout Int
 ) -> Bool where C1: NonlinearBezierCurve, C2: NonlinearBezierCurve {
 
@@ -324,9 +416,11 @@ func bezierClipping<C1, C2>(
         // de Casteljau splits, and both have quadratic convergence — so Newton wins once
         // we are inside its convergence basin.
         // c1Ratio <= 0.8 is guaranteed by the early-subdivision above.
+        // 12 iterations: well-conditioned crossings converge in ≈5 steps; near-tangent
+        // cases (small Jacobian) need up to ~10; the guard `du²+dv²≤1e-28` exits early.
         if c1Range < 0.25 && c2Range < 0.25 && c2Ratio <= 0.8 {
             var u: CGFloat = 0.5, v: CGFloat = 0.5
-            for _ in 0 ..< 20 {
+            for _ in 0 ..< 16 {
                 let (q1, d1) = c1Reduced.curve.pointAndDerivative(at: u)
                 let (q2, d2) = c2Reduced.curve.pointAndDerivative(at: v)
                 let f = q1 - q2
@@ -390,7 +484,7 @@ func bezierClipping<C1, C2>(
 // exact shared endpoints (handles near-tangent cases that cause slow convergence).
 private func subdivideBezierClipping<C1, C2>(
     _ c1: Subcurve<C1>, _ c2: Subcurve<C2>,
-    _ results: inout [Intersection],
+    _ results: inout ClipBuffer,
     _ totalIterations: inout Int
 ) -> Bool where C1: NonlinearBezierCurve, C2: NonlinearBezierCurve {
     // For tangent intersections at a shared endpoint, fat-line clipping near the
