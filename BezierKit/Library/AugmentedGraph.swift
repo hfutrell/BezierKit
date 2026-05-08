@@ -63,6 +63,7 @@ private class Node {
 private class Edge {
     var visited: Bool = false
     var inSolution: Bool = false
+    var isWraparound: Bool = false
     let endingNode: Node
     let startingNode: Node
     init(startingNode: Node, endingNode: Node) {
@@ -74,11 +75,31 @@ private class Edge {
     }
     var component: PathComponent {
         let parentComponent = self.endingNode.pathComponent
+        if isWraparound {
+            let compStartLoc = parentComponent.startingIndexedLocation
+            let compEndLoc = parentComponent.endingIndexedLocation
+            let startNodeLoc = startingNode.componentLocation
+            let endNodeLoc = endingNode.componentLocation
+            if startNodeLoc == compEndLoc {
+                // Starting at seam end: arc is just start→endNode
+                return parentComponent.split(from: compStartLoc, to: endNodeLoc)
+            }
+            let part1 = parentComponent.split(from: startNodeLoc, to: compEndLoc)
+            if endNodeLoc == compStartLoc {
+                // Ending at seam start: arc is just startNode→seam end
+                return part1
+            }
+            let part2 = parentComponent.split(from: compStartLoc, to: endNodeLoc)
+            var points = part1.points
+            points += part2.points[1...]
+            let orders = part1.orders + part2.orders
+            return PathComponent(points: points, orders: orders)
+        }
         var nextLocation = endingNode.componentLocation
         if nextLocation == parentComponent.startingIndexedLocation {
             nextLocation = parentComponent.endingIndexedLocation
         }
-        return self.endingNode.pathComponent.split(from: startingNode.componentLocation, to: nextLocation)
+        return parentComponent.split(from: startingNode.componentLocation, to: nextLocation)
     }
     func visitCoincidentEdges() {
         let component = self.component
@@ -97,6 +118,7 @@ private class Edge {
             return t == 0 || t == 1
         }
         for edge in self.startingNode.neighbors.compactMap({ $0.forwardEdge }) {
+            guard !edge.isWraparound else { continue }
             guard edge.visited == false else { continue }
             guard tValueIsIntervalEnd(self.startingNode.location.t) || tValueIsIntervalEnd(edge.startingNode.location.t) else { continue }
             guard tValueIsIntervalEnd(self.endingNode.location.t) || tValueIsIntervalEnd(edge.endingNode.location.t) else { continue }
@@ -105,6 +127,7 @@ private class Edge {
             }
         }
         for edge in self.startingNode.neighbors.compactMap({ $0.backwardEdge }) {
+            guard !edge.isWraparound else { continue }
             guard edge.visited == false else { continue }
             guard tValueIsIntervalEnd(self.startingNode.location.t) || tValueIsIntervalEnd(edge.endingNode.location.t) else { continue }
             guard tValueIsIntervalEnd(self.endingNode.location.t) || tValueIsIntervalEnd(edge.startingNode.location.t) else { continue }
@@ -117,16 +140,22 @@ private class Edge {
 
 private class PathComponentGraph {
     private let nodes: [Node]
-    init(for path: Path, componentIndex: Int, using intersections: [Node]) {
+    init(for path: Path, componentIndex: Int, using intersections: [Node], useWraparound: Bool) {
         var nodes = intersections
         let component = path.components[componentIndex]
         let startingLocation = IndexedPathLocation(componentIndex: componentIndex, locationInComponent: component.startingIndexedLocation)
         let endingLocation = IndexedPathLocation(componentIndex: componentIndex, locationInComponent: component.endingIndexedLocation)
-        if nodes.first?.location != startingLocation {
-            nodes.insert(Node(location: startingLocation, in: path), at: 0)
-        }
-        if nodes.last?.location != endingLocation {
-            nodes.append(Node(location: endingLocation, in: path))
+        // For removeCrossings on closed components with intersections, skip the seam node and
+        // create a single wrap-around edge from the last intersection to the first. This avoids
+        // the seam node splitting the wrap-around arc into two edges with inconsistent classifications.
+        let isClosedWithIntersections = component.isClosed && !nodes.isEmpty && useWraparound
+        if !isClosedWithIntersections {
+            if nodes.first?.location != startingLocation {
+                nodes.insert(Node(location: startingLocation, in: path), at: 0)
+            }
+            if nodes.last?.location != endingLocation {
+                nodes.append(Node(location: endingLocation, in: path))
+            }
         }
         for i in 1..<nodes.count {
             let startingNode = nodes[i-1]
@@ -135,16 +164,23 @@ private class PathComponentGraph {
             endingNode.backwardEdge = edge
             startingNode.forwardEdge = edge
         }
-        // loop back the end to the start (if needed)
-        if component.isClosed, let last = nodes.last, let first = nodes.first {
-            if let secondToLast = last.backwardEdge?.startingNode {
-                let edge = Edge(startingNode: secondToLast, endingNode: first)
-                secondToLast.forwardEdge = edge
+        if component.isClosed {
+            if isClosedWithIntersections, let last = nodes.last, let first = nodes.first {
+                let edge = Edge(startingNode: last, endingNode: first)
+                edge.isWraparound = true
+                last.forwardEdge = edge
                 first.backwardEdge = edge
+            } else if let last = nodes.last, let first = nodes.first {
+                // No intersections (or non-removeCrossings): close the loop through the seam
+                if let secondToLast = last.backwardEdge?.startingNode {
+                    let edge = Edge(startingNode: secondToLast, endingNode: first)
+                    secondToLast.forwardEdge = edge
+                    first.backwardEdge = edge
+                }
+                first.mergeNeighbors(of: last)
+                last.unlink()
+                nodes.removeLast()
             }
-            first.mergeNeighbors(of: last)
-            last.unlink()
-            nodes.removeLast()
         }
         self.nodes = nodes
     }
@@ -159,7 +195,7 @@ private class PathComponentGraph {
 private class PathGraph {
     let path: Path
     let components: [PathComponentGraph]
-    init(for path: Path, using intersections: [Node]) {
+    init(for path: Path, using intersections: [Node], useWraparound: Bool) {
         self.path = path
         let intersectionsByComponent = { () -> [[Node]] in
             var temp = [[Node]](repeating: [], count: path.components.count)
@@ -169,7 +205,7 @@ private class PathGraph {
             return temp
         }()
         self.components = (0..<path.components.count).map {
-            PathComponentGraph(for: path, componentIndex: $0, using: intersectionsByComponent[$0])
+            PathComponentGraph(for: path, componentIndex: $0, using: intersectionsByComponent[$0], useWraparound: useWraparound)
         }
     }
 }
@@ -201,8 +237,9 @@ internal class AugmentedGraph {
             AugmentedGraph.sortAndMergeDuplicates(of: &path2Intersections)
         }
         // create graph representations of the two paths
-        self.graph1 = PathGraph(for: path1, using: path1Intersections)
-        self.graph2 = (operation != .removeCrossings) ? PathGraph(for: path2, using: path2Intersections) : graph1
+        let useWraparound = operation == .removeCrossings
+        self.graph1 = PathGraph(for: path1, using: path1Intersections, useWraparound: useWraparound)
+        self.graph2 = (operation != .removeCrossings) ? PathGraph(for: path2, using: path2Intersections, useWraparound: false) : graph1
         // mark each edge as either included or excluded from the final result
         self.classifyEdges(in: self.graph1, isForFirstPath: true)
         if operation != .removeCrossings {
@@ -211,12 +248,31 @@ internal class AugmentedGraph {
     }
     func performOperation() -> Path {
         func performOperation(for graph: PathGraph, appendingToComponents list: inout [PathComponent]) {
-            graph.components.forEach {
-                $0.forEachNode { node in
-                    guard let path = findUnvisitedPath(from: node, to: node) else { return }
+            graph.components.forEach { componentGraph in
+                func findComponent(startingFrom node: Node) {
+                    guard let path = findUnvisitedPath(from: node, to: node, preferNeighbors: operation == .removeCrossings) else { return }
                     guard path.count > 0 else { return }
-                    list.append(self.createComponent(using: path))
+                    list.append(createComponent(using: path))
                 }
+                // for removeCrossings, process intersection nodes first within each component;
+                // this prevents the start node from consuming edges that intersection traversals need.
+                // Within intersection nodes, process gap nodes (whose own forward arc is not in solution)
+                // before other intersection nodes, so they find their cycles before those arcs are consumed.
+                if operation == .removeCrossings {
+                    var hasIntersections = false
+                    componentGraph.forEachNode { if !$0.neighbors.isEmpty { hasIntersections = true } }
+                    if hasIntersections {
+                        componentGraph.forEachNode {
+                            guard !$0.neighbors.isEmpty else { return }
+                            guard $0.forwardEdge?.inSolution != true else { return }
+                            findComponent(startingFrom: $0)
+                        }
+                        componentGraph.forEachNode { guard !$0.neighbors.isEmpty else { return }; findComponent(startingFrom: $0) }
+                        componentGraph.forEachNode { guard $0.neighbors.isEmpty else { return }; findComponent(startingFrom: $0) }
+                        return
+                    }
+                }
+                componentGraph.forEachNode { findComponent(startingFrom: $0) }
             }
         }
         var components: [PathComponent] = []
@@ -238,12 +294,22 @@ private extension AugmentedGraph {
             let location = component.nonDegenerateTestLocation
             let point = component.point(at: location)
             let normal = component.normal(at: location)
-            let smallDistance: CGFloat = AugmentedGraph.smallDistance
-            let point1 = point + smallDistance * normal
-            let point2 = point - smallDistance * normal
-            let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
-            let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
-            edge.inSolution = (included1 != included2)
+            // Try progressively larger offsets to handle cases where the test point is
+            // very close to another boundary and the small offset cannot distinguish sides.
+            let distances: [CGFloat] = MemoryLayout<CGFloat>.size > 4
+                ? [1.0e-6, 1.0e-4, 5.0e-3, 5.0e-2]
+                : [1.0e-4, 5.0e-3, 5.0e-2]
+            for d in distances {
+                let point1 = point + d * normal
+                let point2 = point - d * normal
+                let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
+                let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
+                if included1 != included2 {
+                    edge.inSolution = true
+                    return
+                }
+            }
+            edge.inSolution = false
         }
         func classifyComponentEdges(in component: PathComponentGraph) {
             component.forEachNode {
@@ -284,28 +350,61 @@ private extension AugmentedGraph {
         }
         nodes = Array(nodes[0...currentUniqueIndex])
     }
-    func findUnvisitedPath(from node: Node, to goal: Node) -> [(Edge, Bool)]? {
-        func pathUsingEdge(_ edge: Edge?, from node: Node, forwards: Bool) -> [(Edge, Bool)]? {
+    func findUnvisitedPath(from node: Node, to goal: Node, preferNeighbors: Bool = false) -> [(Edge, Bool)]? {
+        func pathUsingEdge(_ edge: Edge?, forwards: Bool) -> [(Edge, Bool)]? {
             guard let edge = edge, edge.needsVisiting else { return nil }
             edge.visited = true
             edge.visitCoincidentEdges()
             let nextNode = forwards ? edge.endingNode : edge.startingNode
-            if let path = findUnvisitedPath(from: nextNode, to: goal) {
+            if let path = findUnvisitedPath(from: nextNode, to: goal, preferNeighbors: preferNeighbors) {
                 return [(edge, forwards)] + path
             } else {
+                edge.visited = false
                 return nil
             }
         }
         // we prefer to keep the direction of the path the same which is why
-        // we try all the possible forward edges before any back edges
-        if let result = pathUsingEdge(node.forwardEdge, from: node, forwards: true) { return result }
-        for neighbor in node.neighbors {
-            if let result = pathUsingEdge(neighbor.forwardEdge, from: neighbor, forwards: true) { return result }
+        // we try all the possible forward edges before any back edges.
+        // for removeCrossings (preferNeighbors=true), try neighbor edges before own forward edges so that
+        // cross-component arcs are explored first, ensuring all in-solution arcs can form valid cycles.
+        // Neighbor arcs whose next node is the goal are deferred to last to avoid trivial 1-arc cycles
+        // that would split otherwise-correct multi-arc cycles.
+        func tryForwardEdges() -> [(Edge, Bool)]? {
+            if preferNeighbors {
+                for neighbor in node.neighbors where neighbor.forwardEdge?.endingNode !== goal {
+                    if let result = pathUsingEdge(neighbor.forwardEdge, forwards: true) { return result }
+                }
+                if let result = pathUsingEdge(node.forwardEdge, forwards: true) { return result }
+                for neighbor in node.neighbors where neighbor.forwardEdge?.endingNode === goal {
+                    if let result = pathUsingEdge(neighbor.forwardEdge, forwards: true) { return result }
+                }
+                return nil
+            }
+            if let result = pathUsingEdge(node.forwardEdge, forwards: true) { return result }
+            for neighbor in node.neighbors {
+                if let result = pathUsingEdge(neighbor.forwardEdge, forwards: true) { return result }
+            }
+            return nil
         }
-        if let result = pathUsingEdge(node.backwardEdge, from: node, forwards: false) { return result }
-        for neighbor in node.neighbors {
-            if let result = pathUsingEdge(neighbor.backwardEdge, from: neighbor, forwards: false) { return result }
+        func tryBackwardEdges() -> [(Edge, Bool)]? {
+            if preferNeighbors {
+                for neighbor in node.neighbors where neighbor.backwardEdge?.startingNode !== goal {
+                    if let result = pathUsingEdge(neighbor.backwardEdge, forwards: false) { return result }
+                }
+                if let result = pathUsingEdge(node.backwardEdge, forwards: false) { return result }
+                for neighbor in node.neighbors where neighbor.backwardEdge?.startingNode === goal {
+                    if let result = pathUsingEdge(neighbor.backwardEdge, forwards: false) { return result }
+                }
+                return nil
+            }
+            if let result = pathUsingEdge(node.backwardEdge, forwards: false) { return result }
+            for neighbor in node.neighbors {
+                if let result = pathUsingEdge(neighbor.backwardEdge, forwards: false) { return result }
+            }
+            return nil
         }
+        if let result = tryForwardEdges() { return result }
+        if let result = tryBackwardEdges() { return result }
         if node === goal || node.neighborsContain(goal) { return [] }
         return nil
     }

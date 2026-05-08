@@ -159,39 +159,91 @@ private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBez
     }
 }
 
-private func helperArcIntersectsCurve<T: NonlinearBezierCurve>(
-    arc: Arc, arcSubcurve: (t1: CGFloat, t2: CGFloat),
-    curve2: Subcurve<T>, accuracy: CGFloat
-) -> [Intersection] {
-    func mapT1(_ t: CGFloat) -> CGFloat { Utils.map(t, 0, 1, arcSubcurve.t1, arcSubcurve.t2) }
-    func mapT2(_ t: CGFloat) -> CGFloat { Utils.map(t, 0, 1, curve2.t1, curve2.t2) }
+// Checks if any endpoint of c1 or c2 lies on the other curve within `accuracy`,
+// and appends such endpoint-interior intersections (after Newton refinement) to `result`.
+// Handles the case where an arc's endpoint lies in the interior of the other arc.
+private func addEndpointInteriorIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ result: inout [Intersection], curve1: C1, curve2: C2, accuracy: CGFloat
+) {
+    for u in [CGFloat(0), CGFloat(1)] {
+        let pt = curve1.point(at: u)
+        let (proj, v) = curve2.project(pt)
+        guard distanceSquared(pt, proj) < accuracy * accuracy else { continue }
+        let (uR, vR) = newtonRefineCurvePair(curve1, curve2, u: u, v: v, iterations: 10)
+        guard newtonIsGenuineRoot(curve1, curve2, u: uR, v: vR) else { continue }
+        let isDuplicate = result.contains(where: {
+            distanceSquared(curve1.point(at: $0.t1), curve1.point(at: uR)) < accuracy * accuracy
+        })
+        if !isDuplicate { result.append(Intersection(t1: uR, t2: vR)) }
+    }
+    for v in [CGFloat(0), CGFloat(1)] {
+        let pt = curve2.point(at: v)
+        let (proj, u) = curve1.project(pt)
+        guard distanceSquared(pt, proj) < accuracy * accuracy else { continue }
+        let (uR, vR) = newtonRefineCurvePair(curve1, curve2, u: u, v: v, iterations: 10)
+        guard newtonIsGenuineRoot(curve1, curve2, u: uR, v: vR) else { continue }
+        let isDuplicate = result.contains(where: {
+            distanceSquared(curve2.point(at: $0.t2), curve2.point(at: vR)) < accuracy * accuracy
+        })
+        if !isDuplicate { result.append(Intersection(t1: uR, t2: vR)) }
+    }
+}
+
+// Returns (t_cubic1, t_curve2) initial guesses by projecting arc intersection points onto cubic1.
+// Arc-t ≠ cubic Bezier-t, so projection gives Newton a starting point near the true root.
+private func arcIntersectionGuesses<T: NonlinearBezierCurve>(
+    arc: Arc, cubic1: CubicCurve, curve2: Subcurve<T>, accuracy: CGFloat
+) -> [(CGFloat, CGFloat)] {
     if let cubic2 = curve2.curve as? CubicCurve {
         if let arc2 = cubic2.asArc(accuracy: accuracy) {
-            return arcArcIntersections(arc, arc2, accuracy: accuracy).map {
-                Intersection(t1: mapT1($0.t1), t2: mapT2($0.t2))
+            return arcArcIntersections(arc, arc2, accuracy: accuracy).map { ix in
+                let t1 = cubic1.project(arc.point(at: ix.t1)).t
+                let t2 = cubic2.project(arc2.point(at: ix.t2)).t
+                return (t1, t2)
             }
         }
-        return arcCubicIntersections(arc, cubic2, accuracy: accuracy).map {
-            Intersection(t1: mapT1($0.tArc), t2: mapT2($0.tCubic))
+        return arcCubicIntersections(arc, cubic2, accuracy: accuracy).map { ix in
+            (cubic1.project(arc.point(at: ix.tArc)).t, ix.tCubic)
         }
     }
     if let quad2 = curve2.curve as? QuadraticCurve {
         let (line2, lineErr) = quad2.downgradedToLineSegment
         if lineErr <= accuracy {
-            return arcLineIntersections(arc, line2, accuracy: accuracy).map {
-                Intersection(t1: mapT1($0.tArc), t2: mapT2($0.tLine))
+            return arcLineIntersections(arc, line2, accuracy: accuracy).map { ix in
+                (cubic1.project(arc.point(at: ix.tArc)).t, ix.tLine)
             }
         }
-        return arcQuadraticIntersections(arc, quad2, accuracy: accuracy).map {
-            Intersection(t1: mapT1($0.tArc), t2: mapT2($0.tQuad))
+        return arcQuadraticIntersections(arc, quad2, accuracy: accuracy).map { ix in
+            (cubic1.project(arc.point(at: ix.tArc)).t, ix.tQuad)
         }
     }
     return []
 }
 
+// Refines arc-based initial guesses with Newton on the original curves.
+// Returns Newton-verified intersections with accurate Bezier t-parameters.
+// Returns nil when no guesses survive (caller should fall through to bezier clipping).
+private func refineArcGuesses<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ guesses: [(CGFloat, CGFloat)], _ c1: C1, _ c2: C2, accuracy: CGFloat
+) -> [Intersection]? {
+    var result: [Intersection] = []
+    for (t1g, t2g) in guesses {
+        let (uV, vV) = newtonRefineCurvePair(c1, c2, u: t1g, v: t2g, iterations: 10)
+        guard newtonIsGenuineRoot(c1, c2, u: uV, v: vV) else { continue }
+        let p1 = c1.point(at: uV)
+        let isDuplicate = result.contains(where: { distanceSquared(p1, c1.point(at: $0.t1)) < accuracy * accuracy })
+        if !isDuplicate { result.append(Intersection(t1: uV, t2: vV)) }
+    }
+    guard !result.isEmpty else { return nil }
+    addEndpointIntersections(&result, curve1: c1, curve2: c2, accuracy: accuracy)
+    return result.sorted()
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-    // Arc detection for cubics: algebraic intersection avoids bezier-clipping budget issues
-    // on nearly-circular curves.
+    // Arc detection for cubics: get algebraic initial guesses then refine with Newton on the
+    // original Bezier curves. Arc-t ≠ cubic Bezier-t, so without Newton the returned t-values
+    // are inaccurate. If no guesses survive Newton, fall through to bezier clipping.
+    var arcResult: [Intersection]?
     if let cubic1 = curve1.curve as? CubicCurve, let arc1 = cubic1.asArc(accuracy: accuracy) {
         if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
             let centerDist = distance(arc1.center, arc2.center)
@@ -199,40 +251,42 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
             let sameCircleThreshold = max(accuracy, avgRadius * 1.0e-2)
             if centerDist < sameCircleThreshold && abs(arc1.radius - arc2.radius) < sameCircleThreshold {
                 // Same-circle arcs: use coincidenceCheck so AugmentedGraph handles overlap correctly.
+                // If coincidenceCheck returns nil (arcs touch at only one point), fall through to
+                // bezier clipping which handles endpoint intersections correctly.
                 if let coincidence = coincidenceCheck(cubic1, cubic2, accuracy: accuracy) {
                     return coincidence.map {
                         Intersection(t1: Utils.map($0.t1, 0, 1, curve1.t1, curve1.t2),
                                      t2: Utils.map($0.t2, 0, 1, curve2.t1, curve2.t2))
                     }
                 }
-                return []
+            } else {
+                let guesses = arcArcIntersections(arc1, arc2, accuracy: accuracy).map { ix -> (CGFloat, CGFloat) in
+                    let t1 = cubic1.project(arc1.point(at: ix.t1)).t
+                    let t2 = cubic2.project(arc2.point(at: ix.t2)).t
+                    return (t1, t2)
+                }
+                arcResult = refineArcGuesses(guesses, cubic1, cubic2, accuracy: accuracy)
+                // A single arc-arc result may be spurious for partially-coincident cubics
+                // each fitting a slightly different approximate circle. Coincidence check disambiguates.
+                if arcResult?.count == 1,
+                   let coincidence = coincidenceCheck(cubic1, cubic2, accuracy: 0.1 * accuracy) {
+                    return coincidence.map {
+                        Intersection(t1: Utils.map($0.t1, 0, 1, curve1.t1, curve1.t2),
+                                     t2: Utils.map($0.t2, 0, 1, curve2.t1, curve2.t2))
+                    }
+                }
             }
-            // Different circles: algebraic arc-arc with distance verification to filter false positives
-            // (cubic curves may be close to—but not actually intersecting—their respective arcs).
-            let chord1 = distance(cubic1.startingPoint, cubic1.endingPoint)
-            let chord2 = distance(cubic2.startingPoint, cubic2.endingPoint)
-            let arcTol = max(max(accuracy, chord1 * 2.0e-3), max(accuracy, chord2 * 2.0e-3))
-            let maxDist = 3.0 * arcTol
-            let rawResults = arcArcIntersections(arc1, arc2, accuracy: accuracy)
-            var arcResult: [Intersection] = []
-            for r in rawResults {
-                let pt1 = cubic1.point(at: r.t1)
-                let pt2 = cubic2.point(at: r.t2)
-                guard distance(pt1, pt2) <= maxDist else { continue }
-                arcResult.append(Intersection(
-                    t1: Utils.map(r.t1, 0, 1, curve1.t1, curve1.t2),
-                    t2: Utils.map(r.t2, 0, 1, curve2.t1, curve2.t2)
-                ))
-            }
-            return arcResult
+        } else {
+            let guesses = arcIntersectionGuesses(arc: arc1, cubic1: cubic1, curve2: curve2, accuracy: accuracy)
+            arcResult = refineArcGuesses(guesses, cubic1, curve2.curve, accuracy: accuracy)
         }
-        return helperArcIntersectsCurve(arc: arc1, arcSubcurve: (t1: curve1.t1, t2: curve1.t2),
-                                        curve2: curve2, accuracy: accuracy)
+    } else if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
+        let guesses = arcIntersectionGuesses(arc: arc2, cubic1: cubic2, curve2: curve1, accuracy: accuracy)
+        arcResult = refineArcGuesses(guesses, cubic2, curve1.curve, accuracy: accuracy)
+            .map { $0.map { Intersection(t1: $0.t2, t2: $0.t1) } }
     }
-    if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
-        return helperArcIntersectsCurve(arc: arc2, arcSubcurve: (t1: curve2.t1, t2: curve2.t2),
-                                        curve2: curve1, accuracy: accuracy)
-            .map { Intersection(t1: $0.t2, t2: $0.t1) }
+    if let result = arcResult {
+        return result
     }
     // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
     var clipIntersections: [Intersection] = []
@@ -266,6 +320,12 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
             }
         }
         if !result.isEmpty {
+            // Coincident curves produce genuine interior intersections via clipping (the
+            // overlap region looks like a real crossing). Check for coincidence before
+            // returning so we get the two boundary intersections instead of one interior point.
+            if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+                return coincidence
+            }
             addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
             return result.sorted()
         }
