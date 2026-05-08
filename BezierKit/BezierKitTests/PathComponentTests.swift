@@ -143,8 +143,16 @@ class PathComponentTests: XCTestCase {
 
     let pointPathComponent = PathComponent(points: [CGPoint(x: 3.145, y: -8.34)], orders: [0]) // just a single point
 
-    #if canImport(CoreGraphics)
-    let circlePathComponent = Path(cgPath: CGPath(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2), transform: nil)).components[0]
+    // Unit circle as 4 cubic Béziers (matches CGPath(ellipseIn:) approximation)
+    let circlePathComponent: PathComponent = {
+        let k: CGFloat = 0.5522847498  // 4/3 * tan(π/8)
+        return PathComponent(curves: [
+            CubicCurve(p0: CGPoint(x: 1, y: 0),  p1: CGPoint(x: 1, y: k),   p2: CGPoint(x: k, y: 1),   p3: CGPoint(x: 0, y: 1)),
+            CubicCurve(p0: CGPoint(x: 0, y: 1),  p1: CGPoint(x: -k, y: 1),  p2: CGPoint(x: -1, y: k),  p3: CGPoint(x: -1, y: 0)),
+            CubicCurve(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: -1, y: -k), p2: CGPoint(x: -k, y: -1), p3: CGPoint(x: 0, y: -1)),
+            CubicCurve(p0: CGPoint(x: 0, y: -1), p1: CGPoint(x: k, y: -1),  p2: CGPoint(x: 1, y: -k),  p3: CGPoint(x: 1, y: 0))
+        ])
+    }()
 
     func testStartingEndingPointAt() {
         XCTAssertEqual(circlePathComponent.startingPointForElement(at: 0), circlePathComponent.curves[0].startingPoint)
@@ -226,5 +234,4 @@ class PathComponentTests: XCTestCase {
         XCTAssertEqual(arrayByEnumerating(component: circlePathComponent, includeControlPoints: false), expectedCirclePoints)
         XCTAssertEqual(arrayByEnumerating(component: circlePathComponent, includeControlPoints: true), circlePathComponent.points)
     }
-    #endif
 }

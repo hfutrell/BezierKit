@@ -204,9 +204,9 @@ internal class AugmentedGraph {
         self.graph1 = PathGraph(for: path1, using: path1Intersections)
         self.graph2 = (operation != .removeCrossings) ? PathGraph(for: path2, using: path2Intersections) : graph1
         // mark each edge as either included or excluded from the final result
-        self.classifyEdgesUsingWindingCount(in: self.graph1, isForFirstPath: true)
+        self.classifyEdges(in: self.graph1, isForFirstPath: true)
         if operation != .removeCrossings {
-            self.classifyEdgesUsingWindingCount(in: self.graph2, isForFirstPath: false)
+            self.classifyEdges(in: self.graph2, isForFirstPath: false)
         }
     }
     func performOperation() -> Path {
@@ -233,138 +233,42 @@ private extension AugmentedGraph {
         return MemoryLayout<CGFloat>.size > 4 ? 1.0e-6 : 1.0e-4
     }
 
-    // MARK: - Winding-count propagation edge classification
-
-    /// The change in the winding count of path2 (at a point just to the left of path1) as we
-    /// move forward through an intersection node along path1.
-    ///
-    /// `n1Out` is the left-perpendicular normal of path1's outgoing edge (the edge that
-    /// leaves this node).  When path1 is smooth at the node, n1Out equals the node's own
-    /// incoming normal and the original sign(n2 × n1) formula applies.
-    ///
-    /// When path1 has a corner at the node (n1Out ≠ incoming normal), the tracking point
-    /// sweeps an arc from n1In to n1Out in the direction of path1's turn.  A path2 segment
-    /// is counted only if its normal n2 lies strictly inside that arc, determined by:
-    ///   (n1In × n2) and (n2 × n1Out) both having the same sign as (n1In × n1Out).
-    /// This prevents both the false delta from anti-parallel coincident edges and the false
-    /// delta from path2 segments that lie outside the swept arc at touching corners.
-    static func windingCountDelta(atNode node: Node, fromNeighbors neighbors: [Node], outgoingNormal n1Out: CGPoint) -> Int {
-        guard !neighbors.isEmpty else { return 0 }
-        let n1In = node.pathComponent.normal(at: node.componentLocation)
-        guard n1In.x.isFinite, n1In.y.isFinite else { return 0 }
-        guard n1Out.x.isFinite, n1Out.y.isFinite else { return 0 }
-        // Detect a corner of path1: cross product of incoming and outgoing normals is nonzero.
-        let turnDir = n1In.x * n1Out.y - n1In.y * n1Out.x  // n1In × n1Out; sign encodes CCW vs CW turn
-        let isCorner = abs(turnDir) > 1e-10
-        return neighbors.reduce(0) { total, neighbor in
-            let n2 = neighbor.pathComponent.normal(at: neighbor.componentLocation)
-            guard n2.x.isFinite, n2.y.isFinite else { return total }
-            if isCorner {
-                // Arc-crossing condition: n2 must lie strictly inside the arc swept from
-                // n1In to n1Out.  Both intermediate cross products must share the sign of
-                // turnDir (the turn direction), which places n2 between the two bounding
-                // normals in the correct rotational sense.
-                let cross1 = n1In.x * n2.y - n1In.y * n2.x  // n1In × n2
-                let cross2 = n2.x * n1Out.y - n2.y * n1Out.x // n2 × n1Out
-                guard turnDir * cross1 > 0 && turnDir * cross2 > 0 else { return total }
+    func classifyEdges(in graph: PathGraph, isForFirstPath: Bool) {
+        func classifyEdge(_ edge: Edge) {
+            let component = edge.component
+            let location = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
+            let point = component.point(at: location)
+            let normal = component.normal(at: location)
+            let smallDistance: CGFloat = AugmentedGraph.smallDistance
+            let point1 = point + smallDistance * normal
+            let point2 = point - smallDistance * normal
+            let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
+            let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
+            edge.inSolution = (included1 != included2)
+        }
+        func classifyComponentEdges(in component: PathComponentGraph) {
+            component.forEachNode {
+                if let edge = $0.forwardEdge {
+                    classifyEdge(edge)
+                }
             }
-            let cross = n2.x * n1In.y - n2.y * n1In.x
-            if cross > 0 { return total + 1 }
-            if cross < 0 { return total - 1 }
-            return total
         }
+        graph.components.forEach { classifyComponentEdges(in: $0) }
     }
 
-    /// Whether an edge should appear in the boolean result, given the winding count of the
-    /// *other* path at a point just to the left of the edge.
-    ///
-    /// For binary operations the paths use the even-odd fill rule, so containment is
-    /// `abs(w) % 2 == 1`.  An edge of path1 is on the solution boundary when crossing it
-    /// changes the boolean result value, which simplifies per operation to the rules below.
-    func edgeIsInSolution(windingCountOfOther w: Int, isForFirstPath: Bool) -> Bool {
-        switch self.operation {
+    func pointIsContainedInBooleanResult(point: CGPoint, operation: BooleanPathOperation) -> Bool {
+        let rule: PathFillRule = (operation == .removeCrossings) ? .winding : .evenOdd
+        let contained1 = self.graph1.path.contains(point, using: rule)
+        let contained2 = operation != .removeCrossings ? self.graph2.path.contains(point, using: rule) : contained1
+        switch operation {
         case .union:
-            // Keep path1 edges outside path2, and path2 edges outside path1.
-            return w % 2 == 0
-        case .subtract:
-            // Keep path1 edges outside path2; keep path2 edges inside path1.
-            return isForFirstPath ? (w % 2 == 0) : (w % 2 != 0)
+            return contained1 || contained2
         case .intersect:
-            // Keep edges that are inside the other path.
-            return w % 2 != 0
+            return contained1 && contained2
+        case .subtract:
+            return contained1 && !contained2
         case .removeCrossings:
-            // Keep edges where the winding count crosses the zero boundary (winding rule).
-            // The left-side winding count w and right-side (w−1) must differ in sign of
-            // "is nonzero", which happens exactly when w ∈ {0, 1}.
-            return w == 0 || w == 1
-        }
-    }
-
-    func classifyEdgesUsingWindingCount(in graph: PathGraph, isForFirstPath: Bool) {
-        let otherPath = isForFirstPath ? self.graph2.path : self.graph1.path
-        graph.components.forEach { componentGraph in
-            classifyComponentEdgesUsingWindingCount(
-                componentGraph,
-                otherPath: otherPath,
-                isForFirstPath: isForFirstPath
-            )
-        }
-    }
-
-    func classifyComponentEdgesUsingWindingCount(
-        _ componentGraph: PathComponentGraph,
-        otherPath: Path,
-        isForFirstPath: Bool
-    ) {
-        var nodes: [Node] = []
-        componentGraph.forEachNode { nodes.append($0) }
-        guard !nodes.isEmpty, let firstEdge = nodes[0].forwardEdge else { return }
-
-        // Determine which path the "other" neighbors belong to so we can filter correctly.
-        // For removeCrossings graph2 === graph1, so all neighbors are from the same path.
-        let otherGraphPath = isForFirstPath ? self.graph2.path : self.graph1.path
-
-        // Compute the initial winding count of otherPath at a point just to the LEFT of
-        // the first edge's midpoint.  We always apply a tiny left-normal offset so that
-        // a seed point exactly on otherPath's boundary doesn't return 0 due to the strict
-        // inequality in the ray-cast winding algorithm.  The seed is at t=0.5 of the first
-        // edge's element, which is in the interior of an edge and far from any intersection.
-        let midLocation = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
-        let firstEdgeComponent = firstEdge.component
-        let midPoint = firstEdgeComponent.point(at: midLocation)
-        let normal = firstEdgeComponent.normal(at: midLocation)
-        let seedPoint = normal.x.isFinite && normal.y.isFinite
-            ? midPoint + AugmentedGraph.smallDistance * normal
-            : midPoint
-        let initialWinding = otherPath.windingCount(seedPoint)
-
-        // Walk every edge of this component in order, classifying each one and propagating
-        // the winding count across intersection nodes using the crossing-direction formula.
-        var windingCount = initialWinding
-        var currentNode = nodes[0]
-        let startNode = currentNode
-        var firstIteration = true
-
-        while firstIteration || currentNode !== startNode {
-            firstIteration = false
-            guard let edge = currentNode.forwardEdge else { break }
-
-            edge.inSolution = edgeIsInSolution(windingCountOfOther: windingCount,
-                                               isForFirstPath: isForFirstPath)
-
-            // Advance to the ending node and update the winding count for any crossings there.
-            let endingNode = edge.endingNode
-            let otherNeighbors = endingNode.neighbors.filter { $0.path === otherGraphPath }
-            // Outgoing normal: the left-perpendicular of path1 at the start of the next edge.
-            // For smooth nodes this equals the node's own normal; for corners it differs,
-            // enabling the arc-crossing corner correction in windingCountDelta.
-            let startLoc = IndexedPathComponentLocation(elementIndex: 0, t: 0.0)
-            let n1Out = endingNode.forwardEdge.map { $0.component.normal(at: startLoc) }
-                ?? endingNode.pathComponent.normal(at: endingNode.componentLocation)
-            windingCount += AugmentedGraph.windingCountDelta(atNode: endingNode,
-                                                             fromNeighbors: otherNeighbors,
-                                                             outgoingNormal: n1Out)
-            currentNode = endingNode
+            return contained1
         }
     }
 
