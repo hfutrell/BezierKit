@@ -243,31 +243,30 @@ private extension AugmentedGraph {
     /// incoming normal and the original sign(n2 × n1) formula applies.
     ///
     /// When path1 has a corner at the node (n1Out ≠ incoming normal), the tracking point
-    /// sweeps an arc from the incoming to the outgoing normal direction.  A path2 segment is
-    /// counted only if the arc actually crosses it, detected by the incoming and outgoing
-    /// normals lying on opposite sides of path2's tangent:
-    ///   (n2 · n1In) * (n2 · n1Out) < 0
-    /// This prevents the false ±1 delta that occurs at coincident-edge corners, where one of
-    /// path2's segments runs anti-parallel to path1 and would otherwise be counted by the
-    /// cross-product formula even though the tracking point never actually crosses it.
+    /// sweeps an arc from n1In to n1Out in the direction of path1's turn.  A path2 segment
+    /// is counted only if its normal n2 lies strictly inside that arc, determined by:
+    ///   (n1In × n2) and (n2 × n1Out) both having the same sign as (n1In × n1Out).
+    /// This prevents both the false delta from anti-parallel coincident edges and the false
+    /// delta from path2 segments that lie outside the swept arc at touching corners.
     static func windingCountDelta(atNode node: Node, fromNeighbors neighbors: [Node], outgoingNormal n1Out: CGPoint) -> Int {
         guard !neighbors.isEmpty else { return 0 }
         let n1In = node.pathComponent.normal(at: node.componentLocation)
         guard n1In.x.isFinite, n1In.y.isFinite else { return 0 }
         guard n1Out.x.isFinite, n1Out.y.isFinite else { return 0 }
         // Detect a corner of path1: cross product of incoming and outgoing normals is nonzero.
-        let cornerCross = n1In.x * n1Out.y - n1In.y * n1Out.x
-        let isCorner = abs(cornerCross) > 1e-10
+        let turnDir = n1In.x * n1Out.y - n1In.y * n1Out.x  // n1In × n1Out; sign encodes CCW vs CW turn
+        let isCorner = abs(turnDir) > 1e-10
         return neighbors.reduce(0) { total, neighbor in
             let n2 = neighbor.pathComponent.normal(at: neighbor.componentLocation)
             guard n2.x.isFinite, n2.y.isFinite else { return total }
             if isCorner {
-                // Arc-crossing condition: count this path2 segment only if n1In and n1Out
-                // are on opposite sides of path2's tangent line (i.e. their dot products
-                // with n2 have opposite signs).
-                let dotIn  = n2.x * n1In.x  + n2.y * n1In.y
-                let dotOut = n2.x * n1Out.x + n2.y * n1Out.y
-                guard dotIn * dotOut < 0 else { return total }
+                // Arc-crossing condition: n2 must lie strictly inside the arc swept from
+                // n1In to n1Out.  Both intermediate cross products must share the sign of
+                // turnDir (the turn direction), which places n2 between the two bounding
+                // normals in the correct rotational sense.
+                let cross1 = n1In.x * n2.y - n1In.y * n2.x  // n1In × n2
+                let cross2 = n2.x * n1Out.y - n2.y * n1Out.x // n2 × n1Out
+                guard turnDir * cross1 > 0 && turnDir * cross2 > 0 else { return total }
             }
             let cross = n2.x * n1In.y - n2.y * n1In.x
             if cross > 0 { return total + 1 }
@@ -321,12 +320,15 @@ private extension AugmentedGraph {
         componentGraph.forEachNode { nodes.append($0) }
         guard !nodes.isEmpty, let firstEdge = nodes[0].forwardEdge else { return }
 
+        // Determine which path the "other" neighbors belong to so we can filter correctly.
+        // For removeCrossings graph2 === graph1, so all neighbors are from the same path.
+        let otherGraphPath = isForFirstPath ? self.graph2.path : self.graph1.path
+
         // Compute the initial winding count of otherPath at a point just to the LEFT of
         // the first edge's midpoint.  We always apply a tiny left-normal offset so that
-        // a seed point exactly on otherPath's boundary (e.g. operating a path against an
-        // identical copy of itself) doesn't return 0 due to the strict inequality in the
-        // ray-cast winding algorithm.  The seed is at t=0.5 of the first edge's element,
-        // which is guaranteed to be in the interior of an edge and far from any intersection.
+        // a seed point exactly on otherPath's boundary doesn't return 0 due to the strict
+        // inequality in the ray-cast winding algorithm.  The seed is at t=0.5 of the first
+        // edge's element, which is in the interior of an edge and far from any intersection.
         let midLocation = IndexedPathComponentLocation(elementIndex: 0, t: 0.5)
         let firstEdgeComponent = firstEdge.component
         let midPoint = firstEdgeComponent.point(at: midLocation)
@@ -335,10 +337,6 @@ private extension AugmentedGraph {
             ? midPoint + AugmentedGraph.smallDistance * normal
             : midPoint
         let initialWinding = otherPath.windingCount(seedPoint)
-
-        // Determine which path the "other" neighbors belong to so we can filter correctly.
-        // For removeCrossings graph2 === graph1, so all neighbors are from the same path.
-        let otherGraphPath = isForFirstPath ? self.graph2.path : self.graph1.path
 
         // Walk every edge of this component in order, classifying each one and propagating
         // the winding count across intersection nodes using the crossing-direction formula.
