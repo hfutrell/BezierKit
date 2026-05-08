@@ -80,28 +80,6 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
                   p3: quadratic.p2)
     }
 
-    var downgradedToQuadratic: (quadratic: QuadraticCurve, error: CGFloat) {
-        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
-        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
-        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
-        let d = 0.5 * d1 + 0.5 * d2
-        let p1 = 1.5 * d + line.point(at: 0.5)
-        let error = 0.144334 * (d1 - d2).length
-        let quadratic = QuadraticCurve(p0: line.startingPoint,
-                                       p1: p1,
-                                       p2: line.endingPoint)
-        return (quadratic: quadratic, error: error)
-    }
-
-    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
-        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
-        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
-        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
-        let dmaxx = max(d1.x * d1.x, d2.x * d2.x)
-        let dmaxy = max(d1.y * d1.y, d2.y * d2.y)
-        let error = 3 / 4 * sqrt(dmaxx + dmaxy)
-        return (lineSegment: line, error: error)
-    }
 
 /**
      Returns a CubicCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
@@ -188,14 +166,30 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         return temp1 + temp2 + temp3
     }
 
+    @inline(__always) internal func pointAndDerivative(at t: CGFloat) -> (point: CGPoint, derivative: CGPoint) {
+        let mt: CGFloat = 1.0 - t
+        let mt_2: CGFloat = mt * mt
+        let t_2: CGFloat = t * t
+        let dp0 = 3.0 * (p1 - p0)
+        let dp1 = 3.0 * (p2 - p1)
+        let dp2 = 3.0 * (p3 - p2)
+        let w0 = mt_2 * mt; let w1 = 3.0 * mt_2 * t; let w2 = 3.0 * mt * t_2; let w3 = t_2 * t
+        var ptx = w0 * p0.x; ptx = ptx.addingProduct(w1, p1.x); ptx = ptx.addingProduct(w2, p2.x); ptx = ptx.addingProduct(w3, p3.x)
+        var pty = w0 * p0.y; pty = pty.addingProduct(w1, p1.y); pty = pty.addingProduct(w2, p2.y); pty = pty.addingProduct(w3, p3.y)
+        let mt2t = 2.0 * mt * t
+        var dtx = mt_2 * dp0.x; dtx = dtx.addingProduct(mt2t, dp1.x); dtx = dtx.addingProduct(t_2, dp2.x)
+        var dty = mt_2 * dp0.y; dty = dty.addingProduct(mt2t, dp1.y); dty = dty.addingProduct(t_2, dp2.y)
+        return (CGPoint(x: ptx, y: pty), CGPoint(x: dtx, y: dty))
+    }
+
     public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let k = (t2 - t1) / 3.0
-        let p0 = self.point(at: t1)
-        let p3 = self.point(at: t2)
-        let p1 = p0 + k * self.derivative(at: t1)
-        let p2 = p3 - k * self.derivative(at: t2)
-        return CubicCurve(p0: p0, p1: p1, p2: p2, p3: p3)
+        let (q0, qd0) = pointAndDerivative(at: t1)
+        let (q3, qd3) = pointAndDerivative(at: t2)
+        let p1 = CGPoint(x: q0.x.addingProduct(k, qd0.x), y: q0.y.addingProduct(k, qd0.y))
+        let p2 = CGPoint(x: q3.x.addingProduct(-k, qd3.x), y: q3.y.addingProduct(-k, qd3.y))
+        return CubicCurve(p0: q0, p1: p1, p2: p2, p3: q3)
     }
 
     public func split(at t: CGFloat) -> (left: CubicCurve, right: CubicCurve) {
@@ -222,7 +216,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         func mul(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
             return CGPoint(x: a.x * b.x, y: a.y * b.y)
         }
-        let c = self.copy(using: CGAffineTransform(translationX: -point.x, y: -point.y))
+        let c = CubicCurve(p0: p0 - point, p1: p1 - point, p2: p2 - point, p3: p3 - point)
         let q = QuadraticCurve(p0: self.p1 - self.p0, p1: self.p2 - self.p1, p2: self.p3 - self.p2)
         // p0, p1, p2, p3 form the control points of a Cubic Bezier Curve formed
         // by multiplying the polynomials q and l

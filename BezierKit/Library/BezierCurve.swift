@@ -206,11 +206,11 @@ extension BezierCurve {
 
     // MARK: - outlines
 
-    public func outline(distance d1: CGFloat) -> PathComponent {
+    public func outline(distance d1: CGFloat) -> PathComponent? {
         return internalOutline(d1: d1, d2: d1)
     }
 
-    public func outline(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat) -> PathComponent {
+    public func outline(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat) -> PathComponent? {
         return internalOutline(d1: d1, d2: d2)
     }
 
@@ -225,11 +225,12 @@ extension BezierCurve {
         }
     }
 
-    private func internalOutline(d1: CGFloat, d2: CGFloat) -> PathComponent {
+    private func internalOutline(d1: CGFloat, d2: CGFloat) -> PathComponent? {
         let reduced = self.reduce()
         let length = reduced.count
         var forwardCurves: [BezierCurve] = reduced.compactMap { $0.curve.scale(distance: d1) }
         var backCurves: [BezierCurve] = reduced.compactMap { $0.curve.scale(distance: -d2) }
+        guard forwardCurves.isEmpty == false, backCurves.isEmpty == false else { return nil }
         ensureContinuous(&forwardCurves)
         ensureContinuous(&backCurves)
         // reverse the "return" outline
@@ -252,7 +253,7 @@ extension BezierCurve {
     }
 
     public func outlineShapes(distanceAlongNormal d1: CGFloat, distanceOppositeNormal d2: CGFloat, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [Shape] {
-        let outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2)
+        guard let outline = self.outline(distanceAlongNormal: d1, distanceOppositeNormal: d2) else { return [] }
         var shapes: [Shape] = []
         let len = outline.numberOfElements
         for i in 1..<len/2 {
@@ -307,8 +308,16 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sen
     func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection]
 }
 
-internal protocol NonlinearBezierCurve: BezierCurve, ComponentPolynomials, Implicitizeable {
-    // intentionally empty, just declare conformance if you're not a line
+internal protocol NonlinearBezierCurve: BezierClippingCurve, ComponentPolynomials where Polynomial: BezierClippingPolynomial {
+    // Combined evaluation: avoids recomputing shared basis intermediates (mt², t²) that
+    // point(at:) and derivative(at:) would otherwise each compute independently.
+    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint)
+}
+
+internal extension NonlinearBezierCurve {
+    func pointAndDerivative(at t: CGFloat) -> (CGPoint, CGPoint) {
+        return (point(at: t), derivative(at: t))
+    }
 }
 
 public protocol Flatness: BezierCurve {

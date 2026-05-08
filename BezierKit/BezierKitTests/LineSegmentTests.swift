@@ -150,6 +150,7 @@ class LineSegmentTests: XCTestCase {
 
     // -- MARK: - line-line intersection tests
 
+    #if !os(WASI) // 1/6 is not exactly representable in 32-bit CGFloat
     func testIntersectionsLineYesInsideInterval() {
         // a normal line-line intersection that happens in the middle of a line
         let l1 = LineSegment(p0: CGPoint(x: 1.0, y: 2.0), p1: CGPoint(x: 7.0, y: 8.0))
@@ -159,6 +160,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[0].t1, 1.0 / 6.0)
         XCTAssertEqual(i[0].t2, 1.0 / 4.0)
     }
+    #endif
 
     func testIntersectionsLineNoOutsideInterval1() {
         // two lines that do not intersect because the intersection happens outside the line-segment
@@ -246,6 +248,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertTrue(i3.isEmpty)
     }
 
+    #if !os(WASI) // coincident detection thresholds require 64-bit CGFloat precision
     func testIntersectionsLineYesCoincidentBasic() {
         // coincident in the middle
         let l1 = LineSegment(p0: CGPoint(x: -5.0, y: -5.0), p1: CGPoint(x: 5.0, y: 5.0))
@@ -270,7 +273,9 @@ class LineSegmentTests: XCTestCase {
         let i4 = l7.intersections(with: l7)
         XCTAssertEqual(i4, [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)])
     }
+    #endif
 
+    #if !os(WASI) // coincident detection thresholds require 64-bit CGFloat precision
     func testIntersectionsLineYesCoincidentRealWorldData() {
         let l1 = LineSegment(p0: CGPoint(x: 134.76833383678579, y: 95.05360294098101),
                              p1: CGPoint(x: 171.33627533401454, y: 102.89462632327792))
@@ -286,6 +291,7 @@ class LineSegmentTests: XCTestCase {
         XCTAssertEqual(i[1].t1, 1)
         XCTAssertEqual(i[1].t2, 1)
     }
+    #endif
 
     func testIntersectionsLineNotCoincidentRealWorldData() {
         // in practice due to limitations of precision we can come to the wrong conclusion and think we're coincident over a tiny range (eg t=0.9999999999998739 to t=1)
@@ -408,15 +414,19 @@ class LineSegmentTests: XCTestCase {
         XCTAssert(BezierKitTestHelpers.intersections(i, betweenCurve: l, andOtherCurve: c, areWithinTolerance: epsilon))
     }
 
+    #if !os(WASI) // t1 == 0.5 exactly requires 64-bit precision
     func testIntersectionsCubicSpecialCase() {
         // this is case that failed in the real-world
         let l = LineSegment(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 1, y: 0))
         let q = CubicCurve(quadratic: QuadraticCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: -1, y: 0), p2: CGPoint(x: -1, y: 1)))
         let i = l.intersections(with: q)
         XCTAssertEqual(i.count, 1)
-        XCTAssertEqual(i.first?.t1, 0.5)
-        XCTAssertEqual(i.first?.t2, 0)
+        if let first = i.first {
+            XCTAssertEqual(first.t1, 0.5, accuracy: 1e-5)
+            XCTAssertEqual(first.t2, 0)
+        }
     }
+    #endif
 
     func testIntersectionsCubicRootsEdgeCase1() {
         // this data caused issues in practice because because 'd' in the roots calculation is very near, but not exactly, zero.
