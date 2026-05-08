@@ -106,7 +106,7 @@ class PerformanceTests: XCTestCase {
             var count = 0
             for _ in 0..<50 {
                 for curve in curves {
-                    count += curve.selfIntersections.count
+                    count += curve.selfIntersection != nil ? 1 : 0
                 }
             }
             XCTAssertEqual(count, 50 * dataCount)

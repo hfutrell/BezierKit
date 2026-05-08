@@ -31,6 +31,9 @@ public extension BezierCurve {
     var selfIntersects: Bool {
         return false
     }
+    var selfIntersection: Intersection? {
+        return nil
+    }
     var selfIntersections: [Intersection] {
         return []
     }
@@ -326,8 +329,8 @@ extension CubicCurve {
         return self.selfIntersectionInfo != nil
     }
 
-    public var selfIntersections: [Intersection] {
-        guard let info = self.selfIntersectionInfo else { return [] }
+    public var selfIntersection: Intersection? {
+        guard let info = self.selfIntersectionInfo else { return nil }
         let discriminant = info.discriminant
         let x = info.canonicalPoint.x
         let y = info.canonicalPoint.y
@@ -335,8 +338,13 @@ extension CubicCurve {
         let denominator = (3 - x - y)
         let t1 = 0.5 * (3 - x - radical) / denominator
         let t2 = 0.5 * (3 - x + radical) / denominator
-        return [Intersection(t1: Utils.clamp(t1, 0, 1),
-                             t2: Utils.clamp(t2, 0, 1))]
+        return Intersection(t1: Utils.clamp(t1, 0, 1),
+                            t2: Utils.clamp(t2, 0, 1))
+    }
+
+    public var selfIntersections: [Intersection] {
+        guard let i = selfIntersection else { return [] }
+        return [i]
     }
 }
 
