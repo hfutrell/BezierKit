@@ -145,31 +145,49 @@ private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCu
     return f.lengthSquared < scaleSq * CGFloat(1.0e-12)
 }
 
-// Checks one corner (u,v) ∈ {0,1}² of the (curve1,curve2) parameter space.
-// File-level (not nested) so WMO can specialize+inline without closure-capture exclusivity overhead.
-private func processEndpointCorner<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
-    _ result: inout ClipBuffer, curve1: C1, curve2: C2, u: CGFloat, v: CGFloat, accuracy: CGFloat
-) {
-    guard newtonIsGenuineRoot(curve1, curve2, u: u, v: v) else { return }
-    let p1 = curve1.point(at: u)
-    if let idx = result.firstIndex(where: { distanceSquared(p1, curve1.point(at: $0.t1)) < accuracy * accuracy }) {
-        result[idx] = Intersection(t1: u, t2: v)
-    } else {
-        result.append(Intersection(t1: u, t2: v))
-    }
-}
-
 // Ensures exact curve-endpoint intersections are represented precisely in `result`.
 // When Newton refinement nudges a clipping result slightly away from an exact endpoint,
 // this replaces the near-endpoint result with the exact (u, v) corner value.
 // Also appends any endpoint intersections that bezier clipping missed entirely.
+// Endpoint positions are pre-computed once to avoid polynomial evaluation at t=0/1.
 private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
     _ result: inout ClipBuffer, curve1: C1, curve2: C2, accuracy: CGFloat
 ) {
-    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 0, v: 0, accuracy: accuracy)
-    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 0, v: 1, accuracy: accuracy)
-    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 1, v: 0, accuracy: accuracy)
-    processEndpointCorner(&result, curve1: curve1, curve2: curve2, u: 1, v: 1, accuracy: accuracy)
+    let c1s = curve1.startingPoint
+    let c1e = curve1.endingPoint
+    let c2s = curve2.startingPoint
+    let c2e = curve2.endingPoint
+    let chordSq = (c1e - c1s).lengthSquared
+    let threshold = max(chordSq, CGFloat(1.0e-20)) * CGFloat(1.0e-12)
+    let accuracySq = accuracy * accuracy
+    if (c1s - c2s).lengthSquared < threshold {
+        if let idx = result.firstIndex(where: { distanceSquared(c1s, curve1.point(at: $0.t1)) < accuracySq }) {
+            result[idx] = Intersection(t1: 0, t2: 0)
+        } else {
+            result.append(Intersection(t1: 0, t2: 0))
+        }
+    }
+    if (c1s - c2e).lengthSquared < threshold {
+        if let idx = result.firstIndex(where: { distanceSquared(c1s, curve1.point(at: $0.t1)) < accuracySq }) {
+            result[idx] = Intersection(t1: 0, t2: 1)
+        } else {
+            result.append(Intersection(t1: 0, t2: 1))
+        }
+    }
+    if (c1e - c2s).lengthSquared < threshold {
+        if let idx = result.firstIndex(where: { distanceSquared(c1e, curve1.point(at: $0.t1)) < accuracySq }) {
+            result[idx] = Intersection(t1: 1, t2: 0)
+        } else {
+            result.append(Intersection(t1: 1, t2: 0))
+        }
+    }
+    if (c1e - c2e).lengthSquared < threshold {
+        if let idx = result.firstIndex(where: { distanceSquared(c1e, curve1.point(at: $0.t1)) < accuracySq }) {
+            result[idx] = Intersection(t1: 1, t2: 1)
+        } else {
+            result.append(Intersection(t1: 1, t2: 1))
+        }
+    }
 }
 
 // Shared bezier-clipping + Newton refinement body.

@@ -76,11 +76,14 @@ extension CubicCurve: BezierClippingCurve {
                                  y: max(max(p0.y, p1.y), max(p2.y, p3.y))))
     }
 
-    @inline(never)
     // swiftlint:disable:next function_parameter_count
     func clipInterval(d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
                       dLow: CGFloat, dHigh: CGFloat) -> (CGFloat, CGFloat)? {
-        convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh)
+        // Bernstein polynomials lie in the convex hull of their control values.
+        // If all four are outside the band on the same side, no intersection is possible.
+        if d0 > dHigh && d1 > dHigh && d2 > dHigh && d3 > dHigh { return nil }
+        if d0 < dLow && d1 < dLow && d2 < dLow && d3 < dLow { return nil }
+        return convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh)
     }
 }
 
@@ -95,12 +98,15 @@ extension QuadraticCurve: BezierClippingCurve {
                                  y: max(max(p0.y, p1.y), p2.y)))
     }
 
-    @inline(never)
     // swiftlint:disable:next function_parameter_count
     func clipInterval(d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
                       dLow: CGFloat, dHigh: CGFloat) -> (CGFloat, CGFloat)? {
         // d3 unused: quadratic has only 3 control points
-        convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh)
+        // Bernstein polynomials lie in the convex hull of their control values.
+        // If all three are outside the band on the same side, no intersection is possible.
+        if d0 > dHigh && d1 > dHigh && d2 > dHigh { return nil }
+        if d0 < dLow && d1 < dLow && d2 < dLow { return nil }
+        return convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh)
     }
 }
 
