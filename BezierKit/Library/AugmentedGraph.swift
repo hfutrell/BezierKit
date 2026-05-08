@@ -204,9 +204,11 @@ internal class AugmentedGraph {
         self.graph1 = PathGraph(for: path1, using: path1Intersections)
         self.graph2 = (operation != .removeCrossings) ? PathGraph(for: path2, using: path2Intersections) : graph1
         // mark each edge as either included or excluded from the final result
-        self.classifyEdges(in: self.graph1, isForFirstPath: true)
         if operation != .removeCrossings {
-            self.classifyEdges(in: self.graph2, isForFirstPath: false)
+            self.classifyEdgesUsingWindingCount(in: self.graph1, isForFirstPath: true)
+            self.classifyEdgesUsingWindingCount(in: self.graph2, isForFirstPath: false)
+        } else {
+            self.classifyEdges(in: self.graph1, isForFirstPath: true)
         }
     }
     func performOperation() -> Path {
@@ -269,6 +271,130 @@ private extension AugmentedGraph {
             return contained1 && !contained2
         case .removeCrossings:
             return contained1
+        }
+    }
+
+    static func windingCountDelta(atNode node: Node, fromNeighbors neighbors: [Node], outgoingNormal n1Out: CGPoint) -> Int {
+        guard !neighbors.isEmpty else { return 0 }
+        let n1In: CGPoint
+        if let backEdge = node.backwardEdge {
+            let comp = backEdge.component
+            n1In = comp.normal(at: comp.endingIndexedLocation)
+        } else {
+            n1In = node.pathComponent.normal(at: node.componentLocation)
+        }
+        guard n1In.x.isFinite, n1In.y.isFinite else { return 0 }
+        guard n1Out.x.isFinite, n1Out.y.isFinite else { return 0 }
+        let turnDir = n1In.x * n1Out.y - n1In.y * n1Out.x
+        let isCorner = abs(turnDir) > 1e-10
+        return neighbors.reduce(0) { total, neighbor in
+            let n2: CGPoint
+            if let backEdge = neighbor.backwardEdge {
+                let comp = backEdge.component
+                n2 = comp.normal(at: comp.endingIndexedLocation)
+            } else {
+                n2 = neighbor.pathComponent.normal(at: neighbor.componentLocation)
+            }
+            guard n2.x.isFinite, n2.y.isFinite else { return total }
+            if isCorner {
+                let dotIn = n2.x * n1In.x + n2.y * n1In.y
+                let dotOut = n2.x * n1Out.x + n2.y * n1Out.y
+                guard dotIn * dotOut < 0 else { return total }
+            } else {
+                // When square1 is straight, a corner in the neighbor may still be a tangent touch.
+                // Require the neighbor's incoming and outgoing cross-products to have opposite signs.
+                let n2Out: CGPoint
+                if let fwdEdge = neighbor.forwardEdge {
+                    let comp = fwdEdge.component
+                    n2Out = comp.normal(at: comp.startingIndexedLocation)
+                } else {
+                    n2Out = n2
+                }
+                let neighborTurn = n2.x * n2Out.y - n2.y * n2Out.x
+                if abs(neighborTurn) > 1e-10 {
+                    let crossIn = n2.x * n1In.y - n2.y * n1In.x
+                    let crossOut = n2Out.x * n1In.y - n2Out.y * n1In.x
+                    guard crossIn * crossOut < 0 else { return total }
+                }
+            }
+            let cross = n2.x * n1In.y - n2.y * n1In.x
+            if cross > 0 { return total + 1 }
+            if cross < 0 { return total - 1 }
+            return total
+        }
+    }
+
+    func edgeIsInSolution(windingCountOfOther w: Int, isForFirstPath: Bool) -> Bool {
+        switch operation {
+        case .union: return w % 2 == 0
+        case .subtract: return isForFirstPath ? (w % 2 == 0) : (w % 2 != 0)
+        case .intersect: return w % 2 != 0
+        case .removeCrossings: return false
+        }
+    }
+
+    func outgoingNormal(from node: Node) -> CGPoint {
+        guard let fwdEdge = node.forwardEdge else {
+            return node.pathComponent.normal(at: node.componentLocation)
+        }
+        let comp = fwdEdge.component
+        return comp.normal(at: comp.startingIndexedLocation)
+    }
+
+    func isCoincident(_ edge: Edge, withOther otherPath: Path) -> Bool {
+        guard operation == .union else { return false }
+        guard graph1.path !== graph2.path else { return false }
+        let startHasOther = edge.startingNode.neighbors.contains(where: { $0.path === otherPath })
+        guard startHasOther else { return false }
+        let endHasOther = edge.endingNode.neighbors.contains(where: { $0.path === otherPath })
+        guard endHasOther else { return false }
+        let component = edge.component
+        let loc = component.nonDegenerateTestLocation
+        let pt = component.point(at: loc)
+        let n = component.normal(at: loc)
+        guard n.x.isFinite, n.y.isFinite, n != .zero else { return false }
+        let pt1 = pt + AugmentedGraph.smallDistance * n
+        let pt2 = pt - AugmentedGraph.smallDistance * n
+        return otherPath.windingCount(pt1) != otherPath.windingCount(pt2)
+    }
+
+    func classifyEdgesUsingWindingCount(in graph: PathGraph, isForFirstPath: Bool) {
+        let otherPath = isForFirstPath ? graph2.path : graph1.path
+        graph.components.forEach {
+            classifyComponentEdgesUsingWindingCount($0, otherPath: otherPath, isForFirstPath: isForFirstPath)
+        }
+    }
+
+    func classifyComponentEdgesUsingWindingCount(
+        _ componentGraph: PathComponentGraph,
+        otherPath: Path,
+        isForFirstPath: Bool
+    ) {
+        var firstNode: Node?
+        componentGraph.forEachNode { if firstNode == nil { firstNode = $0 } }
+        guard let startNode = firstNode, let firstEdge = startNode.forwardEdge else { return }
+        let firstComp = firstEdge.component
+        let seedLoc = firstComp.nonDegenerateTestLocation
+        let seedPt = firstComp.point(at: seedLoc)
+        let seedNorm = firstComp.normal(at: seedLoc)
+        let offsetSeedPt = (seedNorm.x.isFinite && seedNorm.y.isFinite && seedNorm != .zero)
+            ? seedPt + AugmentedGraph.smallDistance * seedNorm
+            : seedPt
+        var windingCount = otherPath.windingCount(offsetSeedPt)
+        var currentNode = startNode
+        var firstIteration = true
+        while firstIteration || currentNode !== startNode {
+            firstIteration = false
+            guard let edge = currentNode.forwardEdge else { break }
+            let endingNode = edge.endingNode
+            edge.inSolution = isCoincident(edge, withOther: otherPath)
+                ? false
+                : edgeIsInSolution(windingCountOfOther: windingCount, isForFirstPath: isForFirstPath)
+            let otherNeighbors = endingNode.neighbors.filter { $0.path === otherPath }
+            let n1Out = outgoingNormal(from: endingNode)
+            windingCount += AugmentedGraph.windingCountDelta(
+                atNode: endingNode, fromNeighbors: otherNeighbors, outgoingNormal: n1Out)
+            currentNode = endingNode
         }
     }
 
