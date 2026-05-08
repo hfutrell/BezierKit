@@ -34,6 +34,9 @@ struct ControlPolygon {
 /// Protocol for curves that support bezier clipping via a fixed-size control polygon.
 internal protocol BezierClippingCurve: BezierCurve {
     var controlPolygon: ControlPolygon { get }
+    // Protocol requirement (not extension default) so WMO can devirtualize and inline
+    // the concrete implementation at call sites where the type is statically known.
+    var controlPolygonBounds: BoundingBox { get }
 }
 
 internal extension BezierClippingCurve {
@@ -55,10 +58,28 @@ internal extension BezierClippingCurve {
 
 extension CubicCurve: BezierClippingCurve {
     var controlPolygon: ControlPolygon { ControlPolygon(p0, p1, p2, p3) }
+
+    // Direct override: avoids the generic loop over ControlPolygon.count, letting the
+    // compiler emit fmin/fmax over 4 known fields instead of an unrolled branch chain.
+    @inline(__always)
+    var controlPolygonBounds: BoundingBox {
+        BoundingBox(min: CGPoint(x: min(min(p0.x, p1.x), min(p2.x, p3.x)),
+                                 y: min(min(p0.y, p1.y), min(p2.y, p3.y))),
+                    max: CGPoint(x: max(max(p0.x, p1.x), max(p2.x, p3.x)),
+                                 y: max(max(p0.y, p1.y), max(p2.y, p3.y))))
+    }
 }
 
 extension QuadraticCurve: BezierClippingCurve {
     var controlPolygon: ControlPolygon { ControlPolygon(p0, p1, p2) }
+
+    @inline(__always)
+    var controlPolygonBounds: BoundingBox {
+        BoundingBox(min: CGPoint(x: min(min(p0.x, p1.x), p2.x),
+                                 y: min(min(p0.y, p1.y), p2.y)),
+                    max: CGPoint(x: max(max(p0.x, p1.x), p2.x),
+                                 y: max(max(p0.y, p1.y), p2.y)))
+    }
 }
 
 // MARK: - Bezier Clipping (Sederberg & Nishita, 1990)
@@ -74,75 +95,78 @@ private func hullEdgeClipInterval(
 ) -> (CGFloat, CGFloat) {
     var lo = lo, hi = hi
     if da >= dLow && da <= dHigh { if ta < lo { lo = ta }; if ta > hi { hi = ta } }
+    // IEEE-754 safe with no dDelta != 0 guard: when da==db, recip=±inf; crossing tests
+    // (dLowA*dLowB<=0) collapse to a perfect square (≥0), which fires only when dLow==da,
+    // giving t = ta + 0*±inf = NaN; NaN comparisons are false — no spurious lo/hi update.
     let dDelta = db - da
-    if dDelta != 0 {
-        // Precompute reciprocal once; both potential t values use FMA (ta + d * recip)
-        // instead of a separate FMUL + FDIV per crossing — saves one FDIV in the common
-        // case where both band boundaries are crossed.
-        let recip = dt / dDelta
-        let dLowA = dLow - da; let dLowB = dLow - db
-        if dLowA * dLowB <= 0 { let t = ta.addingProduct(dLowA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
-        let dHighA = dHigh - da; let dHighB = dHigh - db
-        if dHighA * dHighB <= 0 { let t = ta.addingProduct(dHighA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
+    let recip = dt / dDelta
+    let dLowA = dLow - da; let dLowB = dLow - db
+    if dLowA * dLowB <= 0 { let t = ta.addingProduct(dLowA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
+    let dHighA = dHigh - da; let dHighB = dHigh - db
+    if dHighA * dHighB <= 0 { let t = ta.addingProduct(dHighA, recip); if t < lo { lo = t }; if t > hi { hi = t } }
+    return (lo, hi)
+}
+
+// Processes one hull (lower or upper) for convexHullClipIntervalCubic.
+// File-level rather than nested so the compiler can inline both calls into the outer
+// function: nested-func @inline(__always) only inlines one of the two call sites in WMO.
+// All dependencies passed explicitly — no closure captures, no swift_beginAccess overhead.
+// Cross products: c012 = d0 - 2·d1 + d2  (c023, c123, c013 computed lazily on demand).
+@inline(__always)
+private func processHullCubic(
+    sign: CGFloat, lo: CGFloat, hi: CGFloat,
+    d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
+    c012: CGFloat, dLow: CGFloat, dHigh: CGFloat
+) -> (CGFloat, CGFloat) {
+    var lo = lo, hi = hi
+    if sign * c012 <= 0 {
+        let c023 = d0 - 3*d2 + 2*d3
+        if sign * c023 <= 0 {
+            (lo, hi) = hullEdgeClipInterval(d0, d3, 0, 1, dLow, dHigh, lo, hi)
+        } else {
+            (lo, hi) = hullEdgeClipInterval(d0, d2, 0, 2.0/3, dLow, dHigh, lo, hi)
+            (lo, hi) = hullEdgeClipInterval(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, lo, hi)
+        }
+    } else {
+        let c123 = d1 - 2*d2 + d3
+        if sign * c123 <= 0 {
+            let c013 = 2*d0 - 3*d1 + d3
+            if sign * c013 <= 0 {
+                (lo, hi) = hullEdgeClipInterval(d0, d3, 0, 1, dLow, dHigh, lo, hi)
+            } else {
+                (lo, hi) = hullEdgeClipInterval(d0, d1, 0, 1.0/3, dLow, dHigh, lo, hi)
+                (lo, hi) = hullEdgeClipInterval(d1, d3, 1.0/3, 2.0/3, dLow, dHigh, lo, hi)
+            }
+        } else {
+            (lo, hi) = hullEdgeClipInterval(d0, d1, 0, 1.0/3, dLow, dHigh, lo, hi)
+            (lo, hi) = hullEdgeClipInterval(d1, d2, 1.0/3, 1.0/3, dLow, dHigh, lo, hi)
+            (lo, hi) = hullEdgeClipInterval(d2, d3, 2.0/3, 1.0/3, dLow, dHigh, lo, hi)
+        }
     }
     return (lo, hi)
 }
 
 // n=4 specialization of convexHullClipInterval (cubic curves — by far the most common case).
 // Eliminates the generic loop + withUnsafeTemporaryAllocation overhead by using a
-// static branch tree over precomputed cross products. tMin/tMax are passed explicitly
-// to avoid captured-var exclusivity overhead even after inlining.
+// static branch tree over precomputed cross products.
+// Cross products proportional to cross2d for the 4 uniformly-spaced points
+// (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
+//   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
+//   c023 = cross2d(0,2,3) = d0 - 3·d2 + 2·d3
+//   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
+//   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
 private func convexHullClipIntervalCubic(
     d0: CGFloat, d1: CGFloat, d2: CGFloat, d3: CGFloat,
     dLow: CGFloat, dHigh: CGFloat
 ) -> (CGFloat, CGFloat)? {
-    // Thin wrapper so call sites can omit dLow/dHigh; @inline(__always) ensures zero overhead.
-    @inline(__always) func check(_ da: CGFloat, _ db: CGFloat,
-                                 _ ta: CGFloat, _ dt: CGFloat,
-                                 _ lo: CGFloat, _ hi: CGFloat) -> (CGFloat, CGFloat) {
-        hullEdgeClipInterval(da, db, ta, dt, dLow, dHigh, lo, hi)
-    }
-    // Cross products proportional to cross2d for the 4 uniformly-spaced points
-    // (t ∈ {0, 1/3, 2/3, 1}), sharing sign with the original cross2d formulation:
-    //   c012 = cross2d(0,1,2) = d0 - 2·d1 + d2
-    //   c023 = cross2d(0,2,3) = d0 - 3·d2 + 2·d3
-    //   c123 = cross2d(1,2,3) = d1 - 2·d2 + d3
-    //   c013 = cross2d(0,1,3) = 2·d0 - 3·d1 + d3
     let c012 = d0 - 2*d1 + d2
-    // processHull takes (lo, hi) explicitly and returns updated (lo, hi).
-    // Passing rather than capturing avoids heap-boxing tMin/tMax and eliminates the
-    // swift_beginAccess calls the compiler inserts for each access to a captured var.
-    @inline(__always) func processHull(sign: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> (CGFloat, CGFloat) {
-        var lo = lo, hi = hi
-        if sign * c012 <= 0 {
-            let c023 = d0 - 3*d2 + 2*d3
-            if sign * c023 <= 0 {
-                (lo, hi) = check(d0, d3, 0, 1, lo, hi)
-            } else {
-                (lo, hi) = check(d0, d2, 0, 2.0/3, lo, hi)
-                (lo, hi) = check(d2, d3, 2.0/3, 1.0/3, lo, hi)
-            }
-        } else {
-            let c123 = d1 - 2*d2 + d3
-            if sign * c123 <= 0 {
-                let c013 = 2*d0 - 3*d1 + d3
-                if sign * c013 <= 0 {
-                    (lo, hi) = check(d0, d3, 0, 1, lo, hi)
-                } else {
-                    (lo, hi) = check(d0, d1, 0, 1.0/3, lo, hi)
-                    (lo, hi) = check(d1, d3, 1.0/3, 2.0/3, lo, hi)
-                }
-            } else {
-                (lo, hi) = check(d0, d1, 0, 1.0/3, lo, hi)
-                (lo, hi) = check(d1, d2, 1.0/3, 1.0/3, lo, hi)
-                (lo, hi) = check(d2, d3, 2.0/3, 1.0/3, lo, hi)
-            }
-        }
-        return (lo, hi)
-    }
     var tMin = CGFloat.infinity, tMax = -CGFloat.infinity
-    (tMin, tMax) = processHull(sign: 1, tMin, tMax)      // lower hull
-    (tMin, tMax) = processHull(sign: -1, tMin, tMax)     // upper hull
+    (tMin, tMax) = processHullCubic(sign: 1, lo: tMin, hi: tMax,
+                                    d0: d0, d1: d1, d2: d2, d3: d3,
+                                    c012: c012, dLow: dLow, dHigh: dHigh)
+    (tMin, tMax) = processHullCubic(sign: -1, lo: tMin, hi: tMax,
+                                    d0: d0, d1: d1, d2: d2, d3: d3,
+                                    c012: c012, dLow: dLow, dHigh: dHigh)
     // d3 at t=1 is always the final vertex of both hulls.
     if d3 >= dLow && d3 <= dHigh { if tMin > 1 { tMin = 1 }; if tMax < 1 { tMax = 1 } }
     guard tMin <= tMax else { return nil }
@@ -269,12 +293,22 @@ func bezierClipping<C1, C2>(
         let c1Ratio   = clip1.1 - clip1.0
         let c1Reduced = c1.split(from: clip1.0, to: clip1.1)
 
+        let c1Range = c1Reduced.t2 - c1Reduced.t1
+        // Sederberg-Nishita: if the first clip barely narrows c1 and c1 still spans
+        // substantial global range, subdivide immediately without computing the second clip.
+        // When c1Ratio ≈ 1, c1Reduced ≈ c1, so the second clip's fat line provides almost
+        // no additional narrowing of c2 — computing it is wasted work before subdivision.
+        // Guard c1Range >= 1e-10: if c1 is already tiny (degenerate sub-curve), the
+        // convergence check below must run to detect simultaneous c1+c2 convergence.
+        if c1Ratio > 0.8 && c1Range >= 1e-10 {
+            return subdivideBezierClipping(c1Reduced, c2, &results, &totalIterations)
+        }
+
         // Clip c2 using the fat line of the (possibly narrowed) c1.
         guard let clip2 = fatLineClip(curve: c2.curve, fatOf: c1Reduced.curve) else { return true }
         let c2Ratio   = clip2.1 - clip2.0
         let c2Reduced = c2.split(from: clip2.0, to: clip2.1)
 
-        let c1Range = c1Reduced.t2 - c1Reduced.t1
         let c2Range = c2Reduced.t2 - c2Reduced.t1
 
         // Sederberg-Nishita convergence: parameter intervals have shrunk to machine precision.
@@ -289,7 +323,8 @@ func bezierClipping<C1, C2>(
         // from fat-line clipping to Newton-Raphson. Newton is O(n) per step vs O(n²) for
         // de Casteljau splits, and both have quadratic convergence — so Newton wins once
         // we are inside its convergence basin.
-        if c1Range < 0.25 && c2Range < 0.25 && c1Ratio <= 0.8 && c2Ratio <= 0.8 {
+        // c1Ratio <= 0.8 is guaranteed by the early-subdivision above.
+        if c1Range < 0.25 && c2Range < 0.25 && c2Ratio <= 0.8 {
             var u: CGFloat = 0.5, v: CGFloat = 0.5
             for _ in 0 ..< 20 {
                 let (q1, d1) = c1Reduced.curve.pointAndDerivative(at: u)
@@ -339,8 +374,9 @@ func bezierClipping<C1, C2>(
             }
         }
 
-        // If either curve reduced by less than 20 %, convergence is slow — subdivide.
-        if c1Ratio > 0.8 || c2Ratio > 0.8 {
+        // If c2 reduced by less than 20 %, convergence is slow — subdivide.
+        // (c1Ratio > 0.8 was already handled with early return above.)
+        if c2Ratio > 0.8 {
             return subdivideBezierClipping(c1Reduced, c2Reduced, &results, &totalIterations)
         }
 

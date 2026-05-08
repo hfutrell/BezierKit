@@ -33,6 +33,7 @@ public struct Subcurve<CurveType>: Sendable where CurveType: BezierCurve {
         self.curve = curve
     }
 
+    @inline(__always)
     internal func split(from t1: CGFloat, to t2: CGFloat) -> Subcurve<CurveType> {
         let curve: CurveType = self.curve.split(from: t1, to: t2)
         return Subcurve<CurveType>(t1: Utils.map(t1, 0, 1, self.t1, self.t2),

@@ -182,7 +182,7 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
         return (CGPoint(x: ptx, y: pty), CGPoint(x: dtx, y: dty))
     }
 
-    public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
+    @inline(__always) public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let k = (t2 - t1) / 3.0
         let (q0, qd0) = pointAndDerivative(at: t1)

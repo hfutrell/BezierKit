@@ -344,6 +344,15 @@ extension NonlinearBezierCurve {
     public func intersections(with line: LineSegment) -> [Intersection] {
         return helperIntersectsCurveLine(self, line)
     }
+    // Concrete overloads avoid heap-boxing the curve argument as a BezierCurve existential.
+    // CubicCurve is 64 bytes — larger than Swift's 24-byte existential inline buffer,
+    // so passing it as `BezierCurve` causes a heap allocation per call.
+    public func intersections(with curve: CubicCurve, accuracy: CGFloat) -> [Intersection] {
+        return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
+    }
+    public func intersections(with curve: QuadraticCurve, accuracy: CGFloat) -> [Intersection] {
+        return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
+    }
     public func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {
         case 3:
