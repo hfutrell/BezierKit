@@ -341,6 +341,17 @@ private extension AugmentedGraph {
         return comp.normal(at: comp.startingIndexedLocation)
     }
 
+    func classifyEdgeDirectly(_ edge: Edge) -> Bool {
+        let component = edge.component
+        let loc = component.nonDegenerateTestLocation
+        let pt = component.point(at: loc)
+        let n = component.normal(at: loc)
+        let d = AugmentedGraph.smallDistance
+        let included1 = pointIsContainedInBooleanResult(point: pt + d * n, operation: operation)
+        let included2 = pointIsContainedInBooleanResult(point: pt - d * n, operation: operation)
+        return included1 != included2
+    }
+
     func isCoincident(_ edge: Edge, withOther otherPath: Path) -> Bool {
         guard operation == .union else { return false }
         guard graph1.path !== graph2.path else { return false }
@@ -383,13 +394,29 @@ private extension AugmentedGraph {
         var windingCount = otherPath.windingCount(offsetSeedPt)
         var currentNode = startNode
         var firstIteration = true
+        var resampleAfterCoincident = false
         while firstIteration || currentNode !== startNode {
             firstIteration = false
             guard let edge = currentNode.forwardEdge else { break }
             let endingNode = edge.endingNode
-            edge.inSolution = isCoincident(edge, withOther: otherPath)
-                ? false
-                : edgeIsInSolution(windingCountOfOther: windingCount, isForFirstPath: isForFirstPath)
+            if resampleAfterCoincident {
+                let comp = edge.component
+                let loc = comp.nonDegenerateTestLocation
+                let pt = comp.point(at: loc)
+                let n = comp.normal(at: loc)
+                let offsetPt = (n.x.isFinite && n.y.isFinite && n != .zero)
+                    ? pt + AugmentedGraph.smallDistance * n
+                    : pt
+                windingCount = otherPath.windingCount(offsetPt)
+                resampleAfterCoincident = false
+            }
+            let coincident = isCoincident(edge, withOther: otherPath)
+            if coincident {
+                edge.inSolution = classifyEdgeDirectly(edge)
+                resampleAfterCoincident = true
+            } else {
+                edge.inSolution = edgeIsInSolution(windingCountOfOther: windingCount, isForFirstPath: isForFirstPath)
+            }
             let otherNeighbors = endingNode.neighbors.filter { $0.path === otherPath }
             let n1Out = outgoingNormal(from: endingNode)
             windingCount += AugmentedGraph.windingCountDelta(
