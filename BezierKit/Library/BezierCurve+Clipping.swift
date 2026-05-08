@@ -199,6 +199,7 @@ private func convexHullClipInterval(
 
 // Compute the fat line of `other` and clip `curve`'s [0,1] parameter range
 // to where it might intersect `other`. Returns nil if no intersection possible.
+@inline(__always)
 private func fatLineClip<C1: BezierClippingCurve, C2: BezierClippingCurve>(curve: C1, fatOf other: C2) -> (CGFloat, CGFloat)? {
     let ocp = other.controlPolygon
     let q0  = ocp.p0

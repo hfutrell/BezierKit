@@ -159,16 +159,23 @@ private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBez
     }
 }
 
+// Compares two concrete Equatable values without going through BezierCurve's global == operator.
+// The global `func == (BezierCurve, BezierCurve)` allocates [CGPoint] arrays via .points; this
+// helper forces the synthesized struct == (direct field comparison, zero allocation).
+private func equatableCurvesMatch<C: Equatable>(_ a: C, _ b: C) -> Bool { a == b }
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     // Identical full-range curves are fully coincident (CLAUDE.md: self-pair contract).
     // Skip bezier clipping (which exhausts 64 iterations) and coincidenceCheck (expensive
     // point projections). This fires whenever the same curve value appears on both sides,
     // which happens in all-pairs performance tests and any caller passing the same curve twice.
     if curve1.t1 == 0, curve1.t2 == 1, curve2.t1 == 0, curve2.t2 == 1 {
-        if let c1 = curve1.curve as? CubicCurve, let c2 = curve2.curve as? CubicCurve, c1 == c2 {
+        if let c1 = curve1.curve as? CubicCurve, let c2 = curve2.curve as? CubicCurve,
+           equatableCurvesMatch(c1, c2) {
             return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
         }
-        if let c1 = curve1.curve as? QuadraticCurve, let c2 = curve2.curve as? QuadraticCurve, c1 == c2 {
+        if let c1 = curve1.curve as? QuadraticCurve, let c2 = curve2.curve as? QuadraticCurve,
+           equatableCurvesMatch(c1, c2) {
             return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
         }
     }
@@ -191,9 +198,9 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         // spurious points; Newton rejection filters these out. When multiple subdivisions
         // converge to nearby parameters of the same genuine crossing, refining to the
         // true (u,v) makes them spatially identical, so deduplication collapses them to one.
-        let sorted = clipIntersections.sorted()
+        clipIntersections.sort()
         var result: [Intersection] = []
-        for ix in sorted {
+        for ix in clipIntersections {
             let (uV, vV) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: ix.t1, v: ix.t2, iterations: 10)
             guard newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV) else { continue }
             let p1 = curve1.curve.point(at: uV)
