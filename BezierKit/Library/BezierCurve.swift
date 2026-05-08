@@ -305,6 +305,7 @@ public protocol BezierCurve: BoundingBoxProtocol, Transformable, Reversible, Sen
     /// The single self-intersection of this curve, if one exists. At most one is possible for cubic curves;
     /// all other curve types return nil.
     var selfIntersection: Intersection? { get }
+    @available(*, deprecated, renamed: "selfIntersection")
     var selfIntersections: [Intersection] { get }
     func intersects(_ line: LineSegment) -> Bool
     func intersects(_ curve: BezierCurve, accuracy: CGFloat) -> Bool

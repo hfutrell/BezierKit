@@ -34,6 +34,7 @@ public extension BezierCurve {
     var selfIntersection: Intersection? {
         return nil
     }
+    @available(*, deprecated, renamed: "selfIntersection")
     var selfIntersections: [Intersection] {
         return []
     }
@@ -342,6 +343,7 @@ extension CubicCurve {
                             t2: Utils.clamp(t2, 0, 1))
     }
 
+    @available(*, deprecated, renamed: "selfIntersection")
     public var selfIntersections: [Intersection] {
         guard let i = selfIntersection else { return [] }
         return [i]
