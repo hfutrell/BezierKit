@@ -85,14 +85,14 @@ class PerformanceTests: XCTestCase {
 
     func testCubicSelfIntersectionsPerformanceNoIntersect() {
         // test the performance of `selfIntersections` when the curves DO NOT self-intersect
-        // -Onone 0.036 seconds
-        // -Os 0.004 seconds
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 0)
         self.measure {
             var count = 0
-            for curve in curves {
-                count += curve.selfIntersections.count
+            for _ in 0..<50 {
+                for curve in curves {
+                    count += curve.selfIntersections.count
+                }
             }
             XCTAssertEqual(count, 0)
         }
@@ -100,16 +100,16 @@ class PerformanceTests: XCTestCase {
 
     func testCubicSelfIntersectionsPerformanceYesIntersect() {
         // test the performance of `selfIntersections` when the curves self-intersect
-        // -Onone 0.048 seconds
-        // -Os 0.014 seconds
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: true, reseed: 1)
         self.measure {
             var count = 0
-            for curve in curves {
-                count += curve.selfIntersections.count
+            for _ in 0..<50 {
+                for curve in curves {
+                    count += curve.selfIntersections.count
+                }
             }
-            XCTAssertEqual(count, dataCount)
+            XCTAssertEqual(count, 50 * dataCount)
         }
     }
 
@@ -422,8 +422,10 @@ class PerformanceTests: XCTestCase {
         let numPoints = 300
         let path1 = circlePath(origin: CGPoint(x: 0, y: 0), radius: 100, numPoints: numPoints)
         let path2 = circlePath(origin: CGPoint(x: 1, y: 0), radius: 100, numPoints: numPoints)
-        self.measure { // roughly 0.018s in debug mode
-            _ = path1.subtract(path2, accuracy: 1.0e-3)
+        self.measure {
+            for _ in 0..<30 {
+                _ = path1.subtract(path2, accuracy: 1.0e-3)
+            }
         }
     }
 
