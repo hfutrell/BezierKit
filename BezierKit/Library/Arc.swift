@@ -34,21 +34,32 @@ internal struct Arc {
 extension CubicCurve {
     /// Returns an Arc approximating this cubic if the curve lies within `accuracy` of a circle, or nil.
     func asArc(accuracy: CGFloat) -> Arc? {
-        let pts = [point(at: 0), point(at: 0.25), point(at: 0.5), point(at: 0.75), point(at: 1)]
-        guard let (center, radius) = circumcircle(pts[0], pts[2], pts[4]) else { return nil }
+        // Closed-form midpoint at t=0.5 avoids heap allocation from a [point(at:)] array.
+        let pMid = CGPoint(
+            x: (p0.x + p3.x + 3 * (p1.x + p2.x)) * 0.125,
+            y: (p0.y + p3.y + 3 * (p1.y + p2.y)) * 0.125
+        )
+        guard let (center, radius) = circumcircle(p0, pMid, p3) else { return nil }
         // Standard cubic approximations to circles have max error ≈ 0.0003 * radius.
         // Use a chord-relative floor so those curves are accepted even with tight accuracy.
-        let chord = distance(pts[0], pts[4])
+        let chordX = p3.x - p0.x, chordY = p3.y - p0.y
+        let chordSq = chordX * chordX + chordY * chordY
+        // Reject nearly-linear curves (R > 5×chord, arc spans < ~11.5°). These are false
+        // positives that pass the distance checks but gain nothing from the arc path.
+        guard radius * radius <= 25 * chordSq else { return nil }
+        let chord = chordSq.squareRoot()
         let arcTol = max(accuracy, chord * 2.0e-3)
-        for pt in pts {
-            if abs(distance(pt, center) - radius) > arcTol { return nil }
-        }
+        // p0, pMid, p3 lie on the circumcircle by construction; only t=0.25 and t=0.75 can fail.
+        let p025 = point(at: 0.25)
+        guard abs(distance(p025, center) - radius) <= arcTol else { return nil }
+        let p075 = point(at: 0.75)
+        guard abs(distance(p075, center) - radius) <= arcTol else { return nil }
         // startAngle is in (-π, π] as returned by atan2.
-        let startAngle = atan2(pts[0].y - center.y, pts[0].x - center.x)
-        var endAngle = atan2(pts[4].y - center.y, pts[4].x - center.x)
+        let startAngle = atan2(p0.y - center.y, p0.x - center.x)
+        var endAngle = atan2(p3.y - center.y, p3.x - center.x)
         // Determine rotation direction from the first tangent (p1 - p0 = derivative direction at t=0).
         // The cross product of the radial vector and tangent is positive for CCW, negative for CW.
-        let radial = pts[0] - center
+        let radial = p0 - center
         let tangent = p1 - p0
         let isCCW = radial.cross(tangent) > 0
         // Adjust endAngle so the arc spans the correct direction.
