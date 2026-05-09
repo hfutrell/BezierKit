@@ -83,6 +83,8 @@ extension CubicCurve: BezierClippingCurve {
         // If all four are outside the band on the same side, no intersection is possible.
         if d0 > dHigh && d1 > dHigh && d2 > dHigh && d3 > dHigh { return nil }
         if d0 < dLow && d1 < dLow && d2 < dLow && d3 < dLow { return nil }
+        // Both curve endpoints inside the band: convex hull trivially spans [0, 1].
+        if d0 >= dLow && d0 <= dHigh && d3 >= dLow && d3 <= dHigh { return (0.0, 1.0) }
         return convexHullClipIntervalCubic(d0: d0, d1: d1, d2: d2, d3: d3, dLow: dLow, dHigh: dHigh)
     }
 }
@@ -106,6 +108,8 @@ extension QuadraticCurve: BezierClippingCurve {
         // If all three are outside the band on the same side, no intersection is possible.
         if d0 > dHigh && d1 > dHigh && d2 > dHigh { return nil }
         if d0 < dLow && d1 < dLow && d2 < dLow { return nil }
+        // Both curve endpoints inside the band: convex hull trivially spans [0, 1].
+        if d0 >= dLow && d0 <= dHigh && d2 >= dLow && d2 <= dHigh { return (0.0, 1.0) }
         return convexHullClipIntervalQuadratic(d0: d0, d1: d1, d2: d2, dLow: dLow, dHigh: dHigh)
     }
 }
@@ -511,7 +515,7 @@ private func subdivideBezierClipping<C1, C2>(
         if p1s == p2e { results.append(Intersection(t1: c1.t1, t2: c2.t2)); return true }
     }
     // Subdivide whichever has the larger global parameter range.
-    if (c1.t2 - c1.t1) >= (c2.t2 - c2.t1) {
+    if c1Range >= c2Range {
         guard c1.canSplit else {
             guard c2.canSplit else { return true }
             let h = c2.split(at: 0.5)

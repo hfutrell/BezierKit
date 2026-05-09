@@ -185,11 +185,25 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
     @inline(__always) public func split(from t1: CGFloat, to t2: CGFloat) -> CubicCurve {
         guard t1 != 0.0 || t2 != 1.0 else { return self }
         let k = (t2 - t1) / 3.0
+        // When t1=0 or t2=1, the endpoint value and derivative are direct functions of the
+        // control points, so one pointAndDerivative call can be replaced by arithmetic.
+        if t1 == 0.0 {
+            let (q3, qd3) = pointAndDerivative(at: t2)
+            let sp1 = CGPoint(x: p0.x.addingProduct(t2, p1.x - p0.x), y: p0.y.addingProduct(t2, p1.y - p0.y))
+            let sp2 = CGPoint(x: q3.x.addingProduct(-k, qd3.x), y: q3.y.addingProduct(-k, qd3.y))
+            return CubicCurve(p0: p0, p1: sp1, p2: sp2, p3: q3)
+        }
+        if t2 == 1.0 {
+            let (q0, qd0) = pointAndDerivative(at: t1)
+            let sp1 = CGPoint(x: q0.x.addingProduct(k, qd0.x), y: q0.y.addingProduct(k, qd0.y))
+            let sp2 = CGPoint(x: p3.x.addingProduct(t1 - 1.0, p3.x - p2.x), y: p3.y.addingProduct(t1 - 1.0, p3.y - p2.y))
+            return CubicCurve(p0: q0, p1: sp1, p2: sp2, p3: p3)
+        }
         let (q0, qd0) = pointAndDerivative(at: t1)
         let (q3, qd3) = pointAndDerivative(at: t2)
-        let p1 = CGPoint(x: q0.x.addingProduct(k, qd0.x), y: q0.y.addingProduct(k, qd0.y))
-        let p2 = CGPoint(x: q3.x.addingProduct(-k, qd3.x), y: q3.y.addingProduct(-k, qd3.y))
-        return CubicCurve(p0: q0, p1: p1, p2: p2, p3: q3)
+        let sp1 = CGPoint(x: q0.x.addingProduct(k, qd0.x), y: q0.y.addingProduct(k, qd0.y))
+        let sp2 = CGPoint(x: q3.x.addingProduct(-k, qd3.x), y: q3.y.addingProduct(-k, qd3.y))
+        return CubicCurve(p0: q0, p1: sp1, p2: sp2, p3: q3)
     }
 
     public func split(at t: CGFloat) -> (left: CubicCurve, right: CubicCurve) {
