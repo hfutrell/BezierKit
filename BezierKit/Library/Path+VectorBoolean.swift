@@ -24,6 +24,10 @@ public extension Path {
         guard other.isEmpty == false else {
             return self
         }
+        // Paths with identical geometry produce degenerate intersections; return one copy directly.
+        guard self != other else {
+            return self
+        }
         return self.performBooleanOperation(.union, with: other, accuracy: accuracy)
     }
 

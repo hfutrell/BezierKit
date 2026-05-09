@@ -8,9 +8,9 @@
 
 @testable import BezierKit
 import XCTest
-
 #if canImport(CoreGraphics)
 import CoreGraphics
+#endif
 
 class PathComponentProjectionTests: XCTestCase {
     func testProject() {
@@ -35,5 +35,3 @@ class PathComponentProjectionTests: XCTestCase {
         XCTAssertFalse(component.pointIsWithinDistanceOfBoundary(point2, distance: 0.5))
     }
 }
-
-#endif
