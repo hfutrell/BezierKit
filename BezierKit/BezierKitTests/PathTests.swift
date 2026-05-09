@@ -687,7 +687,7 @@ class PathTests: XCTestCase {
                         control2: CGPoint(x: 212.02163105179878, y: 108.14905966376985))
         let path = Path(cgPath: cgPath)
 
-        XCTAssertFalse(path.boundingBox.contains(point)) // the point is not even in the bounding box of the path!
+        XCTAssertFalse(path.boundingBoxOfPath.contains(point)) // the point is not even in the tight bounding box of the path!
         XCTAssertFalse(path.contains(point, using: .evenOdd))
         XCTAssertFalse(path.contains(point, using: .winding))
     }
@@ -919,8 +919,8 @@ class PathTests: XCTestCase {
 
     #endif
 
-    func testBoundingBoxOfPath() {
-        XCTAssertEqual(Path().boundingBoxOfPath, BoundingBox.empty)
+    func testBoundingBox() {
+        XCTAssertEqual(Path().boundingBox, BoundingBox.empty)
         let quad1 = QuadraticCurve(p0: CGPoint(x: 1, y: 2),
                                    p1: CGPoint(x: 2, y: 4),
                                    p2: CGPoint(x: 3, y: 2))
@@ -928,10 +928,26 @@ class PathTests: XCTestCase {
                                    p1: CGPoint(x: 2, y: 0),
                                    p2: CGPoint(x: 1, y: 2))
         let path1 = Path(curve: quad1)
-        XCTAssertEqual(path1.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 4)))
+        XCTAssertEqual(path1.boundingBox, BoundingBox(p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 3, y: 4)))
         let path2 = Path(components: [PathComponent(curve: quad1),
                                       PathComponent(curve: quad2)])
-        XCTAssertEqual(path2.boundingBoxOfPath, BoundingBox(p1: CGPoint(x: 1, y: 0), p2: CGPoint(x: 3, y: 4)))
+        XCTAssertEqual(path2.boundingBox, BoundingBox(p1: CGPoint(x: 1, y: 0), p2: CGPoint(x: 3, y: 4)))
+        #if canImport(CoreGraphics)
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 1, y: 2))
+        cgPath.addQuadCurve(to: CGPoint(x: 3, y: 2), control: CGPoint(x: 2, y: 4))
+        XCTAssertEqual(Path(cgPath: cgPath).boundingBox.cgRect, cgPath.boundingBox)
+        #endif
+    }
+
+    func testBoundingBoxOfPath() {
+        XCTAssertEqual(Path().boundingBoxOfPath, BoundingBox.empty)
+        #if canImport(CoreGraphics)
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 1, y: 2))
+        cgPath.addQuadCurve(to: CGPoint(x: 3, y: 2), control: CGPoint(x: 2, y: 4))
+        XCTAssertEqual(Path(cgPath: cgPath).boundingBoxOfPath.cgRect, cgPath.boundingBoxOfPath)
+        #endif
     }
 
     #if !os(WASI)

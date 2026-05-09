@@ -29,14 +29,14 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
 
     private var _hash: Int?
 
-    private lazy var _boundingBoxOfPath: BoundingBox = {
-        var boundingBoxOfPath = BoundingBox.empty
+    private lazy var _boundingBox: BoundingBox = {
+        var boundingBox = BoundingBox.empty
         points.withUnsafeBufferPointer { buffer in
             for point in buffer {
-                boundingBoxOfPath.union(point)
+                boundingBox.union(point)
             }
         }
-        return boundingBoxOfPath
+        return boundingBox
     }()
 
     internal var bvh: BoundingBoxHierarchy {
@@ -238,12 +238,14 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         return self.curves.reduce(0.0) { $0 + $1.length() }
     }
 
-    public var boundingBox: BoundingBox {
+    /// The path bounding box of the path component. The path bounding box is the smallest rectangle completely enclosing all points in the path component, *not* including control points for Bézier cubic and quadratic curves.
+    public var boundingBoxOfPath: BoundingBox {
         return self.bvh.boundingBox
     }
 
-    public var boundingBoxOfPath: BoundingBox {
-        return self.lock.sync { _boundingBoxOfPath }
+    /// The bounding box of the path component. The bounding box is the smallest rectangle completely enclosing all points in the path component, including control points for Bézier cubic and quadratic curves.
+    public var boundingBox: BoundingBox {
+        return self.lock.sync { _boundingBox }
     }
 
     public var isClosed: Bool {

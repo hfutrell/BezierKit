@@ -17,7 +17,7 @@ public extension Path {
     private func searchForClosestLocation(to point: CGPoint, maximumDistance: CGFloat, requireBest: Bool) -> (point: CGPoint, location: IndexedPathLocation)? {
         // sort the components by proximity to avoid searching distant components later on
         let tuples: [ComponentTuple] = self.components.enumerated().map { i, component in
-            let boundingBox = component.boundingBox
+            let boundingBox = component.boundingBoxOfPath
             let upper = boundingBox.upperBoundOfDistance(to: point)
             return (component: component, index: i, upperBound: upper)
         }.sorted(by: { $0.upperBound < $1.upperBound })

@@ -103,7 +103,7 @@ internal extension PathComponent {
     }
 
     func windingCount(at point: CGPoint) -> Int {
-        guard self.isClosed, self.boundingBox.contains(point) else {
+        guard self.isClosed, self.boundingBoxOfPath.contains(point) else {
             return 0
         }
         var windingCount: Int = 0
