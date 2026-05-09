@@ -1052,4 +1052,65 @@ class PathVectorBooleanTests: XCTestCase {
 
     #endif
 
+    // MARK: - Shared-component adversarial tests
+
+    // Two multi-component paths that are NOT equal but share one component with identical geometry.
+    // The shared component produces no transversal intersections with its twin, so the
+    // winding-count seed for the shared component lands exactly on the boundary of the other path.
+
+    private func sharedComponentPaths() -> (pathA: Path, pathB: Path, shared: PathComponent, onlyA: PathComponent, onlyB: PathComponent) {
+        // shared: square at x∈[0,2], y∈[0,2]
+        let shared = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 2, y: 0)),
+            LineSegment(p0: CGPoint(x: 2, y: 0), p1: CGPoint(x: 2, y: 2)),
+            LineSegment(p0: CGPoint(x: 2, y: 2), p1: CGPoint(x: 0, y: 2)),
+            LineSegment(p0: CGPoint(x: 0, y: 2), p1: CGPoint(x: 0, y: 0))
+        ])
+        // onlyA: square at x∈[10,12], y∈[0,2]  (far right, no overlap)
+        let onlyA = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 10, y: 0), p1: CGPoint(x: 12, y: 0)),
+            LineSegment(p0: CGPoint(x: 12, y: 0), p1: CGPoint(x: 12, y: 2)),
+            LineSegment(p0: CGPoint(x: 12, y: 2), p1: CGPoint(x: 10, y: 2)),
+            LineSegment(p0: CGPoint(x: 10, y: 2), p1: CGPoint(x: 10, y: 0))
+        ])
+        // onlyB: square at x∈[20,22], y∈[0,2]  (even farther right, no overlap)
+        let onlyB = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 20, y: 0), p1: CGPoint(x: 22, y: 0)),
+            LineSegment(p0: CGPoint(x: 22, y: 0), p1: CGPoint(x: 22, y: 2)),
+            LineSegment(p0: CGPoint(x: 22, y: 2), p1: CGPoint(x: 20, y: 2)),
+            LineSegment(p0: CGPoint(x: 20, y: 2), p1: CGPoint(x: 20, y: 0))
+        ])
+        let pathA = Path(components: [shared, onlyA])
+        let pathB = Path(components: [shared, onlyB])
+        return (pathA, pathB, shared, onlyA, onlyB)
+    }
+
+    func testSharedComponentUnion() {
+        // union(pathA, pathB) = 3 separate non-overlapping squares: shared, onlyA, onlyB
+        let (pathA, pathB, shared, onlyA, onlyB) = sharedComponentPaths()
+        XCTAssertNotEqual(pathA, pathB)
+        let result = pathA.union(pathB)
+        XCTAssertEqual(result.components.count, 3)
+        let resultComponents = result.components
+        XCTAssertTrue(resultComponents.contains { componentsEqualAsideFromElementOrdering($0, shared) }, "union must contain shared square")
+        XCTAssertTrue(resultComponents.contains { componentsEqualAsideFromElementOrdering($0, onlyA) }, "union must contain onlyA square")
+        XCTAssertTrue(resultComponents.contains { componentsEqualAsideFromElementOrdering($0, onlyB) }, "union must contain onlyB square")
+    }
+
+    func testSharedComponentIntersect() {
+        // intersect(pathA, pathB) = shared square only (onlyA and onlyB don't overlap anything)
+        let (pathA, pathB, shared, _, _) = sharedComponentPaths()
+        let result = pathA.intersect(pathB)
+        XCTAssertEqual(result.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], shared), "intersect must be the shared square")
+    }
+
+    func testSharedComponentSubtract() {
+        // subtract(pathA, pathB) = onlyA square only (shared cancels out, onlyB doesn't touch A)
+        let (pathA, pathB, _, onlyA, _) = sharedComponentPaths()
+        let result = pathA.subtract(pathB)
+        XCTAssertEqual(result.components.count, 1)
+        XCTAssertTrue(componentsEqualAsideFromElementOrdering(result.components[0], onlyA), "subtract must be the onlyA square")
+    }
+
 }
