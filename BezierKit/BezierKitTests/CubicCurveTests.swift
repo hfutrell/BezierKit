@@ -1015,6 +1015,31 @@ class CubicCurveTests: XCTestCase {
 
     #endif
 
+    func testSelfIntersection() {
+        // A curve that forms a loop — self-intersection should be found.
+        let loopCurve = CubicCurve(
+            p0: CGPoint(x: 0, y: 0),
+            p1: CGPoint(x: 0, y: 1),
+            p2: CGPoint(x: 1, y: 1),
+            p3: CGPoint(x: 0.25, y: 0.75))
+        let si = loopCurve.selfIntersection
+        XCTAssertNotNil(si)
+        if let si = si {
+            XCTAssertLessThan(si.t1, si.t2)
+            let p1 = loopCurve.point(at: si.t1)
+            let p2 = loopCurve.point(at: si.t2)
+            XCTAssertEqual(p1.x, p2.x, accuracy: 1e-5)
+            XCTAssertEqual(p1.y, p2.y, accuracy: 1e-5)
+        }
+        // A simple S-curve has no self-intersection.
+        let sCurve = CubicCurve(
+            p0: CGPoint(x: 0, y: 0),
+            p1: CGPoint(x: 0, y: 1),
+            p2: CGPoint(x: 1, y: 0),
+            p3: CGPoint(x: 1, y: 1))
+        XCTAssertNil(sCurve.selfIntersection)
+    }
+
     // Regression: Horner Newton-bisection had catastrophic cancellation in the
     // Bernstein→power-basis conversion for this polynomial, producing a spurious root
     // at t=0.5. The de Casteljau fallback in refineBracketedRoot eliminates it.

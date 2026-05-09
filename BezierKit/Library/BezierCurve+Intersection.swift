@@ -255,8 +255,25 @@ where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     return fallback.toSortedAndUniquedArray()
 }
 
+private func sameGeometryIntersections<C: NonlinearBezierCurve & Equatable>(
+    _ curve1: Subcurve<C>, _ curve2: Subcurve<C>
+) -> [Intersection]? {
+    guard curve1.curve == curve2.curve else { return nil }
+    let tLo = max(curve1.t1, curve2.t1)
+    let tHi = min(curve1.t2, curve2.t2)
+    guard tLo < tHi else { return [] }
+    return [Intersection(t1: tLo, t2: tLo), Intersection(t1: tHi, t2: tHi)]
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection]
 where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+    // Detect identical-geometry pairs by casting to concrete types.
+    // as? is only used here (not in the hot-path concrete overloads).
+    if let c1 = curve1 as? Subcurve<CubicCurve>, let c2 = curve2 as? Subcurve<CubicCurve> {
+        if let result = sameGeometryIntersections(c1, c2) { return result }
+    } else if let c1 = curve1 as? Subcurve<QuadraticCurve>, let c2 = curve2 as? Subcurve<QuadraticCurve> {
+        if let result = sameGeometryIntersections(c1, c2) { return result }
+    }
     return helperIntersectsCurveCurveImpl(curve1, curve2, accuracy: accuracy)
 }
 
