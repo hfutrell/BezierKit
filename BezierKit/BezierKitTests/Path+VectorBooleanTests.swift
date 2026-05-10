@@ -1395,6 +1395,81 @@ class PathVectorBooleanTests: XCTestCase {
         }
     }
 
+    func testCrossingsRemovedTwoOverlappingIrregularComponents() {
+        let cgPath = CGMutablePath()
+        // Component 0: 10-element closed shape
+        cgPath.move(to: CGPoint(x: 18.532630597477276, y: 50.513658174132814))
+        cgPath.addCurve(to: CGPoint(x: 16.158216825867186, y: 51.67325559747728),
+                        control1: CGPoint(x: 18.19716832599986, y: 51.48954841843075),
+                        control2: CGPoint(x: 17.134107070165125, y: 52.00871786895469))
+        cgPath.addCurve(to: CGPoint(x: 14.998619402522722, y: 49.298841825867186),
+                        control1: CGPoint(x: 15.18232658156925, y: 51.33779332599986),
+                        control2: CGPoint(x: 14.663157131045308, y: 50.27473207016512))
+        cgPath.addLine(to: CGPoint(x: 15.444686525360819, y: 47.931843457608245))
+        cgPath.addCurve(to: CGPoint(x: 16.32877207502522, y: 45.69563603751261),
+                        control1: CGPoint(x: 15.802480282958161, y: 46.83946081554559),
+                        control2: CGPoint(x: 16.113580843425787, y: 46.126018500711474))
+        cgPath.addLine(to: CGPoint(x: 16.59543672645252, y: 45.106900572788874))
+        cgPath.addCurve(to: CGPoint(x: 19.049457786744338, y: 44.1269579322823),
+                        control1: CGPoint(x: 17.00249224208086, y: 44.15863768113002),
+                        control2: CGPoint(x: 18.101194895085477, y: 43.719902416653966))
+        cgPath.addCurve(to: CGPoint(x: 20.029400427250906, y: 46.58097899257412),
+                        control1: CGPoint(x: 19.997720678403198, y: 44.53401344791064),
+                        control2: CGPoint(x: 20.436455942879245, y: 45.63271610091526))
+        cgPath.addLine(to: CGPoint(x: 19.693193793681928, y: 47.321407103718236))
+        cgPath.addCurve(to: CGPoint(x: 19.00973436189334, y: 49.051289790621254),
+                        control1: CGPoint(x: 19.54384528074403, y: 47.62162925094889),
+                        control2: CGPoint(x: 19.29947866319219, y: 48.16825953904381))
+        cgPath.addLine(to: CGPoint(x: 18.532630597477276, y: 50.513658174132814))
+        // Component 1: 8-element closed shape
+        cgPath.move(to: CGPoint(x: 16.81532416596536, y: 44.72584181894499))
+        cgPath.addCurve(to: CGPoint(x: 19.430460300470145, y: 44.3469355758635),
+                        control1: CGPoint(x: 17.432841999005355, y: 43.89905984624708),
+                        control2: CGPoint(x: 18.60367832777223, y: 43.7294177428235))
+        cgPath.addCurve(to: CGPoint(x: 19.809366543551644, y: 46.962071710368285),
+                        control1: CGPoint(x: 20.257242273168067, y: 44.964453408903495),
+                        control2: CGPoint(x: 20.42688437659164, y: 46.13528973767036))
+        cgPath.addLine(to: CGPoint(x: 19.297814762820426, y: 47.83186966813563))
+        cgPath.addLine(to: CGPoint(x: 18.313290869473846, y: 49.98551214126323))
+        cgPath.addCurve(to: CGPoint(x: 15.84261285873677, y: 50.922665869473846),
+                        control1: CGPoint(x: 17.889819832130172, y: 50.92655889091584),
+                        control2: CGPoint(x: 16.78365960838938, y: 51.34613690681752))
+        cgPath.addCurve(to: CGPoint(x: 14.905459130526154, y: 48.45198785873677),
+                        control1: CGPoint(x: 14.901566109084158, y: 50.49919483213017),
+                        control2: CGPoint(x: 14.481988093182478, y: 49.393034608389385))
+        cgPath.addLine(to: CGPoint(x: 15.989276449311067, y: 46.09450664963527))
+        cgPath.addCurve(to: CGPoint(x: 16.81532416596536, y: 44.72584181894499),
+                        control1: CGPoint(x: 16.402125538201027, y: 45.301744953903174),
+                        control2: CGPoint(x: 16.726143320395295, y: 44.84524422561608))
+
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+
+        XCTAssertFalse(result.components.isEmpty, "crossingsRemoved returned empty path")
+        XCTAssertEqual(result.components.count, 1, "expected 1 outer boundary component, got \(result.components.count): \(result.components.map { "\($0.numberOfElements) elements" })")
+
+        let testTs: [CGFloat] = [0.05, 0.5, 0.95]
+        let normalDistance: CGFloat = 0.1
+        for (componentIndex, component) in path.components.enumerated() {
+            for elementIndex in 0..<component.numberOfElements {
+                for t in testTs {
+                    let location = IndexedPathComponentLocation(elementIndex: elementIndex, t: t)
+                    let point = component.point(at: location)
+                    let normal = component.normal(at: location)
+                    guard normal.x != 0 || normal.y != 0 else { continue }
+                    for sign: CGFloat in [1, -1] {
+                        let testPoint = point + sign * normalDistance * normal
+                        XCTAssertEqual(
+                            path.contains(testPoint, using: .winding),
+                            result.contains(testPoint, using: .evenOdd),
+                            "Containment mismatch at component \(componentIndex), element \(elementIndex), t=\(t), sign=\(sign)"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     #endif
 
 }

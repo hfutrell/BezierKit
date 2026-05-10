@@ -413,7 +413,7 @@ private extension AugmentedGraph {
         }
         if let result = tryForwardEdges() { return result }
         if let result = tryBackwardEdges() { return result }
-        if node === goal || node.neighborsContain(goal) { return [] }
+        if node === goal || (!preferNeighbors && node.neighborsContain(goal)) { return [] }
         return nil
     }
     func createComponent(using path: [(Edge, Bool)]) -> PathComponent {
