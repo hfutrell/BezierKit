@@ -1063,5 +1063,20 @@ class PathVectorBooleanTests: XCTestCase {
         }
     }
 
+    func testCrossingsRemovedAugmentedGraphDuplicateNeighborMinimal() {
+        // A degenerate cubic Bezier (start == end, with control points off that point) followed
+        // by a single line segment, closed back to the start. The degeneracy causes the bezier
+        // clipping algorithm to detect the same self-intersection twice, producing duplicate
+        // entries in sortAndMergeDuplicates that triggered assert(self.neighborsContain(node) == false).
+        let cgPath = CGMutablePath()
+        let P = CGPoint(x: -7.83203, y: 70.75)
+        cgPath.move(to: P)
+        cgPath.addCurve(to: P, control1: CGPoint(x: -7.77344, y: 70.8125), control2: CGPoint(x: -7.69531, y: 70.8125))
+        cgPath.addLine(to: CGPoint(x: -10.0938, y: 69.1875))
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        _ = path.crossingsRemoved(accuracy: 0.0001)
+    }
+
     #endif
 }
