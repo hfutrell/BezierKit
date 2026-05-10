@@ -126,6 +126,8 @@ private class Edge {
             return t == 0 || t == 1
         }
         for edge in self.startingNode.neighbors.compactMap({ $0.forwardEdge }) {
+            // Skip arcs starting at self's ending node — they travel in the opposite direction
+            guard edge.startingNode !== self.endingNode && !edge.startingNode.neighborsContain(self.endingNode) else { continue }
             guard !edge.isWraparound else { continue }
             guard edge.visited == false else { continue }
             guard tValueIsIntervalEnd(self.startingNode.location.t) || tValueIsIntervalEnd(edge.startingNode.location.t) else { continue }
@@ -135,6 +137,8 @@ private class Edge {
             }
         }
         for edge in self.startingNode.neighbors.compactMap({ $0.backwardEdge }) {
+            // Skip arcs ending at self's ending node — they travel in the opposite direction
+            guard edge.endingNode !== self.endingNode && !edge.endingNode.neighborsContain(self.endingNode) else { continue }
             guard !edge.isWraparound else { continue }
             guard edge.visited == false else { continue }
             guard tValueIsIntervalEnd(self.startingNode.location.t) || tValueIsIntervalEnd(edge.endingNode.location.t) else { continue }
@@ -371,20 +375,30 @@ private extension AugmentedGraph {
                 return nil
             }
         }
-        // we prefer to keep the direction of the path the same which is why
+        // We prefer to keep the direction of the path the same which is why
         // we try all the possible forward edges before any back edges.
-        // for removeCrossings (preferNeighbors=true), try neighbor edges before own forward edges so that
+        // For removeCrossings (preferNeighbors=true), try neighbor edges before own forward edges so that
         // cross-component arcs are explored first, ensuring all in-solution arcs can form valid cycles.
-        // Neighbor arcs whose next node is the goal are deferred to last to avoid trivial 1-arc cycles
-        // that would split otherwise-correct multi-arc cycles.
+        // Arcs whose next node is the goal (or a neighbor of the goal) are deferred to last: taking them
+        // early can close a short inner-face cycle when the correct outer boundary still needs traversal.
+        func leadsToGoal(_ edge: Edge?, forwards: Bool) -> Bool {
+            guard let edge = edge else { return false }
+            let next = forwards ? edge.endingNode : edge.startingNode
+            return next === goal || next.neighborsContain(goal)
+        }
         func tryForwardEdges() -> [(Edge, Bool)]? {
             if preferNeighbors {
-                for neighbor in node.neighbors where neighbor.forwardEdge?.endingNode !== goal {
+                for neighbor in node.neighbors where !leadsToGoal(neighbor.forwardEdge, forwards: true) {
                     if let result = pathUsingEdge(neighbor.forwardEdge, forwards: true) { return result }
                 }
-                if let result = pathUsingEdge(node.forwardEdge, forwards: true) { return result }
-                for neighbor in node.neighbors where neighbor.forwardEdge?.endingNode === goal {
+                if !leadsToGoal(node.forwardEdge, forwards: true) {
+                    if let result = pathUsingEdge(node.forwardEdge, forwards: true) { return result }
+                }
+                for neighbor in node.neighbors where leadsToGoal(neighbor.forwardEdge, forwards: true) {
                     if let result = pathUsingEdge(neighbor.forwardEdge, forwards: true) { return result }
+                }
+                if leadsToGoal(node.forwardEdge, forwards: true) {
+                    if let result = pathUsingEdge(node.forwardEdge, forwards: true) { return result }
                 }
                 return nil
             }
@@ -396,12 +410,17 @@ private extension AugmentedGraph {
         }
         func tryBackwardEdges() -> [(Edge, Bool)]? {
             if preferNeighbors {
-                for neighbor in node.neighbors where neighbor.backwardEdge?.startingNode !== goal {
+                for neighbor in node.neighbors where !leadsToGoal(neighbor.backwardEdge, forwards: false) {
                     if let result = pathUsingEdge(neighbor.backwardEdge, forwards: false) { return result }
                 }
-                if let result = pathUsingEdge(node.backwardEdge, forwards: false) { return result }
-                for neighbor in node.neighbors where neighbor.backwardEdge?.startingNode === goal {
+                if !leadsToGoal(node.backwardEdge, forwards: false) {
+                    if let result = pathUsingEdge(node.backwardEdge, forwards: false) { return result }
+                }
+                for neighbor in node.neighbors where leadsToGoal(neighbor.backwardEdge, forwards: false) {
                     if let result = pathUsingEdge(neighbor.backwardEdge, forwards: false) { return result }
+                }
+                if leadsToGoal(node.backwardEdge, forwards: false) {
+                    if let result = pathUsingEdge(node.backwardEdge, forwards: false) { return result }
                 }
                 return nil
             }
@@ -413,7 +432,7 @@ private extension AugmentedGraph {
         }
         if let result = tryForwardEdges() { return result }
         if let result = tryBackwardEdges() { return result }
-        if node === goal || (!preferNeighbors && node.neighborsContain(goal)) { return [] }
+        if node === goal || node.neighborsContain(goal) { return [] }
         return nil
     }
     func createComponent(using path: [(Edge, Bool)]) -> PathComponent {

@@ -1470,6 +1470,159 @@ class PathVectorBooleanTests: XCTestCase {
         }
     }
 
+    func testCrossingsRemovedIrregularComponentWithLargeNeighbor() {
+        let cgPath = CGMutablePath()
+        // Component 0: 12-element closed shape
+        cgPath.move(to: CGPoint(x: 7.373464509647199, y: 65.4158429529536))
+        cgPath.addCurve(to: CGPoint(x: 8.701344547046398, y: 63.1312770096472),
+                        control1: CGPoint(x: 7.109282991556626, y: 64.4182935406436),
+                        control2: CGPoint(x: 7.703795134736394, y: 63.39545852773777))
+        cgPath.addCurve(to: CGPoint(x: 10.9859104903528, y: 64.4591570470464),
+                        control1: CGPoint(x: 9.698893959356402, y: 62.867095491556626),
+                        control2: CGPoint(x: 10.721728972262227, y: 63.461607634736396))
+        cgPath.addLine(to: CGPoint(x: 14.03661523547465, y: 76.28635944275752))
+        cgPath.addLine(to: CGPoint(x: 15.236873390046032, y: 81.11861452417352))
+        cgPath.addLine(to: CGPoint(x: 16.24238869442051, y: 85.17182470139487))
+        cgPath.addLine(to: CGPoint(x: 16.50996510667901, y: 86.17532522327646))
+        cgPath.addCurve(to: CGPoint(x: 15.259065183086692, y: 88.50293264812187),
+                        control1: CGPoint(x: 16.807289673147686, y: 87.16350274107116),
+                        control2: CGPoint(x: 16.24724270088139, y: 88.2056080816532))
+        cgPath.addCurve(to: CGPoint(x: 12.93145775824128, y: 87.25203272452956),
+                        control1: CGPoint(x: 14.270887665236899, y: 88.80025721460713),
+                        control2: CGPoint(x: 13.228782324726533, y: 88.24021024237935))
+        cgPath.addLine(to: CGPoint(x: 12.609596989483988, y: 86.0475210113698))
+        cgPath.addLine(to: CGPoint(x: 11.609173805579491, y: 82.01567529860513))
+        cgPath.addLine(to: CGPoint(x: 10.411971256618742, y: 77.19554695708023))
+        cgPath.addLine(to: CGPoint(x: 7.373464509647199, y: 65.4158429529536))
+        // Component 1: 39-element closed shape
+        cgPath.move(to: CGPoint(x: 16.456500267679782, y: 86.02221206693565))
+        cgPath.addCurve(to: CGPoint(x: 15.412151753816177, y: 88.44952398027304),
+                        control1: CGPoint(x: 16.838395065210253, y: 86.98088462214929),
+                        control2: CGPoint(x: 16.37082430902981, y: 88.06762918274258))
+        cgPath.addCurve(to: CGPoint(x: 12.98483984047878, y: 87.40517546640945),
+                        control1: CGPoint(x: 14.453479198549093, y: 88.83141877782481),
+                        control2: CGPoint(x: 13.366734638030545, y: 88.36384802167653))
+        cgPath.addCurve(to: CGPoint(x: 12.961416147934731, y: 87.34357050702428),
+                        control1: CGPoint(x: 12.941310469389864, y: 87.29590345307356),
+                        control2: CGPoint(x: 12.96413874937197, y: 87.35083077752358))
+        cgPath.addLine(to: CGPoint(x: 11.378901851231218, y: 83.12278568845693))
+        cgPath.addCurve(to: CGPoint(x: 7.2226489193128485, y: 73.53615990582145),
+                        control1: CGPoint(x: 10.397195255730114, y: 80.62956303041938),
+                        control2: CGPoint(x: 8.82438829016071, y: 77.34908094471781))
+        cgPath.addLine(to: CGPoint(x: 6.137611283651439, y: 70.96646119138579))
+        cgPath.addCurve(to: CGPoint(x: 3.2860602865280617, y: 63.667273680769874),
+                        control1: CGPoint(x: 5.155156918200706, y: 68.56759373569584),
+                        control2: CGPoint(x: 4.173255609366089, y: 66.11800156807132))
+        cgPath.addCurve(to: CGPoint(x: 1.6524614079150084, y: 58.38775386413275),
+                        control1: CGPoint(x: 2.6422405092609926, y: 61.84195182796664),
+                        control2: CGPoint(x: 2.1296404491684906, y: 60.05985232273999))
+        cgPath.addLine(to: CGPoint(x: 0.9198234656134832, y: 55.65642018947058))
+        cgPath.addCurve(to: CGPoint(x: -0.1958825624058005, y: 50.12985125333686),
+                        control1: CGPoint(x: 0.32621837591532044, y: 53.345336879111386),
+                        control2: CGPoint(x: -0.03959042680545122, y: 51.426497119058276))
+        cgPath.addCurve(to: CGPoint(x: -0.8094317564020836, y: 46.883660618955574),
+                        control1: CGPoint(x: -0.3519850015543976, y: 48.81244759478967),
+                        control2: CGPoint(x: -0.644052664607605, y: 47.83150496595676))
+        cgPath.addLine(to: CGPoint(x: -0.9266129304666213, y: 46.271594087235634))
+        cgPath.addLine(to: CGPoint(x: -0.9548506262898406, y: 46.15212294620823))
+        cgPath.addCurve(to: CGPoint(x: -0.9145903645728168, y: 46.25923683595981),
+                        control1: CGPoint(x: -0.9596567237767037, y: 46.137028693422124),
+                        control2: CGPoint(x: -0.8880038520678494, y: 46.321993992680184))
+        cgPath.addCurve(to: CGPoint(x: -0.7123013410803307, y: 46.6121630191447),
+                        control1: CGPoint(x: -0.9411525646835774, y: 46.19653706836609),
+                        control2: CGPoint(x: -0.567075607539318, y: 46.80931908082273))
+        cgPath.addCurve(to: CGPoint(x: -0.32522948011236497, y: 46.9999938814477),
+                        control1: CGPoint(x: -0.7842958495212704, y: 46.51442446137971),
+                        control2: CGPoint(x: -0.1116878150550639, y: 47.158213938929165))
+        cgPath.addCurve(to: CGPoint(x: 0.10297826616787975, y: 47.237046196567896),
+                        control1: CGPoint(x: -0.43247417336544053, y: 46.920532753678884),
+                        control2: CGPoint(x: 0.28583144157071655, y: 47.30873935706215))
+        cgPath.addCurve(to: CGPoint(x: 0.7725887645909678, y: 47.36555572306841),
+                        control1: CGPoint(x: -0.08111638198660556, y: 47.16486627884322),
+                        control2: CGPoint(x: 1.0278139412722749, y: 47.366994419873855))
+        cgPath.addCurve(to: CGPoint(x: 1.513433505181576, y: 47.21656727097353),
+                        control1: CGPoint(x: 0.5216748961973383, y: 47.364141328980836),
+                        control2: CGPoint(x: 1.7400074694449943, y: 47.120089035683414))
+        cgPath.addCurve(to: CGPoint(x: 2.0387014184526144, y: 46.87925126236991),
+                        control1: CGPoint(x: 1.29783807208769, y: 47.30837070032661),
+                        control2: CGPoint(x: 2.172584076578715, y: 46.757194266536686))
+        cgPath.addCurve(to: CGPoint(x: 2.4673382893544247, y: 46.29906142228866),
+                        control1: CGPoint(x: 1.7928324890726424, y: 47.10340294346803),
+                        control2: CGPoint(x: 2.5387041616346133, y: 46.147678193019495))
+        cgPath.addCurve(to: CGPoint(x: 2.619505306587215, y: 45.80556856350308),
+                        control1: CGPoint(x: 2.34689327479055, y: 46.55455266301035),
+                        control2: CGPoint(x: 2.6349156513027734, y: 45.70727491677901))
+        cgPath.addCurve(to: CGPoint(x: 2.639652946082534, y: 45.5528031583224),
+                        control1: CGPoint(x: 2.595866749288817, y: 45.956345203678396),
+                        control2: CGPoint(x: 2.639479011762479, y: 45.51246646130421))
+        cgPath.addCurve(to: CGPoint(x: 1.0421251925373916, y: 47.69607443556191),
+                        control1: CGPoint(x: 2.784647376785828, y: 46.621510344905346),
+                        control2: CGPoint(x: 2.0651357299801285, y: 47.560626494337995))
+        cgPath.addCurve(to: CGPoint(x: -1.0554494355619124, y: 46.08900019253739),
+                        control1: CGPoint(x: 0.019114655037615776, y: 47.83152237679338),
+                        control2: CGPoint(x: -0.9200014943304442, y: 47.11201073003717))
+        cgPath.addLine(to: CGPoint(x: -1.0951805101712822, y: 45.45776059545682))
+        cgPath.addCurve(to: CGPoint(x: -0.7775004809259427, y: 44.465600195923635),
+                        control1: CGPoint(x: -1.0892843184090109, y: 45.321562470511104),
+                        control2: CGPoint(x: -1.244152890256034, y: 45.16738841968484))
+        cgPath.addCurve(to: CGPoint(x: 1.1460509103475607, y: 43.66410753834934),
+                        control1: CGPoint(x: -0.5214598643436779, y: 44.0805463830012),
+                        control2: CGPoint(x: 0.34687362305420166, y: 43.50626973085697))
+        cgPath.addCurve(to: CGPoint(x: 2.4551692107892906, y: 44.65042629244017),
+                        control1: CGPoint(x: 2.4425519158247915, y: 43.92016696267213),
+                        control2: CGPoint(x: 2.367205879402592, y: 44.481849900088264))
+        cgPath.addCurve(to: CGPoint(x: 2.8726113293130875, y: 46.245258882819826),
+                        control1: CGPoint(x: 2.852623046674599, y: 45.412122475653455),
+                        control2: CGPoint(x: 2.7591633007117577, y: 45.586772950699455))
+        cgPath.addCurve(to: CGPoint(x: 3.514689236929417, y: 49.68639144661709),
+                        control1: CGPoint(x: 2.9810603359873955, y: 46.866792732697554),
+                        control2: CGPoint(x: 3.3239341712002437, y: 48.0765025402434))
+        cgPath.addCurve(to: CGPoint(x: 4.538262682383132, y: 54.72266770786392),
+                        control1: CGPoint(x: 3.6412277644949658, y: 50.7361607936251),
+                        control2: CGPoint(x: 3.9805890571131535, y: 52.55145839347947))
+        cgPath.addLine(to: CGPoint(x: 5.247922042315912, y: 57.369114699036146))
+        cgPath.addCurve(to: CGPoint(x: 6.805081583986528, y: 62.40979056301368),
+                        control1: CGPoint(x: 5.7194044419005365, y: 59.02120167571676),
+                        control2: CGPoint(x: 6.211944694278586, y: 60.72798469852533))
+        cgPath.addCurve(to: CGPoint(x: 9.59238419748177, y: 69.5418640889425),
+                        control1: CGPoint(x: 7.659039233634469, y: 64.76851692201093),
+                        control2: CGPoint(x: 8.621920113316662, y: 67.17221684728634))
+        cgPath.addLine(to: CGPoint(x: 10.679091910949639, y: 72.11589220095773))
+        cgPath.addCurve(to: CGPoint(x: 14.855758192276918, y: 81.75293778991596),
+                        control1: CGPoint(x: 12.231882000083209, y: 75.81169906327746),
+                        control2: CGPoint(x: 13.798038289339564, y: 79.06666502055126))
+        cgPath.addLine(to: CGPoint(x: 16.442030685474, y: 85.98424339340119))
+        cgPath.addCurve(to: CGPoint(x: 16.456500267679782, y: 86.02221206693565),
+                        control1: CGPoint(x: 16.469095756234793, y: 86.05446123742779),
+                        control2: CGPoint(x: 16.414755995532065, y: 85.91742119703072))
+
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+
+        XCTAssertFalse(result.components.isEmpty, "crossingsRemoved returned empty path")
+
+        let testTs: [CGFloat] = [0.05, 0.5, 0.95]
+        let normalDistance: CGFloat = 0.1
+        for (componentIndex, component) in path.components.enumerated() {
+            for elementIndex in 0..<component.numberOfElements {
+                for t in testTs {
+                    let location = IndexedPathComponentLocation(elementIndex: elementIndex, t: t)
+                    let point = component.point(at: location)
+                    let normal = component.normal(at: location)
+                    guard normal.x != 0 || normal.y != 0 else { continue }
+                    for sign: CGFloat in [1, -1] {
+                        let testPoint = point + sign * normalDistance * normal
+                        XCTAssertEqual(
+                            path.contains(testPoint, using: .winding),
+                            result.contains(testPoint, using: .evenOdd),
+                            "Containment mismatch at component \(componentIndex), element \(elementIndex), t=\(t), sign=\(sign)"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     #endif
 
 }
