@@ -33,6 +33,11 @@ public struct QuadraticCurve: NonlinearBezierCurve, Equatable, Sendable {
         self.init(p0: l.p0, p1: 0.5 * (l.p0 + l.p1), p2: l.p1)
     }
 
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: startingPoint, p1: endingPoint)
+        let error = 0.5 * (p1 - line.point(at: 0.5)).length
+        return (lineSegment: line, error: error)
+    }
 
     public init(start: CGPoint, end: CGPoint, mid: CGPoint, t: CGFloat = 0.5) {
         // shortcuts, although they're really dumb

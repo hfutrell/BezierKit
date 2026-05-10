@@ -753,6 +753,196 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertTrue(hasZeroLengthSegment, "degenerate zero-length segment should be preserved in result")
     }
 
+    func testCrossingsRemovedTwoOverlappingCircles() {
+        // two overlapping near-circular components; crossingsRemoved should return
+        // the outer boundary and preserve the bounding box of the union
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 39.8945, y: 48.9375))
+        cgPath.addCurve(to: CGPoint(x: 36.9062, y: 51.9258),
+                        control1: CGPoint(x: 39.8945, y: 50.5879),
+                        control2: CGPoint(x: 38.5566, y: 51.9258))
+        cgPath.addCurve(to: CGPoint(x: 33.918, y: 48.9375),
+                        control1: CGPoint(x: 35.2559, y: 51.9258),
+                        control2: CGPoint(x: 33.918, y: 50.5879))
+        cgPath.addCurve(to: CGPoint(x: 36.9062, y: 45.9492),
+                        control1: CGPoint(x: 33.918, y: 47.2871),
+                        control2: CGPoint(x: 35.2559, y: 45.9492))
+        cgPath.addCurve(to: CGPoint(x: 39.8945, y: 48.9375),
+                        control1: CGPoint(x: 38.5566, y: 45.9492),
+                        control2: CGPoint(x: 39.8945, y: 47.2871))
+        cgPath.move(to: CGPoint(x: 36.4688, y: 51.832))
+        cgPath.addCurve(to: CGPoint(x: 33.4805, y: 48.8438),
+                        control1: CGPoint(x: 34.8184, y: 51.832),
+                        control2: CGPoint(x: 33.4805, y: 50.4941))
+        cgPath.addCurve(to: CGPoint(x: 36.4688, y: 45.8555),
+                        control1: CGPoint(x: 33.4805, y: 47.1934),
+                        control2: CGPoint(x: 34.8184, y: 45.8555))
+        cgPath.addCurve(to: CGPoint(x: 38.2295, y: 46.2582),
+                        control1: CGPoint(x: 37.406, y: 45.8555),
+                        control2: CGPoint(x: 37.9564, y: 46.1233))
+        cgPath.addCurve(to: CGPoint(x: 39.5853, y: 50.2609),
+                        control1: CGPoint(x: 39.7092, y: 46.9891),
+                        control2: CGPoint(x: 40.3162, y: 48.7812))
+        cgPath.addCurve(to: CGPoint(x: 35.5826, y: 51.6166),
+                        control1: CGPoint(x: 38.8544, y: 51.7406),
+                        control2: CGPoint(x: 37.0623, y: 52.3476))
+        cgPath.addCurve(to: CGPoint(x: 36.4688, y: 51.832),
+                        control1: CGPoint(x: 35.3572, y: 51.5053),
+                        control2: CGPoint(x: 36.9275, y: 51.832))
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+        XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 0.01)
+        XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 0.01)
+    }
+
+    func testCrossingsRemovedTwoOverlappingCircles2() {
+        let cgPath = CGMutablePath()
+        // component 0: clean circle centered near (84.5, 0)
+        cgPath.move(to: CGPoint(x: 87.4883, y: 0))
+        cgPath.addCurve(to: CGPoint(x: 84.5, y: 2.98828),
+                        control1: CGPoint(x: 87.4883, y: 1.65038),
+                        control2: CGPoint(x: 86.1504, y: 2.98828))
+        cgPath.addCurve(to: CGPoint(x: 81.5117, y: 0),
+                        control1: CGPoint(x: 82.8496, y: 2.98828),
+                        control2: CGPoint(x: 81.5117, y: 1.65038))
+        cgPath.addCurve(to: CGPoint(x: 84.5, y: -2.98828),
+                        control1: CGPoint(x: 81.5117, y: -1.65038),
+                        control2: CGPoint(x: 82.8496, y: -2.98828))
+        cgPath.addCurve(to: CGPoint(x: 87.4883, y: 0),
+                        control1: CGPoint(x: 86.1504, y: -2.98828),
+                        control2: CGPoint(x: 87.4883, y: -1.65038))
+        // component 1: irregular near-circle centered near (84.1875, 0)
+        cgPath.move(to: CGPoint(x: 84.1875, y: 2.98828))
+        cgPath.addCurve(to: CGPoint(x: 81.1992, y: 1.82979e-16),
+                        control1: CGPoint(x: 82.5371, y: 2.98828),
+                        control2: CGPoint(x: 81.1992, y: 1.65038))
+        cgPath.addCurve(to: CGPoint(x: 84.1875, y: -2.98828),
+                        control1: CGPoint(x: 81.1992, y: -1.65038),
+                        control2: CGPoint(x: 82.5371, y: -2.98828))
+        cgPath.addLine(to: CGPoint(x: 84.4035, y: -2.98728))
+        cgPath.addCurve(to: CGPoint(x: 84.2974, y: -2.98111),
+                        control1: CGPoint(x: 84.4271, y: -2.98689),
+                        control2: CGPoint(x: 84.2343, y: -2.97689))
+        cgPath.addCurve(to: CGPoint(x: 84.1259, y: -2.96459),
+                        control1: CGPoint(x: 84.3331, y: -2.9835),
+                        control2: CGPoint(x: 84.0369, y: -2.95339))
+        cgPath.addCurve(to: CGPoint(x: 83.9162, y: -2.93059),
+                        control1: CGPoint(x: 84.1749, y: -2.97075),
+                        control2: CGPoint(x: 83.8183, y: -2.91109))
+        cgPath.addCurve(to: CGPoint(x: 83.3546, y: -2.76001),
+                        control1: CGPoint(x: 84.0239, y: -2.95202),
+                        control2: CGPoint(x: 83.0458, y: -2.63186))
+        cgPath.addCurve(to: CGPoint(x: 87.26, y: -1.1451),
+                        control1: CGPoint(x: 84.879, y: -3.39249),
+                        control2: CGPoint(x: 86.6275, y: -2.66947))
+        cgPath.addCurve(to: CGPoint(x: 85.6451, y: 2.76025),
+                        control1: CGPoint(x: 87.8925, y: 0.379281),
+                        control2: CGPoint(x: 87.1695, y: 2.12776))
+        cgPath.addCurve(to: CGPoint(x: 84.5723, y: 2.98795),
+                        control1: CGPoint(x: 84.0486, y: 3.42263),
+                        control2: CGPoint(x: 84.6252, y: 2.98648))
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+        XCTAssertEqual(path.boundingBox.size.x, result.boundingBox.size.x, accuracy: 0.01)
+        XCTAssertEqual(path.boundingBox.size.y, result.boundingBox.size.y, accuracy: 0.01)
+    }
+
+    func testTempE10E12Direct() {
+        let e10 = CubicCurve(p0: CGPoint(x: -126.87232949400304, y: 148.4386462568562),
+                             p1: CGPoint(x: -126.82100381061004, y: 148.31221332475099),
+                             p2: CGPoint(x: -126.82100381061004, y: 148.31221332475099),
+                             p3: CGPoint(x: -126.81891437160884, y: 148.3065860870587))
+        let e12 = CubicCurve(p0: CGPoint(x: -126.8630702627638, y: 148.41570993771296),
+                             p1: CGPoint(x: -125.21959509823608, y: 144.43288248399367),
+                             p2: CGPoint(x: -124.66218794011559, y: 135.65291348287798),
+                             p3: CGPoint(x: -125.61806652900981, y: 128.80510029733443))
+        let e13 = CubicCurve(p0: CGPoint(x: -125.61806652900981, y: 128.80510029733443),
+                             p1: CGPoint(x: -126.57394511790403, y: 121.95728711179089),
+                             p2: CGPoint(x: -128.6811376781718, y: 119.63475728628889),
+                             p3: CGPoint(x: -130.32461284270224, y: 123.6175847400148))
+        let e16 = CubicCurve(p0: CGPoint(x: -130.33281854714375, y: 123.63796844315559),
+                             p1: CGPoint(x: -130.2863291848816, y: 123.52141357138696),
+                             p2: CGPoint(x: -130.2863291848816, y: 123.52141357138696),
+                             p3: CGPoint(x: -130.08266939492287, y: 123.0881154324443))
+        let e10e12 = e10.intersections(with: e12, accuracy: 0.0001)
+        let e13e16 = e13.intersections(with: e16, accuracy: 0.0001)
+        XCTAssertEqual(e10e12.count, 0, "E10∩E12 count")
+        XCTAssertEqual(e13e16.count, 1, "E13∩E16 count")
+    }
+
+    func testCrossingsRemovedFourthRealWorldCase() {
+        // single self-intersecting component with 27 elements; previously crossingsRemoved
+        // returned an empty or degenerate result due to bezier-clipping budget exhaustion
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: -131.0439804414381, y: 125.95711173465887))
+        cgPath.addCurve(to: CGPoint(x: -130.77374654941084, y: 124.90716552347212),
+                        control1: CGPoint(x: -130.96209115248027, y: 125.59190742023301),
+                        control2: CGPoint(x: -130.8715773273373, y: 125.2407572813251))
+        cgPath.addCurve(to: CGPoint(x: -130.7200836936527, y: 124.728344965607),
+                        control1: CGPoint(x: -130.7409023459286, y: 124.79638749713644),
+                        control2: CGPoint(x: -130.7409023459286, y: 124.79638749713644))
+        cgPath.addCurve(to: CGPoint(x: -131.34768445847735, y: 127.38131307462626),
+                        control1: CGPoint(x: -130.7230200005632, y: 124.64712120497364),
+                        control2: CGPoint(x: -130.7230200005632, y: 124.64712120497364))
+        cgPath.addLine(to: CGPoint(x: -132.04479562345017, y: 136.33336379332712))
+        cgPath.addLine(to: CGPoint(x: -127.94056980136787, y: 150.1149441766425))
+        cgPath.addLine(to: CGPoint(x: -127.51270697920403, y: 149.6445983515889))
+        cgPath.addLine(to: CGPoint(x: -127.29673858082157, y: 149.31026379759442))
+        cgPath.addLine(to: CGPoint(x: -127.19565335710216, y: 149.12961568397853))
+        cgPath.addLine(to: CGPoint(x: -127.14494841559127, y: 149.03291637666047))
+        cgPath.addCurve(to: CGPoint(x: -126.87232949400304, y: 148.4386462568562),
+                        control1: CGPoint(x: -126.91928978521454, y: 148.5563279928645),
+                        control2: CGPoint(x: -126.91928978521454, y: 148.5563279928645))
+        cgPath.addCurve(to: CGPoint(x: -126.81891437160884, y: 148.3065860870587),
+                        control1: CGPoint(x: -126.82100381061004, y: 148.31221332475099),
+                        control2: CGPoint(x: -126.82100381061004, y: 148.31221332475099))
+        cgPath.addCurve(to: CGPoint(x: -126.8630702627638, y: 148.41570993771296),
+                        control1: CGPoint(x: -126.83184177645951, y: 148.33917557887608),
+                        control2: CGPoint(x: -126.83184177645951, y: 148.33917557887608))
+        cgPath.addCurve(to: CGPoint(x: -125.61806652900981, y: 128.80510029733443),
+                        control1: CGPoint(x: -125.21959509823608, y: 144.43288248399367),
+                        control2: CGPoint(x: -124.66218794011559, y: 135.65291348287798))
+        cgPath.addCurve(to: CGPoint(x: -130.32461284270224, y: 123.6175847400148),
+                        control1: CGPoint(x: -126.57394511790403, y: 121.95728711179089),
+                        control2: CGPoint(x: -128.6811376781718, y: 119.63475728628889))
+        cgPath.addCurve(to: CGPoint(x: -130.38292936690004, y: 123.76176381068413),
+                        control1: CGPoint(x: -130.36463468304368, y: 123.71565068073693),
+                        control2: CGPoint(x: -130.36463468304368, y: 123.71565068073693))
+        cgPath.addCurve(to: CGPoint(x: -130.33281854714375, y: 123.63796844315559),
+                        control1: CGPoint(x: -130.382900758539, y: 123.76133343503324),
+                        control2: CGPoint(x: -130.382900758539, y: 123.76133343503324))
+        cgPath.addCurve(to: CGPoint(x: -130.08266939492287, y: 123.0881154324443),
+                        control1: CGPoint(x: -130.2863291848816, y: 123.52141357138696),
+                        control2: CGPoint(x: -130.2863291848816, y: 123.52141357138696))
+        cgPath.addLine(to: CGPoint(x: -130.01027583220983, y: 122.94877911367857))
+        cgPath.addLine(to: CGPoint(x: -129.90922355890595, y: 122.76818921942686))
+        cgPath.addLine(to: CGPoint(x: -129.69329216474878, y: 122.43391275620685))
+        cgPath.addLine(to: CGPoint(x: -129.26545712213291, y: 121.96359892699498))
+        cgPath.addLine(to: CGPoint(x: -125.53703487315062, y: 142.56177079566012))
+        cgPath.addCurve(to: CGPoint(x: -126.47171528542721, y: 147.30319269081826),
+                        control1: CGPoint(x: -126.48268039692829, y: 147.42988544797757),
+                        control2: CGPoint(x: -126.48268039692829, y: 147.42988544797757))
+        cgPath.addCurve(to: CGPoint(x: -126.41329568690841, y: 147.10799026873386),
+                        control1: CGPoint(x: -126.45446689769328, y: 147.24686556701914),
+                        control2: CGPoint(x: -126.45446689769328, y: 147.24686556701914))
+        cgPath.addCurve(to: CGPoint(x: -126.01305691207703, y: 145.54178963252627),
+                        control1: CGPoint(x: -126.27879555748534, y: 146.649360218389),
+                        control2: CGPoint(x: -126.14513316579554, y: 146.1308143792919))
+        cgPath.addCurve(to: CGPoint(x: -126.17835732901345, y: 125.26835999742597),
+                        control1: CGPoint(x: -124.71509864007656, y: 139.7532430849646),
+                        control2: CGPoint(x: -124.78910615759808, y: 130.6765194640968))
+        cgPath.addCurve(to: CGPoint(x: -131.0439804414381, y: 125.95711173465887),
+                        control1: CGPoint(x: -127.5676085004288, y: 119.86020053075514),
+                        control2: CGPoint(x: -129.7460221694371, y: 120.16856518709484))
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+        XCTAssertFalse(result.isEmpty)
+        XCTAssertGreaterThan(result.boundingBox.size.x, 0)
+        XCTAssertGreaterThan(result.boundingBox.size.y, 0)
+    }
+
     func testCrossingsRemovedRealWorldInfiniteLoop() {
 
         // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)

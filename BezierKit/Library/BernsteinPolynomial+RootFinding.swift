@@ -63,6 +63,13 @@ extension BernsteinPolynomial5: BezierClippingPolynomial {
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5) }
 }
 
+extension BernsteinPolynomial6: BezierClippingPolynomial {
+    var degree: Int { 6 }
+    var firstCoefficient: CGFloat { b0 }
+    var lastCoefficient: CGFloat { b6 }
+    func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5); body(b6) }
+}
+
 // Bezier clipping convergence threshold (Sederberg & Nishita 1990).
 // The convex hull property guarantees at least 50% reduction per step in the single-root case,
 // giving quadratic convergence; we stop once the mapped interval is below this tolerance.

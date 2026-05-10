@@ -36,10 +36,49 @@ public extension BezierCurve {
     }
 }
 
-private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> [Intersection]? {
+// Encodes the two endpoints of a coincident overlap as four scalar t-values.
+// Using a plain struct (4 CGFloats) avoids the [Intersection] heap allocation
+// that would otherwise occur every time coincidenceCheck returns a result.
+private struct CoincidenceInterval {
+    let firstT1: CGFloat
+    let firstT2: CGFloat
+    let secondT1: CGFloat
+    let secondT2: CGFloat
+    func asIntersections() -> [Intersection] {
+        [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
+    }
+    func asMappedIntersections(t1Range: (CGFloat, CGFloat), t2Range: (CGFloat, CGFloat)) -> [Intersection] {
+        [Intersection(t1: Utils.map(firstT1, 0, 1, t1Range.0, t1Range.1),
+                      t2: Utils.map(firstT2, 0, 1, t2Range.0, t2Range.1)),
+         Intersection(t1: Utils.map(secondT1, 0, 1, t1Range.0, t1Range.1),
+                      t2: Utils.map(secondT2, 0, 1, t2Range.0, t2Range.1))]
+    }
+}
+
+private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ curve2: T, accuracy: CGFloat) -> CoincidenceInterval? {
+    let threshold = 4.0 * accuracy * accuracy
+    let margin = 2.0 * accuracy
+    let bb1 = curve1.boundingBox
+    let bb2 = curve2.boundingBox
+    // Bounding-box guard avoids the expensive project() (degree-5 root find) when the
+    // endpoint is clearly outside the other curve's bounding box.
+    func pointIsCloseTo2(_ point: CGPoint) -> CGFloat? {
+        guard bb2.min.x - margin <= point.x, point.x <= bb2.max.x + margin,
+              bb2.min.y - margin <= point.y, point.y <= bb2.max.y + margin else { return nil }
+        let (projection, t) = curve2.project(point)
+        guard distanceSquared(point, projection) < threshold else { return nil }
+        return t
+    }
+    func pointIsCloseTo1(_ point: CGPoint) -> CGFloat? {
+        guard bb1.min.x - margin <= point.x, point.x <= bb1.max.x + margin,
+              bb1.min.y - margin <= point.y, point.y <= bb1.max.y + margin else { return nil }
+        let (projection, t) = curve1.project(point)
+        guard distanceSquared(point, projection) < threshold else { return nil }
+        return t
+    }
     func pointIsCloseToCurve<X: BezierCurve>(_ point: CGPoint, _ curve: X) -> CGFloat? {
         let (projection, t) = curve.project(point)
-        guard distanceSquared(point, projection) < 4.0 * accuracy * accuracy else { return nil }
+        guard distanceSquared(point, projection) < threshold else { return nil }
         return t
     }
     var range1Start: CGFloat    = .infinity
@@ -47,28 +86,28 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     var range2Start: CGFloat    = .infinity
     var range2End: CGFloat      = -.infinity
     if range1Start > 0 || range2Start > 0 || range2End < 1 {
-        if let t2 = pointIsCloseToCurve(curve1.startingPoint, curve2) {
+        if let t2 = pointIsCloseTo2(curve1.startingPoint) {
             range1Start = 0
             range2Start = min(range2Start, t2)
             range2End   = max(range2End, t2)
         }
     }
     if range1End < 1 || range2Start > 0 || range2Start < 1 {
-        if let t2 = pointIsCloseToCurve(curve1.endingPoint, curve2) {
+        if let t2 = pointIsCloseTo2(curve1.endingPoint) {
             range1End = 1
             range2Start = min(range2Start, t2)
             range2End   = max(range2End, t2)
         }
     }
     if range2Start > 0 || range1Start > 0 || range1End < 1 {
-        if let t1 = pointIsCloseToCurve(curve2.startingPoint, curve1) {
+        if let t1 = pointIsCloseTo1(curve2.startingPoint) {
             range2Start = 0
             range1Start = min(range1Start, t1)
             range1End   = max(range1End, t1)
         }
     }
     if range2End < 1 || range1Start > 0 || range1End < 1 {
-        if let t1 = pointIsCloseToCurve(curve2.endingPoint, curve1) {
+        if let t1 = pointIsCloseTo1(curve2.endingPoint) {
             range2End = 1
             range1Start = min(range1Start, t1)
             range1End   = max(range1End, t1)
@@ -106,7 +145,8 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
             guard pointIsCloseToCurve(curve1.point(at: t), curve2) != nil else { return nil }
         }
     }
-    return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
+    return CoincidenceInterval(firstT1: firstT1, firstT2: firstT2,
+                               secondT1: secondT1, secondT2: secondT2)
 }
 
 // 2D Newton–Raphson on C1(u) = C2(v) starting from (u, v). Returns refined (u, v).
@@ -159,7 +199,131 @@ private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBez
     }
 }
 
+// Checks if any endpoint of c1 or c2 lies on the other curve within `accuracy`,
+// and appends such endpoint-interior intersections (after Newton refinement) to `result`.
+// Handles the case where an arc's endpoint lies in the interior of the other arc.
+private func addEndpointInteriorIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ result: inout [Intersection], curve1: C1, curve2: C2, accuracy: CGFloat
+) {
+    for u in [CGFloat(0), CGFloat(1)] {
+        let pt = curve1.point(at: u)
+        let (proj, v) = curve2.project(pt)
+        guard distanceSquared(pt, proj) < accuracy * accuracy else { continue }
+        let (uR, vR) = newtonRefineCurvePair(curve1, curve2, u: u, v: v, iterations: 10)
+        guard newtonIsGenuineRoot(curve1, curve2, u: uR, v: vR) else { continue }
+        let isDuplicate = result.contains(where: {
+            distanceSquared(curve1.point(at: $0.t1), curve1.point(at: uR)) < accuracy * accuracy
+        })
+        if !isDuplicate { result.append(Intersection(t1: uR, t2: vR)) }
+    }
+    for v in [CGFloat(0), CGFloat(1)] {
+        let pt = curve2.point(at: v)
+        let (proj, u) = curve1.project(pt)
+        guard distanceSquared(pt, proj) < accuracy * accuracy else { continue }
+        let (uR, vR) = newtonRefineCurvePair(curve1, curve2, u: u, v: v, iterations: 10)
+        guard newtonIsGenuineRoot(curve1, curve2, u: uR, v: vR) else { continue }
+        let isDuplicate = result.contains(where: {
+            distanceSquared(curve2.point(at: $0.t2), curve2.point(at: vR)) < accuracy * accuracy
+        })
+        if !isDuplicate { result.append(Intersection(t1: uR, t2: vR)) }
+    }
+}
+
+// Returns (t_cubic1, t_curve2) initial guesses by projecting arc intersection points onto cubic1.
+// Arc-t ≠ cubic Bezier-t, so projection gives Newton a starting point near the true root.
+private func arcIntersectionGuesses<T: NonlinearBezierCurve>(
+    arc: Arc, cubic1: CubicCurve, curve2: Subcurve<T>, accuracy: CGFloat
+) -> [(CGFloat, CGFloat)] {
+    if let cubic2 = curve2.curve as? CubicCurve {
+        if let arc2 = cubic2.asArc(accuracy: accuracy) {
+            return arcArcIntersections(arc, arc2, accuracy: accuracy).map { ix in
+                let t1 = cubic1.project(arc.point(at: ix.t1)).t
+                let t2 = cubic2.project(arc2.point(at: ix.t2)).t
+                return (t1, t2)
+            }
+        }
+        return arcCubicIntersections(arc, cubic2, accuracy: accuracy).map { ix in
+            (cubic1.project(arc.point(at: ix.tArc)).t, ix.tCubic)
+        }
+    }
+    if let quad2 = curve2.curve as? QuadraticCurve {
+        let (line2, lineErr) = quad2.downgradedToLineSegment
+        if lineErr <= accuracy {
+            return arcLineIntersections(arc, line2, accuracy: accuracy).map { ix in
+                (cubic1.project(arc.point(at: ix.tArc)).t, ix.tLine)
+            }
+        }
+        return arcQuadraticIntersections(arc, quad2, accuracy: accuracy).map { ix in
+            (cubic1.project(arc.point(at: ix.tArc)).t, ix.tQuad)
+        }
+    }
+    return []
+}
+
+// Refines arc-based initial guesses with Newton on the original curves.
+// Returns Newton-verified intersections with accurate Bezier t-parameters.
+// Returns nil when no guesses survive (caller should fall through to bezier clipping).
+private func refineArcGuesses<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ guesses: [(CGFloat, CGFloat)], _ c1: C1, _ c2: C2, accuracy: CGFloat
+) -> [Intersection]? {
+    var result: [Intersection] = []
+    for (t1g, t2g) in guesses {
+        let (uV, vV) = newtonRefineCurvePair(c1, c2, u: t1g, v: t2g, iterations: 10)
+        guard newtonIsGenuineRoot(c1, c2, u: uV, v: vV) else { continue }
+        let p1 = c1.point(at: uV)
+        let isDuplicate = result.contains(where: { distanceSquared(p1, c1.point(at: $0.t1)) < accuracy * accuracy })
+        if !isDuplicate { result.append(Intersection(t1: uV, t2: vV)) }
+    }
+    guard !result.isEmpty else { return nil }
+    addEndpointIntersections(&result, curve1: c1, curve2: c2, accuracy: accuracy)
+    return result.sorted()
+}
+
 internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+    // Arc detection for cubics: get algebraic initial guesses then refine with Newton on the
+    // original Bezier curves. Arc-t ≠ cubic Bezier-t, so without Newton the returned t-values
+    // are inaccurate. If no guesses survive Newton, fall through to bezier clipping.
+    var arcResult: [Intersection]?
+    if let cubic1 = curve1.curve as? CubicCurve, let arc1 = cubic1.asArc(accuracy: accuracy) {
+        if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
+            let centerDist = distance(arc1.center, arc2.center)
+            let avgRadius = (arc1.radius + arc2.radius) * 0.5
+            let sameCircleThreshold = max(accuracy, avgRadius * 1.0e-2)
+            if centerDist < sameCircleThreshold && abs(arc1.radius - arc2.radius) < sameCircleThreshold {
+                // Same-circle arcs: use coincidenceCheck so AugmentedGraph handles overlap correctly.
+                // If coincidenceCheck returns nil (arcs touch at only one point), fall through to
+                // bezier clipping which handles endpoint intersections correctly.
+                if let interval = coincidenceCheck(cubic1, cubic2, accuracy: accuracy) {
+                    return interval.asMappedIntersections(t1Range: (curve1.t1, curve1.t2),
+                                                          t2Range: (curve2.t1, curve2.t2))
+                }
+            } else {
+                let guesses = arcArcIntersections(arc1, arc2, accuracy: accuracy).map { ix -> (CGFloat, CGFloat) in
+                    let t1 = cubic1.project(arc1.point(at: ix.t1)).t
+                    let t2 = cubic2.project(arc2.point(at: ix.t2)).t
+                    return (t1, t2)
+                }
+                arcResult = refineArcGuesses(guesses, cubic1, cubic2, accuracy: accuracy)
+                // A single arc-arc result may be spurious for partially-coincident cubics
+                // each fitting a slightly different approximate circle. Coincidence check disambiguates.
+                if arcResult?.count == 1,
+                   let interval = coincidenceCheck(cubic1, cubic2, accuracy: 0.1 * accuracy) {
+                    return interval.asMappedIntersections(t1Range: (curve1.t1, curve1.t2),
+                                                          t2Range: (curve2.t1, curve2.t2))
+                }
+            }
+        } else {
+            let guesses = arcIntersectionGuesses(arc: arc1, cubic1: cubic1, curve2: curve2, accuracy: accuracy)
+            arcResult = refineArcGuesses(guesses, cubic1, curve2.curve, accuracy: accuracy)
+        }
+    } else if let cubic2 = curve2.curve as? CubicCurve, let arc2 = cubic2.asArc(accuracy: accuracy) {
+        let guesses = arcIntersectionGuesses(arc: arc2, cubic1: cubic2, curve2: curve1, accuracy: accuracy)
+        arcResult = refineArcGuesses(guesses, cubic2, curve1.curve, accuracy: accuracy)
+            .map { $0.map { Intersection(t1: $0.t2, t2: $0.t1) } }
+    }
+    if let result = arcResult {
+        return result
+    }
     // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
     var clipIntersections: [Intersection] = []
     clipIntersections.reserveCapacity(curve1.curve.order * curve2.curve.order)
@@ -183,7 +347,8 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         var result: [Intersection] = []
         for ix in sorted {
             let (uV, vV) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: ix.t1, v: ix.t2, iterations: 10)
-            guard newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV) else { continue }
+            let isGenuine = newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV)
+            guard isGenuine else { continue }
             let p1 = curve1.curve.point(at: uV)
             let isDuplicate = result.contains(where: { distanceSquared(p1, curve1.curve.point(at: $0.t1)) < accuracy * accuracy })
             if !isDuplicate {
@@ -191,6 +356,22 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
             }
         }
         if !result.isEmpty {
+            // Coincident curves produce a single interior intersection via clipping (the
+            // overlap region looks like a crossing). Check for coincidence only when there
+            // is exactly one result and tangents are nearly parallel — 2+ genuine crossings
+            // cannot be a coincidence artifact, and transverse crossings (large sin²(angle))
+            // are clearly not coincident.
+            if result.count == 1 {
+                let ix = result[0]
+                let d1 = curve1.curve.derivative(at: ix.t1)
+                let d2 = curve2.curve.derivative(at: ix.t2)
+                let crossSq = d1.cross(d2)
+                // sin²(angle) = crossSq² / (|d1|²|d2|²). Skip coincidenceCheck when angle > ~18°.
+                if crossSq * crossSq <= 0.1 * d1.lengthSquared * d2.lengthSquared,
+                   let interval = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+                    return interval.asIntersections()
+                }
+            }
             addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
             return result.sorted()
         }
@@ -198,8 +379,8 @@ internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: 
         // Fall through to coincidence check and Newton midpoint fallback.
     }
 
-    if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
-        return coincidence
+    if let interval = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
+        return interval.asIntersections()
     }
 
     // Newton midpoint fallback: near-coincident crossing curves exhaust bezier clipping
@@ -223,8 +404,8 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
     guard line.boundingBox.overlaps(curve.boundingBox) else {
         return []
     }
-    if let coincidence = coincidenceCheck(curve, line, accuracy: CGFloat(tinyValue)) {
-        return coincidence
+    if let interval = coincidenceCheck(curve, line, accuracy: CGFloat(tinyValue)) {
+        return interval.asIntersections()
     }
     let lineDirection = (line.p1 - line.p0)
     let lineLength = lineDirection.lengthSquared
@@ -363,8 +544,8 @@ public extension LineSegment {
             return []
         }
 
-        if checkCoincidence, let coincidence = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
-            return coincidence
+        if checkCoincidence, let interval = coincidenceCheck(self, line, accuracy: CGFloat(tinyValue)) {
+            return interval.asIntersections()
         }
 
         let a1 = self.p0
