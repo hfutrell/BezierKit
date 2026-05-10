@@ -1332,6 +1332,69 @@ class PathVectorBooleanTests: XCTestCase {
         }
     }
 
+    func testCrossingsRemovedCircleWithTube() {
+        // A circle (component 0) intersected by a tube-like shape (component 1).
+        // crossingsRemoved was returning an incorrect result for this input.
+        let cgPath = CGMutablePath()
+        // Component 0: circle
+        cgPath.move(to: CGPoint(x: 67.05598962306976, y: 35.15625))
+        cgPath.addCurve(to: CGPoint(x: 65.1875, y: 37.02473962306976),
+                        control1: CGPoint(x: 67.05598962306976, y: 36.18818832398098),
+                        control2: CGPoint(x: 66.21943832398098, y: 37.02473962306976))
+        cgPath.addCurve(to: CGPoint(x: 63.31901037693024, y: 35.15625),
+                        control1: CGPoint(x: 64.15556167601902, y: 37.02473962306976),
+                        control2: CGPoint(x: 63.31901037693024, y: 36.18818832398098))
+        cgPath.addCurve(to: CGPoint(x: 65.1875, y: 33.28776037693024),
+                        control1: CGPoint(x: 63.31901037693024, y: 34.12431167601902),
+                        control2: CGPoint(x: 64.15556167601902, y: 33.28776037693024))
+        cgPath.addCurve(to: CGPoint(x: 67.05598962306976, y: 35.15625),
+                        control1: CGPoint(x: 66.21943832398098, y: 33.28776037693024),
+                        control2: CGPoint(x: 67.05598962306976, y: 34.12431167601902))
+        // Component 1: tube-like shape passing through the circle
+        cgPath.move(to: CGPoint(x: 63.02026378606149, y: 35.83404526742314))
+        cgPath.addCurve(to: CGPoint(x: 62.72845473257686, y: 33.20776378606149),
+                        control1: CGPoint(x: 62.21445533559582, y: 35.18939850705061),
+                        control2: CGPoint(x: 62.083807972204326, y: 34.01357223652715))
+        cgPath.addCurve(to: CGPoint(x: 65.35473621393851, y: 32.91595473257686),
+                        control1: CGPoint(x: 63.37310149294939, y: 32.40195533559582),
+                        control2: CGPoint(x: 64.54892776347285, y: 32.271307972204326))
+        cgPath.addLine(to: CGPoint(x: 66.30892872311176, y: 33.66170958887128))
+        cgPath.addCurve(to: CGPoint(x: 66.68167901539591, y: 36.27773026207722),
+                        control1: CGPoint(x: 67.13425503555436, y: 34.28117159940185),
+                        control2: CGPoint(x: 67.30114102592648, y: 35.45240394963462))
+        cgPath.addCurve(to: CGPoint(x: 64.06565834218998, y: 36.65048055436137),
+                        control1: CGPoint(x: 66.06221700486535, y: 37.10305657451982),
+                        control2: CGPoint(x: 64.89098465463258, y: 37.26994256489194))
+        cgPath.addLine(to: CGPoint(x: 63.02026378606149, y: 35.83404526742314))
+
+        let path = Path(cgPath: cgPath)
+        let result = path.crossingsRemoved(accuracy: 0.0001)
+
+        XCTAssertFalse(result.components.isEmpty, "crossingsRemoved returned empty path")
+        XCTAssertTrue(result.contains(CGPoint(x: 65.1875, y: 35.15625), using: .evenOdd), "center of circle should be inside result")
+
+        let testTs: [CGFloat] = [0.05, 0.5, 0.95]
+        let normalDistance: CGFloat = 0.1
+        for (componentIndex, component) in path.components.enumerated() {
+            for elementIndex in 0..<component.numberOfElements {
+                for t in testTs {
+                    let location = IndexedPathComponentLocation(elementIndex: elementIndex, t: t)
+                    let point = component.point(at: location)
+                    let normal = component.normal(at: location)
+                    guard normal.x != 0 || normal.y != 0 else { continue }
+                    for sign: CGFloat in [1, -1] {
+                        let testPoint = point + sign * normalDistance * normal
+                        XCTAssertEqual(
+                            path.contains(testPoint, using: .winding),
+                            result.contains(testPoint, using: .evenOdd),
+                            "Containment mismatch at component \(componentIndex), element \(elementIndex), t=\(t), sign=\(sign)"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     #endif
 
 }
