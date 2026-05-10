@@ -42,15 +42,23 @@ private class Node {
         self.neighbors.append(node)
     }
     private func replaceNeighbor(_ node: Node, with replacement: Node) {
-        for i in self.neighbors.indices where self.neighbors[i] === node {
-            self.neighbors[i] = replacement
+        // if replacement is already present, just remove node to avoid creating a duplicate
+        let alreadyHasReplacement = neighborsContain(replacement)
+        neighbors = neighbors.compactMap {
+            guard $0 === node else { return $0 }
+            return alreadyHasReplacement ? nil : replacement
         }
     }
     func mergeNeighbors(of node: Node) {
         node.neighbors.forEach {
+            guard $0 !== self else { return }  // skip self-referential connections
             $0.replaceNeighbor(node, with: self)
-            self.addNeighbor($0)
+            if !self.neighborsContain($0) {
+                self.addNeighbor($0)
+            }
         }
+        // remove stale reference to node since it's being merged away
+        self.neighbors = self.neighbors.filter { $0 !== node }
     }
     /// Nodes can have strong reference cycles either through their neighbors or through their edges, unlinking all nodes when owner no longer holds instance prevents memory leakage
     func unlink() {
