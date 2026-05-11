@@ -306,22 +306,34 @@ private extension AugmentedGraph {
             let location = component.nonDegenerateTestLocation
             let point = component.point(at: location)
             let normal = component.normal(at: location)
-            // Try progressively larger offsets to handle cases where the test point is
-            // very close to another boundary and the small offset cannot distinguish sides.
-            let distances: [CGFloat] = MemoryLayout<CGFloat>.size > 4
-                ? [1.0e-6, 1.0e-4, 5.0e-3, 5.0e-2]
-                : [1.0e-4, 5.0e-3, 5.0e-2]
-            for d in distances {
-                let point1 = point + d * normal
-                let point2 = point - d * normal
+            // For removeCrossings, try progressively larger offsets: the seam-wrapping arc's
+            // test point can land very close to another component's boundary, making the small
+            // offset unable to distinguish inside from outside. For union/subtract/intersect the
+            // small offset is sufficient; larger offsets risk crossing the other path's boundary,
+            // which would flip a non-boundary edge incorrectly into the solution set.
+            if operation == .removeCrossings {
+                let distances: [CGFloat] = MemoryLayout<CGFloat>.size > 4
+                    ? [1.0e-6, 1.0e-4, 5.0e-3, 5.0e-2]
+                    : [1.0e-4, 5.0e-3, 5.0e-2]
+                for d in distances {
+                    let point1 = point + d * normal
+                    let point2 = point - d * normal
+                    let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
+                    let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
+                    if included1 != included2 {
+                        edge.inSolution = true
+                        return
+                    }
+                }
+                edge.inSolution = false
+            } else {
+                let smallDistance: CGFloat = AugmentedGraph.smallDistance
+                let point1 = point + smallDistance * normal
+                let point2 = point - smallDistance * normal
                 let included1 = self.pointIsContainedInBooleanResult(point: point1, operation: operation)
                 let included2 = self.pointIsContainedInBooleanResult(point: point2, operation: operation)
-                if included1 != included2 {
-                    edge.inSolution = true
-                    return
-                }
+                edge.inSolution = (included1 != included2)
             }
-            edge.inSolution = false
         }
         func classifyComponentEdges(in component: PathComponentGraph) {
             component.forEachNode {

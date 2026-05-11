@@ -1623,6 +1623,615 @@ class PathVectorBooleanTests: XCTestCase {
         }
     }
 
+    func testUnionRealWorldCase1() {
+        // union of two overlapping paths each containing tiny degenerate self-loop sub-components
+        let pathAData = CGMutablePath()
+        pathAData.move(to: CGPoint(x: 144.93972764715573, y: -76.83260226033795))
+        pathAData.addLine(to: CGPoint(x: 144.91318486993958, y: -76.97042781825232))
+        pathAData.addCurve(to: CGPoint(x: 145.84002821821812, y: -71.36929015756373),
+                           control1: CGPoint(x: 146.40863039409797, y: -73.23181400785634),
+                           control2: CGPoint(x: 145.84002821821812, y: -72.05951674919625))
+        pathAData.addCurve(to: CGPoint(x: 145.78062144778988, y: -70.21669221051258),
+                           control1: CGPoint(x: 145.84002821821812, y: -70.98403866724536),
+                           control2: CGPoint(x: 145.8201702820003, y: -70.5993321248332))
+        pathAData.addCurve(to: CGPoint(x: 145.60235261981012, y: -67.59632417162202),
+                           control1: CGPoint(x: 145.78456618001172, y: -69.73757279849448),
+                           control2: CGPoint(x: 145.77578078536746, y: -68.81032133052344))
+        pathAData.addCurve(to: CGPoint(x: 144.76702699022007, y: -63.70908801051573),
+                           control1: CGPoint(x: 145.30342119878327, y: -65.19096627701924),
+                           control2: CGPoint(x: 144.85138166412403, y: -64.1519500485116))
+        pathAData.addLine(to: CGPoint(x: 143.50529765344118, y: -59.05648842375796))
+        pathAData.addLine(to: CGPoint(x: 139.47568840930148, y: -46.28074641862159))
+        pathAData.addCurve(to: CGPoint(x: 135.3408448362938, y: -32.70831184909752),
+                           control1: CGPoint(x: 138.07388215024665, y: -41.91232675740464),
+                           control2: CGPoint(x: 136.67840260187813, y: -37.35936498851581))
+        pathAData.addLine(to: CGPoint(x: 133.43047678563633, y: -25.710796095801125))
+        pathAData.addCurve(to: CGPoint(x: 129.65421030603824, y: -10.825867408594336),
+                           control1: CGPoint(x: 132.05291750667004, y: -20.678889920823167),
+                           control2: CGPoint(x: 130.83371156872062, y: -15.730109500800017))
+        pathAData.addCurve(to: CGPoint(x: 126.6673736265491, y: 3.3045012654116084),
+                           control1: CGPoint(x: 128.54982772280096, y: -6.146333939059139),
+                           control2: CGPoint(x: 127.63641791539415, y: -1.3519584267157443))
+        pathAData.addLine(to: CGPoint(x: 125.6533417429766, y: 9.298668779079199))
+        pathAData.addCurve(to: CGPoint(x: 124.10034447055406, y: 18.714544842772977),
+                           control1: CGPoint(x: 124.94335957062401, y: 13.163283947555941),
+                           control2: CGPoint(x: 124.46588644078156, y: 16.17859742431974))
+        pathAData.addLine(to: CGPoint(x: 123.4819376471536, y: 22.688381359307243))
+        pathAData.addCurve(to: CGPoint(x: 122.7786519650067, y: 26.543950000331982),
+                           control1: CGPoint(x: 123.24127408108963, y: 24.084658903641987),
+                           control2: CGPoint(x: 123.12290200897381, y: 25.125349886079395))
+        pathAData.addCurve(to: CGPoint(x: 121.36291031937907, y: 30.630392471671083),
+                           control1: CGPoint(x: 122.74314034894684, y: 27.084422182566602),
+                           control2: CGPoint(x: 122.71459434452808, y: 28.26494542766031))
+        pathAData.addCurve(to: CGPoint(x: 106.06690808898333, y: 34.802029443597206),
+                           control1: CGPoint(x: 118.29100167765021, y: 36.006232594696584),
+                           control2: CGPoint(x: 111.44274821200882, y: 37.87393808532606))
+        pathAData.addCurve(to: CGPoint(x: 101.0902829386656, y: 28.892315418941216),
+                           control1: CGPoint(x: 103.66542362851722, y: 33.429752609045146),
+                           control2: CGPoint(x: 101.96401183991007, y: 31.30387989298855))
+        pathAData.addCurve(to: CGPoint(x: 97.30127442023806, y: 18.232699493392815),
+                           control1: CGPoint(x: 98.09269894693192, y: 26.3614917642216),
+                           control2: CGPoint(x: 96.52284406445469, y: 22.334060571066946))
+        pathAData.addLine(to: CGPoint(x: 97.48864910296679, y: 16.047323815365697))
+        pathAData.addLine(to: CGPoint(x: 97.61864952747034, y: 13.200425026014695))
+        pathAData.addLine(to: CGPoint(x: 97.8877468586405, y: 8.220525000003844))
+        pathAData.addCurve(to: CGPoint(x: 99.38371578229558, y: -8.127332053665386),
+                           control1: CGPoint(x: 98.07381938379378, y: 3.524886946114221),
+                           control2: CGPoint(x: 98.61085225649319, y: -2.0838009283967542))
+        pathAData.addLine(to: CGPoint(x: 100.51351337820337, y: -15.134642056223475))
+        pathAData.addCurve(to: CGPoint(x: 104.63636984409648, y: -34.200188782671056),
+                           control1: CGPoint(x: 101.58515191633475, y: -21.649040657726278),
+                           control2: CGPoint(x: 103.0892205417471, y: -28.0921722661042))
+        pathAData.addCurve(to: CGPoint(x: 106.41174790431869, y: -40.20007962393081),
+                           control1: CGPoint(x: 105.21890161526615, y: -36.30502816759959),
+                           control2: CGPoint(x: 105.76365874639475, y: -38.219807196941005))
+        pathAData.addCurve(to: CGPoint(x: 111.99426099935228, y: -56.46728595416922),
+                           control1: CGPoint(x: 108.09592512491584, y: -45.891671692049385),
+                           control2: CGPoint(x: 110.05420500772794, y: -51.48334901016877))
+        pathAData.addCurve(to: CGPoint(x: 115.73995609305427, y: -65.39313631586624),
+                           control1: CGPoint(x: 113.24231927763687, y: -59.685989136263295),
+                           control2: CGPoint(x: 114.5045364236236, y: -62.682076485726725))
+        pathAData.addLine(to: CGPoint(x: 117.61208704174754, y: -69.11377545168138))
+        pathAData.addCurve(to: CGPoint(x: 119.2702711170572, y: -72.36897278679854),
+                           control1: CGPoint(x: 117.90833360730069, y: -69.81226270401645),
+                           control2: CGPoint(x: 118.54428715922877, y: -71.09850086059879))
+        pathAData.addLine(to: CGPoint(x: 120.41205831874828, y: -74.42517146636546))
+        pathAData.addCurve(to: CGPoint(x: 122.17602687153996, y: -77.1504993886825),
+                           control1: CGPoint(x: 121.37519963545378, y: -76.19093054699222),
+                           control2: CGPoint(x: 122.14409541414422, y: -77.10260220258888))
+        pathAData.addCurve(to: CGPoint(x: 124.93613578850957, y: -80.42162008727229),
+                           control1: CGPoint(x: 123.45146490710556, y: -78.79384301090614),
+                           control2: CGPoint(x: 124.036939344671, y: -79.52242364343371))
+        pathAData.addCurve(to: CGPoint(x: 130.9138050411661, y: -83.96471191492252),
+                           control1: CGPoint(x: 125.8992978225212, y: -81.38478212128392),
+                           control2: CGPoint(x: 127.30704348365613, y: -83.03454108090924))
+        pathAData.addCurve(to: CGPoint(x: 131.03503898441235, y: -83.99549709278678),
+                           control1: CGPoint(x: 130.9539432113291, y: -83.97506340465117),
+                           control2: CGPoint(x: 130.99435371974317, y: -83.98532577661949))
+        pathAData.addCurve(to: CGPoint(x: 130.89730210008406, y: -83.95994147232818),
+                           control1: CGPoint(x: 131.17796861323083, y: -84.0312294999914),
+                           control2: CGPoint(x: 130.8228630265439, y: -83.93909853173693))
+        pathAData.addCurve(to: CGPoint(x: 133.0367610877022, y: -84.36570820169413),
+                           control1: CGPoint(x: 131.10925103339497, y: -84.02267280828706),
+                           control2: CGPoint(x: 131.68508048021022, y: -84.23609499275655))
+        pathAData.addCurve(to: CGPoint(x: 139.26777438651843, y: -83.20915749416434),
+                           control1: CGPoint(x: 134.60736686021326, y: -84.51631423467465),
+                           control2: CGPoint(x: 137.17985816945702, y: -84.25311560269505))
+        pathAData.addCurve(to: CGPoint(x: 142.9379440337978, y: -80.36058407091775),
+                           control1: CGPoint(x: 139.46402832625574, y: -83.11103052429569),
+                           control2: CGPoint(x: 141.11974699456854, y: -82.48181395001855))
+        pathAData.addCurve(to: CGPoint(x: 144.93972764715573, y: -76.83260226033795),
+                           control1: CGPoint(x: 143.82644796082502, y: -79.32399615605267),
+                           control2: CGPoint(x: 144.48654915212404, y: -78.07836852169797))
+        pathAData.closeSubpath()
+        // Component 1: tiny closed loop near path A's left boundary
+        pathAData.move(to: CGPoint(x: 97.30127442023806, y: 18.232699493392815))
+        pathAData.addCurve(to: CGPoint(x: 97.35450896664717, y: 17.9691923242425),
+                           control1: CGPoint(x: 97.3179399214171, y: 18.14489300259006),
+                           control2: CGPoint(x: 97.33568175912232, y: 18.057052626025136))
+        pathAData.addCurve(to: CGPoint(x: 97.30127442023806, y: 18.232699493392815),
+                           control1: CGPoint(x: 97.39966898648285, y: 17.758445565009342),
+                           control2: CGPoint(x: 97.29329728707219, y: 18.319610123395215))
+        pathAData.closeSubpath()
+        // Component 2: degenerate self-loop cubic near path A's right boundary
+        pathAData.move(to: CGPoint(x: 145.72800038851935, y: -69.87876538161127))
+        pathAData.addCurve(to: CGPoint(x: 145.72800038851935, y: -69.87876538161127),
+                           control1: CGPoint(x: 145.72340747608004, y: -69.80756727961926),
+                           control2: CGPoint(x: 145.72395489689956, y: -69.82559889168347))
+        pathAData.closeSubpath()
+        // Component 3: degenerate self-loop cubic near path A's right boundary
+        pathAData.move(to: CGPoint(x: 145.76871232808568, y: -70.33190994863763))
+        pathAData.addCurve(to: CGPoint(x: 145.76871232808568, y: -70.33190994863763),
+                           control1: CGPoint(x: 145.7665041019907, y: -70.26423527831467),
+                           control2: CGPoint(x: 145.7668830317481, y: -70.2847365345153))
+        pathAData.closeSubpath()
+
+        let pathBData = CGMutablePath()
+        // Component 0: degenerate self-loop cubic near path B's upper boundary
+        pathBData.move(to: CGPoint(x: 122.65538881555764, y: 27.026411362720857))
+        pathBData.addCurve(to: CGPoint(x: 122.65538881555764, y: 27.026411362720857),
+                           control1: CGPoint(x: 122.64567114098331, y: 27.10193805549278),
+                           control2: CGPoint(x: 122.64847132553246, y: 27.07805999305857))
+        pathBData.closeSubpath()
+        // Component 1: main 53-element closed component
+        pathBData.move(to: CGPoint(x: 122.70979440930768, y: 26.663090459247186))
+        pathBData.addCurve(to: CGPoint(x: 122.62439589048587, y: 27.26407182270474),
+                           control1: CGPoint(x: 122.68672349043645, y: 26.864825940656573),
+                           control2: CGPoint(x: 122.65821319806716, y: 27.06521158421933))
+        pathBData.addCurve(to: CGPoint(x: 122.50653007733864, y: 27.858660159015347),
+                           control1: CGPoint(x: 122.59041957940387, y: 27.46386706980952),
+                           control2: CGPoint(x: 122.5510862303349, y: 27.662122533699364))
+        pathBData.addCurve(to: CGPoint(x: 122.4393915402758, y: 28.126573097092162),
+                           control1: CGPoint(x: 122.4855984681464, y: 27.942907592353),
+                           control2: CGPoint(x: 122.46324658242268, y: 28.032122892784766))
+        pathBData.addCurve(to: CGPoint(x: 119.01700887437187, y: 33.762702036038135),
+                           control1: CGPoint(x: 121.86716511787473, y: 30.392211622193148),
+                           control2: CGPoint(x: 120.64265395683171, y: 32.320876879664475))
+        pathBData.addCurve(to: CGPoint(x: 113.12752518635966, y: 36.483423239043894),
+                           control1: CGPoint(x: 117.42108481029707, y: 35.183397649319836),
+                           control2: CGPoint(x: 115.40218719732398, y: 36.164236488267136))
+        pathBData.addCurve(to: CGPoint(x: 110.96452449489284, y: 36.5779614724114),
+                           control1: CGPoint(x: 112.39751162982805, y: 36.585860723825874),
+                           control2: CGPoint(x: 111.67406755655828, y: 36.61553108095051))
+        pathBData.addCurve(to: CGPoint(x: 108.82447374427262, y: 36.250873231004526),
+                           control1: CGPoint(x: 110.25511857113693, y: 36.538836313052805),
+                           control2: CGPoint(x: 109.53914076061022, y: 36.43137481827723))
+        pathBData.addCurve(to: CGPoint(x: 103.26241445912143, y: 32.91117679732363),
+                           control1: CGPoint(x: 106.59741073970459, y: 35.68838972737106),
+                           control2: CGPoint(x: 104.69594385051077, y: 34.49564442726446))
+        pathBData.addCurve(to: CGPoint(x: 100.81389683887147, y: 28.54867644170363),
+                           control1: CGPoint(x: 102.15037059693927, y: 31.68656020327437),
+                           control2: CGPoint(x: 101.29985380424964, y: 30.206501647779522))
+        pathBData.addCurve(to: CGPoint(x: 100.42716185212602, y: 22.9774024245772),
+                           control1: CGPoint(x: 99.63123348207472, y: 24.828726053968065),
+                           control2: CGPoint(x: 100.30163942011484, y: 24.107104312677823))
+        pathBData.addCurve(to: CGPoint(x: 100.73895695468858, y: 20.51073977233501),
+                           control1: CGPoint(x: 100.35859278381854, y: 22.077874534841545),
+                           control2: CGPoint(x: 100.64120850713009, y: 21.14610468146514))
+        pathBData.addLine(to: CGPoint(x: 101.02275257648652, y: 18.334100621454706))
+        pathBData.addLine(to: CGPoint(x: 101.46867147620203, y: 14.648263294474306))
+        pathBData.addLine(to: CGPoint(x: 101.93391205592032, y: 10.371214781482626))
+        pathBData.addLine(to: CGPoint(x: 102.38447558154246, y: 6.060489083249685))
+        pathBData.addLine(to: CGPoint(x: 102.97124622047964, y: 0.6493535731355559))
+        pathBData.addCurve(to: CGPoint(x: 106.24771955826719, y: -17.469366329297646),
+                           control1: CGPoint(x: 103.7697599174271, y: -5.620045431369374),
+                           control2: CGPoint(x: 104.9546523779395, y: -11.61823733831479))
+        pathBData.addCurve(to: CGPoint(x: 110.68914360604687, y: -34.932280661442086),
+                           control1: CGPoint(x: 107.54459811378874, y: -23.38645332345245),
+                           control2: CGPoint(x: 109.03172273328322, y: -29.297049694045693))
+        pathBData.addCurve(to: CGPoint(x: 114.07909997277282, y: -45.889797121564726),
+                           control1: CGPoint(x: 111.75794474963162, y: -38.594583954530755),
+                           control2: CGPoint(x: 112.85640600975621, y: -42.289642674904705))
+        pathBData.addCurve(to: CGPoint(x: 117.98825728158837, y: -56.017544660746225),
+                           control1: CGPoint(x: 115.41348857274359, y: -49.718488404380274),
+                           control2: CGPoint(x: 116.80019178849538, y: -53.078645809410936))
+        pathBData.addLine(to: CGPoint(x: 119.67463369535663, y: -59.88503941265729))
+        pathBData.addCurve(to: CGPoint(x: 124.01873068696305, y: -67.95878639668136),
+                           control1: CGPoint(x: 121.337856467501, y: -63.3337658379583),
+                           control2: CGPoint(x: 122.74757474401147, y: -65.84019315842873))
+        pathBData.addCurve(to: CGPoint(x: 126.92219493768862, y: -72.04718520042017),
+                           control1: CGPoint(x: 124.76725545859519, y: -69.10444940186909),
+                           control2: CGPoint(x: 125.4456647981751, y: -70.34917553997964))
+        pathBData.addCurve(to: CGPoint(x: 130.07970035410997, y: -75.99313656827664),
+                           control1: CGPoint(x: 127.2825633558757, y: -72.75241124778987),
+                           control2: CGPoint(x: 128.47913828444482, y: -74.39257449861148))
+        pathBData.addCurve(to: CGPoint(x: 133.05866984103798, y: -78.70343442235432),
+                           control1: CGPoint(x: 130.60424913225944, y: -76.58900413154218),
+                           control2: CGPoint(x: 131.56382983569995, y: -77.6056612934342))
+        pathBData.addCurve(to: CGPoint(x: 141.8672758235768, y: -81.36875423728806),
+                           control1: CGPoint(x: 134.65671733162205, y: -79.87700054825201),
+                           control2: CGPoint(x: 137.27383760802962, y: -81.73045197123142))
+        pathBData.addCurve(to: CGPoint(x: 143.53289392599694, y: -81.20024763709534),
+                           control1: CGPoint(x: 141.48352532257368, y: -81.40408427401015),
+                           control2: CGPoint(x: 142.26775126012913, y: -81.41998294221976))
+        pathBData.addCurve(to: CGPoint(x: 151.3097149039089, y: -76.44020418374146),
+                           control1: CGPoint(x: 145.7651207881653, y: -80.81254507682401),
+                           control2: CGPoint(x: 149.34306964994514, y: -79.07610704314158))
+        pathBData.addCurve(to: CGPoint(x: 153.84692847505139, y: -70.08375451875072),
+                           control1: CGPoint(x: 153.17195764815156, y: -73.94423244478504),
+                           control2: CGPoint(x: 153.60090021932245, y: -71.74444524492094))
+        pathBData.addCurve(to: CGPoint(x: 154.09296778381852, y: -66.12830663856808),
+                           control1: CGPoint(x: 154.19248864774877, y: -68.42830389708604),
+                           control2: CGPoint(x: 154.09296778381852, y: -67.0991314975187))
+        pathBData.addLine(to: CGPoint(x: 154.09296778381852, y: -63.06580663856807))
+        pathBData.addCurve(to: CGPoint(x: 153.26996655582047, y: -57.34310449152007),
+                           control1: CGPoint(x: 153.8157014422048, y: -60.00117943571678),
+                           control2: CGPoint(x: 153.50579315524035, y: -58.581194138474515))
+        pathBData.addLine(to: CGPoint(x: 152.07600240384954, y: -52.19631283411673))
+        pathBData.addLine(to: CGPoint(x: 151.05586907930117, y: -47.35742076268746))
+        pathBData.addCurve(to: CGPoint(x: 148.98152399166165, y: -36.99422751693125),
+                           control1: CGPoint(x: 150.3951264405294, y: -44.353902690228644),
+                           control2: CGPoint(x: 149.7760007178929, y: -40.801095163456104))
+        pathBData.addCurve(to: CGPoint(x: 145.57476699826867, y: -17.57653392672598),
+                           control1: CGPoint(x: 147.5585513116932, y: -30.116443939262275),
+                           control2: CGPoint(x: 146.4830418163862, y: -23.20459396041843))
+        pathBData.addLine(to: CGPoint(x: 145.13271733389286, y: -14.52181396181466))
+        pathBData.addLine(to: CGPoint(x: 144.61962432662776, y: -11.271627432860178))
+        pathBData.addLine(to: CGPoint(x: 144.09624684841916, y: -8.258023771453274))
+        pathBData.addCurve(to: CGPoint(x: 143.96622663505548, y: -6.784939037619051),
+                           control1: CGPoint(x: 143.98887750626457, y: -7.400263742805692),
+                           control2: CGPoint(x: 143.9684691623446, y: -6.98749241681363))
+        pathBData.addCurve(to: CGPoint(x: 143.9678995881537, y: -6.624862237528569),
+                           control1: CGPoint(x: 143.96715664685613, y: -6.731669867691962),
+                           control2: CGPoint(x: 143.9677151247449, y: -6.678310107472431))
+        pathBData.addLine(to: CGPoint(x: 143.96796778381855, y: -6.397906227953971))
+        pathBData.addCurve(to: CGPoint(x: 132.75703028381852, y: 4.8130996114319275),
+                           control1: CGPoint(x: 143.96796778381852, y: -0.20620807635713492),
+                           control2: CGPoint(x: 138.94866009602947, y: 4.8130996114319275))
+        pathBData.addCurve(to: CGPoint(x: 125.39573436104469, y: 2.057936777055406),
+                           control1: CGPoint(x: 129.93974655458098, y: 4.8130996114319275),
+                           control2: CGPoint(x: 127.36517869331657, y: 3.7739094462999407))
+        pathBData.addCurve(to: CGPoint(x: 125.25175026683972, y: 3.135823990576767),
+                           control1: CGPoint(x: 125.34555745951123, y: 2.4198049665840586),
+                           control2: CGPoint(x: 125.29752881530979, y: 2.779154475863189))
+        pathBData.addLine(to: CGPoint(x: 124.6606837584213, y: 8.597315172808104))
+        pathBData.addLine(to: CGPoint(x: 124.23055970029553, y: 12.725233868317325))
+        pathBData.addLine(to: CGPoint(x: 123.68212432662776, y: 17.697122567139818))
+        pathBData.addLine(to: CGPoint(x: 123.26836724637822, y: 21.1316128643374))
+        pathBData.addLine(to: CGPoint(x: 122.9799678086023, y: 23.278342173316098))
+        pathBData.addLine(to: CGPoint(x: 122.82426865457732, y: 24.36122266039211))
+        pathBData.addLine(to: CGPoint(x: 122.76480477629224, y: 24.77479121112714))
+        pathBData.addCurve(to: CGPoint(x: 122.70979440930768, y: 26.663090459247186),
+                           control1: CGPoint(x: 122.8001277024233, y: 25.41353769063375),
+                           control2: CGPoint(x: 122.78051986397581, y: 26.044656762478724))
+        pathBData.closeSubpath()
+
+        let pathA = Path(cgPath: pathAData)
+        let pathB = Path(cgPath: pathBData)
+        let rule: PathFillRule = .evenOdd
+        let pointInA = CGPoint(x: 115.0, y: -25.0)
+        let pointInBNotA = CGPoint(x: 150.0, y: -60.0)
+        XCTAssertTrue(pathA.contains(pointInA, using: rule), "sanity: point should be inside path A")
+        XCTAssertFalse(pathA.contains(pointInBNotA, using: rule), "sanity: point should be outside path A")
+        XCTAssertTrue(pathB.contains(pointInBNotA, using: rule), "sanity: point should be inside path B")
+        let result = pathA.union(pathB, accuracy: 1.0e-4)
+        XCTAssertTrue(result.contains(pointInA, using: rule), "point inside path A should be in the union")
+        XCTAssertTrue(result.contains(pointInBNotA, using: rule), "point inside path B should be in the union")
+    }
+
+    func testUnionRealWorldCase2() {
+        let pathAData = CGMutablePath()
+        pathAData.move(to: CGPoint(x: 169.4526401097924, y: -59.941311462821474))
+        pathAData.addCurve(to: CGPoint(x: 165.92191811498446, y: -53.93973168860035),
+                           control1: CGPoint(x: 168.61485274771488, y: -58.45969901067963),
+                           control2: CGPoint(x: 167.4854383898041, y: -56.480452135182254))
+        pathAData.addCurve(to: CGPoint(x: 150.49840647202086, y: -50.26746701170425),
+                           control1: CGPoint(x: 162.67690086973818, y: -48.66657866507511),
+                           control2: CGPoint(x: 155.77155949554611, y: -47.022449766457946))
+        pathAData.addCurve(to: CGPoint(x: 146.82614179512478, y: -65.69097865466784),
+                           control1: CGPoint(x: 145.22525344849564, y: -53.51248425695054),
+                           control2: CGPoint(x: 143.58112454987847, y: -60.417825631142605))
+        pathAData.addCurve(to: CGPoint(x: 150.30955962234808, y: -71.61582116775507),
+                           control1: CGPoint(x: 148.5198149419813, y: -68.4431975183097),
+                           control2: CGPoint(x: 149.4923079753478, y: -70.21242399620873))
+        pathAData.addCurve(to: CGPoint(x: 151.17096610837646, y: -73.15906440275288),
+                           control1: CGPoint(x: 150.55459424181458, y: -72.14984324595407),
+                           control2: CGPoint(x: 150.8422579161966, y: -72.66600211448306))
+        pathAData.addCurve(to: CGPoint(x: 153.12221254131865, y: -75.40946098751837),
+                           control1: CGPoint(x: 151.68275956242442, y: -73.9267545838248),
+                           control2: CGPoint(x: 152.28974100738088, y: -74.66618283221679))
+        pathAData.addCurve(to: CGPoint(x: 155.96662671099963, y: -77.27344906104203),
+                           control1: CGPoint(x: 153.77132958772813, y: -75.98902977895543),
+                           control2: CGPoint(x: 154.53319445179335, y: -76.61570324589991))
+        pathAData.addCurve(to: CGPoint(x: 162.89649770717003, y: -78.0767423654457),
+                           control1: CGPoint(x: 157.15410199017145, y: -77.81833486952277),
+                           control2: CGPoint(x: 158.8866631095937, y: -78.89022501024118))
+        pathAData.addCurve(to: CGPoint(x: 168.3892288432265, y: -75.21983606010723),
+                           control1: CGPoint(x: 164.56118593302034, y: -77.73902395143851),
+                           control2: CGPoint(x: 166.64315515706753, y: -76.87651022509158))
+        pathAData.addCurve(to: CGPoint(x: 171.48194657329262, y: -70.0664091096708),
+                           control1: CGPoint(x: 169.93273365799553, y: -73.7553591766706),
+                           control2: CGPoint(x: 170.99910973349068, y: -71.81521210437153))
+        pathAData.addCurve(to: CGPoint(x: 171.39708697021973, y: -63.79828084686825),
+                           control1: CGPoint(x: 172.2814425238716, y: -67.17068782792857),
+                           control2: CGPoint(x: 171.80392433979563, y: -65.13131499685137))
+        pathAData.addCurve(to: CGPoint(x: 169.4526401097924, y: -59.941311462821474),
+                           control1: CGPoint(x: 170.73346225622873, y: -61.623863075351885),
+                           control2: CGPoint(x: 170.04529348713692, y: -60.587365295861474))
+        pathAData.closeSubpath()
+        // Component 1: tiny closed 4-element loop near path A's lower boundary
+        pathAData.move(to: CGPoint(x: 150.37810863980434, y: -71.73329156202611))
+        pathAData.addCurve(to: CGPoint(x: 150.4609393398093, y: -71.87452612177839),
+                           control1: CGPoint(x: 150.40587539704168, y: -71.78077197986615),
+                           control2: CGPoint(x: 150.43347800218032, y: -71.82784184780914))
+        pathAData.addLine(to: CGPoint(x: 150.51325865010278, y: -72.00510896713574))
+        pathAData.addCurve(to: CGPoint(x: 150.47282965322088, y: -71.92748867071217),
+                           control1: CGPoint(x: 150.46466004690927, y: -71.91136425807576),
+                           control2: CGPoint(x: 150.46000072886014, y: -71.90249899513445))
+        pathAData.addCurve(to: CGPoint(x: 150.37810863980434, y: -71.73329156202611),
+                           control1: CGPoint(x: 150.46806473177253, y: -71.91626313427945),
+                           control2: CGPoint(x: 150.4161568123335, y: -71.81029417979279))
+        pathAData.closeSubpath()
+
+        let pathBData = CGMutablePath()
+        // Component 0: degenerate self-loop cubic
+        pathBData.move(to: CGPoint(x: 150.56254052524326, y: -71.84375493658648))
+        pathBData.addCurve(to: CGPoint(x: 150.56254052524326, y: -71.84375493658648),
+                           control1: CGPoint(x: 150.52379768837753, y: -71.77454471325406),
+                           control2: CGPoint(x: 150.50321047774688, y: -71.74001407452634))
+        pathBData.closeSubpath()
+        // Component 1: main 13-element closed component
+        pathBData.move(to: CGPoint(x: 150.4611924165118, y: -71.72239763983333))
+        pathBData.addCurve(to: CGPoint(x: 163.3497199493032, y: -77.87492465635971),
+                           control1: CGPoint(x: 152.67745201882607, y: -76.50760831422711),
+                           control2: CGPoint(x: 158.04480083349435, y: -79.20115443531192))
+        pathBData.addCurve(to: CGPoint(x: 171.50687515072048, y: -64.27966598733089),
+                           control1: CGPoint(x: 169.35648317529586, y: -76.37323384986153),
+                           control2: CGPoint(x: 173.00856595721865, y: -70.28642921332359))
+        pathBData.addCurve(to: CGPoint(x: 169.52981752928926, y: -59.92069316227049),
+                           control1: CGPoint(x: 170.7908597608953, y: -61.41560442803017),
+                           control2: CGPoint(x: 169.98318019546818, y: -60.62592397632657))
+        pathBData.addLine(to: CGPoint(x: 168.4639044256191, y: -58.29234013287742))
+        pathBData.addCurve(to: CGPoint(x: 163.42045040561774, y: -49.14091600968427),
+                           control1: CGPoint(x: 167.4208949789778, y: -56.441497625960885),
+                           control2: CGPoint(x: 165.63809794807432, y: -53.34277451118093))
+        pathBData.addCurve(to: CGPoint(x: 157.76088819359563, y: -38.16499306485307),
+                           control1: CGPoint(x: 161.59088262347183, y: -45.67780354931521),
+                           control2: CGPoint(x: 159.5811663334907, y: -42.004642266194224))
+        pathBData.addLine(to: CGPoint(x: 154.74699239360197, y: -31.97954050174344))
+        pathBData.addCurve(to: CGPoint(x: 139.7989909961042, y: -26.69489354303211),
+                           control1: CGPoint(x: 152.07853074937503, y: -26.392448934143275),
+                           control2: CGPoint(x: 145.38608256370438, y: -24.026431898805164))
+        pathBData.addCurve(to: CGPoint(x: 134.51434403739287, y: -41.642894940529885),
+                           control1: CGPoint(x: 134.21189942850404, y: -29.363355187259053),
+                           control2: CGPoint(x: 131.84588239316594, y: -36.05580337292972))
+        pathBData.addLine(to: CGPoint(x: 137.60330087889682, y: -47.981151389436974))
+        pathBData.addCurve(to: CGPoint(x: 143.5930314487334, y: -59.610582428106326),
+                           control1: CGPoint(x: 139.6570267053385, y: -52.31897508322968),
+                           control2: CGPoint(x: 141.8589489231659, y: -56.32821193328217))
+        pathBData.addCurve(to: CGPoint(x: 149.2718486143365, y: -69.87340035037147),
+                           control1: CGPoint(x: 145.99860509089376, y: -64.16851345146269),
+                           control2: CGPoint(x: 147.96780028147822, y: -67.59131576786947))
+        pathBData.addLine(to: CGPoint(x: 150.4611924165118, y: -71.72239763983333))
+        pathBData.closeSubpath()
+
+        let pathA = Path(cgPath: pathAData)
+        let pathB = Path(cgPath: pathBData)
+        let rule: PathFillRule = .evenOdd
+        let pointInA = CGPoint(x: 157.0, y: -66.0)
+        let pointInB = CGPoint(x: 152.0, y: -60.0)
+        XCTAssertTrue(pathA.contains(pointInA, using: rule), "sanity: point should be inside path A")
+        XCTAssertTrue(pathB.contains(pointInB, using: rule), "sanity: point should be inside path B")
+        let result = pathA.union(pathB, accuracy: 1.0e-4)
+        XCTAssertTrue(result.contains(pointInA, using: rule), "point inside path A should be in the union")
+        XCTAssertTrue(result.contains(pointInB, using: rule), "point inside path B should be in the union")
+    }
+
+    func testUnionRealWorldCase3() {
+        let pathAData = CGMutablePath()
+        pathAData.move(to: CGPoint(x: 95.42684472987237, y: 14.112542326547688))
+        pathAData.addCurve(to: CGPoint(x: 99.06812243180225, y: 6.003413710553378),
+                           control1: CGPoint(x: 96.58744632142007, y: 11.491858473265038),
+                           control2: CGPoint(x: 97.79517715765391, y: 8.773701662946715))
+        pathAData.addLine(to: CGPoint(x: 102.01189630821541, y: -0.06141728012209651))
+        pathAData.addLine(to: CGPoint(x: 104.5755425278924, y: -5.117460593578404))
+        pathAData.addCurve(to: CGPoint(x: 115.24116297687908, y: -25.43132974835794),
+                           control1: CGPoint(x: 108.16739302581404, y: -12.258796382497954),
+                           control2: CGPoint(x: 111.81590219471934, y: -19.194770022350102))
+        pathAData.addLine(to: CGPoint(x: 119.80688611355227, y: -33.64031914100532))
+        pathAData.addLine(to: CGPoint(x: 121.91751846254424, y: -37.298206302496766))
+        pathAData.addCurve(to: CGPoint(x: 126.58432501849636, y: -45.474637306566024),
+                           control1: CGPoint(x: 123.80332691343831, y: -40.49681182618086),
+                           control2: CGPoint(x: 125.47699675931518, y: -43.370713614121804))
+        pathAData.addCurve(to: CGPoint(x: 127.29769131376996, y: -46.63491593132077),
+                           control1: CGPoint(x: 127.34655853057846, y: -46.726194100887504),
+                           control2: CGPoint(x: 127.20961482692614, y: -46.425734275066695))
+        pathAData.addLine(to: CGPoint(x: 129.99134985801416, y: -51.62590601202733))
+        pathAData.addCurve(to: CGPoint(x: 131.98123063415375, y: -54.64470962769172),
+                           control1: CGPoint(x: 130.537111311146, y: -52.56819727095026),
+                           control2: CGPoint(x: 130.36564554353805, y: -52.78691560100911))
+        pathAData.addCurve(to: CGPoint(x: 132.74457208286663, y: -55.509574591971344),
+                           control1: CGPoint(x: 131.9984971710431, y: -54.68709743555362),
+                           control2: CGPoint(x: 132.10833268294073, y: -54.847998224791745))
+        pathAData.addCurve(to: CGPoint(x: 137.02443371325853, y: -58.289534646315886),
+                           control1: CGPoint(x: 133.1646402242235, y: -55.94637111063887),
+                           control2: CGPoint(x: 133.27075736481638, y: -56.93333835721404))
+        pathAData.addCurve(to: CGPoint(x: 141.0771623031116, y: -58.95422284457678),
+                           control1: CGPoint(x: 137.99578444463327, y: -58.640481860465954),
+                           control2: CGPoint(x: 139.3190271681256, y: -58.99219483963622))
+        pathAData.addCurve(to: CGPoint(x: 146.89649794058604, y: -57.17724788889969),
+                           control1: CGPoint(x: 142.865252822395, y: -58.91560387666417),
+                           control2: CGPoint(x: 145.0594467393391, y: -58.3576928782591))
+        pathAData.addCurve(to: CGPoint(x: 151.80732862109193, y: -50.05401663178891),
+                           control1: CGPoint(x: 150.38924886678123, y: -54.93289001411157),
+                           control2: CGPoint(x: 151.44422169277425, y: -51.778264300214644))
+        pathAData.addCurve(to: CGPoint(x: 151.8876073421258, y: -45.8488363031942),
+                           control1: CGPoint(x: 152.38632075375455, y: -47.30461760653286),
+                           control2: CGPoint(x: 151.99318398272027, y: -46.46729036028322))
+        pathAData.addCurve(to: CGPoint(x: 151.47026663282563, y: -44.174955086279624),
+                           control1: CGPoint(x: 151.41552021088842, y: -43.08341205812191),
+                           control2: CGPoint(x: 151.47585220635386, y: -44.19310820024639))
+        pathAData.addCurve(to: CGPoint(x: 150.4889075033928, y: -41.90975052799673),
+                           control1: CGPoint(x: 151.22753074114385, y: -43.386063438313826),
+                           control2: CGPoint(x: 150.8984162508424, y: -42.626390836033494))
+        pathAData.addCurve(to: CGPoint(x: 147.40825856392894, y: -36.52968954082086),
+                           control1: CGPoint(x: 149.65604271030136, y: -40.45223714008671),
+                           control2: CGPoint(x: 148.79532070219517, y: -39.14376818601493))
+        pathAData.addLine(to: CGPoint(x: 145.73077586423403, y: -33.418695740820176))
+        pathAData.addCurve(to: CGPoint(x: 144.4599782438638, y: -31.46611243211342),
+                           control1: CGPoint(x: 145.3682539595436, y: -32.711778026673834),
+                           control2: CGPoint(x: 144.9410082503627, y: -32.05974262639149))
+        pathAData.addCurve(to: CGPoint(x: 141.1613079187749, y: -25.791723308763764),
+                           control1: CGPoint(x: 143.54922998002738, y: -29.84573738105402),
+                           control2: CGPoint(x: 142.39231193168877, y: -27.8786597994068))
+        pathAData.addLine(to: CGPoint(x: 139.49242264427673, y: -22.90656640477486))
+        pathAData.addLine(to: CGPoint(x: 134.8896922582644, y: -14.62967732110783))
+        pathAData.addCurve(to: CGPoint(x: 124.58296884065044, y: 5.003838652545757),
+                           control1: CGPoint(x: 131.61001881792313, y: -8.658188982476128),
+                           control2: CGPoint(x: 128.07731273981162, y: -1.9433759629341807))
+        pathAData.addLine(to: CGPoint(x: 122.13299911050254, y: 9.828648655591563))
+        pathAData.addLine(to: CGPoint(x: 119.39170673371696, y: 15.473270621422836))
+        pathAData.addCurve(to: CGPoint(x: 112.58614958316029, y: 30.68281078864501),
+                           control1: CGPoint(x: 117.08092703567787, y: 20.503696842970278),
+                           control2: CGPoint(x: 114.85253930626573, y: 25.69675339781306))
+        pathAData.addCurve(to: CGPoint(x: 106.85924641530256, y: 43.442813320415),
+                           control1: CGPoint(x: 110.47123060809967, y: 35.31700250980358),
+                           control2: CGPoint(x: 108.50748870456074, y: 39.627437650835894))
+        pathAData.addLine(to: CGPoint(x: 104.97858290165591, y: 47.56613959250927))
+        pathAData.addLine(to: CGPoint(x: 103.21735854968287, y: 51.23238395113027))
+        pathAData.addCurve(to: CGPoint(x: 101.4264075033928, y: 54.590249472003265),
+                           control1: CGPoint(x: 102.68542851591805, y: 52.380392078978566),
+                           control2: CGPoint(x: 101.97481835269247, y: 53.63053048572885))
+        pathAData.addCurve(to: CGPoint(x: 99.07185932059708, y: 58.18773397746063),
+                           control1: CGPoint(x: 100.94538826326472, y: 55.49108167611251),
+                           control2: CGPoint(x: 100.18057763053031, y: 56.801836090044105))
+        pathAData.addCurve(to: CGPoint(x: 95.68241783194043, y: 62.080396772477016),
+                           control1: CGPoint(x: 98.00123063267486, y: 59.76441627913121),
+                           control2: CGPoint(x: 96.46758713657853, y: 61.29522746783891))
+        pathAData.addCurve(to: CGPoint(x: 91.83127157053218, y: 64.86793417936907),
+                           control1: CGPoint(x: 94.60880045549234, y: 63.035009877715524),
+                           control2: CGPoint(x: 93.70844011543295, y: 63.92934990691869))
+        pathAData.addCurve(to: CGPoint(x: 84.45634167775803, y: 66.30426398540209),
+                           control1: CGPoint(x: 89.10156766993364, y: 66.37909830028765),
+                           control2: CGPoint(x: 85.2862239954273, y: 66.36354129380703))
+        pathAData.addCurve(to: CGPoint(x: 77.95281521188738, y: 63.87887536091124),
+                           control1: CGPoint(x: 83.15262927353666, y: 66.33275434276845),
+                           control2: CGPoint(x: 80.4369766928486, y: 65.77852825811688))
+        pathAData.addCurve(to: CGPoint(x: 73.40682600063988, y: 56.08228282871017),
+                           control1: CGPoint(x: 75.40860279640142, y: 61.93330116083374),
+                           control2: CGPoint(x: 73.78588110481184, y: 58.735668557913804))
+        pathAData.addCurve(to: CGPoint(x: 73.49593854908086, y: 50.03066691886834),
+                           control1: CGPoint(x: 73.1859714616622, y: 53.89358703890074),
+                           control2: CGPoint(x: 73.25569289699793, y: 52.07275496157324))
+        pathAData.addCurve(to: CGPoint(x: 74.21279625873608, y: 45.30957269478674),
+                           control1: CGPoint(x: 73.57575102535989, y: 48.48495653990902),
+                           control2: CGPoint(x: 73.91737021902806, y: 46.99350112112241))
+        pathAData.addLine(to: CGPoint(x: 74.97212742210698, y: 41.71849621537374))
+        pathAData.addCurve(to: CGPoint(x: 75.8229344017573, y: 37.94973650175151),
+                           control1: CGPoint(x: 75.21247187029553, y: 40.372659164664434),
+                           control2: CGPoint(x: 75.55682714994614, y: 39.12060840972054))
+        pathAData.addCurve(to: CGPoint(x: 77.0904351767012, y: 32.87079576577903),
+                           control1: CGPoint(x: 76.19831983715183, y: 36.22062402128146),
+                           control2: CGPoint(x: 76.66673028248998, y: 34.505086072022344))
+        pathAData.addCurve(to: CGPoint(x: 78.90624155256523, y: 26.639087338811834),
+                           control1: CGPoint(x: 77.63105229187016, y: 30.936563302516973),
+                           control2: CGPoint(x: 78.17113682365361, y: 28.899534380215087))
+        pathAData.addCurve(to: CGPoint(x: 80.6321713135411, y: 21.15149610032694),
+                           control1: CGPoint(x: 79.38935718131297, y: 24.921570885056646),
+                           control2: CGPoint(x: 80.04555558554716, y: 22.999335643507823))
+        pathAData.addCurve(to: CGPoint(x: 94.70978364467338, y: 13.858275254077684),
+                           control1: CGPoint(x: 82.50562929042803, y: 15.250103473133088),
+                           control2: CGPoint(x: 88.80839101747952, y: 11.984817277190746))
+        pathAData.addCurve(to: CGPoint(x: 95.42684472987237, y: 14.112542326547688),
+                           control1: CGPoint(x: 94.95335321285246, y: 13.935598926515487),
+                           control2: CGPoint(x: 95.19243222651228, y: 14.020467829197619))
+        pathAData.closeSubpath()
+        // Component 1: tiny closed loop
+        pathAData.move(to: CGPoint(x: 131.98123063415375, y: -54.64470962769172))
+        pathAData.addCurve(to: CGPoint(x: 132.25092874355178, y: -54.95132463161385),
+                           control1: CGPoint(x: 132.06607991184583, y: -54.74227953111574),
+                           control2: CGPoint(x: 132.15585835660616, y: -54.84437044630004))
+        pathAData.addCurve(to: CGPoint(x: 131.98123063415375, y: -54.64470962769172),
+                           control1: CGPoint(x: 132.39099331865648, y: -55.108897278606655),
+                           control2: CGPoint(x: 131.9605919006197, y: -54.60468872477935))
+        pathAData.closeSubpath()
+
+        let pathBData = CGMutablePath()
+        pathBData.move(to: CGPoint(x: 138.65391637549612, y: -19.071191957822034))
+        pathBData.addCurve(to: CGPoint(x: 140.4243404094738, y: -6.920802201130714),
+                           control1: CGPoint(x: 141.51399065907958, y: -15.835138174752894),
+                           control2: CGPoint(x: 142.35891229793907, y: -11.088864203883118))
+        pathBData.addCurve(to: CGPoint(x: 134.09345099878925, y: 7.674800174485943),
+                           control1: CGPoint(x: 138.28253593621196, y: -2.306254716203657),
+                           control2: CGPoint(x: 136.21300227747065, y: 2.622358776268864))
+        pathBData.addCurve(to: CGPoint(x: 128.40119836375132, y: 22.323363491247786),
+                           control1: CGPoint(x: 132.02609106635623, y: 12.689847295768416),
+                           control2: CGPoint(x: 130.04463259908576, y: 17.620500344598785))
+        pathBData.addLine(to: CGPoint(x: 125.91786927253007, y: 29.49405812061804))
+        pathBData.addLine(to: CGPoint(x: 123.43961490527866, y: 36.96154039796975))
+        pathBData.addLine(to: CGPoint(x: 121.71252508800843, y: 42.416637130014095))
+        pathBData.addCurve(to: CGPoint(x: 119.8212676438836, y: 48.48101684852743),
+                           control1: CGPoint(x: 120.96402031912767, y: 44.832269874709574),
+                           control2: CGPoint(x: 120.25604938242778, y: 46.886817140532116))
+        pathBData.addLine(to: CGPoint(x: 117.060586972701, y: 58.426153652831495))
+        pathBData.addCurve(to: CGPoint(x: 115.4788260753661, y: 63.73748417835357),
+                           control1: CGPoint(x: 116.66320219861184, y: 59.87384920700127),
+                           control2: CGPoint(x: 116.24202302275171, y: 61.638692573043144))
+        pathBData.addCurve(to: CGPoint(x: 114.39098990346439, y: 67.10768377760935),
+                           control1: CGPoint(x: 115.22805657574479, y: 64.71646711889287),
+                           control2: CGPoint(x: 114.72295322170913, y: 66.11179382287511))
+        pathBData.addCurve(to: CGPoint(x: 112.80943665389924, y: 70.94800909341751),
+                           control1: CGPoint(x: 113.7740821779436, y: 68.77464755662386),
+                           control2: CGPoint(x: 113.28188183439224, y: 69.92437786901603))
+        pathBData.addCurve(to: CGPoint(x: 109.19572649336821, y: 76.80133286189154),
+                           control1: CGPoint(x: 111.59658403154711, y: 73.47774368141617),
+                           control2: CGPoint(x: 110.31145500668953, y: 75.38131475402804))
+        pathBData.addCurve(to: CGPoint(x: 104.13004337096102, y: 81.42129365819089),
+                           control1: CGPoint(x: 108.0055402173393, y: 78.2897561201623),
+                           control2: CGPoint(x: 107.21313111184757, y: 79.65952923482715))
+        pathBData.addCurve(to: CGPoint(x: 97.71559948549029, y: 82.54983512425346),
+                           control1: CGPoint(x: 101.91035615641857, y: 82.26902412620952),
+                           control2: CGPoint(x: 99.70178418067147, y: 82.60780731924939))
+        pathBData.addLine(to: CGPoint(x: 98.25536074172622, y: 82.77341155702996))
+        pathBData.addCurve(to: CGPoint(x: 94.13611961194688, y: 81.94942737641746),
+                           control1: CGPoint(x: 97.14971001293273, y: 82.77341155702996),
+                           control2: CGPoint(x: 95.65849488879442, y: 82.54200946893113))
+        pathBData.addCurve(to: CGPoint(x: 92.14602651060743, y: 80.99991290370814),
+                           control1: CGPoint(x: 93.38611381628715, y: 81.69991744813588),
+                           control2: CGPoint(x: 92.71550773408447, y: 81.37956705269283))
+        pathBData.addCurve(to: CGPoint(x: 90.37447414016839, y: 79.54782830449679),
+                           control1: CGPoint(x: 91.32806392870876, y: 80.45460451577569),
+                           control2: CGPoint(x: 90.75742497475423, y: 79.93644295361716))
+        pathBData.addCurve(to: CGPoint(x: 87.33430907430022, y: 74.18341547370594),
+                           control1: CGPoint(x: 88.51033197461439, y: 77.71365094627136),
+                           control2: CGPoint(x: 87.6800508373692, y: 75.60946098410852))
+        pathBData.addCurve(to: CGPoint(x: 87.01973408896086, y: 70.00852495732939),
+                           control1: CGPoint(x: 86.54418196497683, y: 70.92445940517553),
+                           control2: CGPoint(x: 86.83603560294918, y: 70.1827362536434))
+        pathBData.addCurve(to: CGPoint(x: 87.44349548325657, y: 64.73442839972125),
+                           control1: CGPoint(x: 86.90396006928036, y: 68.29556314633143),
+                           control2: CGPoint(x: 87.19162474943403, y: 66.74939427030168))
+        pathBData.addCurve(to: CGPoint(x: 87.88859050694317, y: 61.08121054814522),
+                           control1: CGPoint(x: 87.49603179964036, y: 63.66506207140266),
+                           control2: CGPoint(x: 87.71940406489446, y: 62.37830660385205))
+        pathBData.addLine(to: CGPoint(x: 88.82196011126429, y: 55.56315728528631))
+        pathBData.addLine(to: CGPoint(x: 90.03843910483556, y: 49.361157346174366))
+        pathBData.addCurve(to: CGPoint(x: 93.83660027759653, y: 33.751396558326896),
+                           control1: CGPoint(x: 91.07958294898047, y: 44.73701639875948),
+                           control2: CGPoint(x: 92.240920453522, y: 39.43600593159245))
+        pathBData.addCurve(to: CGPoint(x: 99.36518777772426, y: 16.29951094428974),
+                           control1: CGPoint(x: 95.43864359631803, y: 28.285749369845647),
+                           control2: CGPoint(x: 97.12014198404951, y: 22.37133934081917))
+        pathBData.addCurve(to: CGPoint(x: 102.61419233247102, y: 7.871424830082082),
+                           control1: CGPoint(x: 100.4345911724011, y: 13.32389065818779),
+                           control2: CGPoint(x: 101.59568508929753, y: 10.500072200331322))
+        pathBData.addCurve(to: CGPoint(x: 105.75498238516428, y: -0.3036235476312019),
+                           control1: CGPoint(x: 103.5637653369264, y: 5.292908340627944),
+                           control2: CGPoint(x: 104.60710504717544, y: 2.500657669624642))
+        pathBData.addCurve(to: CGPoint(x: 112.2208229539968, y: -15.21246945764585),
+                           control1: CGPoint(x: 108.03174166537644, y: -5.699418101811216),
+                           control2: CGPoint(x: 110.23498950698531, y: -10.63574393523656))
+        pathBData.addCurve(to: CGPoint(x: 118.12277034820022, y: -28.10999731296602),
+                           control1: CGPoint(x: 114.28114160755307, y: -19.880926123879163),
+                           control2: CGPoint(x: 116.25700607746822, y: -24.16937449978206))
+        pathBData.addLine(to: CGPoint(x: 120.9562123985469, y: -34.021222696838144))
+        pathBData.addLine(to: CGPoint(x: 123.47799340512559, y: -39.07620961127035))
+        pathBData.addLine(to: CGPoint(x: 125.59016702641364, y: -43.259273019859606))
+        pathBData.addCurve(to: CGPoint(x: 140.48335781861576, y: -48.6964696582826),
+                           control1: CGPoint(x: 128.20136770907874, y: -48.87335448758953),
+                           control2: CGPoint(x: 134.86927635088583, y: -51.30767034094768))
+        pathBData.addCurve(to: CGPoint(x: 145.92055445703878, y: -33.80327886608048),
+                           control1: CGPoint(x: 146.09743928665873, y: -46.08526897547193),
+                           control2: CGPoint(x: 148.53175513984945, y: -39.41736033412344))
+        pathBData.addCurve(to: CGPoint(x: 143.37626721350998, y: -28.74742245816341),
+                           control1: CGPoint(x: 145.18768098814328, y: -32.22760090795515),
+                           control2: CGPoint(x: 144.34111214468456, y: -30.539277330344785))
+        pathBData.addLine(to: CGPoint(x: 141.08292130914194, y: -24.151938982087806))
+        pathBData.addLine(to: CGPoint(x: 138.65391637549612, y: -19.071191957822034))
+        pathBData.closeSubpath()
+
+        let pathA = Path(cgPath: pathAData)
+        let pathB = Path(cgPath: pathBData)
+        let rule: PathFillRule = .evenOdd
+        let pointInA = CGPoint(x: 100.0, y: 20.0)
+        let pointInB = CGPoint(x: 130.0, y: 5.0)
+        XCTAssertTrue(pathA.contains(pointInA, using: rule), "sanity: point should be inside path A")
+        XCTAssertTrue(pathB.contains(pointInB, using: rule), "sanity: point should be inside path B")
+        let result = pathA.union(pathB, accuracy: 1.0e-4)
+        XCTAssertTrue(result.contains(pointInA, using: rule), "point inside path A should be in the union")
+        XCTAssertTrue(result.contains(pointInB, using: rule), "point inside path B should be in the union")
+    }
+
     #endif
 
 }
