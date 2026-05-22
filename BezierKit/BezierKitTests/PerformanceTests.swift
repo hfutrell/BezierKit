@@ -427,8 +427,24 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    #endif
+    func testCrossingsRemovedPerformance() {
+        // {n/k} star polygon: gcd(n,k)=1 produces a single closed path with ~n*(k-1)/2 crossings
+        let n = 100, k = 47
+        let radius: CGFloat = 100
+        let cgPath = CGMutablePath()
+        for i in 0..<n {
+            let theta = CGFloat(2.0 * Double.pi) * CGFloat(i * k % n) / CGFloat(n)
+            let point = CGPoint(x: radius * cos(theta), y: radius * sin(theta))
+            if i == 0 { cgPath.move(to: point) } else { cgPath.addLine(to: point) }
+        }
+        cgPath.closeSubpath()
+        let path = Path(cgPath: cgPath)
+        self.measure {
+            _ = path.crossingsRemoved()
+        }
+    }
 
+    #endif
 
 }
 #endif
