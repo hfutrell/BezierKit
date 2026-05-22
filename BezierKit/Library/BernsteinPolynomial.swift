@@ -240,7 +240,65 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
     }
 }
 
-// Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–5.
+public struct BernsteinPolynomial6: BernsteinPolynomial {
+    public init(b0: CGFloat, b1: CGFloat, b2: CGFloat, b3: CGFloat, b4: CGFloat, b5: CGFloat, b6: CGFloat) {
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+        self.b3 = b3
+        self.b4 = b4
+        self.b5 = b5
+        self.b6 = b6
+    }
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial5
+    public var b0, b1, b2, b3, b4, b5, b6: CGFloat
+    public var derivative: BernsteinPolynomial5 {
+        BernsteinPolynomial5(b0: 6 * (b1 - b0), b1: 6 * (b2 - b1), b2: 6 * (b3 - b2),
+                             b3: 6 * (b4 - b3), b4: 6 * (b5 - b4), b5: 6 * (b6 - b5))
+    }
+    public func value(at x: CGFloat) -> CGFloat {
+        valueAndDerivative(at: x).0
+    }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        let s = 1 - x, t = x
+        let c10 = s * b0 + t * b1; let c11 = s * b1 + t * b2; let c12 = s * b2 + t * b3
+        let c13 = s * b3 + t * b4; let c14 = s * b4 + t * b5; let c15 = s * b5 + t * b6
+        let c20 = s * c10 + t * c11; let c21 = s * c11 + t * c12
+        let c22 = s * c12 + t * c13; let c23 = s * c13 + t * c14; let c24 = s * c14 + t * c15
+        let c30 = s * c20 + t * c21; let c31 = s * c21 + t * c22
+        let c32 = s * c22 + t * c23; let c33 = s * c23 + t * c24
+        let c40 = s * c30 + t * c31; let c41 = s * c31 + t * c32; let c42 = s * c32 + t * c33
+        let c50 = s * c40 + t * c41; let c51 = s * c41 + t * c42
+        return (s * c50 + t * c51, 6 * (c51 - c50))
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial6, right: BernsteinPolynomial6) {
+        let h00 = Utils.linearInterpolate(b0, b1, t)
+        let h01 = Utils.linearInterpolate(b1, b2, t)
+        let h02 = Utils.linearInterpolate(b2, b3, t)
+        let h03 = Utils.linearInterpolate(b3, b4, t)
+        let h04 = Utils.linearInterpolate(b4, b5, t)
+        let h05 = Utils.linearInterpolate(b5, b6, t)
+        let h10 = Utils.linearInterpolate(h00, h01, t)
+        let h11 = Utils.linearInterpolate(h01, h02, t)
+        let h12 = Utils.linearInterpolate(h02, h03, t)
+        let h13 = Utils.linearInterpolate(h03, h04, t)
+        let h14 = Utils.linearInterpolate(h04, h05, t)
+        let h20 = Utils.linearInterpolate(h10, h11, t)
+        let h21 = Utils.linearInterpolate(h11, h12, t)
+        let h22 = Utils.linearInterpolate(h12, h13, t)
+        let h23 = Utils.linearInterpolate(h13, h14, t)
+        let h30 = Utils.linearInterpolate(h20, h21, t)
+        let h31 = Utils.linearInterpolate(h21, h22, t)
+        let h32 = Utils.linearInterpolate(h22, h23, t)
+        let h40 = Utils.linearInterpolate(h30, h31, t)
+        let h41 = Utils.linearInterpolate(h31, h32, t)
+        let h50 = Utils.linearInterpolate(h40, h41, t)
+        return (left: BernsteinPolynomial6(b0: b0, b1: h00, b2: h10, b3: h20, b4: h30, b5: h40, b6: h50),
+                right: BernsteinPolynomial6(b0: h50, b1: h41, b2: h32, b3: h23, b4: h14, b5: h05, b6: b6))
+    }
+}
+
+// Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–6.
 // With WMO (whole-module optimization) the conformance check is a compile-time constant and generates no branch overhead.
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
     var result: [CGFloat] = []
@@ -258,6 +316,8 @@ public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomia
         findDistinctRootsCallbackBezierClipping(p4) { result.append($0) }
     } else if let p5 = polynomial as? BernsteinPolynomial5 {
         findDistinctRootsCallbackBezierClipping(p5) { result.append($0) }
+    } else if let p6 = polynomial as? BernsteinPolynomial6 {
+        findDistinctRootsCallbackBezierClipping(p6) { result.append($0) }
     }
     return result
 }

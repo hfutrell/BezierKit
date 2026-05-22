@@ -81,6 +81,16 @@ public struct CubicCurve: NonlinearBezierCurve, Equatable, Sendable {
     }
 
 
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: startingPoint, p1: endingPoint)
+        let d1 = p1 - line.point(at: 1.0 / 3.0)
+        let d2 = p2 - line.point(at: 2.0 / 3.0)
+        let dmaxx = max(d1.x * d1.x, d2.x * d2.x)
+        let dmaxy = max(d1.y * d1.y, d2.y * d2.y)
+        let error = 3 / 4 * sqrt(dmaxx + dmaxy)
+        return (lineSegment: line, error: error)
+    }
+
 /**
      Returns a CubicCurve which passes through three provided points: a starting point `start`, and ending point `end`, and an intermediate point `mid` at an optional t-value `t`.
      
