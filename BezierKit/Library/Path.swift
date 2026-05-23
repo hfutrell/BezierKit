@@ -327,7 +327,12 @@ open class Path: NSObject, @unchecked Sendable {
         var innerComponents: [PathComponent] = []
         // determine which components are outer and which are inner
         for component in self.components {
-            let windingCount = self.windingCount(component.startingPoint, ignoring: component)
+            // Use midpoint of first curve rather than startingPoint: vertices can land exactly on
+            // another component's boundary, causing windingCount to return 0 (boundary exclusion)
+            // and misclassify an inner hole as a second outer. A curve midpoint is interior to the
+            // component and avoids this coincidence.
+            let probePoint = component.curves.first.map { $0.point(at: 0.5) } ?? component.startingPoint
+            let windingCount = self.windingCount(probePoint, ignoring: component)
             if windingCountImpliesContainment(windingCount, using: rule) {
                 innerComponents.append(component)
             } else {
@@ -336,12 +341,13 @@ open class Path: NSObject, @unchecked Sendable {
         }
         // file the inner components into their "owning" outer components
         for component in innerComponents {
+            let probePoint = component.curves.first.map { $0.point(at: 0.5) } ?? component.startingPoint
             var owner: PathComponent?
             for outer in outerComponents.keys {
                 if let owner = owner {
                     guard outer.boundingBox.intersection(owner.boundingBox) == outer.boundingBox else { continue }
                 }
-                if outer.contains(component.startingPoint, using: rule) {
+                if outer.contains(probePoint, using: rule) {
                     owner = outer
                 }
             }
