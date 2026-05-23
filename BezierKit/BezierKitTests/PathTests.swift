@@ -853,6 +853,29 @@ class PathTests: XCTestCase {
         }
     }
 
+    func testDisjointComponentsInnerStartingPointOnOuterBoundary() {
+        // When an inner component's startingPoint lands exactly on another component's boundary,
+        // the winding count at that vertex is 0 (windingCountIncrementer uses strict point.x > xIntercept)
+        // so the old code misclassified the inner as a second outer component.
+        let outer = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 0, y: 0),   p1: CGPoint(x: 100, y: 0)),
+            LineSegment(p0: CGPoint(x: 100, y: 0),  p1: CGPoint(x: 100, y: 100)),
+            LineSegment(p0: CGPoint(x: 100, y: 100), p1: CGPoint(x: 0, y: 100)),
+            LineSegment(p0: CGPoint(x: 0, y: 100),  p1: CGPoint(x: 0, y: 0))
+        ] as [BezierCurve])])
+        // inner triangle: startingPoint is (0, 50) — exactly on the outer's left boundary
+        // winding is CW so it is a hole inside the outer square
+        let inner = Path(components: [PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 0, y: 50),  p1: CGPoint(x: 20, y: 50)),
+            LineSegment(p0: CGPoint(x: 20, y: 50), p1: CGPoint(x: 10, y: 40)),
+            LineSegment(p0: CGPoint(x: 10, y: 40), p1: CGPoint(x: 0, y: 50))
+        ] as [BezierCurve])])
+        let path = Path(components: outer.components + inner.components)
+        let result = path.disjointComponents()
+        XCTAssertEqual(result.count, 1, "inner should be grouped with outer, not treated as a separate outer")
+        XCTAssertEqual(result.first?.components.count, 2)
+    }
+
     func testApply() {
 
         let emptyPath = Path()
