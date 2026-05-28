@@ -44,7 +44,6 @@ open class Path: NSObject, @unchecked Sendable {
         var currentComponentOrders: [Int] = []
         var components: [PathComponent] = []
 
-        @inline(__always)
         mutating func completeComponentIfNeededAndClearPointsAndOrders() {
             if currentComponentPoints.isEmpty == false {
                 if currentComponentOrders.isEmpty == true {
@@ -57,7 +56,6 @@ open class Path: NSObject, @unchecked Sendable {
             currentComponentOrders = []
         }
 
-        @inline(__always)
         mutating func appendCurrentPointIfEmpty() {
             if currentComponentPoints.isEmpty {
                 currentComponentPoints = [currentPoint!]

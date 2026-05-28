@@ -318,7 +318,66 @@ class PerformanceTests: XCTestCase {
         measure { for _ in 0..<10_000 { _ = pathFromCGPathOriginal(p) } }
     }
 
-    // MARK: After
+    // Struct approach without @inline(__always) — isolates the inlining contribution.
+    private func pathFromCGPathStructNoInline(_ cgPath: CGPath) -> Path {
+        guard !cgPath.isEmpty else { return Path(components: []) }
+        struct Ctx {
+            var currentPoint: CGPoint?
+            var componentStartPoint: CGPoint?
+            var currentComponentPoints: [CGPoint] = []
+            var currentComponentOrders: [Int] = []
+            var components: [PathComponent] = []
+            mutating func completeComponentIfNeededAndClearPointsAndOrders() {
+                if currentComponentPoints.isEmpty == false {
+                    if currentComponentOrders.isEmpty { currentComponentOrders.append(0) }
+                    let pts = currentComponentPoints; let ords = currentComponentOrders
+                    components.append(PathComponent(
+                        points: pts.capacity  > pts.count  ? Array(pts)  : pts,
+                        orders: ords.capacity > ords.count ? Array(ords) : ords))
+                }
+                currentComponentPoints = []; currentComponentOrders = []
+            }
+            mutating func appendCurrentPointIfEmpty() {
+                if currentComponentPoints.isEmpty { currentComponentPoints = [currentPoint!] }
+            }
+        }
+        var ctx = Ctx()
+        func apply(_ raw: UnsafeMutableRawPointer?, _ el: UnsafePointer<CGPathElement>) {
+            let c = raw!.assumingMemoryBound(to: Ctx.self)
+            let p = el.pointee.points
+            switch el.pointee.type {
+            case .moveToPoint:
+                c.pointee.completeComponentIfNeededAndClearPointsAndOrders()
+                c.pointee.componentStartPoint = p[0]; c.pointee.currentComponentPoints = [p[0]]
+                c.pointee.currentComponentOrders = []; c.pointee.currentPoint = p[0]
+            case .addLineToPoint:
+                c.pointee.appendCurrentPointIfEmpty()
+                c.pointee.currentComponentOrders.append(1); c.pointee.currentComponentPoints.append(p[0])
+                c.pointee.currentPoint = p[0]
+            case .addQuadCurveToPoint:
+                c.pointee.appendCurrentPointIfEmpty(); c.pointee.currentComponentOrders.append(2)
+                c.pointee.currentComponentPoints.append(contentsOf: UnsafeBufferPointer(start: p, count: 2))
+                c.pointee.currentPoint = p[1]
+            case .addCurveToPoint:
+                c.pointee.appendCurrentPointIfEmpty(); c.pointee.currentComponentOrders.append(3)
+                c.pointee.currentComponentPoints.append(contentsOf: UnsafeBufferPointer(start: p, count: 3))
+                c.pointee.currentPoint = p[2]
+            case .closeSubpath:
+                if c.pointee.currentPoint != c.pointee.componentStartPoint {
+                    c.pointee.currentComponentOrders.append(1)
+                    c.pointee.currentComponentPoints.append(c.pointee.componentStartPoint!)
+                }
+                c.pointee.completeComponentIfNeededAndClearPointsAndOrders()
+                c.pointee.currentPoint = c.pointee.componentStartPoint
+            @unknown default: fatalError()
+            }
+        }
+        withUnsafeMutablePointer(to: &ctx) { cgPath.apply(info: $0, function: apply) }
+        ctx.completeComponentIfNeededAndClearPointsAndOrders()
+        return Path(components: ctx.components)
+    }
+
+    // MARK: After (struct + @inline(__always))
     func testPathFromCGPathEmptyPerformance_after() {
         let p = Self.emptyCGPath
         measure { for _ in 0..<1_000_000 { _ = Path(cgPath: p) } }
@@ -330,6 +389,16 @@ class PerformanceTests: XCTestCase {
     func testPathFromCGPathMediumPerformance_after() {
         let p = Self.mediumCGPath
         measure { for _ in 0..<10_000 { _ = Path(cgPath: p) } }
+    }
+
+    // MARK: Struct without @inline(__always)
+    func testPathFromCGPathSmallPerformance_structNoInline() {
+        let p = Self.smallCGPath
+        measure { for _ in 0..<100_000 { _ = pathFromCGPathStructNoInline(p) } }
+    }
+    func testPathFromCGPathMediumPerformance_structNoInline() {
+        let p = Self.mediumCGPath
+        measure { for _ in 0..<10_000 { _ = pathFromCGPathStructNoInline(p) } }
     }
 
     #endif
