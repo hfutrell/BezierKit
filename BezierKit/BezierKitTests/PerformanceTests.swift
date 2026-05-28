@@ -228,39 +228,108 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testPathFromCGPathSmallPerformance() {
-        // 1 move + 4 cubics — representative of a simple icon or UI glyph.
-        // The struct-context approach eliminates the PathApplierFunctionContext class
-        // heap allocation that dominated cost at this size.
-        // Measured improvement: ~12% faster at -Os.
-        let cgPath = CGMutablePath()
-        cgPath.move(to: .zero)
-        for i in 1...4 {
-            let x = CGFloat(i)
-            cgPath.addCurve(to: CGPoint(x: x, y: 0),
-                            control1: CGPoint(x: x - 0.7, y: 1),
-                            control2: CGPoint(x: x - 0.3, y: -1))
+    // Replication of the original production implementation (before this PR's optimizations).
+    private func pathFromCGPathOriginal(_ cgPath: CGPath) -> Path {
+        final class Ctx {
+            var currentPoint: CGPoint?
+            var componentStartPoint: CGPoint?
+            var currentComponentPoints: [CGPoint] = []
+            var currentComponentOrders: [Int] = []
+            var components: [PathComponent] = []
+            func completeComponentIfNeededAndClearPointsAndOrders() {
+                if currentComponentPoints.isEmpty == false {
+                    if currentComponentOrders.isEmpty { currentComponentOrders.append(0) }
+                    let pts = currentComponentPoints; let ords = currentComponentOrders
+                    components.append(PathComponent(
+                        points: pts.capacity  > pts.count  ? Array(pts)  : pts,
+                        orders: ords.capacity > ords.count ? Array(ords) : ords))
+                }
+                currentComponentPoints = []; currentComponentOrders = []
+            }
+            func appendCurrentPointIfEmpty() {
+                if currentComponentPoints.isEmpty { currentComponentPoints = [currentPoint!] }
+            }
         }
-        measure {
-            for _ in 0..<10_000 { _ = Path(cgPath: cgPath) }
+        let ctx = Ctx()
+        func applier(_ raw: UnsafeMutableRawPointer?, _ el: UnsafePointer<CGPathElement>) {
+            guard let ctx = raw?.assumingMemoryBound(to: Ctx.self).pointee else { fatalError() }
+            let p = el.pointee.points
+            switch el.pointee.type {
+            case .moveToPoint:
+                ctx.completeComponentIfNeededAndClearPointsAndOrders()
+                ctx.componentStartPoint = p[0]; ctx.currentComponentPoints = [p[0]]
+                ctx.currentComponentOrders = []; ctx.currentPoint = p[0]
+            case .addLineToPoint:
+                ctx.appendCurrentPointIfEmpty()
+                ctx.currentComponentOrders.append(1); ctx.currentComponentPoints.append(p[0])
+                ctx.currentPoint = p[0]
+            case .addQuadCurveToPoint:
+                ctx.appendCurrentPointIfEmpty()
+                ctx.currentComponentOrders.append(2)
+                ctx.currentComponentPoints.append(p[0]); ctx.currentComponentPoints.append(p[1])
+                ctx.currentPoint = p[1]
+            case .addCurveToPoint:
+                ctx.appendCurrentPointIfEmpty()
+                ctx.currentComponentOrders.append(3)
+                ctx.currentComponentPoints.append(p[0]); ctx.currentComponentPoints.append(p[1])
+                ctx.currentComponentPoints.append(p[2]); ctx.currentPoint = p[2]
+            case .closeSubpath:
+                if ctx.currentPoint != ctx.componentStartPoint {
+                    ctx.currentComponentOrders.append(1)
+                    ctx.currentComponentPoints.append(ctx.componentStartPoint!)
+                }
+                ctx.completeComponentIfNeededAndClearPointsAndOrders()
+                ctx.currentPoint = ctx.componentStartPoint
+            @unknown default: fatalError()
+            }
         }
+        withUnsafePointer(to: ctx) {
+            cgPath.apply(info: UnsafeMutableRawPointer(mutating: $0), function: applier)
+        }
+        ctx.completeComponentIfNeededAndClearPointsAndOrders()
+        return Path(components: ctx.components)
     }
 
-    func testPathFromCGPathMediumPerformance() {
-        // 1 move + 49 cubics — representative of a detailed glyph or moderate path.
-        // The batched append(contentsOf:) for multi-point elements reduces per-element
-        // overhead. Measured improvement: ~12% faster at -Os.
-        let cgPath = CGMutablePath()
-        cgPath.move(to: .zero)
-        for i in 1...49 {
-            let x = CGFloat(i)
-            cgPath.addCurve(to: CGPoint(x: x, y: 0),
-                            control1: CGPoint(x: x - 0.7, y: 1),
-                            control2: CGPoint(x: x - 0.3, y: -1))
-        }
-        measure {
-            for _ in 0..<1_000 { _ = Path(cgPath: cgPath) }
-        }
+    private static let emptyCGPath  = CGMutablePath() as CGPath
+    private static let smallCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...4 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    private static let mediumCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...49 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+
+    // MARK: Before
+    func testPathFromCGPathEmptyPerformance_before() {
+        let p = Self.emptyCGPath
+        measure { for _ in 0..<1_000_000 { _ = pathFromCGPathOriginal(p) } }
+    }
+    func testPathFromCGPathSmallPerformance_before() {
+        let p = Self.smallCGPath
+        measure { for _ in 0..<100_000 { _ = pathFromCGPathOriginal(p) } }
+    }
+    func testPathFromCGPathMediumPerformance_before() {
+        let p = Self.mediumCGPath
+        measure { for _ in 0..<10_000 { _ = pathFromCGPathOriginal(p) } }
+    }
+
+    // MARK: After
+    func testPathFromCGPathEmptyPerformance_after() {
+        let p = Self.emptyCGPath
+        measure { for _ in 0..<1_000_000 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathSmallPerformance_after() {
+        let p = Self.smallCGPath
+        measure { for _ in 0..<100_000 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathMediumPerformance_after() {
+        let p = Self.mediumCGPath
+        measure { for _ in 0..<10_000 { _ = Path(cgPath: p) } }
     }
 
     #endif
