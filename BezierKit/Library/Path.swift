@@ -263,6 +263,10 @@ open class Path: NSObject, @unchecked Sendable {
             cgPath.apply(info: $0, function: applierFunction)
         }
         context.completeComponentIfNeededAndClearPointsAndOrders()
+        assert(context.ptsCount  <= counts.ptCount,
+               "Path(cgPath:) internal error: wrote \(context.ptsCount) points but allocated \(counts.ptCount)")
+        assert(context.ordsCount <= counts.ordCount,
+               "Path(cgPath:) internal error: wrote \(context.ordsCount) orders but allocated \(counts.ordCount)")
         self.init(components: context.components)
     }
 
