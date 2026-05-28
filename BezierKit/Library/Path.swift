@@ -37,6 +37,34 @@ open class Path: NSObject, @unchecked Sendable {
     /// lock to make external accessing of lazy vars threadsafe
     private let lock = UnfairLock()
 
+    private struct CGPathApplyContext {
+        var currentPoint: CGPoint?
+        var componentStartPoint: CGPoint?
+        var currentComponentPoints: [CGPoint] = []
+        var currentComponentOrders: [Int] = []
+        var components: [PathComponent] = []
+
+        @inline(__always)
+        mutating func completeComponentIfNeededAndClearPointsAndOrders() {
+            if currentComponentPoints.isEmpty == false {
+                if currentComponentOrders.isEmpty == true {
+                    currentComponentOrders.append(0)
+                }
+                components.append(PathComponent(points: currentComponentPoints.copyByTrimmingReservedCapacity,
+                                                orders: currentComponentOrders.copyByTrimmingReservedCapacity))
+            }
+            currentComponentPoints = []
+            currentComponentOrders = []
+        }
+
+        @inline(__always)
+        mutating func appendCurrentPointIfEmpty() {
+            if currentComponentPoints.isEmpty {
+                currentComponentPoints = [currentPoint!]
+            }
+        }
+    }
+
     #if canImport(CoreGraphics)
     public var cgPath: CGPath {
         return self.lock.sync { self._cgPath }
@@ -144,74 +172,45 @@ open class Path: NSObject, @unchecked Sendable {
             self.init(components: [])
             return
         }
-        final class PathApplierFunctionContext {
-            var currentPoint: CGPoint?
-            var componentStartPoint: CGPoint?
-            var currentComponentPoints: [CGPoint] = []
-            var currentComponentOrders: [Int] = []
-            var components: [PathComponent] = []
-            func completeComponentIfNeededAndClearPointsAndOrders() {
-                if currentComponentPoints.isEmpty == false {
-                    if currentComponentOrders.isEmpty == true {
-                        currentComponentOrders.append(0)
-                    }
-                    components.append(PathComponent(points: currentComponentPoints.copyByTrimmingReservedCapacity,
-                                                    orders: currentComponentOrders.copyByTrimmingReservedCapacity))
-                }
-                currentComponentPoints = []
-                currentComponentOrders = []
-            }
-            func appendCurrentPointIfEmpty() {
-                if currentComponentPoints.isEmpty {
-                    currentComponentPoints = [self.currentPoint!]
-                }
-            }
-        }
-        let context = PathApplierFunctionContext()
-        func applierFunction(_ ctx: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
-            guard let context = ctx?.assumingMemoryBound(to: PathApplierFunctionContext.self).pointee else {
-                fatalError("unexpected applierFunction context")
-            }
+        var context = CGPathApplyContext()
+        func applierFunction(_ raw: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
+            let ctx = raw!.assumingMemoryBound(to: CGPathApplyContext.self)
             let points: UnsafeMutablePointer<CGPoint> = element.pointee.points
             switch element.pointee.type {
             case .moveToPoint:
-                context.completeComponentIfNeededAndClearPointsAndOrders()
-                context.componentStartPoint = points[0]
-                context.currentComponentOrders = []
-                context.currentComponentPoints = [points[0]]
-                context.currentPoint = points[0]
+                ctx.pointee.completeComponentIfNeededAndClearPointsAndOrders()
+                ctx.pointee.componentStartPoint = points[0]
+                ctx.pointee.currentComponentOrders = []
+                ctx.pointee.currentComponentPoints = [points[0]]
+                ctx.pointee.currentPoint = points[0]
             case .addLineToPoint:
-                context.appendCurrentPointIfEmpty()
-                context.currentComponentOrders.append(1)
-                context.currentComponentPoints.append(points[0])
-                context.currentPoint = points[0]
+                ctx.pointee.appendCurrentPointIfEmpty()
+                ctx.pointee.currentComponentOrders.append(1)
+                ctx.pointee.currentComponentPoints.append(points[0])
+                ctx.pointee.currentPoint = points[0]
             case .addQuadCurveToPoint:
-                context.appendCurrentPointIfEmpty()
-                context.currentComponentOrders.append(2)
-                context.currentComponentPoints.append(points[0])
-                context.currentComponentPoints.append(points[1])
-                context.currentPoint = points[1]
+                ctx.pointee.appendCurrentPointIfEmpty()
+                ctx.pointee.currentComponentOrders.append(2)
+                ctx.pointee.currentComponentPoints.append(contentsOf: UnsafeBufferPointer(start: points, count: 2))
+                ctx.pointee.currentPoint = points[1]
             case .addCurveToPoint:
-                context.appendCurrentPointIfEmpty()
-                context.currentComponentOrders.append(3)
-                context.currentComponentPoints.append(points[0])
-                context.currentComponentPoints.append(points[1])
-                context.currentComponentPoints.append(points[2])
-                context.currentPoint = points[2]
+                ctx.pointee.appendCurrentPointIfEmpty()
+                ctx.pointee.currentComponentOrders.append(3)
+                ctx.pointee.currentComponentPoints.append(contentsOf: UnsafeBufferPointer(start: points, count: 3))
+                ctx.pointee.currentPoint = points[2]
             case .closeSubpath:
-                if context.currentPoint != context.componentStartPoint {
-                    context.currentComponentOrders.append(1)
-                    context.currentComponentPoints.append(context.componentStartPoint!)
+                if ctx.pointee.currentPoint != ctx.pointee.componentStartPoint {
+                    ctx.pointee.currentComponentOrders.append(1)
+                    ctx.pointee.currentComponentPoints.append(ctx.pointee.componentStartPoint!)
                 }
-                context.completeComponentIfNeededAndClearPointsAndOrders()
-                context.currentPoint = context.componentStartPoint!
+                ctx.pointee.completeComponentIfNeededAndClearPointsAndOrders()
+                ctx.pointee.currentPoint = ctx.pointee.componentStartPoint
             @unknown default:
                 fatalError("unexpected unknown path element type \(element.pointee.type)")
             }
         }
-        withUnsafePointer(to: context) {
-            let rawPointer = UnsafeMutableRawPointer(mutating: $0)
-            cgPath.apply(info: rawPointer, function: applierFunction)
+        withUnsafeMutablePointer(to: &context) {
+            cgPath.apply(info: $0, function: applierFunction)
         }
         context.completeComponentIfNeededAndClearPointsAndOrders()
         self.init(components: context.components)
