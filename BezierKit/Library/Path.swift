@@ -147,16 +147,33 @@ open class Path: NSObject, @unchecked Sendable {
         // Pass 1: count the exact number of points and orders needed.
         // The callback does only integer arithmetic — no arrays, no function calls —
         // so it can be compiled without callee-saved registers or a stack frame.
-        struct CountContext { var ptCount = 0; var ordCount = 0 }
+        //
+        // componentIsEmpty tracks whether the next non-moveTo element would trigger
+        // appendCurrentPointIfEmpty (i.e. we are at the implicit start of a new component).
+        // This happens after closeSubpath and at the very beginning of the path.
+        struct CountContext { var ptCount = 0; var ordCount = 0; var componentIsEmpty = true }
         var counts = CountContext()
         func countApplier(_ raw: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             let ctx = raw!.assumingMemoryBound(to: CountContext.self)
             switch element.pointee.type {
-            case .moveToPoint:         ctx.pointee.ptCount  += 2           // start point + potential close endpoint
-            case .addCurveToPoint:     ctx.pointee.ptCount  += 3; ctx.pointee.ordCount += 1
-            case .addQuadCurveToPoint: ctx.pointee.ptCount  += 2; ctx.pointee.ordCount += 1
-            case .addLineToPoint:      ctx.pointee.ptCount  += 1; ctx.pointee.ordCount += 1
-            case .closeSubpath:                                    ctx.pointee.ordCount += 1
+            case .moveToPoint:
+                ctx.pointee.ptCount += 2           // start point + potential close endpoint
+                ctx.pointee.componentIsEmpty = false
+            case .addCurveToPoint:
+                if ctx.pointee.componentIsEmpty { ctx.pointee.ptCount += 1 }   // implicit start point
+                ctx.pointee.ptCount += 3; ctx.pointee.ordCount += 1
+                ctx.pointee.componentIsEmpty = false
+            case .addQuadCurveToPoint:
+                if ctx.pointee.componentIsEmpty { ctx.pointee.ptCount += 1 }
+                ctx.pointee.ptCount += 2; ctx.pointee.ordCount += 1
+                ctx.pointee.componentIsEmpty = false
+            case .addLineToPoint:
+                if ctx.pointee.componentIsEmpty { ctx.pointee.ptCount += 1 }
+                ctx.pointee.ptCount += 1; ctx.pointee.ordCount += 1
+                ctx.pointee.componentIsEmpty = false
+            case .closeSubpath:
+                ctx.pointee.ordCount += 1
+                ctx.pointee.componentIsEmpty = true   // next non-moveTo starts a new implicit component
             @unknown default:
                 fatalError("unexpected unknown path element type \(element.pointee.type)")
             }
