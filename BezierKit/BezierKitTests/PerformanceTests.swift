@@ -401,6 +401,120 @@ class PerformanceTests: XCTestCase {
         measure { for _ in 0..<10_000 { _ = pathFromCGPathStructNoInline(p) } }
     }
 
+    // MARK: Unsafe prepass — two passes: count exact sizes, then fill into raw buffers
+    //
+    // Pass 1 (counting): no arrays, no function calls, just integer arithmetic on the context.
+    //   The callback needs no callee-saved registers → potentially no prologue/epilogue.
+    // Pass 2 (fill): direct pointer stores into pre-allocated UnsafeMutablePointer buffers.
+    //   Hot path (addCurveToPoint) has zero function calls — no COW, no uniqueness check,
+    //   no capacity check. Just stores and arithmetic.
+    private func pathFromCGPath_unsafePrepass(_ cgPath: CGPath) -> Path {
+        guard !cgPath.isEmpty else { return Path(components: []) }
+
+        // Pass 1: count exact allocation sizes
+        struct CountCtx { var ptCount = 0; var ordCount = 0 }
+        var counts = CountCtx()
+        func countApplier(_ raw: UnsafeMutableRawPointer?, _ el: UnsafePointer<CGPathElement>) {
+            let c = raw!.assumingMemoryBound(to: CountCtx.self)
+            switch el.pointee.type {
+            case .moveToPoint:         c.pointee.ptCount  += 2
+            case .addCurveToPoint:     c.pointee.ptCount  += 3; c.pointee.ordCount += 1
+            case .addQuadCurveToPoint: c.pointee.ptCount  += 2; c.pointee.ordCount += 1
+            case .addLineToPoint:      c.pointee.ptCount  += 1; c.pointee.ordCount += 1
+            case .closeSubpath:                                  c.pointee.ordCount += 1
+            @unknown default: break
+            }
+        }
+        withUnsafeMutablePointer(to: &counts) {
+            cgPath.apply(info: $0, function: countApplier)
+        }
+        if counts.ordCount == 0 { counts.ordCount = 1 }
+
+        // Allocate exact-size raw buffers — no COW, no capacity tracking needed
+        let ptsBuf  = UnsafeMutablePointer<CGPoint>.allocate(capacity: counts.ptCount)
+        let ordsBuf = UnsafeMutablePointer<Int>.allocate(capacity: counts.ordCount)
+        defer { ptsBuf.deallocate(); ordsBuf.deallocate() }
+
+        // Pass 2: fill — hot path has zero function calls
+        struct FillCtx {
+            var ptsBuf:  UnsafeMutablePointer<CGPoint>
+            var ordsBuf: UnsafeMutablePointer<Int>
+            var ptsCount = 0;  var ordsCount = 0
+            var startPts = 0;  var startOrds = 0
+            var curPt  = CGPoint.zero
+            var startPt = CGPoint.zero
+            var components: [PathComponent] = []
+        }
+        var fill = FillCtx(ptsBuf: ptsBuf, ordsBuf: ordsBuf)
+
+        func flush(_ c: UnsafeMutablePointer<FillCtx>) {
+            let n = c.pointee.ptsCount - c.pointee.startPts; guard n > 0 else { return }
+            var m = c.pointee.ordsCount - c.pointee.startOrds
+            if m == 0 { c.pointee.ordsBuf[c.pointee.ordsCount] = 0; c.pointee.ordsCount += 1; m = 1 }
+            let pts  = Array(UnsafeBufferPointer(start: c.pointee.ptsBuf  + c.pointee.startPts,  count: n))
+            let ords = Array(UnsafeBufferPointer(start: c.pointee.ordsBuf + c.pointee.startOrds, count: m))
+            c.pointee.components.append(PathComponent(points: pts, orders: ords))
+            c.pointee.startPts = c.pointee.ptsCount; c.pointee.startOrds = c.pointee.ordsCount
+        }
+
+        func fillApplier(_ raw: UnsafeMutableRawPointer?, _ el: UnsafePointer<CGPathElement>) {
+            let c = raw!.assumingMemoryBound(to: FillCtx.self)
+            let p = el.pointee.points
+            switch el.pointee.type {
+            case .moveToPoint:
+                flush(c)
+                c.pointee.startPt = p[0]; c.pointee.curPt = p[0]
+                c.pointee.ptsBuf[c.pointee.ptsCount] = p[0]; c.pointee.ptsCount += 1
+            case .addLineToPoint:
+                if c.pointee.ptsCount == c.pointee.startPts {
+                    c.pointee.ptsBuf[c.pointee.ptsCount] = c.pointee.curPt; c.pointee.ptsCount += 1
+                }
+                c.pointee.ordsBuf[c.pointee.ordsCount] = 1; c.pointee.ordsCount += 1
+                c.pointee.ptsBuf[c.pointee.ptsCount] = p[0]; c.pointee.ptsCount += 1
+                c.pointee.curPt = p[0]
+            case .addQuadCurveToPoint:
+                if c.pointee.ptsCount == c.pointee.startPts {
+                    c.pointee.ptsBuf[c.pointee.ptsCount] = c.pointee.curPt; c.pointee.ptsCount += 1
+                }
+                c.pointee.ordsBuf[c.pointee.ordsCount] = 2; c.pointee.ordsCount += 1
+                c.pointee.ptsBuf[c.pointee.ptsCount]     = p[0]
+                c.pointee.ptsBuf[c.pointee.ptsCount + 1] = p[1]; c.pointee.ptsCount += 2
+                c.pointee.curPt = p[1]
+            case .addCurveToPoint:
+                if c.pointee.ptsCount == c.pointee.startPts {
+                    c.pointee.ptsBuf[c.pointee.ptsCount] = c.pointee.curPt; c.pointee.ptsCount += 1
+                }
+                c.pointee.ordsBuf[c.pointee.ordsCount] = 3; c.pointee.ordsCount += 1
+                c.pointee.ptsBuf[c.pointee.ptsCount]     = p[0]
+                c.pointee.ptsBuf[c.pointee.ptsCount + 1] = p[1]
+                c.pointee.ptsBuf[c.pointee.ptsCount + 2] = p[2]; c.pointee.ptsCount += 3
+                c.pointee.curPt = p[2]
+            case .closeSubpath:
+                if c.pointee.curPt != c.pointee.startPt {
+                    c.pointee.ordsBuf[c.pointee.ordsCount] = 1; c.pointee.ordsCount += 1
+                    c.pointee.ptsBuf[c.pointee.ptsCount] = c.pointee.startPt; c.pointee.ptsCount += 1
+                }
+                flush(c); c.pointee.curPt = c.pointee.startPt
+            @unknown default: break
+            }
+        }
+        withUnsafeMutablePointer(to: &fill) {
+            cgPath.apply(info: $0, function: fillApplier)
+        }
+        flush(&fill)
+        return Path(components: fill.components)
+    }
+
+    // MARK: Unsafe prepass benchmarks
+    func testPathFromCGPathSmallPerformance_unsafePrepass() {
+        let p = Self.smallCGPath
+        measure { for _ in 0..<100_000 { _ = pathFromCGPath_unsafePrepass(p) } }
+    }
+    func testPathFromCGPathMediumPerformance_unsafePrepass() {
+        let p = Self.mediumCGPath
+        measure { for _ in 0..<10_000 { _ = pathFromCGPath_unsafePrepass(p) } }
+    }
+
     #endif
 }
 #endif
