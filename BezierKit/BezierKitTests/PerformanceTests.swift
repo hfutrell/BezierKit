@@ -297,6 +297,12 @@ class PerformanceTests: XCTestCase {
             p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
         return p
     }()
+    private static let largeCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...1999 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
     private static let mediumCGPath: CGPath = {
         let p = CGMutablePath(); p.move(to: .zero)
         for i in 1...49 { let x = CGFloat(i)
@@ -305,6 +311,10 @@ class PerformanceTests: XCTestCase {
     }()
 
     // MARK: Before
+    func testPathFromCGPathLargePerformance_before() {
+        let p = Self.largeCGPath
+        measure { for _ in 0..<50 { _ = pathFromCGPathOriginal(p) } }
+    }
     func testPathFromCGPathEmptyPerformance_before() {
         let p = Self.emptyCGPath
         measure { for _ in 0..<1_000_000 { _ = pathFromCGPathOriginal(p) } }
@@ -378,6 +388,10 @@ class PerformanceTests: XCTestCase {
     }
 
     // MARK: After (struct + @inline(__always))
+    func testPathFromCGPathLargePerformance_after() {
+        let p = Self.largeCGPath
+        measure { for _ in 0..<50 { _ = Path(cgPath: p) } }
+    }
     func testPathFromCGPathEmptyPerformance_after() {
         let p = Self.emptyCGPath
         measure { for _ in 0..<1_000_000 { _ = Path(cgPath: p) } }
