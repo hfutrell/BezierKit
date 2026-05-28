@@ -539,6 +539,9 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         // Fast path: t=0 at start and t=1 at end means every element in the range is
         // included whole. Copy the slices directly without going through appendElement.
         if start.t == 0.0 && end.t == 1.0 {
+            if start.elementIndex == 0 && end.elementIndex == self.numberOfElements - 1 {
+                return self
+            }
             let firstPoint = self.offsets[start.elementIndex]
             let lastPoint  = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
             return type(of: self).init(
