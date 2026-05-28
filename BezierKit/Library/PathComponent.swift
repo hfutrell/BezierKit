@@ -536,10 +536,22 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         let start = range.start
         let end   = range.end
 
-        // Exact capacity: all elements from start.elementIndex through end.elementIndex
-        // share boundary points, so total points = sum(orders[start...end]) + 1.
-        // offsets[i] = sum(orders[0..<i]), so:
-        //   sum(orders[start...end]) = offsets[end] + orders[end] - offsets[start]
+        // Fast path: t=0 at start and t=1 at end means every element in the range is
+        // included whole. Return early by copying the point and order slices directly,
+        // before appendElement is ever defined. This avoids the i-cache overhead of the
+        // concrete-dispatch appendElement body even when it would never be called.
+        if start.t == 0.0 && end.t == 1.0 {
+            let firstPoint = self.offsets[start.elementIndex]
+            let lastPoint  = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
+            return type(of: self).init(
+                points: Array(self.points[firstPoint...lastPoint]),
+                orders: Array(self.orders[start.elementIndex...end.elementIndex]))
+        }
+
+        // Partial-boundary case: at least one end has a fractional t.
+        // Reserve exact capacity so the partial-element appends don't force a
+        // reallocation when the large bulk full-element copy arrives.
+        // offsets[i] = sum(orders[0..<i]), so sum(orders[start...end]) = offsets[end]+orders[end]-offsets[start]
         let ordersCount = end.elementIndex - start.elementIndex + 1
         let pointsCount = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
                         - self.offsets[start.elementIndex] + 1
