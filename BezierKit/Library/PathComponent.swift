@@ -599,16 +599,66 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         let start = range.start
         let end   = range.end
 
+        // Fast path: t=0 at start and t=1 at end means every element in the range is
+        // included whole. Copy the slices directly without going through appendElement.
+        if start.t == 0.0 && end.t == 1.0 {
+            if start.elementIndex == 0 && end.elementIndex == self.numberOfElements - 1 {
+                return self
+            }
+            let firstPoint = self.offsets[start.elementIndex]
+            let lastPoint  = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
+            return type(of: self).init(
+                points: Array(self.points[firstPoint...lastPoint]),
+                orders: Array(self.orders[start.elementIndex...end.elementIndex]))
+        }
+
+        // Partial-boundary case: at least one end has a fractional t.
+        // Reserve exact capacity so the partial-element appends don't force a
+        // reallocation when the large bulk full-element copy arrives.
+        // offsets[i] = sum(orders[0..<i]), so sum(orders[start...end]) = offsets[end]+orders[end]-offsets[start]
+        let ordersCount = end.elementIndex - start.elementIndex + 1
+        let pointsCount = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
+                        - self.offsets[start.elementIndex] + 1
+
         var resultPoints: [CGPoint] = []
         var resultOrders: [Int] = []
+        resultPoints.reserveCapacity(pointsCount)
+        resultOrders.reserveCapacity(ordersCount)
 
-        func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
+        // Appends points from element[index].split(startT, endT), using concrete types to avoid
+        // existential boxing and the heap allocation from BezierCurve.points.
+        func appendElement(_ index: Int, _ startT: CGFloat, _ endT: CGFloat, includeStart: Bool, includeEnd: Bool) {
             assert(includeStart || includeEnd)
-            let element = self.element(at: index).split(from: start, to: end)
-            let startIndex  = includeStart ? 0 : 1
-            let endIndex    = includeEnd ? element.order : element.order - 1
-            resultPoints    += element.points[startIndex...endIndex]
-            resultOrders.append(self.orders[index])
+            let order = self.orders[index]
+            let offset = self.offsets[index]
+            switch order {
+            case 3:
+                let c = CubicCurve(p0: self.points[offset],   p1: self.points[offset+1],
+                                   p2: self.points[offset+2], p3: self.points[offset+3])
+                    .split(from: startT, to: endT)
+                if includeStart         { resultPoints.append(c.p0) }
+                                          resultPoints.append(c.p1)
+                                          resultPoints.append(c.p2)
+                if includeEnd           { resultPoints.append(c.p3) }
+            case 2:
+                let c = QuadraticCurve(p0: self.points[offset], p1: self.points[offset+1],
+                                       p2: self.points[offset+2])
+                    .split(from: startT, to: endT)
+                if includeStart         { resultPoints.append(c.p0) }
+                                          resultPoints.append(c.p1)
+                if includeEnd           { resultPoints.append(c.p2) }
+            case 1:
+                let c = LineSegment(p0: self.points[offset], p1: self.points[offset+1])
+                    .split(from: startT, to: endT)
+                if includeStart         { resultPoints.append(c.p0) }
+                if includeEnd           { resultPoints.append(c.p1) }
+            default:
+                let element = self.element(at: index).split(from: startT, to: endT)
+                let fromIdx = includeStart ? 0 : 1
+                let toIdx   = includeEnd ? element.order : element.order - 1
+                resultPoints.append(contentsOf: element.points[fromIdx...toIdx])
+            }
+            resultOrders.append(order)
         }
 
         if start.elementIndex == end.elementIndex {
@@ -633,6 +683,10 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
                 appendElement(end.elementIndex, 0.0, end.t, includeStart: !hasFullElements, includeEnd: true)
             }
         }
+
+        assert(resultPoints.count == pointsCount, "capacity formula produced wrong pointsCount")
+        assert(resultOrders.count == ordersCount, "capacity formula produced wrong ordersCount")
+
         return type(of: self).init(points: resultPoints, orders: resultOrders)
     }
 
