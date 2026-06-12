@@ -139,41 +139,58 @@ open class Path: NSObject, @unchecked Sendable {
     }
 
     #if canImport(CoreGraphics)
+    // swiftlint:disable:next function_body_length
     convenience public init(cgPath: CGPath) {
         guard !cgPath.isEmpty else {
             self.init(components: [])
             return
         }
-        // Pass 1: count the exact number of points and orders needed.
-        // The callback does only integer arithmetic — no arrays, no function calls —
-        // so it can be compiled without callee-saved registers or a stack frame.
-        //
-        // componentIsEmpty tracks whether the next non-moveTo element would trigger
-        // appendCurrentPointIfEmpty (i.e. we are at the implicit start of a new component).
-        // This happens after closeSubpath and at the very beginning of the path.
-        struct CountContext { var ptCount = 0; var ordCount = 0; var componentIsEmpty = true }
+        // Pass 1: count the exact number of points and orders the fill pass will write.
+        // Mirrors the fill pass logic exactly so the assert can require strict equality.
+        // Tracks currentPoint and componentStartPoint to apply the same close-segment test
+        // the fill pass uses, and tracks per-component state to count implicit order-0 entries
+        // for components that have points but no orders (isolated moveToPoint).
+        struct CountContext {
+            var ptCount = 0;  var ordCount = 0
+            var compPts  = 0; var compOrds = 0   // points/orders in the current component
+            var currentPoint     = CGPoint.zero
+            var componentStartPoint = CGPoint.zero
+        }
         var counts = CountContext()
         func countApplier(_ raw: UnsafeMutableRawPointer?, _ element: UnsafePointer<CGPathElement>) {
             let ctx = raw!.assumingMemoryBound(to: CountContext.self)
+            let p = element.pointee.points
             switch element.pointee.type {
             case .moveToPoint:
-                ctx.pointee.ptCount += 2           // start point + potential close endpoint
-                ctx.pointee.componentIsEmpty = false
+                // flush previous component: a component with points but no orders gets order 0
+                if ctx.pointee.compPts > 0 && ctx.pointee.compOrds == 0 { ctx.pointee.ordCount += 1 }
+                ctx.pointee.ptCount += 1
+                ctx.pointee.compPts = 1; ctx.pointee.compOrds = 0
+                ctx.pointee.componentStartPoint = p[0]; ctx.pointee.currentPoint = p[0]
             case .addCurveToPoint:
-                if ctx.pointee.componentIsEmpty { ctx.pointee.ptCount += 1 }   // implicit start point
+                if ctx.pointee.compPts == 0 { ctx.pointee.ptCount += 1; ctx.pointee.compPts += 1 }
                 ctx.pointee.ptCount += 3; ctx.pointee.ordCount += 1
-                ctx.pointee.componentIsEmpty = false
+                ctx.pointee.compPts += 3; ctx.pointee.compOrds += 1
+                ctx.pointee.currentPoint = p[2]
             case .addQuadCurveToPoint:
-                if ctx.pointee.componentIsEmpty { ctx.pointee.ptCount += 1 }
+                if ctx.pointee.compPts == 0 { ctx.pointee.ptCount += 1; ctx.pointee.compPts += 1 }
                 ctx.pointee.ptCount += 2; ctx.pointee.ordCount += 1
-                ctx.pointee.componentIsEmpty = false
+                ctx.pointee.compPts += 2; ctx.pointee.compOrds += 1
+                ctx.pointee.currentPoint = p[1]
             case .addLineToPoint:
-                if ctx.pointee.componentIsEmpty { ctx.pointee.ptCount += 1 }
+                if ctx.pointee.compPts == 0 { ctx.pointee.ptCount += 1; ctx.pointee.compPts += 1 }
                 ctx.pointee.ptCount += 1; ctx.pointee.ordCount += 1
-                ctx.pointee.componentIsEmpty = false
+                ctx.pointee.compPts += 1; ctx.pointee.compOrds += 1
+                ctx.pointee.currentPoint = p[0]
             case .closeSubpath:
-                ctx.pointee.ordCount += 1
-                ctx.pointee.componentIsEmpty = true   // next non-moveTo starts a new implicit component
+                if ctx.pointee.currentPoint != ctx.pointee.componentStartPoint {
+                    ctx.pointee.ptCount += 1; ctx.pointee.ordCount += 1
+                    ctx.pointee.compPts += 1; ctx.pointee.compOrds += 1
+                }
+                // flush current component
+                if ctx.pointee.compPts > 0 && ctx.pointee.compOrds == 0 { ctx.pointee.ordCount += 1 }
+                ctx.pointee.compPts = 0; ctx.pointee.compOrds = 0
+                ctx.pointee.currentPoint = ctx.pointee.componentStartPoint
             @unknown default:
                 fatalError("unexpected unknown path element type \(element.pointee.type)")
             }
@@ -181,7 +198,8 @@ open class Path: NSObject, @unchecked Sendable {
         withUnsafeMutablePointer(to: &counts) {
             cgPath.apply(info: $0, function: countApplier)
         }
-        if counts.ordCount == 0 { counts.ordCount = 1 }     // isolated moveTo with no curves
+        // final flush for the last open component
+        if counts.compPts > 0 && counts.compOrds == 0 { counts.ordCount += 1 }
 
         // Allocate exact-size raw buffers. The fill pass writes directly into these,
         // bypassing Swift array COW: no uniqueness checks, no capacity checks per element.
@@ -191,7 +209,7 @@ open class Path: NSObject, @unchecked Sendable {
 
         // Pass 2: fill. The hot path (addCurveToPoint) has zero function calls.
         struct FillContext {
-            var ptsBuf:  UnsafeMutablePointer<CGPoint>
+            var ptsBuf: UnsafeMutablePointer<CGPoint>
             var ordsBuf: UnsafeMutablePointer<Int>
             var ptsCount = 0;  var ordsCount = 0
             var startPts = 0;  var startOrds = 0
@@ -205,7 +223,7 @@ open class Path: NSObject, @unchecked Sendable {
                 var m = ordsCount - startOrds
                 if m == 0 { ordsBuf[ordsCount] = 0; ordsCount += 1; m = 1 }
                 components.append(PathComponent(
-                    points: Array(UnsafeBufferPointer(start: ptsBuf  + startPts,  count: n)),
+                    points: Array(UnsafeBufferPointer(start: ptsBuf + startPts, count: n)),
                     orders: Array(UnsafeBufferPointer(start: ordsBuf + startOrds, count: m))))
                 startPts = ptsCount; startOrds = ordsCount
             }
@@ -263,9 +281,9 @@ open class Path: NSObject, @unchecked Sendable {
             cgPath.apply(info: $0, function: applierFunction)
         }
         context.completeComponentIfNeededAndClearPointsAndOrders()
-        assert(context.ptsCount  <= counts.ptCount,
+        assert(context.ptsCount  == counts.ptCount,
                "Path(cgPath:) internal error: wrote \(context.ptsCount) points but allocated \(counts.ptCount)")
-        assert(context.ordsCount <= counts.ordCount,
+        assert(context.ordsCount == counts.ordCount,
                "Path(cgPath:) internal error: wrote \(context.ordsCount) orders but allocated \(counts.ordCount)")
         self.init(components: context.components)
     }
