@@ -111,6 +111,35 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots[4], 0.8, accuracy: accuracy)
     }
 
+    // Degrees 6–9 are produced by the curve/curve implicitization fallback (degree = order × order:
+    // quad×cubic = 6, cubic×cubic = 9) and route through the bezier-clipping root finder. Each
+    // polynomial below has a single coefficient sign change, so it has exactly one root in (0, 1);
+    // verify the root finder returns it and that it is a genuine root.
+    func testDegree6() {
+        let polynomial = BernsteinPolynomial6(b0: -1, b1: -1, b2: -1, b3: 1, b4: 1, b5: 1, b6: 1)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(polynomial.value(at: roots[0]), 0, accuracy: accuracy)
+    }
+    func testDegree7() {
+        let polynomial = BernsteinPolynomial7(b0: -1, b1: -1, b2: -1, b3: -1, b4: 1, b5: 1, b6: 1, b7: 1)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(polynomial.value(at: roots[0]), 0, accuracy: accuracy)
+    }
+    func testDegree8() {
+        let polynomial = BernsteinPolynomial8(b0: -1, b1: -1, b2: -1, b3: -1, b4: 1, b5: 1, b6: 1, b7: 1, b8: 1)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(polynomial.value(at: roots[0]), 0, accuracy: accuracy)
+    }
+    func testDegree9() {
+        let polynomial = BernsteinPolynomial9(b0: -1, b1: -1, b2: -1, b3: -1, b4: -1, b5: 1, b6: 1, b7: 1, b8: 1, b9: 1)
+        let roots = findDistinctRootsInUnitInterval(of: polynomial)
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(polynomial.value(at: roots[0]), 0, accuracy: accuracy)
+    }
+
     func testDegree3RootExactlyZero() {
         // root is exactly t = 0 (at the start of unit interval),
         // so may be accidentally discarded due to numerical precision

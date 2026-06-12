@@ -390,7 +390,7 @@ public struct BernsteinPolynomial9: BernsteinPolynomial {
     }
 }
 
-// Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–5.
+// Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree ≥ 4.
 // With WMO (whole-module optimization) the conformance check is a compile-time constant and generates no branch overhead.
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
     var result: [CGFloat] = []
@@ -404,10 +404,10 @@ public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomia
             let t = Swift.max(0, Swift.min(1, $0))
             if result.last.map({ t - $0 > eps }) ?? true { result.append(t) }
         }
-    } else if let p4 = polynomial as? BernsteinPolynomial4 {
-        findDistinctRootsCallbackBezierClipping(p4) { result.append($0) }
-    } else if let p5 = polynomial as? BernsteinPolynomial5 {
-        findDistinctRootsCallbackBezierClipping(p5) { result.append($0) }
+    } else if let clippable = polynomial as? any BezierClippingPolynomial {
+        // degree ≥ 4 (BernsteinPolynomial4 … BernsteinPolynomial9): every concrete type conforms
+        // to BezierClippingPolynomial, so route through the clipping root finder generically.
+        findDistinctRootsCallbackBezierClipping(clippable) { result.append($0) }
     }
     return result
 }
