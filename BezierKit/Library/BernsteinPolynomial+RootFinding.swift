@@ -52,35 +52,35 @@ extension BernsteinPolynomial3: BezierClippingPolynomial {
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3) }
 }
 
-extension BernsteinPolynomial4: BezierClippingPolynomial {
+extension BernsteinPolynomial4: BezierClippingPolynomial, ClippingRootsCallback {
     var degree: Int { 4 }
     var firstCoefficient: CGFloat { b0 }
     var lastCoefficient: CGFloat { b4 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4) }
 }
 
-extension BernsteinPolynomial5: BezierClippingPolynomial {
+extension BernsteinPolynomial5: BezierClippingPolynomial, ClippingRootsCallback {
     var degree: Int { 5 }
     var firstCoefficient: CGFloat { b0 }
     var lastCoefficient: CGFloat { b5 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5) }
 }
 
-extension BernsteinPolynomial6: BezierClippingPolynomial {
+extension BernsteinPolynomial6: BezierClippingPolynomial, ClippingRootsCallback {
     var degree: Int { 6 }
     var firstCoefficient: CGFloat { b0 }
     var lastCoefficient: CGFloat { b6 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5); body(b6) }
 }
 
-extension BernsteinPolynomial7: BezierClippingPolynomial {
+extension BernsteinPolynomial7: BezierClippingPolynomial, ClippingRootsCallback {
     var degree: Int { 7 }
     var firstCoefficient: CGFloat { b0 }
     var lastCoefficient: CGFloat { b7 }
     func forEachCoefficient(_ body: (CGFloat) -> Void) { body(b0); body(b1); body(b2); body(b3); body(b4); body(b5); body(b6); body(b7) }
 }
 
-extension BernsteinPolynomial8: BezierClippingPolynomial {
+extension BernsteinPolynomial8: BezierClippingPolynomial, ClippingRootsCallback {
     var degree: Int { 8 }
     var firstCoefficient: CGFloat { b0 }
     var lastCoefficient: CGFloat { b8 }
@@ -89,7 +89,7 @@ extension BernsteinPolynomial8: BezierClippingPolynomial {
     }
 }
 
-extension BernsteinPolynomial9: BezierClippingPolynomial {
+extension BernsteinPolynomial9: BezierClippingPolynomial, ClippingRootsCallback {
     var degree: Int { 9 }
     var firstCoefficient: CGFloat { b0 }
     var lastCoefficient: CGFloat { b9 }
@@ -289,10 +289,15 @@ func findDistinctRootsCallbackBezierClipping<P: BezierClippingPolynomial>(
     }
 }
 
-internal extension BezierClippingPolynomial {
-    /// Type-erasing entry point for the clipping root finder. Its signature has no `Self`, so it is
-    /// callable on an `any BezierClippingPolynomial` existential — callers need not rely on implicit
-    /// existential opening, which not all toolchains (e.g. the WASM SDK) support.
+/// Type-erasing entry point for the clipping root finder. It has no `Self` / associated-type
+/// requirements, so (unlike `BezierClippingPolynomial`) it can be used as a plain existential and
+/// its method called on that existential — the same pattern as `AnalyticalRootsCallback`. This
+/// avoids `any BezierClippingPolynomial`, which older toolchains (the carton/swiftwasm CI) reject.
+protocol ClippingRootsCallback {
+    func forEachDistinctRootInUnitInterval(_ callback: (CGFloat) -> Void)
+}
+
+extension ClippingRootsCallback where Self: BezierClippingPolynomial {
     func forEachDistinctRootInUnitInterval(_ callback: (CGFloat) -> Void) {
         findDistinctRootsCallbackBezierClipping(self, callback)
     }

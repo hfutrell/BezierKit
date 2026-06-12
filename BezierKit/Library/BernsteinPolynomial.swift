@@ -399,10 +399,11 @@ public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomia
             let t = Swift.max(0, Swift.min(1, $0))
             if result.last.map({ t - $0 > eps }) ?? true { result.append(t) }
         }
-    } else if let clippable = polynomial as? any BezierClippingPolynomial {
-        // degree ≥ 4 (BernsteinPolynomial4 … BernsteinPolynomial9): every concrete type conforms
-        // to BezierClippingPolynomial. Dispatch through a no-`Self` protocol method so the existential
-        // need not be opened by the caller (unsupported on some toolchains, e.g. the WASM SDK).
+    } else if let clippable = polynomial as? ClippingRootsCallback {
+        // degree ≥ 4 (BernsteinPolynomial4 … BernsteinPolynomial9): each conforms to
+        // ClippingRootsCallback, a no-Self/associated-type protocol usable as a plain existential
+        // (mirrors AnalyticalRootsCallback above) — avoids `any BezierClippingPolynomial`, which the
+        // older swiftwasm toolchain rejects.
         clippable.forEachDistinctRootInUnitInterval { result.append($0) }
     }
     return result
