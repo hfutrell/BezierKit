@@ -387,6 +387,47 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssert(circle.subtract(biggerCircle).isEmpty)
     }
 
+    func testCrossingsRemovedCircleStrokeSharedEndpoints() {
+        // A stroked-circle outline (outer + inner loops joined at a seam) is a single closed
+        // component whose self-intersections occur exactly at shared element endpoints (the seam),
+        // where the two arcs meet tangentially. crossingsRemoved at tight accuracy must still find
+        // those endpoint touches and return the annulus rather than collapsing to the empty path
+        // (regression: the monotone subdivision dropped near-tangent endpoint leaves, so the seam
+        // self-intersections were missed and the whole component was classified out).
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 120.49, y: 66.2215))
+        cgPath.addCurve(to: CGPoint(x: 132.443, y: 54.2683), control1: CGPoint(x: 120.49, y: 59.6199), control2: CGPoint(x: 125.841, y: 54.2683))
+        cgPath.addCurve(to: CGPoint(x: 144.396, y: 66.2215), control1: CGPoint(x: 139.044, y: 54.2683), control2: CGPoint(x: 144.396, y: 59.6199))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: 144.396), control1: CGPoint(x: 144.396, y: 109.396), control2: CGPoint(x: 109.396, y: 144.396))
+        cgPath.addCurve(to: CGPoint(x: -11.9531, y: 66.2215), control1: CGPoint(x: 23.0468, y: 144.396), control2: CGPoint(x: -11.9531, y: 109.396))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: -11.9531), control1: CGPoint(x: -11.9531, y: 23.0468), control2: CGPoint(x: 23.0468, y: -11.9531))
+        cgPath.addCurve(to: CGPoint(x: 144.396, y: 66.2215), control1: CGPoint(x: 109.396, y: -11.9531), control2: CGPoint(x: 144.396, y: 23.0468))
+        cgPath.addCurve(to: CGPoint(x: 132.443, y: 78.1746), control1: CGPoint(x: 144.396, y: 72.823), control2: CGPoint(x: 139.044, y: 78.1746))
+        cgPath.addCurve(to: CGPoint(x: 120.49, y: 66.2215), control1: CGPoint(x: 125.841, y: 78.1746), control2: CGPoint(x: 120.49, y: 72.823))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: 11.9531), control1: CGPoint(x: 120.49, y: 36.2499), control2: CGPoint(x: 96.193, y: 11.9531))
+        cgPath.addCurve(to: CGPoint(x: 11.9531, y: 66.2215), control1: CGPoint(x: 36.2499, y: 11.9531), control2: CGPoint(x: 11.9531, y: 36.2499))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: 120.49), control1: CGPoint(x: 11.9531, y: 96.193), control2: CGPoint(x: 36.2499, y: 120.49))
+        cgPath.addCurve(to: CGPoint(x: 120.49, y: 66.2215), control1: CGPoint(x: 96.193, y: 120.49), control2: CGPoint(x: 120.49, y: 96.193))
+        cgPath.closeSubpath()
+        let result = Path(cgPath: cgPath).crossingsRemoved(accuracy: 0.0001)
+        XCTAssertFalse(result.isEmpty, "crossingsRemoved collapsed the stroked circle to the empty path")
+        XCTAssertEqual(result.components.count, 2, "expected the annulus (outer + inner boundary)")
+        XCTAssertTrue(result.contains(CGPoint(x: 66.2215, y: 130), using: .evenOdd), "ring band should be inside")
+        XCTAssertFalse(result.contains(CGPoint(x: 66.2215, y: 66.2215), using: .evenOdd), "center hole should be outside")
+    }
+
+    func testIntersectionsSharedEndpointTightAccuracy() {
+        // Two cubics meeting tangentially at a shared endpoint must report that intersection at any
+        // accuracy (the monotone leaf solver previously discarded the near-tangent endpoint leaf).
+        let c1 = CubicCurve(p0: CGPoint(x: 132.443, y: 54.2683), p1: CGPoint(x: 139.044, y: 54.2683),
+                            p2: CGPoint(x: 144.396, y: 59.6199), p3: CGPoint(x: 144.396, y: 66.2215))
+        let c2 = CubicCurve(p0: CGPoint(x: 66.2215, y: -11.9531), p1: CGPoint(x: 109.396, y: -11.9531),
+                            p2: CGPoint(x: 144.396, y: 23.0468), p3: CGPoint(x: 144.396, y: 66.2215))
+        for accuracy: CGFloat in [0.5, 1.0e-2, 1.0e-4, 1.0e-6] {
+            XCTAssertEqual(c1.intersections(with: c2, accuracy: accuracy).count, 1, "shared endpoint missed at accuracy \(accuracy)")
+        }
+    }
+
     func testSubtractingEdgeCase1() {
         // this is a specific edge case test of `subtracting`. There was an issue where if a path element intersected at the exact border between
         // two elements on the other path it would count as two intersections. The winding count would then be incremented twice on the way in

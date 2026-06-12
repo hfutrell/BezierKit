@@ -121,6 +121,27 @@ private extension BezierCurve {
     }
 }
 
+// Curves that touch only at a shared endpoint are tangent there, so the monotone subdivision's
+// leaf solver (which discards near-tangent leaves) can miss the touch at tight accuracy even though
+// subdivision otherwise succeeds. Detect coincident endpoints explicitly — matching master, whose
+// subdivision leaf does a line-segment solve that always catches a shared endpoint. Each of the four
+// corner pairs is added only when the endpoints coincide within `accuracy` and the subdivision did
+// not already report a crossing there (point-proximity dedup).
+private func addCoincidentEndpoints<U: BezierCurve, T: BezierCurve>(
+    _ result: inout [Intersection], _ c1: U, _ c2: T, accuracy: CGFloat
+) {
+    let accuracySq = accuracy * accuracy
+    func consider(_ t1: CGFloat, _ t2: CGFloat, _ corner: CGPoint, _ other: CGPoint) {
+        guard distanceSquared(corner, other) < accuracySq else { return }
+        guard !result.contains(where: { distanceSquared(c1.point(at: $0.t1), corner) < accuracySq }) else { return }
+        result.append(Intersection(t1: t1, t2: t2))
+    }
+    consider(0, 0, c1.startingPoint, c2.startingPoint)
+    consider(0, 1, c1.startingPoint, c2.endingPoint)
+    consider(1, 0, c1.endingPoint, c2.startingPoint)
+    consider(1, 1, c1.endingPoint, c2.endingPoint)
+}
+
 // Curve/curve intersection driver. Splits both curves at their derivative roots so every
 // piece is monotone, then runs fast monotone subdivision (Utils.preSplitIntersections) on
 // all overlapping pairs. The identical-curve fast path is handled by concrete-type overloads
@@ -131,6 +152,7 @@ where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     var pairIntersections: [Intersection] = []
     var subdivisionIterations = 0
     if Utils.preSplitIntersections(curve1.curve, curve2.curve, &pairIntersections, accuracy, &subdivisionIterations) {
+        addCoincidentEndpoints(&pairIntersections, curve1.curve, curve2.curve, accuracy: accuracy)
         return pairIntersections.sortedAndUniqued()
     }
 
