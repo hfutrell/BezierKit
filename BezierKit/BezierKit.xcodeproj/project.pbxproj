@@ -59,6 +59,8 @@
 		FDA03FE125D21B9C005F7795 /* Path+VectorBoolean.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA03FDF25D21B9C005F7795 /* Path+VectorBoolean.swift */; };
 		FDA727591ED5035300011871 /* CubicCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicCurveTests.swift */; };
 		FDA7275A1ED5035300011871 /* CubicCurveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA727581ED5035300011871 /* CubicCurveTests.swift */; };
+		FD11AA0011223344556677D2 /* BezierCurve+ImplicitizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD11AA0011223344556677D1 /* BezierCurve+ImplicitizationTests.swift */; };
+		FD11AA0011223344556677D3 /* BezierCurve+ImplicitizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD11AA0011223344556677D1 /* BezierCurve+ImplicitizationTests.swift */; };
 		2787808C8BFA4DE9ABA2441F /* BezierCurve+MonotoneIntersection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399EC6F7DE164E75B8D5C0BD /* BezierCurve+MonotoneIntersection.swift */; };
 		2CA20E1CA9FD45929A2EAA19 /* BezierCurve+MonotoneIntersection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399EC6F7DE164E75B8D5C0BD /* BezierCurve+MonotoneIntersection.swift */; };
 		FD11AA0011223344556677B1 /* BezierCurve+Implicitization.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD11AA0011223344556677A1 /* BezierCurve+Implicitization.swift */; };
@@ -193,6 +195,7 @@
 		FDA03FD425D2182C005F7795 /* Path+VectorBooleanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+VectorBooleanTests.swift"; sourceTree = "<group>"; };
 		FDA03FDF25D21B9C005F7795 /* Path+VectorBoolean.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+VectorBoolean.swift"; sourceTree = "<group>"; };
 		FDA727581ED5035300011871 /* CubicCurveTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicCurveTests.swift; sourceTree = "<group>"; };
+		FD11AA0011223344556677D1 /* BezierCurve+ImplicitizationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "BezierCurve+ImplicitizationTests.swift"; sourceTree = "<group>"; };
 		399EC6F7DE164E75B8D5C0BD /* BezierCurve+MonotoneIntersection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BezierCurve+MonotoneIntersection.swift"; sourceTree = "<group>"; };
 		FD11AA0011223344556677A1 /* BezierCurve+Implicitization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BezierCurve+Implicitization.swift"; sourceTree = "<group>"; };
 		FDB6011A25BB9B3700BAB067 /* BezierCurve+Polynomial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BezierCurve+Polynomial.swift"; sourceTree = "<group>"; };
@@ -309,6 +312,7 @@
 				FDB6012125BBA06600BAB067 /* BezierCurve+PolynomialTests.swift */,
 				FDE6CD8E1EC8F9BD00FAB479 /* LineSegmentTests.swift */,
 				FDA727581ED5035300011871 /* CubicCurveTests.swift */,
+				FD11AA0011223344556677D1 /* BezierCurve+ImplicitizationTests.swift */,
 				FD40244F2110CF5100FA723C /* QuadraticCurveTests.swift */,
 				FD4A6400200ACB8900930E10 /* ShapeTests.swift */,
 				FD4A6405200B11DA00930E10 /* PathComponentTests.swift */,
@@ -723,6 +727,7 @@
 				FD06332321E03A58001181B6 /* CGPointTests.swift in Sources */,
 				FD12F1E22288CF6900404CE1 /* UtilsTests.swift in Sources */,
 				FDA727591ED5035300011871 /* CubicCurveTests.swift in Sources */,
+				FD11AA0011223344556677D2 /* BezierCurve+ImplicitizationTests.swift in Sources */,
 				FDB9D7331EB28CEB00413F0E /* BezierKit_iOSTests.swift in Sources */,
 				FDB6012225BBA06600BAB067 /* BezierCurve+PolynomialTests.swift in Sources */,
 				FD80FF8A22B1CEE00018C592 /* LockTests.swift in Sources */,
@@ -755,6 +760,7 @@
 				FD06332421E03A58001181B6 /* CGPointTests.swift in Sources */,
 				FD12F1E32288CF6900404CE1 /* UtilsTests.swift in Sources */,
 				FDA7275A1ED5035300011871 /* CubicCurveTests.swift in Sources */,
+				FD11AA0011223344556677D3 /* BezierCurve+ImplicitizationTests.swift in Sources */,
 				FDB9D7421EB28D1900413F0E /* BezierKit_MacTests.swift in Sources */,
 				FDB6012325BBA06600BAB067 /* BezierCurve+PolynomialTests.swift in Sources */,
 				FD80FF8B22B1CEE00018C592 /* LockTests.swift in Sources */,

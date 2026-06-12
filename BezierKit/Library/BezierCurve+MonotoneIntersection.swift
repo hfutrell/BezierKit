@@ -200,7 +200,21 @@ extension Utils {
         var curS1 = s1initial, curS2 = s2initial
 
         while true {
-            assert(monoOverlap(curS1, curS2), "monoPairiteration invariant: every stack pair must overlap")
+            #if DEBUG
+            // Sanity invariant: every stack pair overlaps. The check is tolerant of floating-point
+            // rounding scaled to the platform's precision and the coordinate magnitude — on 32-bit
+            // CGFloat (WASM) a midpoint evaluation at large coordinates can shift a child's bbox by
+            // a few ULPs, which is harmless (the Cramer's-rule leaf test rejects non-overlap anyway).
+            do {
+                let a = curS1.bbox, b = curS2.bbox
+                let scale = Swift.max(Swift.abs(a.min.x), Swift.abs(a.max.x), Swift.abs(b.min.x), Swift.abs(b.max.x),
+                                      Swift.abs(a.min.y), Swift.abs(a.max.y), Swift.abs(b.min.y), Swift.abs(b.max.y), 1)
+                let tol = 256 * scale * CGFloat.ulpOfOne
+                assert(a.min.x <= b.max.x + tol && b.min.x <= a.max.x + tol &&
+                       a.min.y <= b.max.y + tol && b.min.y <= a.max.y + tol,
+                       "monoPairiteration invariant: every stack pair must overlap (within FP tolerance)")
+            }
+            #endif
 
             totalIterations += 1
             guard totalIterations <= 900 else { return false }
