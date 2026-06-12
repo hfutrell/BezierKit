@@ -688,7 +688,7 @@ class CubicCurveTests: XCTestCase {
         }
         XCTAssertEqual(crossingCount(aVal: 4.0, delta: 1.2e-5), 1)
         XCTAssertEqual(crossingCount(aVal: 8.0, delta: 1.2e-5), 1)
-        XCTExpectFailure("known bug: a4 δ=8e-6 is below the engine resolution and over-produces") {
+        expectKnownBug("known bug: a4 δ=8e-6 is below the engine resolution and over-produces") {
             XCTAssertEqual(crossingCount(aVal: 4.0, delta: 8e-6), 1)
         }
     }
@@ -757,7 +757,7 @@ class CubicCurveTests: XCTestCase {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
                             p2: CGPoint(x:0.66,y:-3-delta), p3: CGPoint(x:1,y:1-delta))
-        XCTExpectFailure("known bug: δ=7e-6 is below the engine resolution and over-produces") {
+        expectKnownBug("known bug: δ=7e-6 is below the engine resolution and over-produces") {
             XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 1)
         }
     }
@@ -787,7 +787,7 @@ class CubicCurveTests: XCTestCase {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
                             p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
-        XCTExpectFailure("known bug: sub-accuracy parallel separation yields a spurious intersection") {
+        expectKnownBug("known bug: sub-accuracy parallel separation yields a spurious intersection") {
             XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
         }
     }
@@ -799,7 +799,7 @@ class CubicCurveTests: XCTestCase {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
                             p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
-        XCTExpectFailure("known bug: sub-accuracy parallel separation yields a spurious intersection") {
+        expectKnownBug("known bug: sub-accuracy parallel separation yields a spurious intersection") {
             XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
         }
     }
@@ -809,7 +809,7 @@ class CubicCurveTests: XCTestCase {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
                             p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
-        XCTExpectFailure("known bug: sub-accuracy parallel separation yields a spurious intersection") {
+        expectKnownBug("known bug: sub-accuracy parallel separation yields a spurious intersection") {
             XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
         }
     }
@@ -819,7 +819,7 @@ class CubicCurveTests: XCTestCase {
         let s1 = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:4), p2: CGPoint(x:0.66,y:-3), p3: CGPoint(x:1,y:1))
         let s2 = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:4+delta),
                             p2: CGPoint(x:0.66,y:-3+delta), p3: CGPoint(x:1,y:1+delta))
-        XCTExpectFailure("known bug: sub-accuracy parallel separation yields a spurious intersection") {
+        expectKnownBug("known bug: sub-accuracy parallel separation yields a spurious intersection") {
             XCTAssertEqual(s1.intersections(with: s2, accuracy: 1e-5).count, 0)
         }
     }
@@ -891,7 +891,7 @@ class CubicCurveTests: XCTestCase {
         let sa = CubicCurve(p0: .zero, p1: CGPoint(x:0.33,y:a), p2: CGPoint(x:0.66,y:1-a), p3: CGPoint(x:1,y:1))
         let sb = CubicCurve(p0: CGPoint(x:0,y:delta), p1: CGPoint(x:0.33,y:a+delta),
                             p2: CGPoint(x:0.66,y:1-a-delta), p3: CGPoint(x:1,y:1-delta))
-        XCTExpectFailure("known bug: δ=8e-6 is below the engine resolution and over-produces") {
+        expectKnownBug("known bug: δ=8e-6 is below the engine resolution and over-produces") {
             XCTAssertEqual(sa.intersections(with: sb, accuracy: 1e-5).count, 1)
         }
     }

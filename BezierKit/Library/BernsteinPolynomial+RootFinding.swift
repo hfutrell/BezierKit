@@ -288,3 +288,12 @@ func findDistinctRootsCallbackBezierClipping<P: BezierClippingPolynomial>(
         callback($0)
     }
 }
+
+internal extension BezierClippingPolynomial {
+    /// Type-erasing entry point for the clipping root finder. Its signature has no `Self`, so it is
+    /// callable on an `any BezierClippingPolynomial` existential — callers need not rely on implicit
+    /// existential opening, which not all toolchains (e.g. the WASM SDK) support.
+    func forEachDistinctRootInUnitInterval(_ callback: (CGFloat) -> Void) {
+        findDistinctRootsCallbackBezierClipping(self, callback)
+    }
+}

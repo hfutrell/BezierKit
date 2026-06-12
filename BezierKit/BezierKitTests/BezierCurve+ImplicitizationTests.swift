@@ -18,7 +18,7 @@ import XCTest
 // fixed-degree Bézier-clipping root finder, then accepts each candidate root t1 when curve1(t1)
 // projects onto curve2 within `accuracy` (the standard project-and-check verification).
 //
-// Several near-coincident CROSSING cases below are marked XCTExpectFailure: they document a known
+// Several near-coincident CROSSING cases below are wrapped in expectKnownBug: they document a known
 // bug. Their separations sit below `accuracy`, where projecting onto a near-coincident curve always
 // lands within `accuracy`, so the engine reports spurious extra intersections. The expectations
 // assert the correct count and are kept (rather than deleted or changed to the wrong count) to
@@ -84,14 +84,15 @@ class BezierCurve_ImplicitizationTests: XCTestCase {
     // Exercises the degree-4 (quad×quad) fallback. Sub-accuracy separation: documents a known
     // bug (see file header). Expected failure.
     func testQuadQuadNearCoincidentCrossing() {
-        XCTExpectFailure("known bug: sub-accuracy near-coincident crossing over-produces intersections")
         let q1 = QuadraticCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 1, y: 1), p2: CGPoint(x: 2, y: 0))
         let q2 = QuadraticCurve(p0: CGPoint(x: 0, y: -d), p1: CGPoint(x: 1, y: 1 + d), p2: CGPoint(x: 2, y: -d))
-        let intersections = q1.intersections(with: q2, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t1, 0.5, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections[0].t2, 0.5, accuracy: 1.0e-5)
-        XCTAssertLessThan(distance(q1.point(at: intersections[0].t1), q2.point(at: intersections[0].t2)), 1.0e-5)
+        expectKnownBug("known bug: sub-accuracy near-coincident crossing over-produces intersections") {
+            let intersections = q1.intersections(with: q2, accuracy: 1.0e-5)
+            XCTAssertEqual(intersections.count, 1)
+            XCTAssertEqual(intersections[0].t1, 0.5, accuracy: 1.0e-5)
+            XCTAssertEqual(intersections[0].t2, 0.5, accuracy: 1.0e-5)
+            XCTAssertLessThan(distance(q1.point(at: intersections[0].t1), q2.point(at: intersections[0].t2)), 1.0e-5)
+        }
     }
 
     // A cubic that is `q1` elevated to cubic degree and offset by `d`, near-coincident with `q1` and
@@ -106,21 +107,23 @@ class BezierCurve_ImplicitizationTests: XCTestCase {
     }
     // Sub-accuracy separation: documents a known bug (see file header). Expected failure.
     func testQuadCubicNearCoincidentCrossing() {
-        XCTExpectFailure("known bug: sub-accuracy near-coincident crossing over-produces intersections")
         let (q1, cubic) = nearCoincidentQuadAndCubic()
-        let intersections = q1.intersections(with: cubic, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t1, 0.5, accuracy: 1.0e-5)
-        XCTAssertLessThan(distance(q1.point(at: intersections[0].t1), cubic.point(at: intersections[0].t2)), 1.0e-5)
+        expectKnownBug("known bug: sub-accuracy near-coincident crossing over-produces intersections") {
+            let intersections = q1.intersections(with: cubic, accuracy: 1.0e-5)
+            XCTAssertEqual(intersections.count, 1)
+            XCTAssertEqual(intersections[0].t1, 0.5, accuracy: 1.0e-5)
+            XCTAssertLessThan(distance(q1.point(at: intersections[0].t1), cubic.point(at: intersections[0].t2)), 1.0e-5)
+        }
     }
     // Sub-accuracy separation: documents a known bug (see file header). Expected failure.
     func testCubicQuadNearCoincidentCrossing() {
-        XCTExpectFailure("known bug: sub-accuracy near-coincident crossing over-produces intersections")
         let (q1, cubic) = nearCoincidentQuadAndCubic()
-        let intersections = cubic.intersections(with: q1, accuracy: 1.0e-5)
-        XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t2, 0.5, accuracy: 1.0e-5)
-        XCTAssertLessThan(distance(cubic.point(at: intersections[0].t1), q1.point(at: intersections[0].t2)), 1.0e-5)
+        expectKnownBug("known bug: sub-accuracy near-coincident crossing over-produces intersections") {
+            let intersections = cubic.intersections(with: q1, accuracy: 1.0e-5)
+            XCTAssertEqual(intersections.count, 1)
+            XCTAssertEqual(intersections[0].t2, 0.5, accuracy: 1.0e-5)
+            XCTAssertLessThan(distance(cubic.point(at: intersections[0].t1), q1.point(at: intersections[0].t2)), 1.0e-5)
+        }
     }
 
     // Two near-coincident cubics whose x-coordinate is linear — i.e. degree-deficient cubics
@@ -147,7 +150,7 @@ class BezierCurve_ImplicitizationTests: XCTestCase {
         }
         let c2 = curve2(delta: 1e-5)
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5).count, 2)
-        XCTExpectFailure("known bug: at δ ≈ accuracy the reverse ordering over-produces") {
+        expectKnownBug("known bug: at δ ≈ accuracy the reverse ordering over-produces") {
             XCTAssertEqual(c2.intersections(with: c1, accuracy: 1.0e-5).count, 2)
         }
     }

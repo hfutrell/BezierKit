@@ -401,8 +401,9 @@ public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomia
         }
     } else if let clippable = polynomial as? any BezierClippingPolynomial {
         // degree ≥ 4 (BernsteinPolynomial4 … BernsteinPolynomial9): every concrete type conforms
-        // to BezierClippingPolynomial, so route through the clipping root finder generically.
-        findDistinctRootsCallbackBezierClipping(clippable) { result.append($0) }
+        // to BezierClippingPolynomial. Dispatch through a no-`Self` protocol method so the existential
+        // need not be opened by the caller (unsupported on some toolchains, e.g. the WASM SDK).
+        clippable.forEachDistinctRootInUnitInterval { result.append($0) }
     }
     return result
 }

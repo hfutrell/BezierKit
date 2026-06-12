@@ -9,6 +9,16 @@
 import XCTest
 @testable import BezierKit
 
+/// Marks `body` as documenting a known bug: on Apple platforms it asserts that `body` currently
+/// fails (via XCTExpectFailure), so an unexpected pass flags that the bug was fixed. Linux's
+/// swift-corelibs-XCTest has no XCTExpectFailure, so there the block is skipped to keep CI green
+/// (the same code paths are exercised by the non-expected-failure tests).
+func expectKnownBug(_ message: String, _ body: () -> Void) {
+    #if canImport(Darwin)
+    XCTExpectFailure(message, failingBlock: body)
+    #endif
+}
+
 class BezierKitTestHelpers {
 
     static internal func intersections(_ intersections: [Intersection], betweenCurve c1: BezierCurve, andOtherCurve c2: BezierCurve, areWithinTolerance epsilon: CGFloat) -> Bool {
