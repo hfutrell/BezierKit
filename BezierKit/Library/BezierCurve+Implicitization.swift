@@ -15,12 +15,15 @@ internal protocol Implicitizeable {
     var implicitPolynomial: ImplicitPolynomial { get }
 }
 
-/// represents an implicit polynomial, otherwise known as an algebraic curve.
-/// The values on the polynomial are the zero set of the polynomial f(x, y) = 0
+/// Represents an implicit polynomial (an algebraic curve): the zero set of f(x, y) = 0.
+/// Used only by the curve/curve intersection fallback when monotone subdivision cannot
+/// resolve a near-coincident pair. Composing the implicit polynomial of one curve with the
+/// parametric polynomials of the other yields a univariate polynomial whose roots are the
+/// intersection parameters; those roots are found with the fixed-degree Bézier-clipping root
+/// finder (BernsteinPolynomial4/6/9), so there is a single root-finding implementation.
 internal struct ImplicitPolynomial {
 
     private let coefficients: [CGFloat]
-
     private let order: Int
 
     fileprivate init(_ lineProduct: ImplicitLineProduct) {
@@ -46,61 +49,6 @@ internal struct ImplicitPolynomial {
         assert(i >= 0 && i <= order && j >= 0 && j <= order)
         return coefficients[(order + 1) * i + j]
     }
-    /// composes the implicit polynomial with a parametric polynomial whose coordinates are x(t) and y(t)
-    /// the roots of the resulting polynomial are the intersection between the implicit and parametric polynomials
-    func value<P: BernsteinPolynomial>(_ x: P, _ y: P) -> BernsteinPolynomialN {
-
-        assert(x.order == y.order, "x and y coordinate polynomials must have same degree")
-        let polynomialOrder = x.order
-        let x = BernsteinPolynomialN(coefficients: x.coefficients)
-        let y = BernsteinPolynomialN(coefficients: y.coefficients)
-        var xPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
-        var yPowers: [BernsteinPolynomialN] = [BernsteinPolynomialN(coefficients: [1])]
-        for i in 1...order {
-            xPowers.append(xPowers[i - 1] * x)
-            yPowers.append(yPowers[i - 1] * y)
-        }
-
-        let resultOrder = order * polynomialOrder
-        var sum: BernsteinPolynomialN = BernsteinPolynomialN(coefficients: [CGFloat](repeating: 0, count: resultOrder + 1))
-        for i in 0...order {
-            let xPower: BernsteinPolynomialN = xPowers[i]
-            for j in 0...order {
-
-                let c: CGFloat = coefficient(i, j)
-                guard c != 0 else { continue }
-
-                let yPower: BernsteinPolynomialN = yPowers[j]
-
-                let k = resultOrder - xPower.order - yPower.order
-
-                var term: BernsteinPolynomialN = (xPower * yPower)
-
-                // swiftlint:disable shorthand_operator
-                if k > 0 {
-                    // bring the term up to degree k
-                    term = term * BernsteinPolynomialN(coefficients: [CGFloat](repeating: 1, count: k + 1))
-                } else {
-                    assert(k == 0, "for k < 0 we should have c == 0")
-                }
-                sum = sum + c * term
-                // swiftlint:enable shorthand_operator
-            }
-        }
-        return sum
-    }
-
-    func value(at point: CGPoint) -> CGFloat {
-        let x = point.x
-        let y = point.y
-        var sum: CGFloat = 0
-        for i in 0...order {
-            for j in 0...order {
-                sum += coefficient(i, j) * pow(x, CGFloat(i)) * pow(y, CGFloat(j))
-            }
-        }
-        return sum
-    }
 
     fileprivate static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
@@ -110,6 +58,136 @@ internal struct ImplicitPolynomial {
     fileprivate static func - (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(-), order: left.order)
+    }
+
+    /// Composes the implicit polynomial with a parametric curve whose coordinate polynomials have
+    /// Bernstein coefficients x[0..paramOrder] and y[0..paramOrder], and invokes `callback` for each
+    /// distinct root in (0, 1) of the resulting degree (order × paramOrder) polynomial.
+    func forEachRootOfComposition(xCoeffs: UnsafePointer<CGFloat>, yCoeffs: UnsafePointer<CGFloat>,
+                                  paramOrder p: Int, _ callback: (CGFloat) -> Void) {
+        let resultOrder = order * p
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: resultOrder + 1) { out in
+            compose(xCoeffs: xCoeffs, yCoeffs: yCoeffs, paramOrder: p, into: out.baseAddress!)
+            switch resultOrder {
+            case 2:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial2(b0: out[0], b1: out[1], b2: out[2]), callback)
+            case 3:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial3(b0: out[0], b1: out[1], b2: out[2], b3: out[3]), callback)
+            case 4:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial4(b0: out[0], b1: out[1], b2: out[2], b3: out[3], b4: out[4]), callback)
+            case 6:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial6(b0: out[0], b1: out[1], b2: out[2], b3: out[3],
+                                         b4: out[4], b5: out[5], b6: out[6]), callback)
+            case 9:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial9(b0: out[0], b1: out[1], b2: out[2], b3: out[3], b4: out[4],
+                                         b5: out[5], b6: out[6], b7: out[7], b8: out[8], b9: out[9]), callback)
+            default:
+                assertionFailure("unexpected composed degree \(resultOrder)")
+            }
+        }
+    }
+
+    /// Writes the Bernstein coefficients of f(x(t), y(t)) (degree order × paramOrder) into `out`.
+    private func compose(xCoeffs: UnsafePointer<CGFloat>, yCoeffs: UnsafePointer<CGFloat>,
+                         paramOrder p: Int, into out: UnsafeMutablePointer<CGFloat>) {
+        let m = order
+        let resultOrder = m * p
+        for k in 0...resultOrder { out[k] = 0 }
+        // Scratch: x powers (m+1 slots of stride 10), y powers (same), one term and one elevated term.
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 110) { buf in
+            let base = buf.baseAddress!
+            let xPow = base          // x^i at xPow + i*10 (degree i*p)
+            let yPow = base + 40     // y^j at yPow + j*10 (degree j*p)
+            let term = base + 80     // x^i·y^j (degree (i+j)*p)
+            let elev = base + 90     // term elevated to resultOrder
+            xPow[0] = 1; yPow[0] = 1
+            for k in 0...p { xPow[10 + k] = xCoeffs[k]; yPow[10 + k] = yCoeffs[k] }
+            if m >= 2 {
+                for i in 2...m {
+                    bernsteinMul(xPow + 10, p, xPow + (i - 1) * 10, (i - 1) * p, into: xPow + i * 10)
+                    bernsteinMul(yPow + 10, p, yPow + (i - 1) * 10, (i - 1) * p, into: yPow + i * 10)
+                }
+            }
+            for i in 0...m {
+                for j in 0...m {
+                    let c = coefficient(i, j)
+                    guard c != 0 else { continue }
+                    let termOrder = (i + j) * p
+                    if i == 0 && j == 0 {
+                        term[0] = 1
+                    } else if i == 0 {
+                        for k in 0...termOrder { term[k] = yPow[j * 10 + k] }
+                    } else if j == 0 {
+                        for k in 0...termOrder { term[k] = xPow[i * 10 + k] }
+                    } else {
+                        bernsteinMul(xPow + i * 10, i * p, yPow + j * 10, j * p, into: term)
+                    }
+                    let e = resultOrder - termOrder
+                    let src: UnsafeMutablePointer<CGFloat>
+                    if e > 0 {
+                        bernsteinElevate(term, termOrder, by: e, into: elev)
+                        src = elev
+                    } else {
+                        src = term
+                    }
+                    for k in 0...resultOrder { out[k] += c * src[k] }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Zero-allocation Bernstein arithmetic for implicit-polynomial composition
+
+private func bernsteinMul(
+    _ left: UnsafePointer<CGFloat>, _ m: Int,
+    _ right: UnsafePointer<CGFloat>, _ n: Int,
+    into result: UnsafeMutablePointer<CGFloat>
+) {
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 30) { tmp in
+        let mRow = tmp.baseAddress!
+        let nRow = tmp.baseAddress! + 10
+        let mnRow = tmp.baseAddress! + 20
+        for i in 0 ... m { mRow[i] = Utils.binomialCoefficient(m, choose: i) }
+        for i in 0 ... n { nRow[i] = Utils.binomialCoefficient(n, choose: i) }
+        for i in 0 ... m + n { mnRow[i] = Utils.binomialCoefficient(m + n, choose: i) }
+        for k in 0 ... m + n {
+            let lo = max(k - n, 0)
+            let hi = min(m, k)
+            var s = CGFloat.zero
+            for i in lo ... hi {
+                s += mRow[i] * nRow[k - i] * left[i] * right[k - i]
+            }
+            result[k] = s / mnRow[k]
+        }
+    }
+}
+
+private func bernsteinElevate(
+    _ src: UnsafePointer<CGFloat>, _ d: Int, by e: Int,
+    into result: UnsafeMutablePointer<CGFloat>
+) {
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 30) { tmp in
+        let dRow = tmp.baseAddress!
+        let eRow = tmp.baseAddress! + 10
+        let deRow = tmp.baseAddress! + 20
+        for i in 0 ... d { dRow[i] = Utils.binomialCoefficient(d, choose: i) }
+        for i in 0 ... e { eRow[i] = Utils.binomialCoefficient(e, choose: i) }
+        for i in 0 ... d + e { deRow[i] = Utils.binomialCoefficient(d + e, choose: i) }
+        for k in 0 ... d + e {
+            let lo = max(k - e, 0)
+            let hi = min(d, k)
+            var s = CGFloat.zero
+            for l in lo ... hi {
+                s += dRow[l] * eRow[k - l] * src[l]
+            }
+            result[k] = s / deRow[k]
+        }
     }
 }
 
@@ -182,12 +260,6 @@ private extension BezierCurve {
     }
 }
 
-extension LineSegment: Implicitizeable {
-    internal var implicitPolynomial: ImplicitPolynomial {
-        return ImplicitPolynomial(l(0, 1))
-    }
-}
-
 extension QuadraticCurve: Implicitizeable {
     internal var implicitPolynomial: ImplicitPolynomial {
         let l20 = l(2, 0)
@@ -218,5 +290,62 @@ extension CubicCurve: Implicitizeable {
         return m00 * (m11 * m22 - m12 * m21)
             - m01 * (m10 * m22 - m12 * m20)
             + m02 * (m10 * m21 - m11 * m20)
+    }
+}
+
+extension LineSegment: Implicitizeable {
+    internal var implicitPolynomial: ImplicitPolynomial {
+        return ImplicitPolynomial(l(0, 1))
+    }
+}
+
+// Degree reduction used before implicitization: a degree-deficient curve (e.g. a quadratic raised
+// to cubic form, whose x- or y-coordinate is linear) makes the higher-order implicit polynomial
+// degenerate to zero, so demote it to its true degree first.
+extension CubicCurve {
+    var downgradedToQuadratic: (quadratic: QuadraticCurve, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
+        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
+        let d = 0.5 * d1 + 0.5 * d2
+        let p1 = 1.5 * d + line.point(at: 0.5)
+        let error = 0.144334 * (d1 - d2).length
+        return (quadratic: QuadraticCurve(p0: line.startingPoint, p1: p1, p2: line.endingPoint), error: error)
+    }
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
+        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
+        let dmaxx = max(d1.x * d1.x, d2.x * d2.x)
+        let dmaxy = max(d1.y * d1.y, d2.y * d2.y)
+        return (lineSegment: line, error: 3 / 4 * sqrt(dmaxx + dmaxy))
+    }
+}
+
+extension QuadraticCurve {
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        return (lineSegment: line, error: 0.5 * (self.p1 - line.point(at: 0.5)).length)
+    }
+}
+
+extension BezierCurve where Self: NonlinearBezierCurve {
+    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve & Implicitizeable {
+        switch self.order {
+        case 3:
+            let cubic = self as! CubicCurve
+            let (line, lineError) = cubic.downgradedToLineSegment
+            if lineError <= maximumError { return line }
+            let (quadratic, quadraticError) = cubic.downgradedToQuadratic
+            if quadraticError <= maximumError { return quadratic }
+            return self
+        case 2:
+            let quadratic = self as! QuadraticCurve
+            let (line, lineError) = quadratic.downgradedToLineSegment
+            if lineError <= maximumError { return line }
+            return self
+        default:
+            return self
+        }
     }
 }

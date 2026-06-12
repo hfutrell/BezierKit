@@ -238,8 +238,45 @@ class QuadraticCurveTests: XCTestCase {
                                        p2: CGPoint(x: 7, y: 0))
         let intersections = quadratic.intersections(with: quadraticButActuallyLinear, accuracy: epsilon)
         XCTAssertEqual(intersections.count, 1)
-        XCTAssertEqual(intersections[0].t1, 0.5)
-        XCTAssertEqual(intersections[0].t2, 0.75)
+        XCTAssertEqual(intersections[0].t1, 0.5, accuracy: epsilon)
+        XCTAssertEqual(intersections[0].t2, 0.75, accuracy: epsilon)
+    }
+
+    // MARK: - Adversarial intersection tests
+
+    // Two arches with amplitude a=4 crossing transversally at 2 interior points.
+    // q1(t) = (-1+2t, 8t(1-t)), q2(t) = (-1+2t, 2−8t+8t²).
+    // Since both share the same x-parameterization, intersection reduces to
+    // 8t²−8t+1 = 0 → t = 1/2 ± √2/4. The large amplitude stresses convergence
+    // more than the default unit-scale tests.
+    func testIntersectionsHighAmplitudeQuadQuad() {
+        let q1 = QuadraticCurve(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 0, y: 4), p2: CGPoint(x: 1, y: 0))
+        let q2 = QuadraticCurve(p0: CGPoint(x: -1, y: 2), p1: CGPoint(x: 0, y: -2), p2: CGPoint(x: 1, y: 2))
+        let i = q1.intersections(with: q2, accuracy: 1e-5)
+        XCTAssertEqual(i.count, 2)
+        let sq2 = CGFloat(2).squareRoot()
+        let t1 = (2 - sq2) / 4     // ≈ 0.1464
+        let t2 = (2 + sq2) / 4     // ≈ 0.8536
+        XCTAssertEqual(i[0].t1, t1, accuracy: 1e-5)
+        XCTAssertEqual(i[1].t1, t2, accuracy: 1e-5)
+        for ix in i {
+            XCTAssertLessThan(distance(q1.point(at: ix.t1), q2.point(at: ix.t2)), 1e-5)
+        }
+    }
+
+    // High-amplitude quadratic (a=4) vs an S-curve cubic (a=4).
+    // The quadratic fat-line is wide; this is the mixed-order stress case.
+    func testIntersectionsHighAmplitudeQuadCubic() {
+        let q = QuadraticCurve(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 0, y: 4), p2: CGPoint(x: 1, y: 0))
+        let c = CubicCurve(p0: CGPoint(x: -1, y: 1),
+                           p1: CGPoint(x: 4, y: 0.66),
+                           p2: CGPoint(x: -3, y: 0.33),
+                           p3: CGPoint(x: 1, y: 0))
+        let intersections = q.intersections(with: c, accuracy: 1e-5)
+        XCTAssertGreaterThan(intersections.count, 0)
+        for ix in intersections {
+            XCTAssertLessThan(distance(q.point(at: ix.t1), c.point(at: ix.t2)), 1e-5)
+        }
     }
 
     // MARK: -

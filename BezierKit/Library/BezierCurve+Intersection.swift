@@ -31,6 +31,10 @@ public extension BezierCurve {
     var selfIntersects: Bool {
         return false
     }
+    var selfIntersection: Intersection? {
+        return nil
+    }
+    @available(*, deprecated, renamed: "selfIntersection")
     var selfIntersections: [Intersection] {
         return []
     }
@@ -94,87 +98,177 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
     let secondT1    = range1End
     let firstT2     = reversed ? range2End : range2Start
     let secondT2    = reversed ? range2Start : range2End
-    // ensure curves are actually relatively equal by testing more points
-    // for example with a quadratic curve we must test 1 additional point, and cubic two
-    let numberOfPointsToTest = max(curve1.order, curve2.order) - 1
+    // Sample additional interior points to rule out false coincidence from crossing curves.
+    // Crossing near-coincident curves pass the endpoint checks above but diverge from
+    // each other between the crossing and the endpoints. Using more samples than
+    // (order - 1) catches these divergent regions.
+    let numberOfPointsToTest = max(max(curve1.order, curve2.order) - 1, 8)
     if numberOfPointsToTest > 0 {
-        let delta = (secondT1 - firstT1) / CGFloat(numberOfPointsToTest+1)
+        let step = (secondT1 - firstT1) / CGFloat(numberOfPointsToTest + 1)
         for i in 1...numberOfPointsToTest {
-            let t = firstT1 + delta * CGFloat(i)
+            let t = firstT1 + step * CGFloat(i)
             guard pointIsCloseToCurve(curve1.point(at: t), curve2) != nil else { return nil }
         }
     }
     return [Intersection(t1: firstT1, t2: firstT2), Intersection(t1: secondT1, t2: secondT2)]
 }
 
-fileprivate extension BezierCurve {
-    var derivativeBounds: CGFloat {
-        let points = self.points
-        let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
-        return CGFloat(self.order) * speeds.max()!
+// 2D Newton–Raphson on C1(u) = C2(v) starting from (u, v). Returns refined (u, v).
+private func newtonRefineCurvePair<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ c1: C1, _ c2: C2, u: CGFloat, v: CGFloat, iterations: Int
+) -> (CGFloat, CGFloat) {
+    var u = u, v = v
+    for _ in 0..<iterations {
+        let (q1, d1) = c1.pointAndDerivative(at: u)
+        let (q2, d2) = c2.pointAndDerivative(at: v)
+        let f = q1 - q2
+        let denom = d1.cross(d2)
+        let denomSq = denom * denom
+        let scaleSq = (d1.x * d1.x + d1.y * d1.y) * (d2.x * d2.x + d2.y * d2.y)
+        guard denomSq > scaleSq * CGFloat(1.0e-20) else { break }
+        let du = -f.cross(d2) / denom
+        let dv = d1.cross(f) / denom
+        u = Utils.clamp(u + du, 0, 1)
+        v = Utils.clamp(v + dv, 0, 1)
+        guard du * du + dv * dv > CGFloat(1.0e-28) else { break }
     }
+    return (u, v)
 }
 
-internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection] where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+// True when |C1(u) − C2(v)| < chord × 1e-6 — distinguishes genuine roots from near-misses.
+// This relative threshold (far tighter than `accuracy`) is what rejects spurious intersections
+// between near-coincident, non-crossing curves.
+private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ c1: C1, _ c2: C2, u: CGFloat, v: CGFloat
+) -> Bool {
+    let f = c1.point(at: u) - c2.point(at: v)
+    let chordSq = (c1.endingPoint - c1.startingPoint).lengthSquared
+    let scaleSq = max(chordSq, CGFloat(1.0e-20))
+    return f.lengthSquared < scaleSq * CGFloat(1.0e-12)
+}
 
-    // try intersecting using subdivision
-    let lb = curve1.curve.boundingBox
-    let rb = curve2.curve.boundingBox
+// Ensures exact curve-endpoint intersections are represented precisely. When a refined interior
+// result lands near an exact shared endpoint it is replaced with the exact (u, v) corner value;
+// otherwise the corner intersection is appended. Endpoint positions are pre-computed once.
+private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ result: inout [Intersection], curve1: C1, curve2: C2, accuracy: CGFloat
+) {
+    let c1s = curve1.startingPoint, c1e = curve1.endingPoint
+    let c2s = curve2.startingPoint, c2e = curve2.endingPoint
+    let chordSq = (c1e - c1s).lengthSquared
+    let threshold = max(chordSq, CGFloat(1.0e-20)) * CGFloat(1.0e-12)
+    let accuracySq = accuracy * accuracy
+    func addCorner(_ corner: CGPoint, _ c1Point: CGPoint, _ t1: CGFloat, _ t2: CGFloat) {
+        guard (c1Point - corner).lengthSquared < threshold else { return }
+        if let idx = result.firstIndex(where: { distanceSquared(c1Point, curve1.point(at: $0.t1)) < accuracySq }) {
+            result[idx] = Intersection(t1: t1, t2: t2)
+        } else {
+            result.append(Intersection(t1: t1, t2: t2))
+        }
+    }
+    addCorner(c2s, c1s, 0, 0)
+    addCorner(c2e, c1s, 0, 1)
+    addCorner(c2s, c1e, 1, 0)
+    addCorner(c2e, c1e, 1, 1)
+}
+
+// Curve/curve intersection driver. Splits both curves at their derivative roots so every
+// piece is monotone, then runs fast monotone subdivision (Utils.preSplitIntersections) on
+// all overlapping pairs. The identical-curve fast path is handled by concrete-type overloads
+// in extension CubicCurve / extension QuadraticCurve, which shadow the protocol extension for
+// statically-typed receivers, eliminating as? runtime casts entirely.
+private func helperIntersectsCurveCurveImpl<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection]
+where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
     var pairIntersections: [Intersection] = []
     var subdivisionIterations = 0
-    if Utils.pairiteration(curve1, curve2, lb, rb, &pairIntersections, accuracy, &subdivisionIterations) {
+    if Utils.preSplitIntersections(curve1.curve, curve2.curve, &pairIntersections, accuracy, &subdivisionIterations) {
         return pairIntersections.sortedAndUniqued()
     }
 
-    // subdivision failed, check if the curves are coincident
-    let insignificantDistance: CGFloat = 0.5 * accuracy
+    // Subdivision hit its iteration limit (curves are likely coincident, or near-coincident with
+    // genuine crossings the bounding-box test cannot separate). Check for geometric coincidence
+    // first — the composition polynomial is theoretically zero for coincident curves, so
+    // floating-point noise would otherwise produce spurious roots.
     if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
         return coincidence
     }
 
-    // find any intersections using curve implicitization
-    let transform = CGAffineTransform(translationX: -curve2.curve.startingPoint.x, y: -curve2.curve.startingPoint.y)
-    let c2 = curve2.curve.downgradedIfPossible(maximumError: insignificantDistance).copy(using: transform)
+    // Not coincident — resolve via implicitization. First demote curve2 to its true degree: a
+    // degree-deficient curve (e.g. a quadratic raised to cubic form, whose x- or y-coordinate is
+    // linear) makes the higher-order implicit polynomial degenerate to zero. If it reduces to a
+    // line the intersection is exact via the curve/line routine; otherwise implicitize the (still
+    // nonlinear) curve.
+    let downgraded = curve2.curve.downgradedIfPossible(maximumError: 0.5 * accuracy)
+    switch downgraded {
+    case let line as LineSegment:
+        return helperIntersectsCurveLine(curve1.curve, line)
+    case let quadratic as QuadraticCurve:
+        return implicitizationFallback(curve1.curve, quadratic, accuracy: accuracy)
+    case let cubic as CubicCurve:
+        return implicitizationFallback(curve1.curve, cubic, accuracy: accuracy)
+    default:
+        return []
+    }
+}
 
-    let c1 = curve1.curve.copy(using: transform)
-    let equation: BernsteinPolynomialN = c2.implicitPolynomial.value(c1.xPolynomial, c1.yPolynomial)
-    let roots = equation.distinctRealRootsInUnitInterval(configuration: RootFindingConfiguration(errorThreshold: RootFindingConfiguration.minimumErrorThreshold))
+// Implicitization fallback: translate so curve2 starts at the origin (keeps the implicit-polynomial
+// coefficients well-conditioned), build curve2's implicit polynomial, compose it with curve1's
+// parametric x/y polynomials, and root-find the resulting degree-(order × order) polynomial with the
+// fixed-degree root finder. Each candidate is refined with 2D Newton and accepted only if it is a
+// genuine root, which rejects spurious near-misses between near-coincident, non-crossing curves.
+private func implicitizationFallback<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ curve1: C1, _ curve2: C2, accuracy: CGFloat
+) -> [Intersection] {
+    let origin = curve2.startingPoint
+    let transform = CGAffineTransform(translationX: -origin.x, y: -origin.y)
+    let c1 = curve1.copy(using: transform)
+    let c2 = curve2.copy(using: transform)
+    let implicit = c2.implicitPolynomial
+    let accuracySq = accuracy * accuracy
 
-    let t1Tolerance = insignificantDistance / c1.derivativeBounds
-    let t2Tolerance = insignificantDistance / c2.derivativeBounds
+    var result: [Intersection] = []
+    func appendGenuineRoot(near t1Guess: CGFloat) {
+        let (u, v) = newtonRefineCurvePair(c1, c2, u: t1Guess, v: c2.project(c1.point(at: t1Guess)).t, iterations: 10)
+        guard newtonIsGenuineRoot(c1, c2, u: u, v: v) else { return }
+        let point = c1.point(at: u)
+        guard !result.contains(where: { distanceSquared(point, c1.point(at: $0.t1)) < accuracySq }) else { return }
+        result.append(Intersection(t1: u, t2: v))
+    }
 
-    func intersectionIfCloseEnough(at t1: CGFloat) -> Intersection? {
-        let point = c1.point(at: t1)
-        guard c2.boundingBox.contains(point) else { return nil }
-        var t2 = c2.project(point).t
-        if t2 < t2Tolerance {
-            t2 = 0
-        } else if t2 > 1 - t2Tolerance {
-            t2 = 1
-        }
-        guard distance(point, c2.point(at: t2)) < accuracy else { return nil }
-        return Intersection(t1: t1, t2: t2)
+    let p = c1.order
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 2 * (p + 1)) { coeffs in
+        var xi = 0
+        c1.xPolynomial.forEachCoefficient { coeffs[xi] = $0; xi += 1 }
+        var yi = p + 1
+        c1.yPolynomial.forEachCoefficient { coeffs[yi] = $0; yi += 1 }
+        implicit.forEachRootOfComposition(xCoeffs: coeffs.baseAddress!,
+                                          yCoeffs: coeffs.baseAddress! + (p + 1),
+                                          paramOrder: p) { t1 in appendGenuineRoot(near: t1) }
     }
-    var intersections = roots.compactMap { t1 -> Intersection? in
-        if t1 < t1Tolerance {
-            return nil // (t1 near 0 handled explicitly)
-        } else if t1 > 1 - t1Tolerance {
-            return nil // (t1 near 1 handled explicitly)
-        }
-        return intersectionIfCloseEnough(at: t1)
+    addEndpointIntersections(&result, curve1: c1, curve2: c2, accuracy: accuracy)
+    return result.sortedAndUniqued()
+}
+
+private func sameGeometryIntersections<C: NonlinearBezierCurve & Equatable>(
+    _ curve1: Subcurve<C>, _ curve2: Subcurve<C>
+) -> [Intersection]? {
+    guard curve1.curve == curve2.curve else { return nil }
+    let tLo = max(curve1.t1, curve2.t1)
+    let tHi = min(curve1.t2, curve2.t2)
+    guard tLo < tHi else { return [] }
+    return [Intersection(t1: tLo, t2: tLo), Intersection(t1: tHi, t2: tHi)]
+}
+
+internal func helperIntersectsCurveCurve<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection]
+where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
+    // Detect identical-geometry pairs by casting to concrete types.
+    // as? is only used here (not in the hot-path concrete overloads).
+    if let c1 = curve1 as? Subcurve<CubicCurve>, let c2 = curve2 as? Subcurve<CubicCurve> {
+        if let result = sameGeometryIntersections(c1, c2) { return result }
+    } else if let c1 = curve1 as? Subcurve<QuadraticCurve>, let c2 = curve2 as? Subcurve<QuadraticCurve> {
+        if let result = sameGeometryIntersections(c1, c2) { return result }
     }
-    if intersections.contains(where: { $0.t1 == 0 }) == false {
-        if let intersection = intersectionIfCloseEnough(at: 0) {
-            intersections.append(intersection)
-        }
-    }
-    if intersections.contains(where: { $0.t1 == 1 }) == false {
-        if let intersection = intersectionIfCloseEnough(at: 1) {
-            intersections.append(intersection)
-        }
-    }
-    // TODO: handle case where curve2 self-intersects and curve intersects it there
-    return intersections.sortedAndUniqued()
+    return helperIntersectsCurveCurveImpl(curve1, curve2, accuracy: accuracy)
 }
 
 internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reversed: Bool = false) -> [Intersection] where U: NonlinearBezierCurve {
@@ -265,8 +359,8 @@ extension CubicCurve {
         return self.selfIntersectionInfo != nil
     }
 
-    public var selfIntersections: [Intersection] {
-        guard let info = self.selfIntersectionInfo else { return [] }
+    public var selfIntersection: Intersection? {
+        guard let info = self.selfIntersectionInfo else { return nil }
         let discriminant = info.discriminant
         let x = info.canonicalPoint.x
         let y = info.canonicalPoint.y
@@ -274,41 +368,50 @@ extension CubicCurve {
         let denominator = (3 - x - y)
         let t1 = 0.5 * (3 - x - radical) / denominator
         let t2 = 0.5 * (3 - x + radical) / denominator
-        return [Intersection(t1: Utils.clamp(t1, 0, 1),
-                             t2: Utils.clamp(t2, 0, 1))]
+        return Intersection(t1: Utils.clamp(t1, 0, 1),
+                            t2: Utils.clamp(t2, 0, 1))
+    }
+
+    @available(*, deprecated, renamed: "selfIntersection")
+    public var selfIntersections: [Intersection] {
+        guard let i = selfIntersection else { return [] }
+        return [i]
+    }
+
+    // Concrete overload: shadows the NonlinearBezierCurve extension for statically-typed
+    // CubicCurve receivers. Uses synthesized struct == (no as? runtime metadata lookup)
+    // for the identical-curve fast path; eliminates __swift_instantiateConcreteTypeFromMangledNameV2.
+    public func intersections(with curve: CubicCurve, accuracy: CGFloat) -> [Intersection] {
+        if self == curve {
+            return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
+        }
+        return helperIntersectsCurveCurveImpl(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
     }
 }
 
-extension BezierCurve where Self: NonlinearBezierCurve {
-    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve & Implicitizeable {
-        switch self.order {
-        case 3:
-            let cubic = (self as! CubicCurve)
-            let (line, lineError) = cubic.downgradedToLineSegment
-            if lineError <= maximumError {
-                return line
-            }
-            let (quadratic, quadraticError) = cubic.downgradedToQuadratic
-            if quadraticError <= maximumError {
-                return quadratic
-            }
-            return self
-        case 2:
-            let quadratic = (self as! QuadraticCurve)
-            let (line, lineError) = quadratic.downgradedToLineSegment
-            if lineError <= maximumError {
-                return line
-            }
-            return self
-        default:
-            return self
+extension QuadraticCurve {
+    // Concrete overload: shadows the NonlinearBezierCurve extension for statically-typed
+    // QuadraticCurve receivers. Uses synthesized struct == for the identical-curve fast path.
+    public func intersections(with curve: QuadraticCurve, accuracy: CGFloat) -> [Intersection] {
+        if self == curve {
+            return [Intersection(t1: 0, t2: 0), Intersection(t1: 1, t2: 1)]
         }
+        return helperIntersectsCurveCurveImpl(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
     }
 }
 
 extension NonlinearBezierCurve {
     public func intersections(with line: LineSegment) -> [Intersection] {
         return helperIntersectsCurveLine(self, line)
+    }
+    // Concrete overloads avoid heap-boxing the curve argument as a BezierCurve existential.
+    // CubicCurve is 64 bytes — larger than Swift's 24-byte existential inline buffer,
+    // so passing it as `BezierCurve` causes a heap allocation per call.
+    public func intersections(with curve: CubicCurve, accuracy: CGFloat) -> [Intersection] {
+        return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
+    }
+    public func intersections(with curve: QuadraticCurve, accuracy: CGFloat) -> [Intersection] {
+        return helperIntersectsCurveCurve(Subcurve(curve: self), Subcurve(curve: curve), accuracy: accuracy)
     }
     public func intersections(with curve: BezierCurve, accuracy: CGFloat) -> [Intersection] {
         switch curve.order {

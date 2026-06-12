@@ -48,9 +48,9 @@ final internal class BoundingBoxHierarchy {
         let type: NodeType
     }
 
-    private let boundingBoxes: UnsafePointer<BoundingBox>
-    private let lastRowIndex: Int
-    private let elementCount: Int
+    internal let boundingBoxes: UnsafePointer<BoundingBox>
+    internal let lastRowIndex: Int
+    internal let elementCount: Int
 
     internal static func leafNodeIndexToElementIndex(_ nodeIndex: Int, elementCount: Int, lastRowIndex: Int) -> Int {
         assert(isLeaf(nodeIndex, elementCount: elementCount))
@@ -70,7 +70,7 @@ final internal class BoundingBoxHierarchy {
         return nodeIndex
     }
 
-    private static func isLeaf(_ index: Int, elementCount: Int) -> Bool {
+    internal static func isLeaf(_ index: Int, elementCount: Int) -> Bool {
         return index >= elementCount-1
     }
 

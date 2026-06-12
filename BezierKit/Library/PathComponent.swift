@@ -255,22 +255,27 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
             $0 + $1.offset(distance: d)
         }
         guard offsetCurves.isEmpty == false else { return nil }
-        // force the set of curves to be contiguous
-        for i in 0..<offsetCurves.count-1 {
-            let start = offsetCurves[i+1].startingPoint
-            let end = offsetCurves[i].endingPoint
-            let average = Utils.linearInterpolate(start, end, 0.5)
-            offsetCurves[i].endingPoint = average
-            offsetCurves[i+1].startingPoint = average
+        let count = offsetCurves.count
+        // Snapshot original offset endpoints so junction computation is not affected
+        // by modifications made earlier in the loop.
+        let starts = offsetCurves.map { $0.startingPoint }
+        let ends = offsetCurves.map { $0.endingPoint }
+        // Make adjacent offset curves contiguous using the projected intersection of
+        // the lines through each curve's endpoints (falls back to linear average when
+        // the lines are parallel, e.g. collinear straight segments).
+        func makeContiguous(_ i: Int, _ j: Int) {
+            guard ends[i] != starts[j] else { return }
+            let pt = Utils.linesIntersection(starts[i], ends[i], starts[j], ends[j])
+                     ?? Utils.linearInterpolate(ends[i], starts[j], 0.5)
+            offsetCurves[i].endingPoint = pt
+            offsetCurves[j].startingPoint = pt
         }
-        // we've touched everything but offsetCurves[0].startingPoint and offsetCurves[count-1].endingPoint
-        // if we are a closed componenet, keep the offset component closed as well
+        for i in 0..<count-1 {
+            makeContiguous(i, i+1)
+        }
+        // if we are a closed component, keep the offset component closed as well
         if self.isClosed {
-            let start = offsetCurves[0].startingPoint
-            let end = offsetCurves[offsetCurves.count-1].endingPoint
-            let average = Utils.linearInterpolate(start, end, 0.5)
-            offsetCurves[0].startingPoint = average
-            offsetCurves[offsetCurves.count-1].endingPoint = average
+            makeContiguous(count-1, 0)
         }
         return PathComponent(curves: offsetCurves)
     }
@@ -322,27 +327,55 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
     }
 
     public func intersections(with other: PathComponent, accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
-        var intersections: [PathComponentIntersection] = []
+        var result: [PathComponentIntersection] = []
+        let bvh1 = self.bvh
+        let bvh2 = other.bvh
+        let boxes1 = bvh1.boundingBoxes
+        let ec1 = bvh1.elementCount
+        let lri1 = bvh1.lastRowIndex
+        let boxes2 = bvh2.boundingBoxes
+        let ec2 = bvh2.elementCount
+        let lri2 = bvh2.lastRowIndex
         let isClosed1 = self.isClosed
         let isClosed2 = other.isClosed
-        self.bvh.enumerateIntersections(with: other.bvh) { i1, i2 in
-            let elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, other, accuracy: accuracy)
-            let pathComponentIntersections = elementIntersections.compactMap { (i: Intersection) -> PathComponentIntersection? in
-                let i1 = IndexedPathComponentLocation(elementIndex: i1, t: i.t1)
-                let i2 = IndexedPathComponentLocation(elementIndex: i2, t: i.t2)
-                if i1.t == 0.0, isClosed1 || i1.elementIndex > 0 {
-                    // handle this intersection instead at i1.elementIndex-1 w/ t=1
-                    return nil
+        // Use Unmanaged to pass ObjC-class references without triggering objc_retain at every
+        // recursive BVH level. Leaf-level code calls takeUnretainedValue() to recover the objects.
+        let selfRef = Unmanaged.passUnretained(self)
+        let otherRef = Unmanaged.passUnretained(other)
+        func traverse(i1: Int, i2: Int) {
+            guard boxes1[i1].overlaps(boxes2[i2]) else { return }
+            let leaf1 = i1 >= ec1 - 1
+            let leaf2 = i2 >= ec2 - 1
+            if leaf1, leaf2 {
+                let p1 = selfRef.takeUnretainedValue()
+                let p2 = otherRef.takeUnretainedValue()
+                let ei1 = BoundingBoxHierarchy.leafNodeIndexToElementIndex(i1, elementCount: ec1, lastRowIndex: lri1)
+                let ei2 = BoundingBoxHierarchy.leafNodeIndexToElementIndex(i2, elementCount: ec2, lastRowIndex: lri2)
+                let elementIntersections = PathComponent.intersectionsBetweenElements(ei1, ei2, p1, p2, accuracy: accuracy)
+                for i in elementIntersections {
+                    let loc1 = IndexedPathComponentLocation(elementIndex: ei1, t: i.t1)
+                    let loc2 = IndexedPathComponentLocation(elementIndex: ei2, t: i.t2)
+                    if loc1.t == 0.0, isClosed1 || loc1.elementIndex > 0 { continue }
+                    if loc2.t == 0.0, isClosed2 || loc2.elementIndex > 0 { continue }
+                    result.append(PathComponentIntersection(indexedComponentLocation1: loc1, indexedComponentLocation2: loc2))
                 }
-                if i2.t == 0.0, isClosed2 || i2.elementIndex > 0 {
-                    // handle this intersection instead at i2.elementIndex-1 w/ t=1
-                    return nil
-                }
-                return PathComponentIntersection(indexedComponentLocation1: i1, indexedComponentLocation2: i2)
+            } else if leaf1 {
+                traverse(i1: i1, i2: 2 * i2 + 1)
+                traverse(i1: i1, i2: 2 * i2 + 2)
+            } else if leaf2 {
+                traverse(i1: 2 * i1 + 1, i2: i2)
+                traverse(i1: 2 * i1 + 2, i2: i2)
+            } else {
+                traverse(i1: 2 * i1 + 1, i2: 2 * i2 + 1)
+                traverse(i1: 2 * i1 + 1, i2: 2 * i2 + 2)
+                traverse(i1: 2 * i1 + 2, i2: 2 * i2 + 1)
+                traverse(i1: 2 * i1 + 2, i2: 2 * i2 + 2)
             }
-            intersections += pathComponentIntersections
         }
-        return intersections
+        withExtendedLifetime((bvh1, bvh2)) {
+            traverse(i1: 0, i2: 0)
+        }
+        return result
     }
 
     private func neighborsIntersectOnlyTrivially(_ i1: Int, _ i2: Int) -> Bool {
@@ -364,51 +397,81 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
     }
 
     public func selfIntersections(accuracy: CGFloat = BezierKit.defaultIntersectionAccuracy) -> [PathComponentIntersection] {
-        var intersections: [PathComponentIntersection] = []
+        var result: [PathComponentIntersection] = []
+        let bvh = self.bvh
+        let boxes = bvh.boundingBoxes
+        let ec = bvh.elementCount
+        let lri = bvh.lastRowIndex
         let isClosed = self.isClosed
-        self.bvh.enumerateSelfIntersections { i1, i2 in
+        let selfRef = Unmanaged.passUnretained(self)
+        func processLeafPair(ei1: Int, ei2: Int) {
+            let comp = selfRef.takeUnretainedValue()
             var elementIntersections: [Intersection] = []
-            if i1 == i2 {
-                // we are intersecting a path element against itself (only possible with cubic or higher order)
-                if self.order(at: i1) == 3 {
-                    elementIntersections = self.cubic(at: i1).selfIntersections.filter {
-                        guard self.numberOfElements == 1 else { return true }
-                        return $0.t1 != 0 || $0.t2 != 1 // exclude intersection of single curve path closing itself
-                    }
+            if ei1 == ei2 {
+                if comp.order(at: ei1) == 3,
+                   let intersection = comp.cubic(at: ei1).selfIntersection {
+                    let include = comp.numberOfElements != 1 || intersection.t1 != 0 || intersection.t2 != 1
+                    if include { elementIntersections = [intersection] }
                 }
-            } else if i1 < i2 {
-                // we are intersecting two distinct path elements
-                let areNeighbors = (i1 == i2-1) || (isClosed && i1 == 0 && i2 == self.numberOfElements-1)
-                if areNeighbors, neighborsIntersectOnlyTrivially(i1, i2) {
-                    // optimize the very common case of element i intersecting i+1 at its endpoint
+            } else if ei1 < ei2 {
+                let areNeighbors = (ei1 == ei2 - 1) || (isClosed && ei1 == 0 && ei2 == comp.numberOfElements - 1)
+                if areNeighbors, comp.neighborsIntersectOnlyTrivially(ei1, ei2) {
                     elementIntersections = []
                 } else {
-                    elementIntersections = PathComponent.intersectionsBetweenElements(i1, i2, self, self, accuracy: accuracy).filter {
-                        if i1 == i2-1, $0.t1 == 1.0, $0.t2 == 0.0 {
-                            return false // exclude intersections of i and i+1 at t=1
-                        }
-                        if i1 == 0, i2 == self.numberOfElements-1, $0.t1 == 0.0, $0.t2 == 1.0 {
-                            assert(self.isClosed) // how else can that happen?
-                            return false // exclude intersections of endpoint and startpoint
-                        }
-                        if $0.t1 == 0.0, i1 > 0 || isClosed {
-                            // handle the intersections instead at i1-1, t=1
+                    elementIntersections = PathComponent.intersectionsBetweenElements(ei1, ei2, comp, comp, accuracy: accuracy).filter {
+                        if ei1 == ei2 - 1, $0.t1 == 1.0, $0.t2 == 0.0 { return false }
+                        if ei1 == 0, ei2 == comp.numberOfElements - 1, $0.t1 == 0.0, $0.t2 == 1.0 {
+                            assert(comp.isClosed)
                             return false
                         }
-                        if $0.t2 == 0.0 {
-                            // handle the intersections instead at i2-1, t=1 (we know i2 > 0 because i2 > i1)
-                            return false
-                        }
+                        if $0.t1 == 0.0, ei1 > 0 || isClosed { return false }
+                        if $0.t2 == 0.0 { return false }
                         return true
                     }
                 }
             }
-            intersections += elementIntersections.map {
-                return PathComponentIntersection(indexedComponentLocation1: IndexedPathComponentLocation(elementIndex: i1, t: $0.t1),
-                                                 indexedComponentLocation2: IndexedPathComponentLocation(elementIndex: i2, t: $0.t2))
+            result += elementIntersections.map {
+                PathComponentIntersection(
+                    indexedComponentLocation1: IndexedPathComponentLocation(elementIndex: ei1, t: $0.t1),
+                    indexedComponentLocation2: IndexedPathComponentLocation(elementIndex: ei2, t: $0.t2))
             }
         }
-        return intersections
+        func traversePair(i1: Int, i2: Int) {
+            guard boxes[i1].overlaps(boxes[i2]) else { return }
+            let leaf1 = i1 >= ec - 1
+            let leaf2 = i2 >= ec - 1
+            if leaf1, leaf2 {
+                let ei1 = BoundingBoxHierarchy.leafNodeIndexToElementIndex(i1, elementCount: ec, lastRowIndex: lri)
+                let ei2 = BoundingBoxHierarchy.leafNodeIndexToElementIndex(i2, elementCount: ec, lastRowIndex: lri)
+                processLeafPair(ei1: ei1, ei2: ei2)
+            } else if leaf1 {
+                traversePair(i1: i1, i2: 2 * i2 + 1)
+                traversePair(i1: i1, i2: 2 * i2 + 2)
+            } else if leaf2 {
+                traversePair(i1: 2 * i1 + 1, i2: i2)
+                traversePair(i1: 2 * i1 + 2, i2: i2)
+            } else {
+                traversePair(i1: 2 * i1 + 1, i2: 2 * i2 + 1)
+                traversePair(i1: 2 * i1 + 1, i2: 2 * i2 + 2)
+                traversePair(i1: 2 * i1 + 2, i2: 2 * i2 + 1)
+                traversePair(i1: 2 * i1 + 2, i2: 2 * i2 + 2)
+            }
+        }
+        func traverseSelf(index: Int) {
+            if index >= ec - 1 {
+                let ei = BoundingBoxHierarchy.leafNodeIndexToElementIndex(index, elementCount: ec, lastRowIndex: lri)
+                processLeafPair(ei1: ei, ei2: ei)
+            } else {
+                let l = 2 * index + 1, r = 2 * index + 2
+                traverseSelf(index: l)
+                traversePair(i1: l, i2: r)
+                traverseSelf(index: r)
+            }
+        }
+        withExtendedLifetime(bvh) {
+            traverseSelf(index: 0)
+        }
+        return result
     }
 
     // MARK: -
@@ -536,16 +599,66 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         let start = range.start
         let end   = range.end
 
+        // Fast path: t=0 at start and t=1 at end means every element in the range is
+        // included whole. Copy the slices directly without going through appendElement.
+        if start.t == 0.0 && end.t == 1.0 {
+            if start.elementIndex == 0 && end.elementIndex == self.numberOfElements - 1 {
+                return self
+            }
+            let firstPoint = self.offsets[start.elementIndex]
+            let lastPoint  = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
+            return type(of: self).init(
+                points: Array(self.points[firstPoint...lastPoint]),
+                orders: Array(self.orders[start.elementIndex...end.elementIndex]))
+        }
+
+        // Partial-boundary case: at least one end has a fractional t.
+        // Reserve exact capacity so the partial-element appends don't force a
+        // reallocation when the large bulk full-element copy arrives.
+        // offsets[i] = sum(orders[0..<i]), so sum(orders[start...end]) = offsets[end]+orders[end]-offsets[start]
+        let ordersCount = end.elementIndex - start.elementIndex + 1
+        let pointsCount = self.offsets[end.elementIndex] + self.orders[end.elementIndex]
+                        - self.offsets[start.elementIndex] + 1
+
         var resultPoints: [CGPoint] = []
         var resultOrders: [Int] = []
+        resultPoints.reserveCapacity(pointsCount)
+        resultOrders.reserveCapacity(ordersCount)
 
-        func appendElement(_ index: Int, _ start: CGFloat, _ end: CGFloat, includeStart: Bool, includeEnd: Bool) {
+        // Appends points from element[index].split(startT, endT), using concrete types to avoid
+        // existential boxing and the heap allocation from BezierCurve.points.
+        func appendElement(_ index: Int, _ startT: CGFloat, _ endT: CGFloat, includeStart: Bool, includeEnd: Bool) {
             assert(includeStart || includeEnd)
-            let element = self.element(at: index).split(from: start, to: end)
-            let startIndex  = includeStart ? 0 : 1
-            let endIndex    = includeEnd ? element.order : element.order - 1
-            resultPoints    += element.points[startIndex...endIndex]
-            resultOrders.append(self.orders[index])
+            let order = self.orders[index]
+            let offset = self.offsets[index]
+            switch order {
+            case 3:
+                let c = CubicCurve(p0: self.points[offset],   p1: self.points[offset+1],
+                                   p2: self.points[offset+2], p3: self.points[offset+3])
+                    .split(from: startT, to: endT)
+                if includeStart         { resultPoints.append(c.p0) }
+                                          resultPoints.append(c.p1)
+                                          resultPoints.append(c.p2)
+                if includeEnd           { resultPoints.append(c.p3) }
+            case 2:
+                let c = QuadraticCurve(p0: self.points[offset], p1: self.points[offset+1],
+                                       p2: self.points[offset+2])
+                    .split(from: startT, to: endT)
+                if includeStart         { resultPoints.append(c.p0) }
+                                          resultPoints.append(c.p1)
+                if includeEnd           { resultPoints.append(c.p2) }
+            case 1:
+                let c = LineSegment(p0: self.points[offset], p1: self.points[offset+1])
+                    .split(from: startT, to: endT)
+                if includeStart         { resultPoints.append(c.p0) }
+                if includeEnd           { resultPoints.append(c.p1) }
+            default:
+                let element = self.element(at: index).split(from: startT, to: endT)
+                let fromIdx = includeStart ? 0 : 1
+                let toIdx   = includeEnd ? element.order : element.order - 1
+                resultPoints.append(contentsOf: element.points[fromIdx...toIdx])
+            }
+            resultOrders.append(order)
         }
 
         if start.elementIndex == end.elementIndex {
@@ -570,6 +683,10 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
                 appendElement(end.elementIndex, 0.0, end.t, includeStart: !hasFullElements, includeEnd: true)
             }
         }
+
+        assert(resultPoints.count == pointsCount, "capacity formula produced wrong pointsCount")
+        assert(resultOrders.count == ordersCount, "capacity formula produced wrong ordersCount")
+
         return type(of: self).init(points: resultPoints, orders: resultOrders)
     }
 
