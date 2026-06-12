@@ -50,6 +50,20 @@ internal struct ImplicitPolynomial {
         return coefficients[(order + 1) * i + j]
     }
 
+    /// Evaluates the implicit polynomial f(x, y) = Σ aij x^i y^j at `point`. Zero on the curve the
+    /// polynomial implicitizes, and opposite signs on its two sides.
+    func value(at point: CGPoint) -> CGFloat {
+        let x = point.x
+        let y = point.y
+        var sum: CGFloat = 0
+        for i in 0...order {
+            for j in 0...order {
+                sum += coefficient(i, j) * pow(x, CGFloat(i)) * pow(y, CGFloat(j))
+            }
+        }
+        return sum
+    }
+
     fileprivate static func + (left: ImplicitPolynomial, right: ImplicitPolynomial) -> ImplicitPolynomial {
         assert(left.order == right.order)
         return ImplicitPolynomial(coefficients: zip(left.coefficients, right.coefficients).map(+), order: left.order)
