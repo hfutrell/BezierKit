@@ -434,6 +434,44 @@ class PerformanceTests: XCTestCase {
 
     #endif
 
+    // MARK: - Path(cgPath:) performance
+    #if canImport(CoreGraphics)
+    private static let emptyCGPath  = CGMutablePath() as CGPath
+    private static let smallCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...4 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    private static let mediumCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...49 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    private static let largeCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...1999 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    func testPathFromCGPathLargePerformance() {
+        let p = Self.largeCGPath
+        measure { for _ in 0..<50 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathEmptyPerformance() {
+        let p = Self.emptyCGPath
+        measure { for _ in 0..<1_000_000 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathSmallPerformance() {
+        let p = Self.smallCGPath
+        measure { for _ in 0..<100_000 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathMediumPerformance() {
+        let p = Self.mediumCGPath
+        measure { for _ in 0..<10_000 { _ = Path(cgPath: p) } }
+    }
+    #endif
 
 }
 #endif

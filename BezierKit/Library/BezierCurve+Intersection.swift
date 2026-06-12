@@ -136,6 +136,8 @@ private func newtonRefineCurvePair<C1: NonlinearBezierCurve, C2: NonlinearBezier
 }
 
 // True when |C1(u) − C2(v)| < chord × 1e-6 — distinguishes genuine roots from near-misses.
+// This relative threshold (far tighter than `accuracy`) is what rejects spurious intersections
+// between near-coincident, non-crossing curves.
 private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
     _ c1: C1, _ c2: C2, u: CGFloat, v: CGFloat
 ) -> Bool {
@@ -145,114 +147,86 @@ private func newtonIsGenuineRoot<C1: NonlinearBezierCurve, C2: NonlinearBezierCu
     return f.lengthSquared < scaleSq * CGFloat(1.0e-12)
 }
 
-// Ensures exact curve-endpoint intersections are represented precisely in `result`.
-// When Newton refinement nudges a clipping result slightly away from an exact endpoint,
-// this replaces the near-endpoint result with the exact (u, v) corner value.
-// Also appends any endpoint intersections that bezier clipping missed entirely.
-// Endpoint positions are pre-computed once to avoid polynomial evaluation at t=0/1.
+// Ensures exact curve-endpoint intersections are represented precisely. When a refined interior
+// result lands near an exact shared endpoint it is replaced with the exact (u, v) corner value;
+// otherwise the corner intersection is appended. Endpoint positions are pre-computed once.
 private func addEndpointIntersections<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
-    _ result: inout ClipBuffer, curve1: C1, curve2: C2, accuracy: CGFloat
+    _ result: inout [Intersection], curve1: C1, curve2: C2, accuracy: CGFloat
 ) {
-    let c1s = curve1.startingPoint
-    let c1e = curve1.endingPoint
-    let c2s = curve2.startingPoint
-    let c2e = curve2.endingPoint
+    let c1s = curve1.startingPoint, c1e = curve1.endingPoint
+    let c2s = curve2.startingPoint, c2e = curve2.endingPoint
     let chordSq = (c1e - c1s).lengthSquared
     let threshold = max(chordSq, CGFloat(1.0e-20)) * CGFloat(1.0e-12)
     let accuracySq = accuracy * accuracy
-    if (c1s - c2s).lengthSquared < threshold {
-        if let idx = result.firstIndex(where: { distanceSquared(c1s, curve1.point(at: $0.t1)) < accuracySq }) {
-            result[idx] = Intersection(t1: 0, t2: 0)
+    func addCorner(_ corner: CGPoint, _ c1Point: CGPoint, _ t1: CGFloat, _ t2: CGFloat) {
+        guard (c1Point - corner).lengthSquared < threshold else { return }
+        if let idx = result.firstIndex(where: { distanceSquared(c1Point, curve1.point(at: $0.t1)) < accuracySq }) {
+            result[idx] = Intersection(t1: t1, t2: t2)
         } else {
-            result.append(Intersection(t1: 0, t2: 0))
+            result.append(Intersection(t1: t1, t2: t2))
         }
     }
-    if (c1s - c2e).lengthSquared < threshold {
-        if let idx = result.firstIndex(where: { distanceSquared(c1s, curve1.point(at: $0.t1)) < accuracySq }) {
-            result[idx] = Intersection(t1: 0, t2: 1)
-        } else {
-            result.append(Intersection(t1: 0, t2: 1))
-        }
-    }
-    if (c1e - c2s).lengthSquared < threshold {
-        if let idx = result.firstIndex(where: { distanceSquared(c1e, curve1.point(at: $0.t1)) < accuracySq }) {
-            result[idx] = Intersection(t1: 1, t2: 0)
-        } else {
-            result.append(Intersection(t1: 1, t2: 0))
-        }
-    }
-    if (c1e - c2e).lengthSquared < threshold {
-        if let idx = result.firstIndex(where: { distanceSquared(c1e, curve1.point(at: $0.t1)) < accuracySq }) {
-            result[idx] = Intersection(t1: 1, t2: 1)
-        } else {
-            result.append(Intersection(t1: 1, t2: 1))
-        }
-    }
+    addCorner(c2s, c1s, 0, 0)
+    addCorner(c2e, c1s, 0, 1)
+    addCorner(c2s, c1e, 1, 0)
+    addCorner(c2e, c1e, 1, 1)
 }
 
-// Shared bezier-clipping + Newton refinement body.
-// The identical-curve fast path is handled by concrete-type overloads in
-// extension CubicCurve / extension QuadraticCurve, which shadow the protocol extension
-// for statically-typed receivers, eliminating as? runtime casts entirely.
+// Curve/curve intersection driver. Splits both curves at their derivative roots so every
+// piece is monotone, then runs fast monotone subdivision (Utils.preSplitIntersections) on
+// all overlapping pairs. The identical-curve fast path is handled by concrete-type overloads
+// in extension CubicCurve / extension QuadraticCurve, which shadow the protocol extension for
+// statically-typed receivers, eliminating as? runtime casts entirely.
 private func helperIntersectsCurveCurveImpl<U, T>(_ curve1: Subcurve<U>, _ curve2: Subcurve<T>, accuracy: CGFloat) -> [Intersection]
 where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
-    // try intersecting using Bezier clipping (Sederberg & Nishita 1990)
-    var clipIntersections = ClipBuffer()
-    var clipIterations = 0
-    let clippingConverged = bezierClipping(curve1, curve2, &clipIntersections, &clipIterations)
-    if clippingConverged {
-        guard !clipIntersections.isEmpty else {
-            // Clipping converged to empty: fat-line clips eliminated all overlap.
-            // Endpoint-endpoint intersections (tangential approach, equal start/end points)
-            // may be missed by pure convergence; check all corner combinations explicitly.
-            var result = ClipBuffer()
-            addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
-            return result.toSortedAndUniquedArray()
-        }
-        // Verify each clipping result with Newton and return Newton-refined t values.
-        // Near-coincident non-intersecting curves can cause clipping to converge to
-        // spurious points; Newton rejection filters these out. When multiple subdivisions
-        // converge to nearby parameters of the same genuine crossing, refining to the
-        // true (u,v) makes them spatially identical, so deduplication collapses them to one.
-        clipIntersections.sort()
-        var result = ClipBuffer()
-        for j in 0..<clipIntersections.count {
-            let ix = clipIntersections[j]
-            let (uV, vV) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: ix.t1, v: ix.t2, iterations: 10)
-            guard newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uV, v: vV) else { continue }
-            let p1 = curve1.curve.point(at: uV)
-            let isDuplicate = result.contains(where: { distanceSquared(p1, curve1.curve.point(at: $0.t1)) < accuracy * accuracy })
-            if !isDuplicate {
-                result.append(Intersection(t1: uV, t2: vV))
-            }
-        }
-        if !result.isEmpty {
-            addEndpointIntersections(&result, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
-            return result.toSortedArray()
-        }
-        // All clipping results failed Newton verification (near-coincident non-intersecting curves).
-        // Fall through to coincidence check and Newton midpoint fallback.
+    var pairIntersections: [Intersection] = []
+    var subdivisionIterations = 0
+    if Utils.preSplitIntersections(curve1.curve, curve2.curve, &pairIntersections, accuracy, &subdivisionIterations) {
+        return pairIntersections.sortedAndUniqued()
     }
 
+    // Subdivision hit its iteration limit (curves are likely coincident, or near-coincident with
+    // genuine crossings the bounding-box test cannot separate). Check for geometric coincidence
+    // first — the composition polynomial is theoretically zero for coincident curves, so
+    // floating-point noise would otherwise produce spurious roots.
     if let coincidence = coincidenceCheck(curve1.curve, curve2.curve, accuracy: 0.1 * accuracy) {
         return coincidence
     }
 
-    // Newton midpoint fallback: near-coincident crossing curves exhaust bezier clipping
-    // because the fat-line of each nearly contains the other. The midpoint (0.5, 0.5) sits
-    // at the crossing for symmetric near-coincident pairs (|f| ≈ 0 → accepted). For parallel
-    // pairs the tangents are nearly identical (denom ≈ 0), Newton breaks on the robust denom
-    // check, and |f| ≈ δ exceeds the threshold, so the fallback produces nothing.
-    var fallback = ClipBuffer()
-    let (uN, vN) = newtonRefineCurvePair(curve1.curve, curve2.curve, u: 0.5, v: 0.5, iterations: 20)
-    if uN > 1.0e-6 && uN < 1.0 - 1.0e-6 && vN > 1.0e-6 && vN < 1.0 - 1.0e-6 &&
-       newtonIsGenuineRoot(curve1.curve, curve2.curve, u: uN, v: vN) {
-        let t1Candidate = uN * curve1.t2 + (1 - uN) * curve1.t1
-        let t2Candidate = vN * curve2.t2 + (1 - vN) * curve2.t1
-        fallback.append(Intersection(t1: t1Candidate, t2: t2Candidate))
+    // Not coincident — find candidate intersections via implicitization. Translate so curve2
+    // starts at the origin (this keeps the implicit-polynomial coefficients well-conditioned),
+    // build curve2's implicit polynomial, compose it with curve1's parametric x/y polynomials, and
+    // root-find the resulting degree-(order × order) polynomial with the fixed-degree root finder.
+    // Each candidate is then refined with 2D Newton and accepted only if it is a genuine root,
+    // which rejects spurious near-misses between near-coincident, non-crossing curves.
+    let origin = curve2.curve.startingPoint
+    let transform = CGAffineTransform(translationX: -origin.x, y: -origin.y)
+    let c1 = curve1.curve.copy(using: transform)
+    let c2 = curve2.curve.copy(using: transform)
+    let implicit = c2.implicitPolynomial
+    let accuracySq = accuracy * accuracy
+
+    var result: [Intersection] = []
+    func appendGenuineRoot(near t1Guess: CGFloat) {
+        let (u, v) = newtonRefineCurvePair(c1, c2, u: t1Guess, v: c2.project(c1.point(at: t1Guess)).t, iterations: 10)
+        guard newtonIsGenuineRoot(c1, c2, u: u, v: v) else { return }
+        let point = c1.point(at: u)
+        guard !result.contains(where: { distanceSquared(point, c1.point(at: $0.t1)) < accuracySq }) else { return }
+        result.append(Intersection(t1: u, t2: v))
     }
-    addEndpointIntersections(&fallback, curve1: curve1.curve, curve2: curve2.curve, accuracy: accuracy)
-    return fallback.toSortedAndUniquedArray()
+
+    let p = c1.order
+    withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 2 * (p + 1)) { coeffs in
+        var xi = 0
+        c1.xPolynomial.forEachCoefficient { coeffs[xi] = $0; xi += 1 }
+        var yi = p + 1
+        c1.yPolynomial.forEachCoefficient { coeffs[yi] = $0; yi += 1 }
+        implicit.forEachRootOfComposition(xCoeffs: coeffs.baseAddress!,
+                                          yCoeffs: coeffs.baseAddress! + (p + 1),
+                                          paramOrder: p) { t1 in appendGenuineRoot(near: t1) }
+    }
+    addEndpointIntersections(&result, curve1: c1, curve2: c2, accuracy: accuracy)
+    return result.sortedAndUniqued()
 }
 
 private func sameGeometryIntersections<C: NonlinearBezierCurve & Equatable>(

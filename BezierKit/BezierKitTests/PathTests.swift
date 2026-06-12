@@ -106,6 +106,25 @@ class PathTests: XCTestCase {
         XCTAssertEqual(path3.components[0].element(at: 1) as! QuadraticCurve, QuadraticCurve(p0: p2, p1: p3, p2: p4))
     }
 
+    func testInitCGPathCloseSubpathFollowedByCurveWithoutMoveTo() {
+        // After closeSubpath the current point resets to the component start.
+        // CoreGraphics allows drawing a new subpath from that point without an
+        // explicit moveTo — the new component starts implicitly at currentPoint.
+        // This exercises the appendCurrentPointIfEmpty path in the prepass.
+        let p1 = CGPoint(x: 0, y: 0)
+        let p2 = CGPoint(x: 1, y: 0)
+        let p3 = CGPoint(x: 2, y: 0)
+        let cgPath = CGMutablePath()
+        cgPath.move(to: p1)
+        cgPath.addLine(to: p2)
+        cgPath.closeSubpath()           // component 1 ends; currentPoint returns to p1
+        cgPath.addLine(to: p3)          // starts component 2 implicitly at p1 (no moveTo)
+        let path = Path(cgPath: cgPath)
+        XCTAssertEqual(path.components.count, 2)
+        XCTAssertEqual(path.components[0].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p2))
+        XCTAssertEqual(path.components[1].element(at: 0) as! LineSegment, LineSegment(p0: p1, p1: p3))
+    }
+
     func testInitCGPathMultiplecomponents() {
         // test of 2 line segments where each segment is started with a moveTo
         // this tests multiple components and starting new paths with moveTo instead of closePath

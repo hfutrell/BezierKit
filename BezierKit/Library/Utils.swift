@@ -32,6 +32,26 @@ internal class Utils {
     static let epsilon: Double = 1.0e-5
     static let tau: Double = 2.0 * Double.pi
 
+    // swiftlint:disable comma
+    private static let binomialTable: [CGFloat] = [
+        1,  0,   0,   0,   0,   0,  0,  0, 0, 0,  // n=0
+        1,  1,   0,   0,   0,   0,  0,  0, 0, 0,  // n=1
+        1,  2,   1,   0,   0,   0,  0,  0, 0, 0,  // n=2
+        1,  3,   3,   1,   0,   0,  0,  0, 0, 0,  // n=3
+        1,  4,   6,   4,   1,   0,  0,  0, 0, 0,  // n=4
+        1,  5,  10,  10,   5,   1,  0,  0, 0, 0,  // n=5
+        1,  6,  15,  20,  15,   6,  1,  0, 0, 0,  // n=6
+        1,  7,  21,  35,  35,  21,  7,  1, 0, 0,  // n=7
+        1,  8,  28,  56,  70,  56, 28,  8, 1, 0,  // n=8
+        1,  9,  36,  84, 126, 126, 84, 36, 9, 1   // n=9
+    ]
+    // swiftlint:enable comma
+
+    static func binomialCoefficient(_ n: Int, choose k: Int) -> CGFloat {
+        precondition(n >= 0 && k >= 0 && n <= 9 && k <= 9)
+        return binomialTable[n &* 10 &+ k]
+    }
+
     // Legendre-Gauss abscissae with n=24 (x_i values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     private static let Tvalues: ContiguousArray<CGFloat> = [
         -0.0640568928626056260850430826247450385909,

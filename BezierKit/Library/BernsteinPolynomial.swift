@@ -240,6 +240,156 @@ public struct BernsteinPolynomial5: BernsteinPolynomial {
     }
 }
 
+// MARK: - High-degree polynomials (6–9) for the curve/curve implicitization fallback.
+// These run only when monotone subdivision cannot resolve a near-coincident pair, so they
+// favor a compact iterative de Casteljau over the unrolled scalar form used for degree ≤ 5.
+
+// Iterative de Casteljau evaluation. `c` (count = degree + 1) is consumed.
+private func deCasteljauValueAndDerivative(_ c: UnsafeMutableBufferPointer<CGFloat>, at x: CGFloat) -> (CGFloat, CGFloat) {
+    let n = c.count - 1
+    let s = 1 - x
+    var count = n
+    while count > 1 {
+        for i in 0..<count { c[i] = s * c[i] + x * c[i + 1] }
+        count -= 1
+    }
+    return (s * c[0] + x * c[1], CGFloat(n) * (c[1] - c[0]))
+}
+
+// Iterative de Casteljau split at t. `c` is consumed; `left`/`right` (each count = degree + 1) receive the halves.
+private func deCasteljauSplit(_ c: UnsafeMutableBufferPointer<CGFloat>, at t: CGFloat,
+                              left: UnsafeMutableBufferPointer<CGFloat>, right: UnsafeMutableBufferPointer<CGFloat>) {
+    let n = c.count - 1
+    let s = 1 - t
+    left[0] = c[0]; right[n] = c[n]
+    for r in 1...n {
+        for i in 0...(n - r) { c[i] = s * c[i] + t * c[i + 1] }
+        left[r] = c[0]
+        right[n - r] = c[n - r]
+    }
+}
+
+public struct BernsteinPolynomial6: BernsteinPolynomial {
+    public init(b0: CGFloat, b1: CGFloat, b2: CGFloat, b3: CGFloat, b4: CGFloat, b5: CGFloat, b6: CGFloat) {
+        self.b0 = b0; self.b1 = b1; self.b2 = b2; self.b3 = b3; self.b4 = b4; self.b5 = b5; self.b6 = b6
+    }
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial5
+    public var b0, b1, b2, b3, b4, b5, b6: CGFloat
+    public var derivative: BernsteinPolynomial5 {
+        BernsteinPolynomial5(b0: 6 * (b1 - b0), b1: 6 * (b2 - b1), b2: 6 * (b3 - b2),
+                             b3: 6 * (b4 - b3), b4: 6 * (b5 - b4), b5: 6 * (b6 - b5))
+    }
+    public func value(at x: CGFloat) -> CGFloat { valueAndDerivative(at: x).0 }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 7) { c in
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6
+            return deCasteljauValueAndDerivative(c, at: x)
+        }
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial6, right: BernsteinPolynomial6) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 21) { buf in
+            let c = UnsafeMutableBufferPointer(start: buf.baseAddress!, count: 7)
+            let l = UnsafeMutableBufferPointer(start: buf.baseAddress! + 7, count: 7)
+            let r = UnsafeMutableBufferPointer(start: buf.baseAddress! + 14, count: 7)
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6
+            deCasteljauSplit(c, at: t, left: l, right: r)
+            return (BernsteinPolynomial6(b0: l[0], b1: l[1], b2: l[2], b3: l[3], b4: l[4], b5: l[5], b6: l[6]),
+                    BernsteinPolynomial6(b0: r[0], b1: r[1], b2: r[2], b3: r[3], b4: r[4], b5: r[5], b6: r[6]))
+        }
+    }
+}
+
+public struct BernsteinPolynomial7: BernsteinPolynomial {
+    public init(b0: CGFloat, b1: CGFloat, b2: CGFloat, b3: CGFloat, b4: CGFloat, b5: CGFloat, b6: CGFloat, b7: CGFloat) {
+        self.b0 = b0; self.b1 = b1; self.b2 = b2; self.b3 = b3; self.b4 = b4; self.b5 = b5; self.b6 = b6; self.b7 = b7
+    }
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial6
+    public var b0, b1, b2, b3, b4, b5, b6, b7: CGFloat
+    public var derivative: BernsteinPolynomial6 {
+        BernsteinPolynomial6(b0: 7 * (b1 - b0), b1: 7 * (b2 - b1), b2: 7 * (b3 - b2), b3: 7 * (b4 - b3),
+                             b4: 7 * (b5 - b4), b5: 7 * (b6 - b5), b6: 7 * (b7 - b6))
+    }
+    public func value(at x: CGFloat) -> CGFloat { valueAndDerivative(at: x).0 }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 8) { c in
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6; c[7] = b7
+            return deCasteljauValueAndDerivative(c, at: x)
+        }
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial7, right: BernsteinPolynomial7) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 24) { buf in
+            let c = UnsafeMutableBufferPointer(start: buf.baseAddress!, count: 8)
+            let l = UnsafeMutableBufferPointer(start: buf.baseAddress! + 8, count: 8)
+            let r = UnsafeMutableBufferPointer(start: buf.baseAddress! + 16, count: 8)
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6; c[7] = b7
+            deCasteljauSplit(c, at: t, left: l, right: r)
+            return (BernsteinPolynomial7(b0: l[0], b1: l[1], b2: l[2], b3: l[3], b4: l[4], b5: l[5], b6: l[6], b7: l[7]),
+                    BernsteinPolynomial7(b0: r[0], b1: r[1], b2: r[2], b3: r[3], b4: r[4], b5: r[5], b6: r[6], b7: r[7]))
+        }
+    }
+}
+
+public struct BernsteinPolynomial8: BernsteinPolynomial {
+    public init(b0: CGFloat, b1: CGFloat, b2: CGFloat, b3: CGFloat, b4: CGFloat, b5: CGFloat, b6: CGFloat, b7: CGFloat, b8: CGFloat) {
+        self.b0 = b0; self.b1 = b1; self.b2 = b2; self.b3 = b3; self.b4 = b4; self.b5 = b5; self.b6 = b6; self.b7 = b7; self.b8 = b8
+    }
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial7
+    public var b0, b1, b2, b3, b4, b5, b6, b7, b8: CGFloat
+    public var derivative: BernsteinPolynomial7 {
+        BernsteinPolynomial7(b0: 8 * (b1 - b0), b1: 8 * (b2 - b1), b2: 8 * (b3 - b2), b3: 8 * (b4 - b3),
+                             b4: 8 * (b5 - b4), b5: 8 * (b6 - b5), b6: 8 * (b7 - b6), b7: 8 * (b8 - b7))
+    }
+    public func value(at x: CGFloat) -> CGFloat { valueAndDerivative(at: x).0 }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 9) { c in
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6; c[7] = b7; c[8] = b8
+            return deCasteljauValueAndDerivative(c, at: x)
+        }
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial8, right: BernsteinPolynomial8) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 27) { buf in
+            let c = UnsafeMutableBufferPointer(start: buf.baseAddress!, count: 9)
+            let l = UnsafeMutableBufferPointer(start: buf.baseAddress! + 9, count: 9)
+            let r = UnsafeMutableBufferPointer(start: buf.baseAddress! + 18, count: 9)
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6; c[7] = b7; c[8] = b8
+            deCasteljauSplit(c, at: t, left: l, right: r)
+            return (BernsteinPolynomial8(b0: l[0], b1: l[1], b2: l[2], b3: l[3], b4: l[4], b5: l[5], b6: l[6], b7: l[7], b8: l[8]),
+                    BernsteinPolynomial8(b0: r[0], b1: r[1], b2: r[2], b3: r[3], b4: r[4], b5: r[5], b6: r[6], b7: r[7], b8: r[8]))
+        }
+    }
+}
+
+public struct BernsteinPolynomial9: BernsteinPolynomial {
+    public init(b0: CGFloat, b1: CGFloat, b2: CGFloat, b3: CGFloat, b4: CGFloat, b5: CGFloat, b6: CGFloat, b7: CGFloat, b8: CGFloat, b9: CGFloat) {
+        self.b0 = b0; self.b1 = b1; self.b2 = b2; self.b3 = b3; self.b4 = b4
+        self.b5 = b5; self.b6 = b6; self.b7 = b7; self.b8 = b8; self.b9 = b9
+    }
+    public typealias NextLowerOrderPolynomial = BernsteinPolynomial8
+    public var b0, b1, b2, b3, b4, b5, b6, b7, b8, b9: CGFloat
+    public var derivative: BernsteinPolynomial8 {
+        BernsteinPolynomial8(b0: 9 * (b1 - b0), b1: 9 * (b2 - b1), b2: 9 * (b3 - b2), b3: 9 * (b4 - b3), b4: 9 * (b5 - b4),
+                             b5: 9 * (b6 - b5), b6: 9 * (b7 - b6), b7: 9 * (b8 - b7), b8: 9 * (b9 - b8))
+    }
+    public func value(at x: CGFloat) -> CGFloat { valueAndDerivative(at: x).0 }
+    public func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 10) { c in
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6; c[7] = b7; c[8] = b8; c[9] = b9
+            return deCasteljauValueAndDerivative(c, at: x)
+        }
+    }
+    public func split(at t: CGFloat) -> (left: BernsteinPolynomial9, right: BernsteinPolynomial9) {
+        withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: 30) { buf in
+            let c = UnsafeMutableBufferPointer(start: buf.baseAddress!, count: 10)
+            let l = UnsafeMutableBufferPointer(start: buf.baseAddress! + 10, count: 10)
+            let r = UnsafeMutableBufferPointer(start: buf.baseAddress! + 20, count: 10)
+            c[0] = b0; c[1] = b1; c[2] = b2; c[3] = b3; c[4] = b4; c[5] = b5; c[6] = b6; c[7] = b7; c[8] = b8; c[9] = b9
+            deCasteljauSplit(c, at: t, left: l, right: r)
+            return (BernsteinPolynomial9(b0: l[0], b1: l[1], b2: l[2], b3: l[3], b4: l[4], b5: l[5], b6: l[6], b7: l[7], b8: l[8], b9: l[9]),
+                    BernsteinPolynomial9(b0: r[0], b1: r[1], b2: r[2], b3: r[3], b4: r[4], b5: r[5], b6: r[6], b7: r[7], b8: r[8], b9: r[9]))
+        }
+    }
+}
+
 // Finds roots in [0, 1]. Uses analytical formulas for degree ≤ 3, bezier clipping for degree 4–5.
 // With WMO (whole-module optimization) the conformance check is a compile-time constant and generates no branch overhead.
 public func findDistinctRootsInUnitInterval<P: BernsteinPolynomial>(of polynomial: P) -> [CGFloat] {
