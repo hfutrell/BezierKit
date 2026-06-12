@@ -21,14 +21,9 @@ public protocol BernsteinPolynomial: Equatable, Sendable {
     var derivative: NextLowerOrderPolynomial { get }
 }
 
-/// Internal protocol for types that also support splitting and combined value/derivative evaluation.
-/// BezierClippingPolynomial refines this; the concrete BP types all satisfy it.
-internal protocol ClippableBernsteinPolynomial: BernsteinPolynomial {
-    func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat)
-    func split(at t: CGFloat) -> (left: Self, right: Self)
-}
-
-internal extension ClippableBernsteinPolynomial {
+/// Default split/value-and-derivative behavior for the concrete BP types (declared as
+/// requirements on BezierClippingPolynomial in BernsteinPolynomial+RootFinding.swift).
+internal extension BezierClippingPolynomial {
     func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat) {
         (value(at: x), derivative.value(at: x))
     }

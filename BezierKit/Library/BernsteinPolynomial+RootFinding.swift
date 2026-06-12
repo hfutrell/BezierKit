@@ -11,10 +11,13 @@ import CoreGraphics
 import Foundation
 
 // Internal protocol for the bezier clipping algorithm.
+// `split`/`valueAndDerivative` support the subdivision and Newton-refinement steps;
 // `forEachCoefficient` lets the sign-change and convex hull loops iterate without
 // a branch-cascaded switch per step; `firstCoefficient`/`lastCoefficient` are used
 // for endpoint sign checks.
-protocol BezierClippingPolynomial: ClippableBernsteinPolynomial {
+protocol BezierClippingPolynomial: BernsteinPolynomial {
+    func valueAndDerivative(at x: CGFloat) -> (CGFloat, CGFloat)
+    func split(at t: CGFloat) -> (left: Self, right: Self)
     var degree: Int { get }
     var firstCoefficient: CGFloat { get }
     var lastCoefficient: CGFloat { get }
