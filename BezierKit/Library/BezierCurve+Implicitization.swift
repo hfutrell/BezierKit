@@ -33,6 +33,11 @@ internal struct ImplicitPolynomial {
         order = 2
     }
 
+    fileprivate init(_ line: ImplicitLine) {
+        coefficients = [line.a00, line.a01, line.a10, 0]
+        order = 1
+    }
+
     fileprivate init(coefficients: [CGFloat], order: Int) {
         assert(coefficients.count == (order + 1) * (order + 1))
         self.coefficients = coefficients
@@ -64,6 +69,12 @@ internal struct ImplicitPolynomial {
         withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: resultOrder + 1) { out in
             compose(xCoeffs: xCoeffs, yCoeffs: yCoeffs, paramOrder: p, into: out.baseAddress!)
             switch resultOrder {
+            case 2:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial2(b0: out[0], b1: out[1], b2: out[2]), callback)
+            case 3:
+                findDistinctRootsCallbackBezierClipping(
+                    BernsteinPolynomial3(b0: out[0], b1: out[1], b2: out[2], b3: out[3]), callback)
             case 4:
                 findDistinctRootsCallbackBezierClipping(
                     BernsteinPolynomial4(b0: out[0], b1: out[1], b2: out[2], b3: out[3], b4: out[4]), callback)
@@ -279,5 +290,62 @@ extension CubicCurve: Implicitizeable {
         return m00 * (m11 * m22 - m12 * m21)
             - m01 * (m10 * m22 - m12 * m20)
             + m02 * (m10 * m21 - m11 * m20)
+    }
+}
+
+extension LineSegment: Implicitizeable {
+    internal var implicitPolynomial: ImplicitPolynomial {
+        return ImplicitPolynomial(l(0, 1))
+    }
+}
+
+// Degree reduction used before implicitization: a degree-deficient curve (e.g. a quadratic raised
+// to cubic form, whose x- or y-coordinate is linear) makes the higher-order implicit polynomial
+// degenerate to zero, so demote it to its true degree first.
+extension CubicCurve {
+    var downgradedToQuadratic: (quadratic: QuadraticCurve, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
+        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
+        let d = 0.5 * d1 + 0.5 * d2
+        let p1 = 1.5 * d + line.point(at: 0.5)
+        let error = 0.144334 * (d1 - d2).length
+        return (quadratic: QuadraticCurve(p0: line.startingPoint, p1: p1, p2: line.endingPoint), error: error)
+    }
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        let d1 = self.p1 - line.point(at: 1.0 / 3.0)
+        let d2 = self.p2 - line.point(at: 2.0 / 3.0)
+        let dmaxx = max(d1.x * d1.x, d2.x * d2.x)
+        let dmaxy = max(d1.y * d1.y, d2.y * d2.y)
+        return (lineSegment: line, error: 3 / 4 * sqrt(dmaxx + dmaxy))
+    }
+}
+
+extension QuadraticCurve {
+    var downgradedToLineSegment: (lineSegment: LineSegment, error: CGFloat) {
+        let line = LineSegment(p0: self.startingPoint, p1: self.endingPoint)
+        return (lineSegment: line, error: 0.5 * (self.p1 - line.point(at: 0.5)).length)
+    }
+}
+
+extension BezierCurve where Self: NonlinearBezierCurve {
+    func downgradedIfPossible(maximumError: CGFloat) -> BezierCurve & Implicitizeable {
+        switch self.order {
+        case 3:
+            let cubic = self as! CubicCurve
+            let (line, lineError) = cubic.downgradedToLineSegment
+            if lineError <= maximumError { return line }
+            let (quadratic, quadraticError) = cubic.downgradedToQuadratic
+            if quadraticError <= maximumError { return quadratic }
+            return self
+        case 2:
+            let quadratic = self as! QuadraticCurve
+            let (line, lineError) = quadratic.downgradedToLineSegment
+            if lineError <= maximumError { return line }
+            return self
+        default:
+            return self
+        }
     }
 }

@@ -71,5 +71,24 @@ class BezierCurve_ImplicitizationTests: XCTestCase {
         XCTAssertEqual(intersections[0].t2, 0.5, accuracy: 1.0e-5)
         XCTAssertLessThan(distance(cubic.point(at: intersections[0].t1), q1.point(at: intersections[0].t2)), 1.0e-5)
     }
+
+    // Two near-coincident cubics whose x-coordinate is linear — i.e. degree-deficient cubics
+    // (quadratics raised to cubic form) — crossing twice. The cubic implicitization of such a
+    // curve is the zero polynomial, so the fallback must demote it via downgradedIfPossible before
+    // implicitizing. Both crossings must be found, and the result must be argument-order symmetric.
+    func testDegreeDeficientCubicMultiCrossing() {
+        for delta: CGFloat in [1e-3, 1e-4, 1e-5] {
+            let c1 = CubicCurve(p0: CGPoint(x: 0, y: 0), p1: CGPoint(x: 1, y: 2), p2: CGPoint(x: 2, y: 2), p3: CGPoint(x: 3, y: 0))
+            let c2 = CubicCurve(p0: CGPoint(x: 0, y: delta), p1: CGPoint(x: 1, y: 2 - delta),
+                                p2: CGPoint(x: 2, y: 2 - delta), p3: CGPoint(x: 3, y: delta))
+            let forward = c1.intersections(with: c2, accuracy: 1.0e-5)
+            let reverse = c2.intersections(with: c1, accuracy: 1.0e-5)
+            XCTAssertEqual(forward.count, 2)
+            XCTAssertEqual(reverse.count, 2)
+            for ix in forward {
+                XCTAssertLessThan(distance(c1.point(at: ix.t1), c2.point(at: ix.t2)), 1.0e-5)
+            }
+        }
+    }
 }
 #endif

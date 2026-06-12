@@ -193,16 +193,36 @@ where U: NonlinearBezierCurve, T: NonlinearBezierCurve {
         return coincidence
     }
 
-    // Not coincident — find candidate intersections via implicitization. Translate so curve2
-    // starts at the origin (this keeps the implicit-polynomial coefficients well-conditioned),
-    // build curve2's implicit polynomial, compose it with curve1's parametric x/y polynomials, and
-    // root-find the resulting degree-(order × order) polynomial with the fixed-degree root finder.
-    // Each candidate is then refined with 2D Newton and accepted only if it is a genuine root,
-    // which rejects spurious near-misses between near-coincident, non-crossing curves.
-    let origin = curve2.curve.startingPoint
+    // Not coincident — resolve via implicitization. First demote curve2 to its true degree: a
+    // degree-deficient curve (e.g. a quadratic raised to cubic form, whose x- or y-coordinate is
+    // linear) makes the higher-order implicit polynomial degenerate to zero. If it reduces to a
+    // line the intersection is exact via the curve/line routine; otherwise implicitize the (still
+    // nonlinear) curve.
+    let downgraded = curve2.curve.downgradedIfPossible(maximumError: 0.5 * accuracy)
+    switch downgraded {
+    case let line as LineSegment:
+        return helperIntersectsCurveLine(curve1.curve, line)
+    case let quadratic as QuadraticCurve:
+        return implicitizationFallback(curve1.curve, quadratic, accuracy: accuracy)
+    case let cubic as CubicCurve:
+        return implicitizationFallback(curve1.curve, cubic, accuracy: accuracy)
+    default:
+        return []
+    }
+}
+
+// Implicitization fallback: translate so curve2 starts at the origin (keeps the implicit-polynomial
+// coefficients well-conditioned), build curve2's implicit polynomial, compose it with curve1's
+// parametric x/y polynomials, and root-find the resulting degree-(order × order) polynomial with the
+// fixed-degree root finder. Each candidate is refined with 2D Newton and accepted only if it is a
+// genuine root, which rejects spurious near-misses between near-coincident, non-crossing curves.
+private func implicitizationFallback<C1: NonlinearBezierCurve, C2: NonlinearBezierCurve>(
+    _ curve1: C1, _ curve2: C2, accuracy: CGFloat
+) -> [Intersection] {
+    let origin = curve2.startingPoint
     let transform = CGAffineTransform(translationX: -origin.x, y: -origin.y)
-    let c1 = curve1.curve.copy(using: transform)
-    let c2 = curve2.curve.copy(using: transform)
+    let c1 = curve1.copy(using: transform)
+    let c2 = curve2.copy(using: transform)
     let implicit = c2.implicitPolynomial
     let accuracySq = accuracy * accuracy
 
