@@ -247,14 +247,8 @@ class QuadraticCurveTests: XCTestCase {
     // Two arches with amplitude a=4 crossing transversally at 2 interior points.
     // q1(t) = (-1+2t, 8t(1-t)), q2(t) = (-1+2t, 2−8t+8t²).
     // Since both share the same x-parameterization, intersection reduces to
-    // 8t²−8t+1 = 0 → t = 1/2 ± √2/4. Fat-line half-width ≈ 2 (a/2), stressing
-    // fat-line convergence more than the default unit-scale tests.
-    // NOTE: removing the Newton-Raphson step from bezierClipping causes
-    // testIntersectionsQuadraticMaxIntersections to fail: the two quadratics share
-    // a starting point, and fat-line cannot narrow the t=0 region of either curve.
-    // Without Newton to short-circuit the recursion, exponential branching generates
-    // duplicate near-endpoint results that exhaust the intersection count guard before
-    // the exact endpoint detection in subdivideBezierClipping can fire.
+    // 8t²−8t+1 = 0 → t = 1/2 ± √2/4. The large amplitude stresses convergence
+    // more than the default unit-scale tests.
     func testIntersectionsHighAmplitudeQuadQuad() {
         let q1 = QuadraticCurve(p0: CGPoint(x: -1, y: 0), p1: CGPoint(x: 0, y: 4), p2: CGPoint(x: 1, y: 0))
         let q2 = QuadraticCurve(p0: CGPoint(x: -1, y: 2), p1: CGPoint(x: 0, y: -2), p2: CGPoint(x: 1, y: 2))

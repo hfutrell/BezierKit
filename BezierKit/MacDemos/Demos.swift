@@ -338,7 +338,7 @@ class Demos {
                                 let curve = demoState.curve!
                                 Draw.drawSkeleton(context, curve: curve)
                                 Draw.drawCurve(context, curve: curve)
-                                for intersection in curve.selfIntersections {
+                                if let intersection = curve.selfIntersection {
                                     Draw.drawPoint(context, origin: curve.point(at: intersection.t1))
                                 }
                                 if demoState.quadratic {

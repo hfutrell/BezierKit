@@ -285,9 +285,3 @@ func findDistinctRootsCallbackBezierClipping<P: BezierClippingPolynomial>(
         callback($0)
     }
 }
-
-func findDistinctRootsInUnitIntervalBezierClipping<P: BezierClippingPolynomial>(of polynomial: P) -> [CGFloat] {
-    var result: [CGFloat] = []
-    findDistinctRootsCallbackBezierClipping(polynomial) { result.append($0) }
-    return result
-}
