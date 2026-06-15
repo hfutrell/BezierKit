@@ -101,7 +101,12 @@ extension BernsteinPolynomial9: BezierClippingPolynomial, ClippingRootsCallback 
 // Bezier clipping convergence threshold (Sederberg & Nishita 1990).
 // The convex hull property guarantees at least 50% reduction per step in the single-root case,
 // giving quadratic convergence; we stop once the mapped interval is below this tolerance.
-private let clippingErrorThreshold: CGFloat = 1e-5
+// Most root-finding (self-intersection, extrema, projection) only needs accuracy to ~1e-5; stopping
+// there avoids extra subdivision. The curve/curve implicitization fallback, however, resolves
+// tangencies as double roots and needs the tightest possible bracket to land them on the true point
+// rather than a spurious near-endpoint cluster, so it passes `minimumClippingErrorThreshold`.
+private let defaultClippingErrorThreshold: CGFloat = 1e-5
+let minimumClippingErrorThreshold: CGFloat = 1e-12
 
 // Finds the unique root in [0,1] of a polynomial bracketed by c0 * lastCoefficient < 0.
 // Fast path: Horner Newton-bisection (O(n) per eval). Validates via one de Casteljau evaluation
@@ -197,6 +202,7 @@ private func rootsCore<P: BezierClippingPolynomial>(
     start rangeStart: CGFloat,
     end rangeEnd: CGFloat,
     depth: Int,
+    errorThreshold: CGFloat,
     callback: (CGFloat) -> Void
 ) {
     guard depth < 48 else { return }
@@ -254,21 +260,24 @@ private func rootsCore<P: BezierClippingPolynomial>(
     guard lowerBound.isFinite, upperBound.isFinite else { return }
     let nextRangeStart = Utils.linearInterpolate(rangeStart, rangeEnd, lowerBound)
     let nextRangeEnd = Utils.linearInterpolate(rangeStart, rangeEnd, upperBound)
-    guard nextRangeEnd - nextRangeStart > clippingErrorThreshold else {
+    guard nextRangeEnd - nextRangeStart > errorThreshold else {
         callback(Utils.linearInterpolate(nextRangeStart, nextRangeEnd, 0.5))
         return
     }
     guard upperBound - lowerBound < 0.8 else {
         let rangeMid = Utils.linearInterpolate(rangeStart, rangeEnd, 0.5)
         let (left, right) = polynomial.split(at: 0.5)
-        rootsCore(polynomial: left, start: rangeStart, end: rangeMid, depth: depth + 1, callback: callback)
-        rootsCore(polynomial: right, start: rangeMid, end: rangeEnd, depth: depth + 1, callback: callback)
+        rootsCore(polynomial: left, start: rangeStart, end: rangeMid, depth: depth + 1,
+                  errorThreshold: errorThreshold, callback: callback)
+        rootsCore(polynomial: right, start: rangeMid, end: rangeEnd, depth: depth + 1,
+                  errorThreshold: errorThreshold, callback: callback)
         return
     }
     let subcurve = polynomial.split(from: lowerBound, to: upperBound)
     let skippedRoot = { (a: CGFloat, b: CGFloat) in a > 0 && b < 0 || a < 0 && b > 0 }
     if skippedRoot(c0, subcurve.firstCoefficient) { callback(nextRangeStart) }
-    rootsCore(polynomial: subcurve, start: nextRangeStart, end: nextRangeEnd, depth: depth + 1, callback: callback)
+    rootsCore(polynomial: subcurve, start: nextRangeStart, end: nextRangeEnd, depth: depth + 1,
+              errorThreshold: errorThreshold, callback: callback)
     if skippedRoot(subcurve.lastCoefficient, cN) { callback(nextRangeEnd) }
 }
 
@@ -276,13 +285,14 @@ private func rootsCore<P: BezierClippingPolynomial>(
 /// (Sederberg & Nishita 1990). Roots are emitted in ascending order with duplicates suppressed.
 func findDistinctRootsCallbackBezierClipping<P: BezierClippingPolynomial>(
     _ polynomial: P,
+    errorThreshold: CGFloat = defaultClippingErrorThreshold,
     _ callback: (CGFloat) -> Void
 ) {
     var hasNonZero = false
     polynomial.forEachCoefficient { if $0 != .zero { hasNonZero = true } }
     guard hasNonZero else { return }
     var lastRoot = CGFloat.infinity
-    rootsCore(polynomial: polynomial, start: 0, end: 1, depth: 0) {
+    rootsCore(polynomial: polynomial, start: 0, end: 1, depth: 0, errorThreshold: errorThreshold) {
         guard $0 != lastRoot else { return }
         lastRoot = $0
         callback($0)

@@ -78,28 +78,34 @@ internal struct ImplicitPolynomial {
     /// Bernstein coefficients x[0..paramOrder] and y[0..paramOrder], and invokes `callback` for each
     /// distinct root in (0, 1) of the resulting degree (order × paramOrder) polynomial.
     func forEachRootOfComposition(xCoeffs: UnsafePointer<CGFloat>, yCoeffs: UnsafePointer<CGFloat>,
-                                  paramOrder p: Int, _ callback: (CGFloat) -> Void) {
+                                  paramOrder p: Int, errorThreshold: CGFloat,
+                                  _ callback: (CGFloat) -> Void) {
         let resultOrder = order * p
         withUnsafeTemporaryAllocation(of: CGFloat.self, capacity: resultOrder + 1) { out in
             compose(xCoeffs: xCoeffs, yCoeffs: yCoeffs, paramOrder: p, into: out.baseAddress!)
             switch resultOrder {
             case 2:
                 findDistinctRootsCallbackBezierClipping(
-                    BernsteinPolynomial2(b0: out[0], b1: out[1], b2: out[2]), callback)
+                    BernsteinPolynomial2(b0: out[0], b1: out[1], b2: out[2]),
+                    errorThreshold: errorThreshold, callback)
             case 3:
                 findDistinctRootsCallbackBezierClipping(
-                    BernsteinPolynomial3(b0: out[0], b1: out[1], b2: out[2], b3: out[3]), callback)
+                    BernsteinPolynomial3(b0: out[0], b1: out[1], b2: out[2], b3: out[3]),
+                    errorThreshold: errorThreshold, callback)
             case 4:
                 findDistinctRootsCallbackBezierClipping(
-                    BernsteinPolynomial4(b0: out[0], b1: out[1], b2: out[2], b3: out[3], b4: out[4]), callback)
+                    BernsteinPolynomial4(b0: out[0], b1: out[1], b2: out[2], b3: out[3], b4: out[4]),
+                    errorThreshold: errorThreshold, callback)
             case 6:
                 findDistinctRootsCallbackBezierClipping(
                     BernsteinPolynomial6(b0: out[0], b1: out[1], b2: out[2], b3: out[3],
-                                         b4: out[4], b5: out[5], b6: out[6]), callback)
+                                         b4: out[4], b5: out[5], b6: out[6]),
+                    errorThreshold: errorThreshold, callback)
             case 9:
                 findDistinctRootsCallbackBezierClipping(
                     BernsteinPolynomial9(b0: out[0], b1: out[1], b2: out[2], b3: out[3], b4: out[4],
-                                         b5: out[5], b6: out[6], b7: out[7], b8: out[8], b9: out[9]), callback)
+                                         b5: out[5], b6: out[6], b7: out[7], b8: out[8], b9: out[9]),
+                    errorThreshold: errorThreshold, callback)
             default:
                 assertionFailure("unexpected composed degree \(resultOrder)")
             }

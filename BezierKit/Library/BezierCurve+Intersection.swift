@@ -209,7 +209,8 @@ private func implicitizationFallback<C1: NonlinearBezierCurve, C2: NonlinearBezi
         c1.yPolynomial.forEachCoefficient { coeffs[yi] = $0; yi += 1 }
         implicit.forEachRootOfComposition(xCoeffs: coeffs.baseAddress!,
                                           yCoeffs: coeffs.baseAddress! + (p + 1),
-                                          paramOrder: p) { t1 in
+                                          paramOrder: p,
+                                          errorThreshold: minimumClippingErrorThreshold) { t1 in
             // t1 near 0 or 1 is handled explicitly below.
             guard t1 >= t1Tolerance, t1 <= 1 - t1Tolerance else { return }
             if let intersection = intersectionIfCloseEnough(at: t1) {
