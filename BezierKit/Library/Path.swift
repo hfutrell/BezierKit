@@ -35,7 +35,7 @@ internal func windingCountImpliesContainment(_ count: Int, using rule: PathFillR
 
 open class Path: NSObject, @unchecked Sendable {
     /// lock to make external accessing of lazy vars threadsafe
-    private let lock = UnfairLock()
+    private let lock = makeLock()
 
     private class PathApplierFunctionContext {
         var currentPoint: CGPoint?

@@ -16,6 +16,18 @@ import XCTest
 
 #if !os(WASI)
 class LockTests: XCTestCase {
+
+    func testNSLockFallback() {
+        // NSLock is the implementation used on Linux/WASM and on Apple OS versions older
+        // than the OSAllocatedUnfairLock availability floor. On newer Apple platforms
+        // makeLock() never returns it at runtime, so exercise it directly for coverage.
+        let lock: any Lock = NSLock()
+        XCTAssertEqual(lock.sync { 42 }, 42)
+        var ran = false
+        lock.sync { ran = true }
+        XCTAssertTrue(ran)
+    }
+
     func testPathPropertyAtomicity() async {
 
         @MainActor class Results: Sendable {

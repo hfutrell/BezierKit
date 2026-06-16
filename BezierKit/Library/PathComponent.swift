@@ -17,7 +17,7 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
     public let points: [CGPoint]
     public let orders: [Int]
     /// lock to make external accessing of lazy vars threadsafe
-    private let lock = UnfairLock()
+    private let lock = makeLock()
 
     public var curves: [BezierCurve] { // in most cases use element(at:)
         return (0..<self.numberOfElements).map {
