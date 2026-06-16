@@ -507,6 +507,24 @@ class CubicCurveTests: XCTestCase {
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-5), expectedIntersections)
         XCTAssertEqual(c1.intersections(with: c2, accuracy: 1.0e-8), expectedIntersections)
     }
+
+    func testIntersectionCubicEndpointOnLine() {
+        // A near-straight cubic whose start endpoint lies on the interior of a line segment (to ~1e-13).
+        // The intersection is the cubic's endpoint (t2 = 0); the curve grazes the line there with no
+        // sign change, so the aligned cubic's leading coefficient is at the noise floor. Regression
+        // for a missed endpoint root that made pencil partial-erase drop whole stroke segments.
+        let line = LineSegment(p0: CGPoint(x: 182.61789105447974, y: 90.16542816162098),
+                               p1: CGPoint(x: 177.1924454918826, y: 90.16542816162129))
+        let cubic = CubicCurve(p0: CGPoint(x: 179.89578822683316, y: 90.16542816162118),
+                               p1: CGPoint(x: 179.97013659946896, y: 89.4409494233684),
+                               p2: CGPoint(x: 180.04552710514776, y: 88.71768547297994),
+                               p3: CGPoint(x: 180.12197875976562, y: 87.9957046508789))
+        let viaLine = line.intersections(with: cubic, accuracy: 1.0e-4)
+        let viaCubic = cubic.intersections(with: line, accuracy: 1.0e-4)
+        XCTAssertEqual(viaLine.count, 1)
+        XCTAssertEqual(viaCubic.count, 1)
+        XCTAssertEqual(viaCubic.first?.t1 ?? -1, 0, accuracy: 1.0e-4) // touch is at the cubic's endpoint
+    }
     #endif
 
     // Skip on platforms where CGFloat is 32bit

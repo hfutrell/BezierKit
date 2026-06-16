@@ -223,6 +223,18 @@ private func rootsCore<P: BezierClippingPolynomial>(
     }
     let c0 = polynomial.firstCoefficient
     let cN = polynomial.lastCoefficient
+    // Genuine curve endpoints: in the Bernstein basis c0/cN ARE the curve's value at t=0/t=1, so a
+    // coefficient at the noise floor means the curve grazes zero there — a real root even with no
+    // sign change (e.g. a curve touching a line at its endpoint). With no sign change the interior
+    // has no root (variation-diminishing), so emit the endpoint(s) and stop. Scoped to depth 0 (the
+    // true boundary): at deeper levels a near-zero endpoint is a split artifact of an interior
+    // no-sign-change root, which the clip intentionally leaves to its sign-based search.
+    if signChanges == 0, depth == 0 {
+        var foundEndpointRoot = false
+        if Swift.abs(Double(c0)) <= signThreshold { callback(rangeStart); foundEndpointRoot = true }
+        if Swift.abs(Double(cN)) <= signThreshold { callback(rangeEnd); foundEndpointRoot = true }
+        if foundEndpointRoot { return }
+    }
     guard signChanges > 0 || c0 == 0 || cN == 0 else { return }
 
     if signChanges == 1, c0 * cN < 0 {

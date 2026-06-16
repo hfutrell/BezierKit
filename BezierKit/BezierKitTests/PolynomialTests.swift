@@ -224,4 +224,28 @@ class PolynomialTests: XCTestCase {
         XCTAssertEqual(roots.count, 1)
         XCTAssertEqual(roots.first ?? -1, 0, accuracy: 1.0e-5)
     }
+
+    func testBezierClippingEndpointGrazingRoot() {
+        // A near-straight curve aligned to a line it touches at its start point: the first
+        // coefficient (= the curve's value at t=0) is at the noise floor while the rest share a
+        // sign, so there is no interior sign change. The root sits exactly at t=0 and must be found.
+        // (Real-world: a pencil stroke's centerline grazing the eraser-outline at its endpoint.)
+        let polynomial = BernsteinPolynomial3(b0: -2.284e-13, b1: 3.9306, b2: 7.8546, b3: 11.7717)
+        var roots: [CGFloat] = []
+        findDistinctRootsCallbackBezierClipping(polynomial) { roots.append($0) }
+        XCTAssertEqual(roots.count, 1)
+        XCTAssertEqual(roots.first ?? -1, 0, accuracy: 1.0e-5)
+    }
+
+    func testBezierClippingUniformlyZeroNoFalseRoots() {
+        // The endpoint-grazing handling must be relative to the coefficient scale: a polynomial that
+        // is uniformly at the noise floor (or exactly zero) has no endpoint standing out, so it must
+        // produce no roots rather than spurious endpoint roots.
+        func roots<P: BezierClippingPolynomial>(_ p: P) -> [CGFloat] {
+            var r: [CGFloat] = []; findDistinctRootsCallbackBezierClipping(p) { r.append($0) }; return r
+        }
+        XCTAssertEqual(roots(BernsteinPolynomial3(b0: 0, b1: 0, b2: 0, b3: 0)).count, 0)
+        XCTAssertEqual(roots(BernsteinPolynomial3(b0: 1e-13, b1: 1e-13, b2: 1e-13, b3: 1e-13)).count, 0)
+        XCTAssertEqual(roots(BernsteinPolynomial3(b0: -1e-9, b1: -1e-9, b2: -1e-9, b3: -1e-9)).count, 0)
+    }
 }
