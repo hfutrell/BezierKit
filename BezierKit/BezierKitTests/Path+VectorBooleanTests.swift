@@ -387,6 +387,47 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssert(circle.subtract(biggerCircle).isEmpty)
     }
 
+    func testCrossingsRemovedCircleStrokeSharedEndpoints() {
+        // A stroked-circle outline (outer + inner loops joined at a seam) is a single closed
+        // component whose self-intersections occur exactly at shared element endpoints (the seam),
+        // where the two arcs meet tangentially. crossingsRemoved at tight accuracy must still find
+        // those endpoint touches and return the annulus rather than collapsing to the empty path
+        // (regression: the monotone subdivision dropped near-tangent endpoint leaves, so the seam
+        // self-intersections were missed and the whole component was classified out).
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 120.49, y: 66.2215))
+        cgPath.addCurve(to: CGPoint(x: 132.443, y: 54.2683), control1: CGPoint(x: 120.49, y: 59.6199), control2: CGPoint(x: 125.841, y: 54.2683))
+        cgPath.addCurve(to: CGPoint(x: 144.396, y: 66.2215), control1: CGPoint(x: 139.044, y: 54.2683), control2: CGPoint(x: 144.396, y: 59.6199))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: 144.396), control1: CGPoint(x: 144.396, y: 109.396), control2: CGPoint(x: 109.396, y: 144.396))
+        cgPath.addCurve(to: CGPoint(x: -11.9531, y: 66.2215), control1: CGPoint(x: 23.0468, y: 144.396), control2: CGPoint(x: -11.9531, y: 109.396))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: -11.9531), control1: CGPoint(x: -11.9531, y: 23.0468), control2: CGPoint(x: 23.0468, y: -11.9531))
+        cgPath.addCurve(to: CGPoint(x: 144.396, y: 66.2215), control1: CGPoint(x: 109.396, y: -11.9531), control2: CGPoint(x: 144.396, y: 23.0468))
+        cgPath.addCurve(to: CGPoint(x: 132.443, y: 78.1746), control1: CGPoint(x: 144.396, y: 72.823), control2: CGPoint(x: 139.044, y: 78.1746))
+        cgPath.addCurve(to: CGPoint(x: 120.49, y: 66.2215), control1: CGPoint(x: 125.841, y: 78.1746), control2: CGPoint(x: 120.49, y: 72.823))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: 11.9531), control1: CGPoint(x: 120.49, y: 36.2499), control2: CGPoint(x: 96.193, y: 11.9531))
+        cgPath.addCurve(to: CGPoint(x: 11.9531, y: 66.2215), control1: CGPoint(x: 36.2499, y: 11.9531), control2: CGPoint(x: 11.9531, y: 36.2499))
+        cgPath.addCurve(to: CGPoint(x: 66.2215, y: 120.49), control1: CGPoint(x: 11.9531, y: 96.193), control2: CGPoint(x: 36.2499, y: 120.49))
+        cgPath.addCurve(to: CGPoint(x: 120.49, y: 66.2215), control1: CGPoint(x: 96.193, y: 120.49), control2: CGPoint(x: 120.49, y: 96.193))
+        cgPath.closeSubpath()
+        let result = Path(cgPath: cgPath).crossingsRemoved(accuracy: 0.0001)
+        XCTAssertFalse(result.isEmpty, "crossingsRemoved collapsed the stroked circle to the empty path")
+        XCTAssertEqual(result.components.count, 2, "expected the annulus (outer + inner boundary)")
+        XCTAssertTrue(result.contains(CGPoint(x: 66.2215, y: 130), using: .evenOdd), "ring band should be inside")
+        XCTAssertFalse(result.contains(CGPoint(x: 66.2215, y: 66.2215), using: .evenOdd), "center hole should be outside")
+    }
+
+    func testIntersectionsSharedEndpointTightAccuracy() {
+        // Two cubics meeting tangentially at a shared endpoint must report that intersection at any
+        // accuracy (the monotone leaf solver previously discarded the near-tangent endpoint leaf).
+        let c1 = CubicCurve(p0: CGPoint(x: 132.443, y: 54.2683), p1: CGPoint(x: 139.044, y: 54.2683),
+                            p2: CGPoint(x: 144.396, y: 59.6199), p3: CGPoint(x: 144.396, y: 66.2215))
+        let c2 = CubicCurve(p0: CGPoint(x: 66.2215, y: -11.9531), p1: CGPoint(x: 109.396, y: -11.9531),
+                            p2: CGPoint(x: 144.396, y: 23.0468), p3: CGPoint(x: 144.396, y: 66.2215))
+        for accuracy: CGFloat in [0.5, 1.0e-2, 1.0e-4, 1.0e-6] {
+            XCTAssertEqual(c1.intersections(with: c2, accuracy: accuracy).count, 1, "shared endpoint missed at accuracy \(accuracy)")
+        }
+    }
+
     func testSubtractingEdgeCase1() {
         // this is a specific edge case test of `subtracting`. There was an issue where if a path element intersected at the exact border between
         // two elements on the other path it would count as two intersections. The winding count would then be incremented twice on the way in
@@ -729,6 +770,30 @@ class PathVectorBooleanTests: XCTestCase {
         XCTAssertEqual(result.components.first?.numberOfElements, 7)
     }
 
+    func testCrossingsRemovedCoincidentPoints() {
+        // GitHub issue #84: crossingsRemoved gets confused by coincident points
+        // Two overlapping triangles where one has a zero-length degenerate segment at (100, 585).
+        // crossingsRemoved() should merge them into a single component, preserving the zero-length segment.
+        let comp0 = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 100, y: 585), p1: CGPoint(x: 100, y: 585)),
+            LineSegment(p0: CGPoint(x: 100, y: 585), p1: CGPoint(x: 225, y: 585)),
+            LineSegment(p0: CGPoint(x: 225, y: 585), p1: CGPoint(x: 100, y: 680)),
+            LineSegment(p0: CGPoint(x: 100, y: 680), p1: CGPoint(x: 100, y: 585))
+        ] as [BezierCurve])
+        let comp1 = PathComponent(curves: [
+            LineSegment(p0: CGPoint(x: 260, y: 392), p1: CGPoint(x: 260, y: 585)),
+            LineSegment(p0: CGPoint(x: 260, y: 585), p1: CGPoint(x: 160, y: 680)),
+            LineSegment(p0: CGPoint(x: 160, y: 680), p1: CGPoint(x: 260, y: 392))
+        ] as [BezierCurve])
+        let path = Path(components: [comp0, comp1])
+        let result = path.crossingsRemoved()
+        XCTAssertEqual(result.components.count, 1)
+        let hasZeroLengthSegment = result.components[0].curves.contains {
+            $0.startingPoint == CGPoint(x: 100, y: 585) && $0.endingPoint == CGPoint(x: 100, y: 585)
+        }
+        XCTAssertTrue(hasZeroLengthSegment, "degenerate zero-length segment should be preserved in result")
+    }
+
     func testCrossingsRemovedRealWorldInfiniteLoop() {
 
         // in testing this data previously caused an infinite loop in AgumentedGraph.booleanOperation(_:)
@@ -801,5 +866,61 @@ class PathVectorBooleanTests: XCTestCase {
 //        #warning("this test just prints stuff?")
 //    }
 
+    func testUnionRealWorldIssue() {
+        // this test data has an intersection that is very close to the end of a path element
+        // in practice there was an issue where if the intersection were not computed precisely
+        // the classification of the edge beginning at that intersection could be incorrect
+        let p1 = CGMutablePath()
+        p1.move(to: CGPoint(x: 160.30770651563628, y: 827.7553004653367))
+        p1.addCurve(to: CGPoint(x: 110.26942663248718, y: 568.5268524837642),
+                    control1: CGPoint(x: 181.33161356383755, y: 737.7466984152248),
+                    control2: CGPoint(x: 164.05060972624904, y: 653.3356412085424))
+        p1.addCurve(to: CGPoint(x: 68.86790851824688, y: 559.2578558910238),
+                    control1: CGPoint(x: 101.39627582752009, y: 554.534576214393),
+                    control2: CGPoint(x: 82.86018478761805, y: 550.3847050860568))
+        p1.addCurve(to: CGPoint(x: 59.59891192550654, y: 600.6593740052641),
+                    control1: CGPoint(x: 54.875632248875704, y: 568.1310066959909),
+                    control2: CGPoint(x: 50.725761120539445, y: 586.667097735893))
+        p1.addCurve(to: CGPoint(x: 101.88038125865839, y: 814.1080420111522),
+                    control1: CGPoint(x: 105.11513351206828, y: 672.4349541994575),
+                    control2: CGPoint(x: 119.06082214735332, y: 740.5542794564268))
+        p1.addCurve(to: CGPoint(x: 124.27041466005505, y: 850.1453338667334),
+                    control1: CGPoint(x: 98.11179489803564, y: 830.2423023675684),
+                    control2: CGPoint(x: 108.13615430363883, y: 846.3767475061106))
+        p1.addCurve(to: CGPoint(x: 160.30770651563628, y: 827.7553004653367),
+                    control1: CGPoint(x: 140.40467501647126, y: 853.9139202273561),
+                    control2: CGPoint(x: 156.53912015501353, y: 843.889560821753))
+
+        let p2 = CGMutablePath()
+        p2.move(to: CGPoint(x: 110.01560660410875, y: 568.1334199999095))
+        p2.addCurve(to: CGPoint(x: -34.46691786355873, y: 426.72807843882487),
+                    control1: CGPoint(x: 64.94829801467844, y: 499.45942595887277),
+                    control2: CGPoint(x: 20.78869552632778, y: 454.67344613026177))
+        p2.addCurve(to: CGPoint(x: -69.07061390857123, y: 474.860094579322),
+                    control1: CGPoint(x: -65.01464367993249, y: 411.2786538880151),
+                    control2: CGPoint(x: -93.44515961076199, y: 450.82408423410607))
+        p2.addLine(to: CGPoint(x: 63.869824962902115, y: 605.9541384664693))
+        p2.addCurve(to: CGPoint(x: 110.01560660410875, y: 568.1334199999095),
+                    control1: CGPoint(x: 89.4862743247028, y: 631.2148038093562),
+                    control2: CGPoint(x: 129.75430800678396, y: 598.2114411849384))
+
+        let point1 = CGPoint(x: 90, y: 650)
+        let point2 = CGPoint(x: -30, y: 450)
+        let path1 = Path(cgPath: p1)
+        let path2 = Path(cgPath: p2)
+
+        let rule: PathFillRule = .evenOdd
+
+        XCTAssertTrue(path1.contains(point1, using: rule))
+        XCTAssertFalse(path2.contains(point1, using: rule))
+        XCTAssertFalse(path1.contains(point2, using: rule))
+        XCTAssertTrue(path2.contains(point2, using: rule))
+
+        let result = path1.union(path2, accuracy: 0.5)
+        XCTAssertTrue(result.contains(point1, using: rule), "point1 is in path1 so it should be in the union")
+        XCTAssertTrue(result.contains(point2, using: rule), "point2 is in path2 so it should be in the union")
+    }
+
     #endif
+
 }

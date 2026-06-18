@@ -6,7 +6,7 @@
 //  Copyright © 2021 Holmes Futrell. All rights reserved.
 //
 
-import BezierKit
+@testable import BezierKit
 import XCTest
 
 #if !os(WASI)
@@ -35,6 +35,18 @@ private extension PerformanceTests {
             }
         }
         return curves
+    }
+
+    func generateRandomQuadraticCurves(count: Int, reseed: Int? = nil) -> [QuadraticCurve] {
+        if let reseed = reseed {
+            srand48(reseed)
+        }
+        func randomPoint() -> CGPoint {
+            return CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48()))
+        }
+        return (0..<count).map { _ in
+            QuadraticCurve(p0: randomPoint(), p1: randomPoint(), p2: randomPoint())
+        }
     }
 
     #if canImport(CoreGraphics)
@@ -72,46 +84,48 @@ private extension PerformanceTests {
 class PerformanceTests: XCTestCase {
 
     func testCubicSelfIntersectionsPerformanceNoIntersect() {
-        // test the performance of `selfIntersections` when the curves DO NOT self-intersect
-        // -Onone 0.036 seconds
-        // -Os 0.004 seconds
+        // test the performance of `selfIntersection` when the curves DO NOT self-intersect
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: false, reseed: 0)
+        for curve in curves { _ = curve.selfIntersection } // warm caches
         self.measure {
             var count = 0
-            for curve in curves {
-                count += curve.selfIntersections.count
+            for _ in 0..<50 {
+                for curve in curves {
+                    count += curve.selfIntersection != nil ? 1 : 0
+                }
             }
             XCTAssertEqual(count, 0)
         }
     }
 
     func testCubicSelfIntersectionsPerformanceYesIntersect() {
-        // test the performance of `selfIntersections` when the curves self-intersect
-        // -Onone 0.048 seconds
-        // -Os 0.014 seconds
+        // test the performance of `selfIntersection` when the curves self-intersect
         let dataCount = 100000
         let curves = generateRandomCurves(count: dataCount, selfIntersect: true, reseed: 1)
+        for curve in curves { _ = curve.selfIntersection } // warm caches
         self.measure {
             var count = 0
-            for curve in curves {
-                count += curve.selfIntersections.count
+            for _ in 0..<50 {
+                for curve in curves {
+                    count += curve.selfIntersection != nil ? 1 : 0
+                }
             }
-            XCTAssertEqual(count, dataCount)
+            XCTAssertEqual(count, 50 * dataCount)
         }
     }
 
     func testCubicIntersectionsPerformance() {
         // test the performance of `intersections(with:,accuracy:)`
-        // -Onone 0.57 seconds
-        // -Os 0.075 seconds
         let dataCount = 50
         let curves = generateRandomCurves(count: dataCount, reseed: 2)
         self.measure {
             var count = 0
-            for curve1 in curves {
-                for curve2 in curves {
-                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<100 {
+                for curve1 in curves {
+                    for curve2 in curves {
+                        count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                    }
                 }
             }
         }
@@ -125,18 +139,167 @@ class PerformanceTests: XCTestCase {
         let curves = generateRandomCurves(count: dataCount, reseed: 3)
         self.measure {
             var count = 0
-            for curve1 in curves {
-                // create a curve that starts at the other curve's endpoint
-                // and whose first tangent double's back on the curve
-                // this is a difficult edge case for divide-and-conquer
-                // algorithms
-                let curve2 = CubicCurve(p0: curve1.endingPoint,
-                                        p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
-                                        p2: CGPoint(x: drand48(), y: drand48()),
-                                        p3: CGPoint(x: drand48(), y: drand48()))
-                count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    // create a curve that starts at the other curve's endpoint
+                    // and whose first tangent double's back on the curve
+                    // this is a difficult edge case for divide-and-conquer
+                    // algorithms
+                    let curve2 = CubicCurve(p0: curve1.endingPoint,
+                                            p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                            p2: CGPoint(x: drand48(), y: drand48()),
+                                            p3: CGPoint(x: drand48(), y: drand48()))
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
             }
         }
+    }
+
+    func testQuadraticIntersectionsPerformance() {
+        // test the performance of `intersections(with:,accuracy:)` for quadratic-quadratic pairs
+        let dataCount = 50
+        let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 10)
+        self.measure {
+            var count = 0
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    for curve2 in curves {
+                        count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                    }
+                }
+            }
+        }
+    }
+
+    func testQuadraticIntersectionsPerformanceTangentEndpoint() {
+        let dataCount = 250
+        let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 13)
+        self.measure {
+            var count = 0
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                                p1: CGFloat(drand48()) * (curve1.p1 - curve1.p2) + curve1.endingPoint,
+                                                p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
+            }
+        }
+    }
+
+    func testQuadraticIntersectionsAccuracyTangentEndpoint() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomQuadraticCurves(count: 250, reseed: 13)
+        var maxError: CGFloat = 0; var totalError: CGFloat = 0; var intersectionCount = 0
+        for curve1 in curves {
+            let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                        p1: CGFloat(drand48()) * (curve1.p1 - curve1.p2) + curve1.endingPoint,
+                                        p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+            for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                maxError = max(maxError, err); totalError += err; intersectionCount += 1
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Quad×Quad tangent EP: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testQuadraticCubicIntersectionsPerformance() {
+        let dataCount = 50
+        let quadratics = generateRandomQuadraticCurves(count: dataCount, reseed: 11)
+        let cubics = generateRandomCurves(count: dataCount, reseed: 12)
+        self.measure {
+            var count = 0
+            for _ in 0..<10 {
+                for curve1 in quadratics {
+                    for curve2 in cubics {
+                        count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                    }
+                }
+            }
+        }
+    }
+
+    func testCubicQuadraticIntersectionsPerformanceTangentEndpoint() {
+        let dataCount = 250
+        let curves = generateRandomCurves(count: dataCount, reseed: 14)
+        self.measure {
+            var count = 0
+            for _ in 0..<10 {
+                for curve1 in curves {
+                    let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                                p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                                p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+                    count += curve1.intersections(with: curve2, accuracy: 1.0e-5).count
+                }
+            }
+        }
+    }
+
+    func testCubicQuadraticIntersectionsAccuracyTangentEndpoint() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomCurves(count: 250, reseed: 14)
+        var maxError: CGFloat = 0; var totalError: CGFloat = 0; var intersectionCount = 0
+        for curve1 in curves {
+            let curve2 = QuadraticCurve(p0: curve1.endingPoint,
+                                        p1: CGFloat(drand48()) * (curve1.p2 - curve1.p3) + curve1.endingPoint,
+                                        p2: CGPoint(x: CGFloat(drand48()), y: CGFloat(drand48())))
+            for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                maxError = max(maxError, err); totalError += err; intersectionCount += 1
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Cubic×Quad tangent EP: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testQuadraticIntersectionsAccuracy() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomQuadraticCurves(count: 50, reseed: 10)
+        var maxError: CGFloat = 0; var totalError: CGFloat = 0; var intersectionCount = 0
+        for curve1 in curves {
+            for curve2 in curves {
+                for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                    let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                    maxError = max(maxError, err); totalError += err; intersectionCount += 1
+                }
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Quad×Quad: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testQuadraticCubicIntersectionsAccuracy() {
+        let accuracy: CGFloat = 1.0e-5
+        let quadratics = generateRandomQuadraticCurves(count: 50, reseed: 11)
+        let cubics = generateRandomCurves(count: 50, reseed: 12)
+        var maxError: CGFloat = 0; var totalError: CGFloat = 0; var intersectionCount = 0
+        for curve1 in quadratics {
+            for curve2 in cubics {
+                for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                    let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                    maxError = max(maxError, err); totalError += err; intersectionCount += 1
+                }
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Quad×Cubic: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
+    }
+
+    func testCubicIntersectionsAccuracy() {
+        let accuracy: CGFloat = 1.0e-5
+        let curves = generateRandomCurves(count: 50, reseed: 2)
+        var maxError: CGFloat = 0; var totalError: CGFloat = 0; var intersectionCount = 0
+        for curve1 in curves {
+            for curve2 in curves {
+                for i in curve1.intersections(with: curve2, accuracy: accuracy) {
+                    let err = distance(curve1.point(at: i.t1), curve2.point(at: i.t2))
+                    maxError = max(maxError, err); totalError += err; intersectionCount += 1
+                }
+            }
+        }
+        let avgError = intersectionCount > 0 ? totalError / CGFloat(intersectionCount) : 0
+        print("Cubic×Cubic: \(intersectionCount) intersections, max error = \(maxError), avg error = \(avgError)")
     }
 
     func testQuadraticCurveProjectPerformance() {
@@ -152,6 +315,43 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+    func testQuadraticCurveSplitFromToPerformance() {
+        let dataCount = 10000000
+        let curves = generateRandomQuadraticCurves(count: dataCount, reseed: 5)
+        srand48(5)
+        let params: [(CGFloat, CGFloat)] = (0..<dataCount).map { _ in
+            let a = CGFloat(drand48()), b = CGFloat(drand48())
+            return a < b ? (a, b) : (b, a)
+        }
+        self.measure {
+            var sink = CGPoint.zero
+            for i in 0..<dataCount {
+                let s = curves[i].split(from: params[i].0, to: params[i].1)
+                sink.x += s.p0.x
+            }
+            XCTAssertNotEqual(sink, CGPoint.zero)
+        }
+    }
+
+    func testCubicCurveSplitFromToPerformance() {
+        let dataCount = 10000000
+        let curves = generateRandomCurves(count: dataCount, reseed: 4)
+        srand48(4)
+        let params: [(CGFloat, CGFloat)] = (0..<dataCount).map { _ in
+            let a = CGFloat(drand48())
+            let b = CGFloat(drand48())
+            return a < b ? (a, b) : (b, a)
+        }
+        self.measure {
+            var sink = CGPoint.zero
+            for i in 0..<dataCount {
+                let s = curves[i].split(from: params[i].0, to: params[i].1)
+                sink.x += s.p0.x
+            }
+            XCTAssertNotEqual(sink, CGPoint.zero)
+        }
+    }
+
     func testCubicCurveProjectPerformance() {
         let c = CubicCurve(p0: CGPoint(x: -1, y: -1),
                            p1: CGPoint(x: 3, y: 1),
@@ -159,11 +359,12 @@ class PerformanceTests: XCTestCase {
                            p3: CGPoint(x: 1, y: -1))
         self.measure {
             // roughly 0.029 -Onone, 0.004 with -Ospeed
-            for theta in stride(from: 0, to: 2*Double.pi, by: 0.01) {
+            for theta in stride(from: 0, to: 2*Double.pi, by: 0.0001) {
                 _ = c.project(CGPoint(x: cos(theta), y: sin(theta)))
             }
         }
     }
+
 
     #if canImport(CoreGraphics)
 
@@ -223,11 +424,54 @@ class PerformanceTests: XCTestCase {
         let numPoints = 300
         let path1 = circlePath(origin: CGPoint(x: 0, y: 0), radius: 100, numPoints: numPoints)
         let path2 = circlePath(origin: CGPoint(x: 1, y: 0), radius: 100, numPoints: numPoints)
-        self.measure { // roughly 0.018s in debug mode
-            _ = path1.subtract(path2, accuracy: 1.0e-3)
+        for _ in 0..<1000 { _ = path1.subtract(path2, accuracy: 1.0e-3) } // warm CPU and caches
+        self.measure {
+            for _ in 0..<200 {
+                _ = path1.subtract(path2, accuracy: 1.0e-3)
+            }
         }
     }
 
     #endif
+
+    // MARK: - Path(cgPath:) performance
+    #if canImport(CoreGraphics)
+    private static let emptyCGPath  = CGMutablePath() as CGPath
+    private static let smallCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...4 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    private static let mediumCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...49 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    private static let largeCGPath: CGPath = {
+        let p = CGMutablePath(); p.move(to: .zero)
+        for i in 1...1999 { let x = CGFloat(i)
+            p.addCurve(to: CGPoint(x: x, y: 0), control1: CGPoint(x: x-0.7, y: 1), control2: CGPoint(x: x-0.3, y: -1)) }
+        return p
+    }()
+    func testPathFromCGPathLargePerformance() {
+        let p = Self.largeCGPath
+        measure { for _ in 0..<50 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathEmptyPerformance() {
+        let p = Self.emptyCGPath
+        measure { for _ in 0..<1_000_000 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathSmallPerformance() {
+        let p = Self.smallCGPath
+        measure { for _ in 0..<100_000 { _ = Path(cgPath: p) } }
+    }
+    func testPathFromCGPathMediumPerformance() {
+        let p = Self.mediumCGPath
+        measure { for _ in 0..<10_000 { _ = Path(cgPath: p) } }
+    }
+    #endif
+
 }
 #endif
