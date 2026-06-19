@@ -700,6 +700,21 @@ open class PathComponent: NSObject, Reversible, Transformable, @unchecked Sendab
         return self.split(range: PathComponentRange(from: start, to: end))
     }
 
+    /// Splits the path component at each location in `locations`, returning the pieces in order from start to end.
+    /// The result contains `locations.count + 1` components.
+    public func split(at locations: [IndexedPathComponentLocation]) -> [PathComponent] {
+        guard !locations.isEmpty else { return [self] }
+        let sorted = locations.sorted()
+        var result: [PathComponent] = []
+        var previous = self.startingIndexedLocation
+        for location in sorted {
+            result.append(self.split(from: previous, to: location))
+            previous = location
+        }
+        result.append(self.split(from: previous, to: self.endingIndexedLocation))
+        return result
+    }
+
     open func reversed() -> Self {
         return type(of: self).init(points: self.points.reversed(), orders: self.orders.reversed())
     }
