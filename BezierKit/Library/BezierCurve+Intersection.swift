@@ -116,7 +116,10 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
 private extension BezierCurve {
     var derivativeBounds: CGFloat {
         let points = self.points
-        let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
+        let speeds: [CGFloat] = (1..<points.count).map { index in
+            let point: CGPoint = points[index] - points[index - 1]
+            return sqrt(point.dot(point))
+        }
         return CGFloat(self.order) * speeds.max()!
     }
 }
