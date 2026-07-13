@@ -77,3 +77,15 @@ export PATH="/tmp/swift-6.3-toolchain/usr/bin:$PATH"
 swift test --swift-sdk 6.3-RELEASE-wasm32-unknown-wasip1
 wasmtime --dir=. .build/wasm32-unknown-wasip1/debug/BezierKitPackageTests.xctest
 ```
+
+## Type-checking time budget
+
+Un-annotated arithmetic over `CGPoint`'s operator overloads (and chained `.map`/`.filter` that leave the intermediate element type to be inferred) can push a single expression into the hundreds of milliseconds to *type-check*. This is distinct from runtime performance: it barely affects an optimized build, but SourceKit re-type-checks live on every keystroke, so a slow expression makes the file stutter as you edit it, and it inflates incremental/debug builds.
+
+Before committing any change under `BezierKit/Library/`, you must run:
+```
+Scripts/check-type-check-time.sh
+```
+It builds the library with `-warn-long-function-bodies` / `-warn-long-expression-type-checking` at a per-body/expression budget (default 120ms, override with `TYPE_CHECK_LIMIT_MS`) and fails if anything exceeds it. The default sits between the library's current worst legitimate body (~85ms) and the operator-overload hot-spot class it guards against (~160ms+); re-calibrate `TYPE_CHECK_LIMIT_MS` if your machine is much slower or faster. Fix a flagged site by giving the expression explicit type annotations (e.g. `let p: CGPoint = a - b`, `let speeds: [CGFloat] = …`) or by collapsing a chained `.map`/`.filter` into one closure with an annotated result, so the solver stops exploring the operator overloads. You must not raise the budget to sidestep a regression.
+
+Do not enforce this budget in CI: hosted CI runners have variable, unreliable wall-clock build times, so the signal is only meaningful from a controlled local build. This is a check you run, not a CI gate.
