@@ -116,7 +116,10 @@ private func coincidenceCheck<U: BezierCurve, T: BezierCurve>(_ curve1: U, _ cur
 private extension BezierCurve {
     var derivativeBounds: CGFloat {
         let points = self.points
-        let speeds = (1..<points.count).map { points[$0] - points[$0 - 1] }.map { sqrt($0.dot($0)) }
+        let speeds: [CGFloat] = (1..<points.count).map { index in
+            let point: CGPoint = points[index] - points[index - 1]
+            return sqrt(point.dot(point))
+        }
         return CGFloat(self.order) * speeds.max()!
     }
 }
@@ -305,31 +308,31 @@ internal func helperIntersectsCurveLine<U>(_ curve: U, _ line: LineSegment, reve
 extension CubicCurve {
 
     private var selfIntersectionInfo: (discriminant: CGFloat, canonicalPoint: CGPoint)? {
-        let d1 = self.p1 - self.p0
-        let d2 = self.p2 - self.p0
+        let d1: CGPoint = self.p1 - self.p0
+        let d2: CGPoint = self.p2 - self.p0
         // https://pomax.github.io/bezierinfo/#canonical
         // we'll use cramer's rule to find a matrix M that maps d1 -> (1, 0) and d2 -> (0, 1)
         // then compute the transform to canonical form as [[0, 1], [1, 1]] * M
-        let a = d1.x
-        let c = d1.y
-        let b = d2.x
-        let d = d2.y
-        let det = a * d - b * c
+        let a: CGFloat = d1.x
+        let c: CGFloat = d1.y
+        let b: CGFloat = d2.x
+        let d: CGFloat = d2.y
+        let det: CGFloat = a * d - b * c
         guard det != 0 else { return nil }
-        let d3 = self.p3 - self.p0
+        let d3: CGPoint = self.p3 - self.p0
         // find the coordinates of the last point in canonical form
-        let x = (1 / det) * (-c * d3.x + a * d3.y)
-        let y = (1 / det) * ((d - c) * d3.x + (a - b) * d3.y)
+        let x: CGFloat = (1 / det) * (-c * d3.x + a * d3.y)
+        let y: CGFloat = (1 / det) * ((d - c) * d3.x + (a - b) * d3.y)
         // use the coordinates of the last point to determine if any self-intersections exist
         guard x < 1 else { return nil }
-        let xSquared = x * x
-        let cuspEdge = -3 * xSquared + 6 * x - 12 * y + 9
+        let xSquared: CGFloat = x * x
+        let cuspEdge: CGFloat = -3 * xSquared + 6 * x - 12 * y + 9
         guard cuspEdge > 0 else { return nil }
         if x <= 0 {
-            let loopAtTZeroEdge = (-xSquared + 3 * x) / 3
+            let loopAtTZeroEdge: CGFloat = (-xSquared + 3 * x) / 3
             guard y >= loopAtTZeroEdge else { return nil }
         } else {
-            let loopAtTOneEdge = (sqrt(3 * (4 * x - xSquared)) - x) / 2
+            let loopAtTOneEdge: CGFloat = (sqrt(3 * (4 * x - xSquared)) - x) / 2
             guard y >= loopAtTOneEdge else { return nil }
         }
         return (discriminant: cuspEdge, canonicalPoint: CGPoint(x: x, y: y))
